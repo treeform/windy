@@ -9,3 +9,6 @@ nimcache
 *.pdb
 *.ilk
 .*
+*.dll
+__pycache__
+bindings/generated
