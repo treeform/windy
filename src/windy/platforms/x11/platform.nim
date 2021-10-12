@@ -105,23 +105,17 @@ proc newWindow*(
 ): PlatformWindow =
   app.newWindow(windowTitle, 0, 0, width, height)
 
-proc mainLoop*(window: PlatformWindow) =
+proc poolEvents*(window: PlatformWindow) =
   var ev: XEvent
-
-  while window.opened:
-    var xevents: seq[XEvent]
-
-    proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): cint {.cdecl.} =
-      if cast[int](event.xany.window) == cast[int](userData): 1 else: 0
+  
+  proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): cint {.cdecl.} =
+    if cast[int](event.xany.window) == cast[int](userData): 1 else: 0
+  
+  while window.display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)) == 1:
+    case ev.theType
     
-    while window.display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)) == 1:
-      xevents.add ev
-    
-    for ev in xevents.mitems:
-      case ev.theType
-      
-      of ClientMessage:
-        if ev.xclient.data.l[0] == clong window.display.atom "WM_DELETE_WINDOW":
-          window.opened = false
+    of ClientMessage:
+      if ev.xclient.data.l[0] == clong window.display.atom "WM_DELETE_WINDOW":
+        window.opened = false
 
-      else: discard
+    else: discard

@@ -214,7 +214,6 @@ proc screen(d: Display, id: cint): ptr Screen =
   cast[ptr Screen](cast[int](cast[ptr XPrivDisplay](d)[].screens) + id * Screen.sizeof)
 
 proc defaultScreen*(d: Display): cint =
-  echo cast[ptr XPrivDisplay](d)[].screens[]
   cast[ptr XPrivDisplay](d)[].defaultScreen
 
 proc defaultRootWindow*(d: Display): Window =
