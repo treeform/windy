@@ -1,11 +1,10 @@
 import boxy, opengl, windy
 
-let app = getApp()
-app.init()
+init()
 
 let
   windowSize = ivec2(1280, 800)
-  window = app.newWindow("Windy + Boxy", windowSize.x, windowSize.y)
+  window = newWindow("Windy + Boxy", windowSize.x, windowSize.y)
 
 window.makeContextCurrent()
 loadExtensions()

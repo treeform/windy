@@ -22,9 +22,6 @@ exportProcs:
   checkError
   takeError
 
-exportRefObject App:
-  discard
-
 exportRefObject Window:
   constructor:
     newWindow
@@ -36,7 +33,6 @@ exportRefObject Window:
     swapBuffers
 
 exportProcs:
-  getApp
   init
 
 writeFiles("bindings/generated", "Windy")

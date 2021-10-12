@@ -20,15 +20,14 @@ const
   WGL_CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001
 
 type
-  PlatformApp* = ref object
-    windows*: seq[PlatformWindow]
-
   PlatformWindow* = ref object
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
 
 var
+  initialized*: bool
+  windows*: seq[PlatformWindow]
   wglCreateContext: wglCreateContext
   wglDeleteContext: wglDeleteContext
   wglGetProcAddress: wglGetProcAddress
@@ -202,10 +201,12 @@ proc wndProc(
 ): LRESULT {.stdcall.} =
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-proc newPlatformApp*(): PlatformApp =
-  result = PlatformApp()
+proc platformInit*() =
+  if initialized:
+    raise newException(WindyError, "Windy is already initialized")
   loadOpenGL()
   registerWindowClass(windowClassName, wndProc)
+  initialized = true
 
 proc show*(window: PlatformWindow) =
   discard ShowWindow(window.hWnd, SW_SHOW)
@@ -220,8 +221,7 @@ proc swapBuffers*(window: PlatformWindow) =
   if SwapBuffers(window.hdc) == 0:
     raise newException(WindyError, "Error swapping buffers")
 
-proc newWindow*(
-  app: PlatformApp,
+proc newPlatformWindow*(
   windowTitle: string,
   x, y, w, h: int
 ): PlatformWindow =
@@ -309,11 +309,10 @@ proc newWindow*(
 
   result.makeContextCurrent()
 
-  app.windows.add(result)
+  windows.add(result)
 
-proc newWindow*(
-  app: PlatformApp,
+proc newPlatformWindow*(
   windowTitle: string,
   width, height: int
 ): PlatformWindow =
-  app.newWindow(windowTitle, CW_USEDEFAULT, CW_USEDEFAULT, width, height)
+  newPlatformWindow(windowTitle, CW_USEDEFAULT, CW_USEDEFAULT, width, height)
