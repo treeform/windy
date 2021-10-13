@@ -17,6 +17,35 @@ type
   
   KeyCode* = cuchar
 
+  PropMode* = enum
+    pmReplace = 0
+    pmPrepend = 1
+    pmAppend = 2
+
+  Status* = enum
+    success = 0
+    badRequest = 1
+    badValue = 2
+    badWindow = 3
+    badPixmap = 4
+    badAtom = 5
+    badCursor = 6
+    badFont = 7
+    badMatch = 8
+    badDrawable = 9
+    badAccess = 10
+    badAlloc = 11
+    badColor = 12
+    badGC = 13
+    badIDChoice = 14
+    badName = 15
+    badLength = 16
+    badImplementation = 17
+  
+  ByteOrder* = enum
+    leftToRight = 0
+    rightToLeft = 1
+
 const
   ParentRelative* = 1
   CopyFromParent* = 0
@@ -55,40 +84,6 @@ const
   PropertyChangeMask* = 1 shl 22
   ColormapChangeMask* = 1 shl 23
   OwnerGrabButtonMask* = 1 shl 24
-  KeyPress* = 2
-  KeyRelease* = 3
-  ButtonPress* = 4
-  ButtonRelease* = 5
-  MotionNotify* = 6
-  EnterNotify* = 7
-  LeaveNotify* = 8
-  FocusIn* = 9
-  FocusOut* = 10
-  KeymapNotify* = 11
-  Expose* = 12
-  GraphicsExpose* = 13
-  NoExpose* = 14
-  VisibilityNotify* = 15
-  CreateNotify* = 16
-  DestroyNotify* = 17
-  UnmapNotify* = 18
-  MapNotify* = 19
-  MapRequest* = 20
-  ReparentNotify* = 21
-  ConfigureNotify* = 22
-  ConfigureRequest* = 23
-  GravityNotify* = 24
-  ResizeRequest* = 25
-  CirculateNotify* = 26
-  CirculateRequest* = 27
-  PropertyNotify* = 28
-  SelectionClear* = 29
-  SelectionRequest* = 30
-  SelectionNotify* = 31
-  ColormapNotify* = 32
-  ClientMessage* = 33
-  MappingNotify* = 34
-  GenericEvent* = 35
   LASTEvent* = 36
   ShiftMask* = 1 shl 0
   LockMask* = 1 shl 1
@@ -162,24 +157,6 @@ const
   RevertToNone* = 0
   RevertToPointerRoot* = PointerRoot
   RevertToParent* = 2
-  Success* = 0
-  BadRequest* = 1
-  BadValue* = 2
-  BadWindow* = 3
-  BadPixmap* = 4
-  BadAtom* = 5
-  BadCursor* = 6
-  BadFont* = 7
-  BadMatch* = 8
-  BadDrawable* = 9
-  BadAccess* = 10
-  BadAlloc* = 11
-  BadColor* = 12
-  BadGC* = 13
-  BadIDChoice* = 14
-  BadName* = 15
-  BadLength* = 16
-  BadImplementation* = 17
   FirstExtensionError* = 128
   LastExtensionError* = 255
   InputOutput* = 1
@@ -236,9 +213,6 @@ const
   Opposite* = 4
   RaiseLowest* = 0
   LowerHighest* = 1
-  PropModeReplace* = 0
-  PropModePrepend* = 1
-  PropModeAppend* = 2
   GXclear* = 0x00000000
   GXand* = 0x00000001
   GXandReverse* = 0x00000002
@@ -361,5 +335,3 @@ const
   PseudoColor* = 3
   TrueColor* = 4
   DirectColor* = 5
-  LSBFirst* = 0
-  MSBFirst* = 1

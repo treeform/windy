@@ -147,57 +147,15 @@ type
     dashes*: cchar
 
 const
-  XIMPreeditArea* = 0x00000001
-  XIMPreeditCallbacks* = 0x00000002
-  XIMPreeditPosition* = 0x00000004
-  XIMPreeditNothing* = 0x00000008
-  XIMPreeditNone* = 0x00000010
-  XIMStatusArea* = 0x00000100
-  XIMStatusCallbacks* = 0x00000200
-  XIMStatusNothing* = 0x00000400
-  XIMStatusNone* = 0x00000800
-  XNVaNestedList* = "XNVaNestedList"
-  XNQueryInputStyle* = "queryInputStyle"
-  XNClientWindow* = "clientWindow"
-  XNInputStyle* = "inputStyle"
-  XNFocusWindow* = "focusWindow"
-  XNResourceName* = "resourceName"
-  XNResourceClass* = "resourceClass"
-  XNGeometryCallback* = "geometryCallback"
-  XNDestroyCallback* = "destroyCallback"
-  XNFilterEvents* = "filterEvents"
-  XNPreeditStartCallback* = "preeditStartCallback"
-  XNPreeditDoneCallback* = "preeditDoneCallback"
-  XNPreeditDrawCallback* = "preeditDrawCallback"
-  XNPreeditCaretCallback* = "preeditCaretCallback"
-  XNPreeditStateNotifyCallback* = "preeditStateNotifyCallback"
-  XNPreeditAttributes* = "preeditAttributes"
-  XNStatusStartCallback* = "statusStartCallback"
-  XNStatusDoneCallback* = "statusDoneCallback"
-  XNStatusDrawCallback* = "statusDrawCallback"
-  XNStatusAttributes* = "statusAttributes"
-  XNArea* = "area"
-  XNAreaNeeded* = "areaNeeded"
-  XNSpotLocation* = "spotLocation"
-  XNColormap* = "colorMap"
-  XNStdColormap* = "stdColorMap"
-  XNForeground* = "foreground"
-  XNBackground* = "background"
-  XNBackgroundPixmap* = "backgroundPixmap"
-  XNFontSet* = "fontSet"
-  XNLineSpace* = "lineSpace"
-  XNCursor* = "cursor"
-  XNQueryIMValuesList* = "queryIMValuesList"
-  XNQueryICValuesList* = "queryICValuesList"
-  XNVisiblePosition* = "visiblePosition"
-  XNR6PreeditCallback* = "r6PreeditCallback"
-  XNStringConversionCallback* = "stringConversionCallback"
-  XNStringConversion* = "stringConversion"
-  XNResetState* = "resetState"
-  XNHotKey* = "hotKey"
-  XNHotKeyState* = "hotKeyState"
-  XNPreeditState* = "preeditState"
-  XNSeparatorofNestedList* = "separatorofNestedList"
+  XIMPreeditArea* = 1 shl 0
+  XIMPreeditCallbacks* = 1 shl 1
+  XIMPreeditPosition* = 1 shl 2
+  XIMPreeditNothing* = 1 shl 3
+  XIMPreeditNone* = 1 shl 4
+  XIMStatusArea* = 1 shl 8
+  XIMStatusCallbacks* = 1 shl 9
+  XIMStatusNothing* = 1 shl 10
+  XIMStatusNone* = 1 shl 11
   XBufferOverflow* = -1
   XLookupNone* = 1
   XLookupChars* = 2
@@ -232,17 +190,17 @@ proc XCreateWindow*(
   visual: ptr Visual,
   valueMask: culong,
   attributes: ptr XSetWindowAttributes
-  ): Window {.libx11.}
-proc XDestroyWindow*(d: Display, window: Window): cint {.libx11.}
+): Window {.libx11.}
+proc XDestroyWindow*(d: Display, window: Window) {.libx11.}
 
-proc XMapWindow*(d: Display, window: Window): cint {.libx11.}
-proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: cint): cint {.libx11.}
-proc XSelectInput*(d: Display, window: Window, inputs: clong): cint {.libx11.}
+proc XMapWindow*(d: Display, window: Window) {.libx11.}
+proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: cint) {.libx11.}
+proc XSelectInput*(d: Display, window: Window, inputs: clong) {.libx11.}
 
 proc XChangeProperty*(
   d: Display, window: Window, atom: Atom, kind: Atom,
-  align: cint, mode: cint, data: cstring, len: cint
-): cint {.libx11.}
+  align: cint, mode: PropMode, data: cstring, len: cint
+) {.libx11.}
 
 proc Xutf8SetWMProperties*(
   d: Display, window: Window,
@@ -254,7 +212,7 @@ proc Xutf8SetWMProperties*(
 proc XInternAtom*(d: Display, name: cstring, onlyIfExist: cint): Atom {.libx11.}
 
 proc XOpenIM*(d: Display, db: pointer = nil, resName: cstring = nil, resClass: cstring = nil): XIM {.libx11.}
-proc XCloseIM*(im: XIM): cint {.libx11.}
+proc XCloseIM*(im: XIM) {.libx11.}
 
 proc XCreateIC*(im: XIM): XIC {.varargs, libx11.}
 proc XDestroyIC*(ic: XIC) {.libx11.}
@@ -262,4 +220,4 @@ proc XSetICFocus*(ic: XIC) {.libx11.}
 proc XUnsetICFocus*(ic: XIC) {.libx11.}
 
 proc XCreateGC*(d: Display, o: Drawable, flags: culong, gcv: ptr XGCValues): GC {.libx11.}
-proc XFreeGC*(d: Display, gc: GC): cint {.libx11.}
+proc XFreeGC*(d: Display, gc: GC) {.libx11.}

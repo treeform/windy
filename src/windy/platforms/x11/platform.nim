@@ -18,9 +18,14 @@ var
   display: Display
 
 
+proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
+  raise WindyError.newException("Error dealing with X11: " & $event.errorCode.Status)
+
 proc platformInit* =
   if initialized:
-    raise newException(WindyError, "Windy is already initialized")
+    raise WindyError.newException("Windy is already initialized")
+
+  XSetErrorHandler handleXError
 
   display = XOpenDisplay(getEnv("DISPLAY"))
   if display == nil:
@@ -47,7 +52,7 @@ proc newXClientMessageEvent[T](
     raise WindyError.newException("To much data in client message")
 
   result = XEvent(xclient: XClientMessageEvent(
-    theType: ClientMessage,
+    kind: xeClientMessage,
     messageType: messageKind,
     window: window,
     display: display,
@@ -67,9 +72,9 @@ proc newXClientMessageEvent[T](
 
 proc `=destroy`(window: var PlatformWindowObj) =
   if window.ic != nil:   XDestroyIC(window.ic)
-  if window.im != nil:   discard XCloseIM(window.im)
-  if window.gc != nil:   discard display.XFreeGC(window.gc)
-  if window.handle != 0: discard display.XDestroyWindow(window.handle)
+  if window.im != nil:   XCloseIM(window.im)
+  if window.gc != nil:   display.XFreeGC(window.gc)
+  if window.handle != 0: display.XDestroyWindow(window.handle)
 
 proc show*(window: PlatformWindow) =
   display.XRaiseWindow(window.handle)
@@ -78,14 +83,14 @@ proc hide*(window: PlatformWindow) =
   display.XLowerWindow(window.handle)
 
 proc makeContextCurrent*(window: PlatformWindow) =
-  discard display.glXMakeCurrent(window.handle, window.ctx)
+  display.glXMakeCurrent(window.handle, window.ctx)
 
 proc swapBuffers*(window: PlatformWindow) =
   display.glXSwapBuffers(window.handle)
 
 proc `title=`*(window: PlatformWindow, v: string) =
-  discard display.XChangeProperty(window.handle, atom"_NET_WM_NAME", atom"UTF8_STRING", 8, PropModeReplace, v, v.len.cint)
-  discard display.XChangeProperty(window.handle, atom"_NET_WM_ICON_NAME", atom"UTF8_STRING", 8, PropModeReplace, v, v.len.cint)
+  display.XChangeProperty(window.handle, atom"_NET_WM_NAME", atom"UTF8_STRING", 8, pmReplace, v, v.len.cint)
+  display.XChangeProperty(window.handle, atom"_NET_WM_ICON_NAME", atom"UTF8_STRING", 8, pmReplace, v, v.len.cint)
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
 proc newPlatformWindow*(
@@ -113,22 +118,22 @@ proc newPlatformWindow*(
     swa.addr
   )
 
-  discard display.XSelectInput(result.handle,
+  display.XSelectInput(result.handle,
     ExposureMask or KeyPressMask or KeyReleaseMask or PointerMotionMask or ButtonPressMask or
     ButtonReleaseMask or StructureNotifyMask or EnterWindowMask or LeaveWindowMask or FocusChangeMask
   )
 
-  discard display.XMapWindow(result.handle)
+  display.XMapWindow(result.handle)
   var wmProtocols = [atom"WM_DELETE_WINDOW"]
-  discard display.XSetWMProtocols(result.handle, wmProtocols[0].addr, cint wmProtocols.len)
+  display.XSetWMProtocols(result.handle, wmProtocols[0].addr, cint wmProtocols.len)
 
   result.im = display.XOpenIM
   result.ic = result.im.XCreateIC(
-    XNClientWindow,
+    "clientWindow",
     result.handle,
-    XNFocusWindow,
+    "focusWindow",
     result.handle,
-    XnInputStyle,
+    "inputStyle",
     XimPreeditNothing or XimStatusNothing,
     nil
   )
@@ -159,26 +164,26 @@ proc isOpen*(window: PlatformWindow): bool = not window.closed
 proc close*(window: PlatformWindow) =
   if window.closed: return
   var e = newXClientMessageEvent(window.handle, atom"WM_PROTOCOLS", [atom"WM_DELETE_WINDOW", CurrentTime])
-  discard display.XSendEvent(window.handle, 0, NoEventMask, e.addr)
+  display.XSendEvent(window.handle, 0, NoEventMask, e.addr)
 
 proc pollEvents*(window: PlatformWindow) =
   var ev: XEvent
   
-  proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): cint {.cdecl.} =
-    if event.xany.window == cast[PlatformWindow](userData).handle: 1 else: 0
+  proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): bool {.cdecl.} =
+    event.xany.window == cast[PlatformWindow](userData).handle
   
-  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)) == 1:
+  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
     case ev.theType
     
-    of ClientMessage:
+    of xeClientMessage:
       if ev.xclient.data.l[0] == clong atom"WM_DELETE_WINDOW":
         window.closed = true
 
-    of MotionNotify:
+    of xeMotion:
       #TODO: push event
       discard (ev.xmotion.x.int, ev.xmotion.y.int)
     
-    of ButtonPress, ButtonRelease:
+    of xeButtonPress, xeButtonRelease:
       #TODO: push event
       case ev.xbutton.button
       of 1: discard # left
@@ -192,15 +197,15 @@ proc pollEvents*(window: PlatformWindow) =
       
       else: discard
 
-    of FocusIn:
+    of xeFocusIn:
       if window.ic != nil: XSetICFocus window.ic
       #TODO: press currently pressed keys
     
-    of FocusOut:
+    of xeFocusOut:
       if window.ic != nil: XUnsetICFocus window.ic
       #TODO: release currently pressed keys
         
-    of KeyPress:
+    of xeKeyPress:
       #TODO: handle key press
 
       # handle text input
@@ -214,7 +219,7 @@ proc pollEvents*(window: PlatformWindow) =
           #TODO: push event
           discard
         
-    of KeyRelease:
+    of xeKeyRelease:
       #TODO: handle key release
       discard
 
