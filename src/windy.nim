@@ -11,8 +11,14 @@ type
   Window* = ref object
     platform: PlatformWindow
 
+
 proc init*() {.raises: [WindyError]} =
   platformInit()
+
+proc pollEvents*() =
+  for window in windows:
+    window.pollEvents()
+
 
 proc newWindow*(
   windowTitle: string, width, height: int
@@ -34,3 +40,6 @@ proc `visible=`*(window: Window, visible: bool) =
     window.platform.show()
   else:
     window.platform.hide()
+
+proc isOpen*(window: Window): bool =
+  window.platform.isOpen

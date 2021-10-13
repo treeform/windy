@@ -236,12 +236,12 @@ proc XCreateWindow*(
 proc XDestroyWindow*(d: Display, window: Window): cint {.libx11.}
 
 proc XMapWindow*(d: Display, window: Window): cint {.libx11.}
+proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: cint): cint {.libx11.}
+proc XSelectInput*(d: Display, window: Window, inputs: clong): cint{.libx11.}
+
 proc XInternAtom*(d: Display, name: cstring, onlyIfExist: cint): Atom {.libx11.}
 
-proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: cint): cint {.libx11.}
-
-
-proc XOpenIM*(d: Display, para2: pointer, para3: cstring, para4: cstring): XIM {.libx11.}
+proc XOpenIM*(d: Display, db: pointer = nil, resName: cstring = nil, resClass: cstring = nil): XIM {.libx11.}
 proc XCloseIM*(im: XIM): cint {.libx11.}
 
 proc XCreateIC*(im: XIM): XIC {.varargs, libx11.}
