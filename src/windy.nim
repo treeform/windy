@@ -4,6 +4,8 @@ export common
 
 when defined(windows):
   import windy/platforms/win32/platform
+elif defined(linux):
+  import windy/platforms/x11/platform
 
 type
   App* = ref object
