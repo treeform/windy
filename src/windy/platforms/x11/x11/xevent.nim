@@ -392,3 +392,4 @@ type
 
 
 proc XCheckIfEvent*(d: Display, e: ptr XEvent, cb: IfEventProc, userData: pointer): cint {.libx11.}
+proc XSendEvent*(d: Display, window: Window, propogate: cint, mask: clong, e: ptr XEvent): cint {.libx11.}

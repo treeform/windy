@@ -29,6 +29,42 @@ proc platformInit* =
   initialized = true
 
 
+proc atom[name: static string](): Atom =
+  var a {.global.}: Atom
+  if a == 0: a = display.XInternAtom(name, 0)
+  a
+
+template atom(name: static string): Atom = atom[name]()
+
+proc newClientMessageXEvent[T](
+  window: Window,
+  messageKind: Atom,
+  data: openarray[T],
+  serial: int = 0,
+  sendEvent: bool = false
+  ): XEvent =
+  if data.len * T.sizeof > XClientMessageData.sizeof:
+    raise WindyError.newException("To much data in client message")
+
+  result = XEvent(xclient: XClientMessageEvent(
+    theType: ClientMessage,
+    messageType: messageKind,
+    window: window,
+    display: display,
+    serial: serial.culong,
+    sendEvent: sendEvent,
+    format: case T.sizeof
+      of 1: 8
+      of 2: 16
+      of 4: 32
+      of 8: 32
+      else: 8
+  ))
+
+  if data.len != 0:
+    copyMem(result.xclient.data.addr, data[0].unsafeAddr, data.len * T.sizeof)
+
+
 proc `=destroy`(window: var PlatformWindowObj) =
   if window.ic != nil:   XDestroyIC(window.ic)
   if window.im != nil:   discard XCloseIM(window.im)
@@ -78,7 +114,7 @@ proc newPlatformWindow*(
   )
 
   discard display.XMapWindow(result.handle)
-  var wmProtocols = [display.atom "WM_DELETE_WINDOW"]
+  var wmProtocols = [atom"WM_DELETE_WINDOW"]
   discard display.XSetWMProtocols(result.handle, wmProtocols[0].addr, cint wmProtocols.len)
 
   result.im = display.XOpenIM
@@ -113,6 +149,11 @@ proc newPlatformWindow*(
 
 proc isOpen*(window: PlatformWindow): bool = not window.closed
 
+proc close*(window: PlatformWindow) =
+  if window.closed: return
+  var e = newClientMessageXEvent(window.handle, atom"WM_PROTOCOLS", [atom"WM_DELETE_WINDOW", CurrentTime])
+  discard display.XSendEvent(window.handle, 0, NoEventMask, e.addr)
+
 proc pollEvents*(window: PlatformWindow) =
   var ev: XEvent
   
@@ -123,7 +164,7 @@ proc pollEvents*(window: PlatformWindow) =
     case ev.theType
     
     of ClientMessage:
-      if ev.xclient.data.l[0] == clong display.atom "WM_DELETE_WINDOW":
+      if ev.xclient.data.l[0] == clong atom"WM_DELETE_WINDOW":
         window.closed = true
 
     else: discard

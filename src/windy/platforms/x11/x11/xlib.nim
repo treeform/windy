@@ -249,7 +249,3 @@ proc XDestroyIC*(ic: XIC) {.libx11.}
 
 proc XCreateGC*(d: Display, o: Drawable, flags: culong, gcv: ptr XGCValues): GC {.libx11.}
 proc XFreeGC*(d: Display, gc: GC): cint {.libx11.}
-
-
-proc atom*(d: Display, name: string): Atom = d.XInternAtom(name, 0)
-proc atomIfExist*(d: Display, name: string): Atom = d.XInternAtom(name, 1)
