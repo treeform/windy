@@ -237,7 +237,19 @@ proc XDestroyWindow*(d: Display, window: Window): cint {.libx11.}
 
 proc XMapWindow*(d: Display, window: Window): cint {.libx11.}
 proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: cint): cint {.libx11.}
-proc XSelectInput*(d: Display, window: Window, inputs: clong): cint{.libx11.}
+proc XSelectInput*(d: Display, window: Window, inputs: clong): cint {.libx11.}
+
+proc XChangeProperty*(
+  d: Display, window: Window, atom: Atom, kind: Atom,
+  align: cint, mode: cint, data: cstring, len: cint
+): cint {.libx11.}
+
+proc Xutf8SetWMProperties*(
+  d: Display, window: Window,
+  name: cstring, iconName: cstring,
+  argv: ptr cstring, argc: cint,
+  normalHints: pointer, wmHints: pointer, classHints: pointer
+) {.libx11.}
 
 proc XInternAtom*(d: Display, name: cstring, onlyIfExist: cint): Atom {.libx11.}
 
@@ -246,6 +258,8 @@ proc XCloseIM*(im: XIM): cint {.libx11.}
 
 proc XCreateIC*(im: XIM): XIC {.varargs, libx11.}
 proc XDestroyIC*(ic: XIC) {.libx11.}
+proc XSetICFocus*(ic: XIC) {.libx11.}
+proc XUnsetICFocus*(ic: XIC) {.libx11.}
 
 proc XCreateGC*(d: Display, o: Drawable, flags: culong, gcv: ptr XGCValues): GC {.libx11.}
 proc XFreeGC*(d: Display, gc: GC): cint {.libx11.}

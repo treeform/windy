@@ -36,7 +36,7 @@ proc atom[name: static string](): Atom =
 
 template atom(name: static string): Atom = atom[name]()
 
-proc newClientMessageXEvent[T](
+proc newXClientMessageEvent[T](
   window: Window,
   messageKind: Atom,
   data: openarray[T],
@@ -82,6 +82,11 @@ proc makeContextCurrent*(window: PlatformWindow) =
 
 proc swapBuffers*(window: PlatformWindow) =
   display.glXSwapBuffers(window.handle)
+
+proc `title=`*(window: PlatformWindow, v: string) =
+  discard display.XChangeProperty(window.handle, atom"_NET_WM_NAME", atom"UTF8_STRING", 8, PropModeReplace, v, v.len.cint)
+  discard display.XChangeProperty(window.handle, atom"_NET_WM_ICON_NAME", atom"UTF8_STRING", 8, PropModeReplace, v, v.len.cint)
+  display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
 proc newPlatformWindow*(
   title: string,
@@ -136,6 +141,8 @@ proc newPlatformWindow*(
   if result.ctx == nil:
     raise newException(WindyError, "Error creating OpenGL context")
 
+  result.title = title
+
   hide result
   makeContextCurrent result
 
@@ -151,7 +158,7 @@ proc isOpen*(window: PlatformWindow): bool = not window.closed
 
 proc close*(window: PlatformWindow) =
   if window.closed: return
-  var e = newClientMessageXEvent(window.handle, atom"WM_PROTOCOLS", [atom"WM_DELETE_WINDOW", CurrentTime])
+  var e = newXClientMessageEvent(window.handle, atom"WM_PROTOCOLS", [atom"WM_DELETE_WINDOW", CurrentTime])
   discard display.XSendEvent(window.handle, 0, NoEventMask, e.addr)
 
 proc pollEvents*(window: PlatformWindow) =
@@ -166,5 +173,49 @@ proc pollEvents*(window: PlatformWindow) =
     of ClientMessage:
       if ev.xclient.data.l[0] == clong atom"WM_DELETE_WINDOW":
         window.closed = true
+
+    of MotionNotify:
+      #TODO: push event
+      discard (ev.xmotion.x.int, ev.xmotion.y.int)
+    
+    of ButtonPress, ButtonRelease:
+      #TODO: push event
+      case ev.xbutton.button
+      of 1: discard # left
+      of 2: discard # middle
+      of 3: discard # right
+      of 8: discard # backward
+      of 9: discard # forward
+      
+      of 4: discard # scroll up
+      of 5: discard # scroll down
+      
+      else: discard
+
+    of FocusIn:
+      if window.ic != nil: XSetICFocus window.ic
+      #TODO: press currently pressed keys
+    
+    of FocusOut:
+      if window.ic != nil: XUnsetICFocus window.ic
+      #TODO: release currently pressed keys
+        
+    of KeyPress:
+      #TODO: handle key press
+
+      # handle text input
+      if window.ic != nil and (ev.xkey.state and ControlMask) == 0:
+        var
+          status: cint
+          s = newString(16)
+        s.setLen window.ic.Xutf8LookupString(ev.xkey.addr, s, 16, nil, status.addr)
+
+        if s != "\u001B":
+          #TODO: push event
+          discard
+        
+    of KeyRelease:
+      #TODO: handle key release
+      discard
 
     else: discard

@@ -393,3 +393,5 @@ type
 
 proc XCheckIfEvent*(d: Display, e: ptr XEvent, cb: IfEventProc, userData: pointer): cint {.libx11.}
 proc XSendEvent*(d: Display, window: Window, propogate: cint, mask: clong, e: ptr XEvent): cint {.libx11.}
+
+proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint {.libx11.}
