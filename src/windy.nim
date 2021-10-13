@@ -8,27 +8,17 @@ elif defined(linux):
   import windy/platforms/x11/platform
 
 type
-  App* = ref object
-    platform: PlatformApp
-
   Window* = ref object
     platform: PlatformWindow
 
-let app = App()
-
-proc getApp*(): App =
-  app
-
-proc init*(app: App) {.raises: [WindyError]} =
-  if app.platform != nil:
-    raise newException(WindyError, "Windy is already initialized")
-  app.platform = newPlatformApp()
+proc init*() {.raises: [WindyError]} =
+  platformInit()
 
 proc newWindow*(
-  app: App, windowTitle: string, width, height: int
+  windowTitle: string, width, height: int
 ): Window {.raises: [WindyError]} =
   result = Window()
-  result.platform = app.platform.newWindow(windowTitle, width, height)
+  result.platform = newPlatformWindow(windowTitle, width, height)
 
 proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
   window.platform.makeContextCurrent()
