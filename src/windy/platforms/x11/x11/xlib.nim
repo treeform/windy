@@ -221,3 +221,5 @@ proc XUnsetICFocus*(ic: XIC) {.libx11.}
 
 proc XCreateGC*(d: Display, o: Drawable, flags: culong, gcv: ptr XGCValues): GC {.libx11.}
 proc XFreeGC*(d: Display, gc: GC) {.libx11.}
+
+proc XMatchVisualInfo*(d: Display, screen: cint, depth: cint, flags: cint, result: ptr XVisualInfo) {.libx11.}

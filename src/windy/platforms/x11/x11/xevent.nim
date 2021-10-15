@@ -391,7 +391,7 @@ type
     data*: pointer
 
   XEvent* {.union.} = object
-    theType*: XEventKind
+    kind*: XEventKind
     xany*: XAnyEvent
     xkey*: XKeyEvent
     xbutton*: XButtonEvent

@@ -173,7 +173,7 @@ proc pollEvents*(window: PlatformWindow) =
     event.xany.window == cast[PlatformWindow](userData).handle
   
   while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
-    case ev.theType
+    case ev.kind
     
     of xeClientMessage:
       if ev.xclient.data.l[0] == clong atom"WM_DELETE_WINDOW":
