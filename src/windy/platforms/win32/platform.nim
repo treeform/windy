@@ -263,10 +263,12 @@ proc newPlatformWindow*(
   vsync: bool,
   openglMajorVersion: int,
   openglMinorVersion: int,
-  msaa: MSAA
+  msaa: MSAA,
+  depthBits: int,
+  stencilBits: int
 ): PlatformWindow =
 
-  # resizeable, fullscreen
+  # resizeable, fullscreen, transparent, decorated, floating
 
   result = PlatformWindow()
   result.hWnd = createWindow(
@@ -295,9 +297,9 @@ proc newPlatformWindow*(
       WGL_COLOR_BITS_ARB,
       32,
       WGL_DEPTH_BITS_ARB,
-      24,
+      depthBits.int32,
       WGL_STENCIL_BITS_ARB,
-      8,
+      stencilBits.int32,
       WGL_SAMPLES_ARB,
       msaa.int32,
       0
