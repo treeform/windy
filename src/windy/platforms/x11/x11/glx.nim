@@ -23,7 +23,11 @@ proc glXChooseVisual*(d: Display, screen: cint, attribList: ptr int32): ptr XVis
 proc glXCreateContext*(d: Display, vis: ptr XVisualInfo, shareList: GlxContext, direct: cint): GlxContext {.libglx.}
 proc glXDestroyContext*(d: Display, this: GlxContext) {.libglx.}
 
-proc glXMakeCurrent*(dpy: Display, drawable: Drawable, ctx: GlxContext) {.libglx.}
+proc glXMakeCurrent*(d: Display, drawable: Drawable, ctx: GlxContext) {.libglx.}
 proc glXGetCurrentContext*(): GlxContext {.libglx.}
 
-proc glXSwapBuffers*(dpy: Display, drawable: Drawable) {.libglx.}
+proc glXSwapBuffers*(d: Display, drawable: Drawable) {.libglx.}
+
+proc glXSwapIntervalEXT*(d: Display, drawable: Drawable, interval: cint) {.libglx.}
+proc glXSwapIntervalMESA*(interval: cint) {.libglx.}
+proc glXSwapIntervalSGI*(interval: cint) {.libglx.}

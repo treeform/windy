@@ -145,6 +145,17 @@ type
     clipMask*: Pixmap
     dashOffset*: cint
     dashes*: cchar
+  
+  XSizeHints* = object
+    flags*: clong
+    x*, y*: cint
+    width*, height*: cint
+    minWidth*, minHeight*: cint
+    maxWidth*, maxHeight*: cint
+    widthInc*, heightInc*: cint
+    minAspect*, maxAspect*: tuple[x, y: cint]
+    baseWidth*, baseHeight*: cint
+    winGravity*: cint
 
 const
   XIMPreeditArea* = 1 shl 0
@@ -164,6 +175,8 @@ const
 
 
 proc XOpenDisplay*(displayName: cstring): Display {.libx11.}
+
+proc XFree*(x: pointer) {.libx11.}
 
 proc XRaiseWindow*(d: Display, window: Window) {.libx11.}
 proc XLowerWindow*(d: Display, window: Window) {.libx11.}
@@ -198,8 +211,15 @@ proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: ci
 proc XSelectInput*(d: Display, window: Window, inputs: clong) {.libx11.}
 
 proc XChangeProperty*(
-  d: Display, window: Window, atom: Atom, kind: Atom,
-  align: cint, mode: PropMode, data: cstring, len: cint
+  d: Display, window: Window, property: Atom, kind: Atom,
+  format: cint, mode: PropMode, data: cstring, len: cint
+) {.libx11.}
+
+proc XGetWindowProperty*(
+  d: Display, window: Window, property: Atom,
+  offset: clong, len: clong, delete: bool, requiredKind: Atom,
+  kindReturn: ptr Atom, formatReturn: ptr cint, lenReturn: ptr culong,
+  bytesAfterReturn: ptr culong, dataReturn: ptr cstring
 ) {.libx11.}
 
 proc Xutf8SetWMProperties*(
@@ -223,3 +243,7 @@ proc XCreateGC*(d: Display, o: Drawable, flags: culong, gcv: ptr XGCValues): GC 
 proc XFreeGC*(d: Display, gc: GC) {.libx11.}
 
 proc XMatchVisualInfo*(d: Display, screen: cint, depth: cint, flags: cint, result: ptr XVisualInfo) {.libx11.}
+
+proc XSetTransientForHint*(d: Display, window: Window, root: Window) {.libx11.}
+
+proc XSetNormalHints*(d: Display, window: Window, hints: ptr XSizeHints) {.libx11.}

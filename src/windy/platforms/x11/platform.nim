@@ -1,8 +1,7 @@
-import ../../common, x11, os
+import ../../common, x11, os, sequtils
 
 type
-  PlatformWindow* = ref PlatformWindowObj
-  PlatformWindowObj = object
+  PlatformWindow* = ref object
     handle: Window
     ctx: GlxContext
     gc: GC
@@ -11,27 +10,19 @@ type
 
     closed*: bool
 
+  WmForDecoratedKind {.pure.} = enum
+    unsupported
+    motiv
+    kwm
+    other
+
 
 var
   initialized*: bool
   windows*: seq[PlatformWindow]
   display: Display
-
-
-proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
-  raise WindyError.newException("Error dealing with X11: " & $event.errorCode.Status)
-
-proc platformInit* =
-  if initialized:
-    raise WindyError.newException("Windy is already initialized")
-
-  XSetErrorHandler handleXError
-
-  display = XOpenDisplay(getEnv("DISPLAY"))
-  if display == nil:
-    raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
-  
-  initialized = true
+  decoratedAtom: Atom
+  wmForFramelessKind: WmForDecoratedKind
 
 
 proc atom[name: static string](): Atom =
@@ -40,6 +31,32 @@ proc atom[name: static string](): Atom =
   a
 
 template atom(name: static string): Atom = atom[name]()
+proc atomIfExist(name: string): Atom = display.XInternAtom(name, 1)
+
+
+proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
+  raise WindyError.newException("Error dealing with X11: " & $event.errorCode.Status)
+
+proc platformInit* =
+  if initialized: return # no need to raise error
+
+  XSetErrorHandler handleXError
+
+  display = XOpenDisplay(getEnv("DISPLAY"))
+  if display == nil:
+    raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
+  
+  wmForFramelessKind =
+    if (decoratedAtom = atomIfExist"_MOTIF_WM_HINTS"; decoratedAtom != 0):
+      WmForDecoratedKind.motiv
+    elif (decoratedAtom = atomIfExist"KWM_WIN_DECORATION"; decoratedAtom != 0):
+      WmForDecoratedKind.kwm
+    elif (decoratedAtom = atomIfExist"_WIN_HINTS"; decoratedAtom != 0):
+      WmForDecoratedKind.other
+    else:
+      WmForDecoratedKind.unsupported
+
+  initialized = true
 
 proc newXClientMessageEvent[T](
   window: Window,
@@ -70,7 +87,7 @@ proc newXClientMessageEvent[T](
     copyMem(result.xclient.data.addr, data[0].unsafeAddr, data.len * T.sizeof)
 
 
-proc `=destroy`(window: var PlatformWindowObj) =
+proc destroy(window: PlatformWindow) =
   if window.ic != nil:   XDestroyIC(window.ic)
   if window.im != nil:   XCloseIM(window.im)
   if window.gc != nil:   display.XFreeGC(window.gc)
@@ -88,33 +105,86 @@ proc makeContextCurrent*(window: PlatformWindow) =
 proc swapBuffers*(window: PlatformWindow) =
   display.glXSwapBuffers(window.handle)
 
+proc close*(window: PlatformWindow) =
+  if window.closed: return
+  var e = newXClientMessageEvent(window.handle, atom"WM_PROTOCOLS", [atom"WM_DELETE_WINDOW", CurrentTime])
+  display.XSendEvent(window.handle, 0, NoEventMask, e.addr)
+
+proc isOpen*(window: PlatformWindow): bool = not window.closed
+
 proc `title=`*(window: PlatformWindow, v: string) =
   display.XChangeProperty(window.handle, atom"_NET_WM_NAME", atom"UTF8_STRING", 8, pmReplace, v, v.len.cint)
   display.XChangeProperty(window.handle, atom"_NET_WM_ICON_NAME", atom"UTF8_STRING", 8, pmReplace, v, v.len.cint)
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
+proc `decorated=`*(window: PlatformWindow, v: bool) =
+  #TOFIX: size of window changes
+  case wmForFramelessKind
+  of WmForDecoratedKind.motiv:
+    type MWMHints = object
+      flags: culong
+      functions: culong
+      decorations: culong
+      input_mode: culong
+      status: culong
+    
+    var hints = MWMHints(flags: culong (if v: 0 else: 1) shl 1)
+    display.XChangeProperty(
+      window.handle, decoratedAtom, decoratedAtom, 32, pmReplace,
+      cast[ptr cuchar](hints.addr), MWMHints.sizeof div 4
+    )
+
+  of WmForDecoratedKind.kwm, WmForDecoratedKind.other:
+    var hints: clong = if v: 1 else: 0
+    display.XChangeProperty(
+      window.handle, decoratedAtom, decoratedAtom, 32, pmReplace,
+      cast[ptr cuchar](hints.addr), clong.sizeof div 4
+    )
+
+  else: display.XSetTransientForHint(window.handle, display.defaultRootWindow)
+
+proc `fullscreen=`*(window: PlatformWindow, v: bool) =
+  var e = newXClientMessageEvent(
+    window.handle,
+    atom"_NET_WM_STATE",
+    [Atom (if v: 1 else: 0), atom"_NET_WM_STATE_FULLSCREEN", CurrentTime] # 2 - switch, 1 - set true, 0 - set false
+  )
+  display.XSendEvent(window.handle, 0, SubstructureNotifyMask or SubstructureRedirectMask, e.addr)
+
 proc newPlatformWindow*(
   title: string,
-  x, y, w, h: int
+  w, h: int,
+  vsync: bool,
+  # window constructor can't set opengl version, msaa and stencilBits
+  # args mustn't set depthBits directly
+  resizable: bool,
+  fullscreen: bool,
+  transparent: bool,
+  decorated: bool,
+  # what means "floating"?
 ): PlatformWindow =
   new result
   let root = display.defaultRootWindow
   
-  var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
-  let vi = display.glXChooseVisual(0, attribList[0].addr)
+  var vi: XVisualInfo
+  if transparent:
+    display.XMatchVisualInfo(display.defaultScreen, 32, TrueColor, vi.addr)
+  else:
+    var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
+    vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
 
   let cmap = display.XCreateColormap(root, vi.visual, AllocNone)
   var swa = XSetWindowAttributes(colormap: cmap)
 
   result.handle = display.XCreateWindow(
     root,
-    x.cint, y.cint,
+    0, 0,
     w.cuint, h.cuint,
     0,
     vi.depth.cuint,
     InputOutput,
     vi.visual,
-    CwColormap or CwEventMask,
+    CwColormap or CwEventMask or CwBorderPixel or CwBackPixel,
     swa.addr
   )
 
@@ -122,6 +192,10 @@ proc newPlatformWindow*(
     ExposureMask or KeyPressMask or KeyReleaseMask or PointerMotionMask or ButtonPressMask or
     ButtonReleaseMask or StructureNotifyMask or EnterWindowMask or LeaveWindowMask or FocusChangeMask
   )
+
+  if fullscreen:
+    var v = [atom"_NET_WM_STATE_FULLSCREEN"]
+    display.XChangeProperty(result.handle, atom"_NET_WM_STATE", xaAtom, 32, pmAppend, cast[cstring](v[0].addr), v.len.cint)
 
   display.XMapWindow(result.handle)
   var wmProtocols = [atom"WM_DELETE_WINDOW"]
@@ -141,32 +215,38 @@ proc newPlatformWindow*(
   var gcv: XGCValues
   result.gc = display.XCreateGC(result.handle, GCForeground or GCBackground, gcv.addr)
 
-  result.ctx = display.glXCreateContext(vi, nil, 1)
+  result.ctx = display.glXCreateContext(vi.addr, nil, 1)
 
   if result.ctx == nil:
     raise newException(WindyError, "Error creating OpenGL context")
 
   result.title = title
+  if not decorated:
+    result.decorated = false
+  if not resizable:
+    var hints = XSizeHints(
+      flags: (1 shl 4) or (1 shl 5),
+      minWidth: w.cint, maxWidth: w.cint,
+      minHeight: h.cint, maxHeight: h.cint
+    )
+    display.XSetNormalHints(result.handle, hints.addr)
 
   hide result
   makeContextCurrent result
 
+  if vsync:
+    if glXSwapIntervalEXT != nil:
+      display.glXSwapIntervalEXT(result.handle, 1)
+    elif glXSwapIntervalMESA != nil:
+      glXSwapIntervalMESA(1)
+    elif glXSwapIntervalSGI != nil:
+      glXSwapIntervalSGI(1)
+    else:
+      raise newException(WindyError, "VSync is not supported")
+
   windows.add result
 
-proc newPlatformWindow*(
-  title: string,
-  width, height: int
-): PlatformWindow =
-  newPlatformWindow(title, 0, 0, width, height)
-
-proc isOpen*(window: PlatformWindow): bool = not window.closed
-
-proc close*(window: PlatformWindow) =
-  if window.closed: return
-  var e = newXClientMessageEvent(window.handle, atom"WM_PROTOCOLS", [atom"WM_DELETE_WINDOW", CurrentTime])
-  display.XSendEvent(window.handle, 0, NoEventMask, e.addr)
-
-proc pollEvents*(window: PlatformWindow) =
+proc pollEvents(window: PlatformWindow) =
   var ev: XEvent
   
   proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): bool {.cdecl.} =
@@ -178,6 +258,7 @@ proc pollEvents*(window: PlatformWindow) =
     of xeClientMessage:
       if ev.xclient.data.l[0] == clong atom"WM_DELETE_WINDOW":
         window.closed = true
+        return
 
     of xeMotion:
       #TODO: push event
@@ -224,3 +305,16 @@ proc pollEvents*(window: PlatformWindow) =
       discard
 
     else: discard
+
+proc platformPollEvents* =
+  let ws = windows
+  windows = @[]
+
+  for window in ws:
+    if window.isOpen:
+      windows.add window
+    else:
+      destroy window
+
+  for window in windows:
+    pollEvents window

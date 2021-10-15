@@ -15,11 +15,6 @@ type
 proc init*() {.raises: [WindyError]} =
   platformInit()
 
-proc pollEvents*() =
-  for window in windows:
-    window.pollEvents()
-
-
 proc newWindow*(
   title: string,
   w: int,
@@ -31,19 +26,30 @@ proc newWindow*(
   depthBits = 24,
   stencilBits = 8
 ): Window {.raises: [WindyError]} =
-  # resizeable, fullscreen, transparent, decorated, floating
+  # resizable, fullscreen, transparent, decorated, floating
   result = Window()
-  result.platform = newPlatformWindow(
-    title,
-    w,
-    h,
-    vsync,
-    openglMajorVersion,
-    openglMinorVersion,
-    msaa,
-    depthBits,
-    stencilBits
-  )
+  when defined(windows):
+    result.platform = newPlatformWindow(
+      title,
+      w,
+      h,
+      vsync,
+      openglMajorVersion,
+      openglMinorVersion,
+      msaa,
+      depthBits,
+      stencilBits
+    )
+  elif defined(linux):
+    result.platform = newPlatformWindow(
+      title,
+      w, h,
+      vsync,
+      true, # resizable
+      false, # fullscreen
+      false, # transparent
+      true, # decorated
+    )
 
 proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
   window.platform.makeContextCurrent()
@@ -62,6 +68,3 @@ proc `visible=`*(window: Window, visible: bool) =
     window.platform.show()
   else:
     window.platform.hide()
-
-proc isOpen*(window: Window): bool =
-  window.platform.isOpen
