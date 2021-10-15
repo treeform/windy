@@ -86,6 +86,7 @@ type
     piFormats: ptr int32,
     nNumFormats: ptr UINT
   ): BOOL {.stdcall, raises: [].}
+  wglSwapIntervalEXT* = proc(interval: int32): BOOL {.stdcall, raises: [].}
   PIXELFORMATDESCRIPTOR* {.pure.} = object
     nSize*: WORD
     nVersion*: WORD

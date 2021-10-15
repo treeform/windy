@@ -26,7 +26,7 @@ type
     hglrc: HGLRC
 
 var
-  initialized*: bool
+  initialized: bool
   windows*: seq[PlatformWindow]
   wglCreateContext: wglCreateContext
   wglDeleteContext: wglDeleteContext
@@ -36,6 +36,7 @@ var
   wglMakeCurrent: wglMakeCurrent
   wglCreateContextAttribsARB: wglCreateContextAttribsARB
   wglChoosePixelFormatARB: wglChoosePixelFormatARB
+  wglSwapIntervalEXT: wglSwapIntervalEXT
 
 proc wstr*(str: string): string =
   let wlen = MultiByteToWideChar(
@@ -187,6 +188,10 @@ proc loadOpenGL() =
     cast[wglChoosePixelFormatARB](
       wglGetProcAddress("wglChoosePixelFormatARB")
     )
+  wglSwapIntervalEXT =
+    cast[wglSwapIntervalEXT](
+      wglGetProcAddress("wglSwapIntervalEXT")
+    )
 
   discard wglMakeCurrent(hdc, 0)
   discard wglDeleteContext(hglrc)
@@ -207,6 +212,17 @@ proc platformInit*() =
   loadOpenGL()
   registerWindowClass(windowClassName, wndProc)
   initialized = true
+
+proc platformPollEvents*() =
+  var msg: MSG
+  while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
+    if msg.message == WM_QUIT:
+      for window in windows:
+        discard wndProc(window.hwnd, WM_CLOSE, 0, 0)
+      # app.quitRequested = true
+    else:
+      discard TranslateMessage(msg.addr)
+      discard DispatchMessageW(msg.addr)
 
 proc show*(window: PlatformWindow) =
   discard ShowWindow(window.hWnd, SW_SHOW)
@@ -308,6 +324,9 @@ proc newPlatformWindow*(
   result.hide()
 
   result.makeContextCurrent()
+
+  if wglSwapIntervalEXT(1) == 0:
+    raise newException(WindyError, "Error setting swap interval")
 
   windows.add(result)
 

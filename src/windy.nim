@@ -26,6 +26,9 @@ proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
 proc swapBuffers*(window: Window) {.raises: [WindyError]} =
   window.platform.swapBuffers()
 
+proc pollEvents*() =
+  platformPollEvents()
+
 proc `visible`*(window: Window): bool =
   discard
 
