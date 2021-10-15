@@ -86,6 +86,7 @@ type
     piFormats: ptr int32,
     nNumFormats: ptr UINT
   ): BOOL {.stdcall, raises: [].}
+  wglSwapIntervalEXT* = proc(interval: int32): BOOL {.stdcall, raises: [].}
   PIXELFORMATDESCRIPTOR* {.pure.} = object
     nSize*: WORD
     nVersion*: WORD
@@ -262,6 +263,8 @@ proc ShowWindow*(
   hWnd: HWND,
   nCmdShow: int32
 ): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc IsWindowVisible*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
 
 proc PeekMessageW*(
   lpMsg: LPMSG,
