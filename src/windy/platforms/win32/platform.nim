@@ -228,6 +228,18 @@ proc platformPollEvents*() =
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
 
+proc destroy(window: PlatformWindow) =
+  if window.hglrc != 0:
+    discard wglMakeCurrent(window.hdc, 0)
+    discard wglDeleteContext(window.hglrc)
+    window.hglrc = 0
+  if window.hdc != 0:
+    discard ReleaseDC(window.hWnd, window.hdc)
+    window.hdc = 0
+  if window.hWnd != 0:
+    discard DestroyWindow(window.hWnd)
+    window.hWnd = 0
+
 proc show*(window: PlatformWindow) =
   discard ShowWindow(window.hWnd, SW_SHOW)
 
@@ -259,83 +271,88 @@ proc newPlatformWindow*(
     w,
     h
   )
-  result.hdc = getDC(result.hWnd)
 
-  let pixelFormatAttribs = [
-    WGL_DRAW_TO_WINDOW_ARB.int32,
-    1,
-    WGL_SUPPORT_OPENGL_ARB,
-    1,
-    WGL_DOUBLE_BUFFER_ARB,
-    1,
-    WGL_ACCELERATION_ARB,
-    WGL_FULL_ACCELERATION_ARB,
-    WGL_PIXEL_TYPE_ARB,
-    WGL_TYPE_RGBA_ARB,
-    WGL_COLOR_BITS_ARB,
-    32,
-    WGL_DEPTH_BITS_ARB,
-    24,
-    WGL_STENCIL_BITS_ARB,
-    8,
-    0
-  ]
+  try:
+    result.hdc = getDC(result.hWnd)
 
-  var
-    pixelFormat: int32
-    numFormats: UINT
-  if wglChoosePixelFormatARB(
-    result.hdc,
-    pixelFormatAttribs[0].unsafeAddr,
-    nil,
-    1,
-    pixelFormat.addr,
-    numFormats.addr
-  ) == 0:
-    raise newException(WindyError, "Error choosing pixel format")
+    let pixelFormatAttribs = [
+      WGL_DRAW_TO_WINDOW_ARB.int32,
+      1,
+      WGL_SUPPORT_OPENGL_ARB,
+      1,
+      WGL_DOUBLE_BUFFER_ARB,
+      1,
+      WGL_ACCELERATION_ARB,
+      WGL_FULL_ACCELERATION_ARB,
+      WGL_PIXEL_TYPE_ARB,
+      WGL_TYPE_RGBA_ARB,
+      WGL_COLOR_BITS_ARB,
+      32,
+      WGL_DEPTH_BITS_ARB,
+      24,
+      WGL_STENCIL_BITS_ARB,
+      8,
+      0
+    ]
 
-  if numFormats == 0:
-    raise newException(WindyError, "No pixel format chosen")
+    var
+      pixelFormat: int32
+      numFormats: UINT
+    if wglChoosePixelFormatARB(
+      result.hdc,
+      pixelFormatAttribs[0].unsafeAddr,
+      nil,
+      1,
+      pixelFormat.addr,
+      numFormats.addr
+    ) == 0:
+      raise newException(WindyError, "Error choosing pixel format")
 
-  var pfd: PIXELFORMATDESCRIPTOR
-  if DescribePixelFormat(
-    result.hdc,
-    pixelFormat,
-    sizeof(PIXELFORMATDESCRIPTOR).UINT,
-    pfd.addr
-  ) == 0:
-    raise newException(WindyError, "Error describing pixel format")
+    if numFormats == 0:
+      raise newException(WindyError, "No pixel format chosen")
 
-  if SetPixelFormat(result.hdc, pixelFormat, pfd.addr) == 0:
-    raise newException(WindyError, "Error setting pixel format")
+    var pfd: PIXELFORMATDESCRIPTOR
+    if DescribePixelFormat(
+      result.hdc,
+      pixelFormat,
+      sizeof(PIXELFORMATDESCRIPTOR).UINT,
+      pfd.addr
+    ) == 0:
+      raise newException(WindyError, "Error describing pixel format")
 
-  let contextAttribs = [
-    WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
-    openglMajorVersion.int32,
-    WGL_CONTEXT_MINOR_VERSION_ARB,
-    openglMinorVersion.int32,
-    WGL_CONTEXT_PROFILE_MASK_ARB,
-    WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-    WGL_CONTEXT_FLAGS_ARB,
-    WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-    0
-  ]
+    if SetPixelFormat(result.hdc, pixelFormat, pfd.addr) == 0:
+      raise newException(WindyError, "Error setting pixel format")
 
-  result.hglrc = wglCreateContextAttribsARB(
-    result.hdc,
-    0,
-    contextAttribs[0].unsafeAddr
-  )
-  if result.hglrc == 0:
-    raise newException(WindyError, "Error creating OpenGL context")
+    let contextAttribs = [
+      WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
+      openglMajorVersion.int32,
+      WGL_CONTEXT_MINOR_VERSION_ARB,
+      openglMinorVersion.int32,
+      WGL_CONTEXT_PROFILE_MASK_ARB,
+      WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+      WGL_CONTEXT_FLAGS_ARB,
+      WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+      0
+    ]
 
-  # The first call to ShowWindow may ignore the parameter so do an initial
-  # call to clear that behavior.
-  result.hide()
+    result.hglrc = wglCreateContextAttribsARB(
+      result.hdc,
+      0,
+      contextAttribs[0].unsafeAddr
+    )
+    if result.hglrc == 0:
+      raise newException(WindyError, "Error creating OpenGL context")
 
-  result.makeContextCurrent()
+    # The first call to ShowWindow may ignore the parameter so do an initial
+    # call to clear that behavior.
+    result.hide()
 
-  if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
-    raise newException(WindyError, "Error setting swap interval")
+    result.makeContextCurrent()
 
-  windows.add(result)
+    if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
+      raise newException(WindyError, "Error setting swap interval")
+
+    windows.add(result)
+  except WindyError as e:
+    result.destroy()
+    raise e
