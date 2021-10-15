@@ -21,9 +21,9 @@ proc newWindow*(
   vsync = true,
   openglMajorVersion = 4,
   openglMinorVersion = 1,
-  msaa = msaa8x,
-  depthBits = 0,
-  stencilBits = 0
+  msaa = msaaDisabled,
+  depthBits = 24,
+  stencilBits = 8
 ): Window {.raises: [WindyError]} =
   # resizeable, fullscreen, transparent, decorated, floating
   result = Window()
