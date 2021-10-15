@@ -18,6 +18,10 @@ const
   WGL_CONTEXT_MINOR_VERSION_ARB = 0x2092
   WGL_CONTEXT_PROFILE_MASK_ARB = 0x9126
   WGL_CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001
+  # WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB = 0x00000002
+  WGL_CONTEXT_FLAGS_ARB = 0x2094
+  # WGL_CONTEXT_DEBUG_BIT_ARB = 0x0001
+  WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB = 0x0002
 
 type
   PlatformWindow* = ref object
@@ -80,16 +84,16 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
     raise newException(WindyError, "Error registering window class")
 
 proc createWindow(
-  windowClassName, windowTitle: string, x, y, w, h: int
+  windowClassName, title: string, x, y, w, h: int
 ): HWND =
   let
     windowClassName = windowClassName.wstr()
-    windowTitle = windowTitle.wstr()
+    title = title.wstr()
 
   result = CreateWindowExW(
     WS_EX_APPWINDOW,
     cast[ptr WCHAR](windowClassName[0].unsafeAddr),
-    cast[ptr WCHAR](windowTitle[0].unsafeAddr),
+    cast[ptr WCHAR](title[0].unsafeAddr),
     WS_OVERLAPPEDWINDOW,
     x.int32,
     y.int32,
@@ -238,28 +242,32 @@ proc swapBuffers*(window: PlatformWindow) =
     raise newException(WindyError, "Error swapping buffers")
 
 proc newPlatformWindow*(
-  windowTitle: string,
-  x, y, w, h: int
+  title: string,
+  w: int,
+  h: int,
+  fullscreen: bool,
+  vsync: bool,
+  openglMajorVersion: int,
+  openglMinorVersion: int
 ): PlatformWindow =
   result = PlatformWindow()
   result.hWnd = createWindow(
     windowClassName,
-    windowTitle,
-    x,
-    y,
+    title,
+    CW_USEDEFAULT,
+    CW_USEDEFAULT,
     w,
     h
   )
   result.hdc = getDC(result.hWnd)
 
-  const GL_TRUE = 1
   let pixelFormatAttribs = [
     WGL_DRAW_TO_WINDOW_ARB.int32,
-    GL_TRUE,
+    1,
     WGL_SUPPORT_OPENGL_ARB,
-    GL_TRUE,
+    1,
     WGL_DOUBLE_BUFFER_ARB,
-    GL_TRUE,
+    1,
     WGL_ACCELERATION_ARB,
     WGL_FULL_ACCELERATION_ARB,
     WGL_PIXEL_TYPE_ARB,
@@ -303,11 +311,13 @@ proc newPlatformWindow*(
 
   let contextAttribs = [
     WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
-    4,
+    openglMajorVersion.int32,
     WGL_CONTEXT_MINOR_VERSION_ARB,
-    1,
+    openglMinorVersion.int32,
     WGL_CONTEXT_PROFILE_MASK_ARB,
     WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+    WGL_CONTEXT_FLAGS_ARB,
+    WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
     0
   ]
 
@@ -325,13 +335,7 @@ proc newPlatformWindow*(
 
   result.makeContextCurrent()
 
-  if wglSwapIntervalEXT(1) == 0:
+  if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
     raise newException(WindyError, "Error setting swap interval")
 
   windows.add(result)
-
-proc newPlatformWindow*(
-  windowTitle: string,
-  width, height: int
-): PlatformWindow =
-  newPlatformWindow(windowTitle, CW_USEDEFAULT, CW_USEDEFAULT, width, height)

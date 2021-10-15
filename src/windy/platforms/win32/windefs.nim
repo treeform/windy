@@ -264,6 +264,8 @@ proc ShowWindow*(
   nCmdShow: int32
 ): BOOL {.importc, stdcall, dynlib: "User32".}
 
+proc IsWindowVisible*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+
 proc PeekMessageW*(
   lpMsg: LPMSG,
   hWnd: HWND,
