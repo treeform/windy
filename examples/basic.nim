@@ -26,5 +26,5 @@ proc display() =
   window.swapBuffers()
 
 while true:
-  # pollEvents()
+  pollEvents()
   display()

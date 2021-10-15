@@ -9,15 +9,6 @@ proc takeError(): string =
 proc checkError(): bool =
   result = lastError != nil
 
-proc isVisible(window: Window): bool =
-  window.visible
-
-proc show(window: Window) =
-  window.visible = true
-
-proc hide(window: Window) =
-  window.visible = false
-
 exportProcs:
   checkError
   takeError
@@ -26,9 +17,6 @@ exportRefObject Window:
   constructor:
     newWindow
   procs:
-    show
-    hide
-    isVisible
     makeContextCurrent
     swapBuffers
 

@@ -15,16 +15,38 @@ proc init*() {.raises: [WindyError]} =
   platformInit()
 
 proc newWindow*(
-  windowTitle: string, width, height: int
+  title: string,
+  w: int,
+  h: int,
+  vsync = true,
+  openglMajorVersion = 4,
+  openglMinorVersion = 1,
+  msaa = msaa8x,
+  depthBits = 0,
+  stencilBits = 0
 ): Window {.raises: [WindyError]} =
+  # resizeable, fullscreen, transparent, decorated, floating
   result = Window()
-  result.platform = newPlatformWindow(windowTitle, width, height)
+  result.platform = newPlatformWindow(
+    title,
+    w,
+    h,
+    vsync,
+    openglMajorVersion,
+    openglMinorVersion,
+    msaa,
+    depthBits,
+    stencilBits
+  )
 
 proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
   window.platform.makeContextCurrent()
 
 proc swapBuffers*(window: Window) {.raises: [WindyError]} =
   window.platform.swapBuffers()
+
+proc pollEvents*() =
+  platformPollEvents()
 
 proc `visible`*(window: Window): bool =
   discard
