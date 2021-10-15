@@ -13,6 +13,7 @@ const
   WGL_STENCIL_BITS_ARB = 0x2023
   WGL_FULL_ACCELERATION_ARB = 0x2027
   WGL_TYPE_RGBA_ARB = 0x202B
+  WGL_SAMPLES_ARB = 0x2042
 
   WGL_CONTEXT_MAJOR_VERSION_ARB = 0x2091
   WGL_CONTEXT_MINOR_VERSION_ARB = 0x2092
@@ -257,11 +258,16 @@ proc newPlatformWindow*(
   title: string,
   w: int,
   h: int,
+  resizeable: bool,
   fullscreen: bool,
   vsync: bool,
   openglMajorVersion: int,
-  openglMinorVersion: int
+  openglMinorVersion: int,
+  msaa: MSAA
 ): PlatformWindow =
+
+  # resizeable, fullscreen
+
   result = PlatformWindow()
   result.hWnd = createWindow(
     windowClassName,
@@ -292,6 +298,8 @@ proc newPlatformWindow*(
       24,
       WGL_STENCIL_BITS_ARB,
       8,
+      WGL_SAMPLES_ARB,
+      msaa.int32,
       0
     ]
 

@@ -18,20 +18,24 @@ proc newWindow*(
   title: string,
   w: int,
   h: int,
+  resizeable = true,
   fullscreen = false,
   vsync = true,
   openglMajorVersion = 4,
-  openglMinorVersion = 1
+  openglMinorVersion = 1,
+  msaa = msaa8x
 ): Window {.raises: [WindyError]} =
   result = Window()
   result.platform = newPlatformWindow(
     title,
     w,
     h,
+    resizeable,
     fullscreen,
     vsync,
     openglMajorVersion,
-    openglMinorVersion
+    openglMinorVersion,
+    msaa
   )
 
 proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
