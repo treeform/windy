@@ -258,8 +258,6 @@ proc newPlatformWindow*(
   title: string,
   w: int,
   h: int,
-  resizeable: bool,
-  fullscreen: bool,
   vsync: bool,
   openglMajorVersion: int,
   openglMinorVersion: int,
@@ -267,9 +265,6 @@ proc newPlatformWindow*(
   depthBits: int,
   stencilBits: int
 ): PlatformWindow =
-
-  # resizeable, fullscreen, transparent, decorated, floating
-
   result = PlatformWindow()
   result.hWnd = createWindow(
     windowClassName,

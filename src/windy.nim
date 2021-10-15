@@ -18,8 +18,6 @@ proc newWindow*(
   title: string,
   w: int,
   h: int,
-  resizeable = true,
-  fullscreen = false,
   vsync = true,
   openglMajorVersion = 4,
   openglMinorVersion = 1,
@@ -27,13 +25,12 @@ proc newWindow*(
   depthBits = 0,
   stencilBits = 0
 ): Window {.raises: [WindyError]} =
+  # resizeable, fullscreen, transparent, decorated, floating
   result = Window()
   result.platform = newPlatformWindow(
     title,
     w,
     h,
-    resizeable,
-    fullscreen,
     vsync,
     openglMajorVersion,
     openglMinorVersion,
