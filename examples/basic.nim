@@ -23,7 +23,6 @@ proc display() =
   bxy.drawRect(rect(vec2(0, 0), windowSize.vec2), color(1, 1, 1, 1))
   bxy.drawRect(rect(vec2(100, 100), vec2(200, 200)), color(1, 0, 1, 1))
   bxy.endFrame()
-
   window.swapBuffers()
 
 while true:
