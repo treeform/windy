@@ -7,21 +7,17 @@
 
 
 @class View;
-static CVReturn GlobalDisplayLinkCallback(CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*, CVOptionFlags, CVOptionFlags*, void*);
 
 @interface View : NSOpenGLView <NSWindowDelegate> {
 @public
 	CVDisplayLinkRef displayLink;
 	bool running;
 	NSRect windowRect;
-	NSRecursiveLock* appLock;
 }
 @end
 
 @implementation View
 - (id) initWithFrame: (NSRect) frame {
-
-    printf("initWithFrame\n");
 
 	running = true;
 
@@ -70,19 +66,12 @@ static CVReturn GlobalDisplayLinkCallback(CVDisplayLinkRef, const CVTimeStamp*, 
 	}
 
 	self = [super initWithFrame:frame pixelFormat:[pf autorelease]];
-	appLock = [[NSRecursiveLock alloc] init];
 
 	return self;
 }
 
 - (void) prepareOpenGL {
-
-    printf("prepareOpenGL\n");
-
 	[super prepareOpenGL];
-
-	[[self window] setLevel: NSNormalWindowLevel];
-	[[self window] makeKeyAndOrderFront: self];
 
 	// Make all the OpenGL calls to setup rendering and build the necessary rendering objects
 	[[self openGLContext] makeCurrentContext];
@@ -92,9 +81,6 @@ static CVReturn GlobalDisplayLinkCallback(CVDisplayLinkRef, const CVTimeStamp*, 
 
 	// Create a display link capable of being used with all active displays
 	CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
-
-	// Set the renderer output callback function
-	CVDisplayLinkSetOutputCallback(displayLink, &GlobalDisplayLinkCallback, self);
 
 	CGLContextObj cglContext = (CGLContextObj)[[self openGLContext] CGLContextObj];
 	CGLPixelFormatObj cglPixelFormat = (CGLPixelFormatObj)[[self pixelFormat] CGLPixelFormatObj];
@@ -114,115 +100,72 @@ static CVReturn GlobalDisplayLinkCallback(CVDisplayLinkRef, const CVTimeStamp*, 
 }
 
 - (void)mouseMoved:(NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	// NSLog(@"mouseMoved: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void) mouseDragged: (NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	// NSLog(@"mouseDragged: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void)scrollWheel: (NSEvent*) event  {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	NSLog(@"Mouse wheel at: %lf, %lf. Delta: %lf", point.x, point.y, [event deltaY]);
-	[appLock unlock];
 }
 
 - (void) mouseDown: (NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	NSLog(@"Left mouse down: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void) mouseUp: (NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	NSLog(@"Left mouse up: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void) rightMouseDown: (NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	NSLog(@"Right mouse down: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void) rightMouseUp: (NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	NSLog(@"Right mouse up: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void)otherMouseDown: (NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	NSLog(@"Middle mouse down: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void)otherMouseUp: (NSEvent*) event {
-	[appLock lock];
 	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
 	NSLog(@"Middle mouse up: %lf, %lf", point.x, point.y);
-	[appLock unlock];
 }
 
 - (void) mouseEntered: (NSEvent*)event {
-	[appLock lock];
 	NSLog(@"Mouse entered");
-	[appLock unlock];
 }
 
 - (void) mouseExited: (NSEvent*)event {
-	[appLock lock];
 	NSLog(@"Mouse left");
-	[appLock unlock];
 }
 
 - (void) keyDown: (NSEvent*) event {
-	[appLock lock];
 	if ([event isARepeat] == NO) {
 		NSLog(@"Key down: %d", [event keyCode]);
 	}
-	[appLock unlock];
 }
 
 - (void) keyUp: (NSEvent*) event {
-	[appLock lock];
 	NSLog(@"Key up: %d", [event keyCode]);
-	[appLock unlock];
 }
 
-// Update
-- (CVReturn) getFrameForTime:(const CVTimeStamp*)outputTime {
-	[appLock lock];
-
-	[[self openGLContext] makeCurrentContext];
-	CGLLockContext((CGLContextObj)[[self openGLContext] CGLContextObj]);
-
-	// NSLog(@"Update");
-
-	CGLFlushDrawable((CGLContextObj)[[self openGLContext] CGLContextObj]);
-    CGLUnlockContext((CGLContextObj)[[self openGLContext] CGLContextObj]);
-
-	[appLock unlock];
-
-	return kCVReturnSuccess;
-}
 
 // Resize
 - (void)windowDidResize:(NSNotification*)notification {
 	NSSize size = [ [ self.window contentView ] frame ].size;
-	[appLock lock];
 	[[self openGLContext] makeCurrentContext];
 	CGLLockContext((CGLContextObj)[[self openGLContext] CGLContextObj]);
 	NSLog(@"Window resize: %lf, %lf", size.width, size.height);
@@ -232,19 +175,14 @@ static CVReturn GlobalDisplayLinkCallback(CVDisplayLinkRef, const CVTimeStamp*, 
 	glViewport(0, 0, windowRect.size.width, windowRect.size.height);
 	// End temp
 	CGLUnlockContext((CGLContextObj)[[self openGLContext] CGLContextObj]);
-	[appLock unlock];
 }
 
 - (void)resumeDisplayRenderer  {
-    [appLock lock];
     CVDisplayLinkStop(displayLink);
-    [appLock unlock];
 }
 
 - (void)haltDisplayRenderer  {
-    [appLock lock];
     CVDisplayLinkStop(displayLink);
-    [appLock unlock];
 }
 
 // Terminate window when the red X is pressed
@@ -252,13 +190,11 @@ static CVReturn GlobalDisplayLinkCallback(CVDisplayLinkRef, const CVTimeStamp*, 
 	if (running) {
 		running = false;
 
-		[appLock lock];
 		NSLog(@"Cleanup");
 
 		CVDisplayLinkStop(displayLink);
 		CVDisplayLinkRelease(displayLink);
 
-		[appLock unlock];
 	}
 
 	[NSApp terminate:self];
@@ -266,22 +202,9 @@ static CVReturn GlobalDisplayLinkCallback(CVDisplayLinkRef, const CVTimeStamp*, 
 
 // Cleanup
 - (void) dealloc {
-	[appLock release];
 	[super dealloc];
 }
 @end
-
-static CVReturn GlobalDisplayLinkCallback(
-    CVDisplayLinkRef displayLink,
-    const CVTimeStamp* now,
-    const CVTimeStamp* outputTime,
-    CVOptionFlags flagsIn,
-    CVOptionFlags* flagsOut,
-    void* displayLinkContext
-) {
-	CVReturn result = [(View*)displayLinkContext getFrameForTime:outputTime];
-	return result;
-}
 
 void innerInit() {
     [NSApplication sharedApplication];
@@ -312,13 +235,6 @@ void innerSwapBuffers(View* view) {
     CGLFlushDrawable((CGLContextObj)[[view openGLContext] CGLContextObj]);
 }
 
-void innerLock(View* view) {
-    [view->appLock lock];
-}
-
-void innerUnlock(View* view) {
-    [view->appLock unlock];
-}
 
 void innerNewPlatformWindow(
     char* utf8Title,
@@ -402,5 +318,4 @@ void innerNewPlatformWindow(
 
     windowRet[0] = window;
     viewRet[0] = view;
-
 }

@@ -67,9 +67,3 @@ proc `visible=`*(window: Window, visible: bool) =
     window.platform.show()
   else:
     window.platform.hide()
-
-proc lock*(window: Window) =
-  window.platform.lock()
-
-proc unlock*(window: Window) =
-  window.platform.unlock()

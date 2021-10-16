@@ -21,8 +21,6 @@ proc innerNewPlatformWindow(
 proc innerPollEvents() {.importc.}
 proc innerMakeContextCurrent(viewPtr: pointer) {.importc.}
 proc innerSwapBuffers(viewPtr: pointer) {.importc.}
-proc innerLock(viewPtr: pointer) {.importc.}
-proc innerUnlock(viewPtr: pointer) {.importc.}
 
 proc platformInit*() =
   innerInit()
@@ -55,9 +53,3 @@ proc swapBuffers*(window: PlatformWindow) =
 
 proc platformPollEvents*() =
   innerPollEvents()
-
-proc lock*(window: PlatformWindow) =
-  innerLock(window.viewPtr)
-
-proc unlock*(window: PlatformWindow) =
-  innerUnlock(window.viewPtr)
