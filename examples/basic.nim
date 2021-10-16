@@ -19,11 +19,16 @@ echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGU
 let bxy = newBoxy()
 
 proc display() =
+
+  window.lock()
+
   bxy.beginFrame(windowSize)
   bxy.drawRect(rect(vec2(0, 0), windowSize.vec2), color(1, 1, 1, 1))
   bxy.drawRect(rect(vec2(100, 100), vec2(200, 200)), color(1, 0, 1, 1))
   bxy.endFrame()
+
   window.swapBuffers()
+  window.unlock()
 
 while true:
   pollEvents()

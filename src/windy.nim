@@ -4,6 +4,8 @@ export common
 
 when defined(windows):
   import windy/platforms/win32/platform
+elif defined(macosx):
+  import windy/platforms/macos/platform
 elif defined(linux):
   import windy/platforms/x11/platform
 
@@ -27,23 +29,32 @@ proc newWindow*(
 ): Window {.raises: [WindyError]} =
   # resizeable, fullscreen, transparent, decorated, floating
   result = Window()
-  result.platform = newPlatformWindow(
-    title,
-    w,
-    h,
-    vsync,
-    openglMajorVersion,
-    openglMinorVersion,
-    msaa,
-    depthBits,
-    stencilBits
-  )
+  try:
+    result.platform = newPlatformWindow(
+      title,
+      w,
+      h,
+      vsync,
+      openglMajorVersion,
+      openglMinorVersion,
+      msaa,
+      depthBits,
+      stencilBits
+    )
+  except:
+    raise newException(WindyError, "Creating native window failed: " & getCurrentExceptionMsg())
 
 proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
   window.platform.makeContextCurrent()
 
 proc swapBuffers*(window: Window) {.raises: [WindyError]} =
   window.platform.swapBuffers()
+
+proc show*(window: PlatformWindow) =
+  discard
+
+proc hide*(window: PlatformWindow) =
+  discard
 
 proc pollEvents*() =
   platformPollEvents()
@@ -56,3 +67,9 @@ proc `visible=`*(window: Window, visible: bool) =
     window.platform.show()
   else:
     window.platform.hide()
+
+proc lock*(window: Window) =
+  window.platform.lock()
+
+proc unlock*(window: Window) =
+  window.platform.unlock()
