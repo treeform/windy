@@ -4,6 +4,8 @@ export common
 
 when defined(windows):
   import windy/platforms/win32/platform
+elif defined(macosx):
+  import windy/platforms/macos/platform
 elif defined(linux):
   import windy/platforms/x11/platform
 
@@ -28,34 +30,43 @@ proc newWindow*(
 ): Window {.raises: [WindyError]} =
   # resizable, fullscreen, transparent, decorated, floating
   result = Window()
-  when defined(windows):
-    result.platform = newPlatformWindow(
-      title,
-      w,
-      h,
-      vsync,
-      openglMajorVersion,
-      openglMinorVersion,
-      msaa,
-      depthBits,
-      stencilBits
-    )
-  elif defined(linux):
-    result.platform = newPlatformWindow(
-      title,
-      w, h,
-      vsync,
-      true, # resizable
-      false, # fullscreen
-      false, # transparent
-      true, # decorated
-    )
+  try:
+    when defined(windows) or defined(macosx):
+      result.platform = newPlatformWindow(
+        title,
+        w,
+        h,
+        vsync,
+        openglMajorVersion,
+        openglMinorVersion,
+        msaa,
+        depthBits,
+        stencilBits
+      )
+    elif defined(linux):
+      result.platform = newPlatformWindow(
+        title,
+        w, h,
+        vsync,
+        true, # resizable
+        false, # fullscreen
+        false, # transparent
+        true, # decorated
+      )
+  except:
+    raise newException(WindyError, "Creating native window failed: " & getCurrentExceptionMsg())
 
 proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
   window.platform.makeContextCurrent()
 
 proc swapBuffers*(window: Window) {.raises: [WindyError]} =
   window.platform.swapBuffers()
+
+proc show*(window: PlatformWindow) =
+  discard
+
+proc hide*(window: PlatformWindow) =
+  discard
 
 proc pollEvents*() =
   platformPollEvents()
