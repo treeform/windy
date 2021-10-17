@@ -6,6 +6,7 @@ license     = "MIT"
 srcDir = "src"
 
 requires "nim >= 1.4.8"
+requires "vmath >= 1.1.0"
 
 task bindings, "Generate bindings":
 

@@ -14,6 +14,12 @@ exportProcs:
   takeError
 
 exportRefObject Window:
+  fields:
+    visible
+    decorated
+    resizable
+    size
+    pos
   constructor:
     newWindow
   procs:
@@ -22,6 +28,7 @@ exportRefObject Window:
 
 exportProcs:
   init
+  pollEvents
 
 writeFiles("bindings/generated", "Windy")
 
