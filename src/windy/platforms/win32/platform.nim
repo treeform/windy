@@ -1,7 +1,10 @@
-import ../../common, windefs
+import ../../common, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
+  defaultScreenDpi = 96
+  decoratedWindowStyle = WS_OVERLAPPEDWINDOW
+  undecoratedWindowStyle = WS_POPUP
 
   WGL_DRAW_TO_WINDOW_ARB = 0x2001
   WGL_ACCELERATION_ARB = 0x2003
@@ -31,8 +34,6 @@ type
     hglrc: HGLRC
 
 var
-  initialized: bool
-  windows*: seq[PlatformWindow]
   wglCreateContext: wglCreateContext
   wglDeleteContext: wglDeleteContext
   wglGetProcAddress: wglGetProcAddress
@@ -42,6 +43,13 @@ var
   wglCreateContextAttribsARB: wglCreateContextAttribsARB
   wglChoosePixelFormatARB: wglChoosePixelFormatARB
   wglSwapIntervalEXT: wglSwapIntervalEXT
+  SetProcessDpiAwarenessContext: SetProcessDpiAwarenessContext
+  GetDpiForWindow: GetDpiForWindow
+  AdjustWindowRectExForDpi: AdjustWindowRectExForDpi
+
+var
+  initialized: bool
+  windows*: seq[PlatformWindow]
 
 proc wstr*(str: string): string =
   let wlen = MultiByteToWideChar(
@@ -84,22 +92,34 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   if RegisterClassExW(wc.addr) == 0:
     raise newException(WindyError, "Error registering window class")
 
-proc createWindow(
-  windowClassName, title: string, x, y, w, h: int
-): HWND =
+proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   let
     windowClassName = windowClassName.wstr()
     title = title.wstr()
+
+  var size = size
+  if size != ivec2(CW_USEDEFAULT, CW_USEDEFAULT):
+    # Adjust the window creation size for window styles (border, etc)
+    var rect = Rect(top: 0, left: 0, right: size.x, bottom: size.y)
+    discard AdjustWindowRectExForDpi(
+      rect.addr,
+      decoratedWindowStyle,
+      0,
+      WS_EX_APPWINDOW,
+      defaultScreenDpi
+    )
+    size.x = rect.right - rect.left
+    size.y = rect.bottom - rect.top
 
   result = CreateWindowExW(
     WS_EX_APPWINDOW,
     cast[ptr WCHAR](windowClassName[0].unsafeAddr),
     cast[ptr WCHAR](title[0].unsafeAddr),
-    WS_OVERLAPPEDWINDOW,
-    x.int32,
-    y.int32,
-    w.int32,
-    h.int32,
+    decoratedWindowStyle,
+    CW_USEDEFAULT,
+    CW_USEDEFAULT,
+    size.x,
+    size.y,
     0,
     0,
     GetModuleHandleW(nil),
@@ -155,10 +175,7 @@ proc loadOpenGL() =
     hWnd = createWindow(
       dummyWindowClassName,
       dummyWindowClassName,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT
+      ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
     )
     hdc = getDC(hWnd)
 
@@ -203,17 +220,35 @@ proc loadOpenGL() =
   discard ReleaseDC(hWnd, hdc)
   discard DestroyWindow(hWnd)
 
+proc loadLibraries() =
+  let user32 = LoadLibraryA("user32.dll")
+  if user32 == 0:
+    raise newException(WindyError, "Error loading user32.dll")
+
+  SetProcessDpiAwarenessContext = cast[SetProcessDpiAwarenessContext](
+    GetProcAddress(user32, "SetProcessDpiAwarenessContext")
+  )
+  GetDpiForWindow = cast[GetDpiForWindow](
+    GetProcAddress(user32, "GetDpiForWindow")
+  )
+  AdjustWindowRectExForDpi = cast[AdjustWindowRectExForDpi](
+    GetProcAddress(user32, "AdjustWindowRectExForDpi")
+  )
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
   wParam: WPARAM,
   lParam: LPARAM
 ): LRESULT {.stdcall.} =
+  # echo wmEventName(uMsg)
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
 proc platformInit*() =
   if initialized:
     raise newException(WindyError, "Windy is already initialized")
+  loadLibraries()
+  discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
   registerWindowClass(windowClassName, wndProc)
   initialized = true
@@ -241,10 +276,10 @@ proc destroy(window: PlatformWindow) =
     discard DestroyWindow(window.hWnd)
     window.hWnd = 0
 
-proc show*(window: PlatformWindow) =
+proc show(window: PlatformWindow) =
   discard ShowWindow(window.hWnd, SW_SHOW)
 
-proc hide*(window: PlatformWindow) =
+proc hide(window: PlatformWindow) =
   discard ShowWindow(window.hWnd, SW_HIDE)
 
 proc makeContextCurrent*(window: PlatformWindow) =
@@ -256,8 +291,7 @@ proc swapBuffers*(window: PlatformWindow) =
 
 proc newPlatformWindow*(
   title: string,
-  w: int,
-  h: int,
+  size: IVec2,
   vsync: bool,
   openglMajorVersion: int,
   openglMinorVersion: int,
@@ -269,10 +303,7 @@ proc newPlatformWindow*(
   result.hWnd = createWindow(
     windowClassName,
     title,
-    CW_USEDEFAULT,
-    CW_USEDEFAULT,
-    w,
-    h
+    size
   )
 
   try:
@@ -359,5 +390,97 @@ proc newPlatformWindow*(
 
     windows.add(result)
   except WindyError as e:
-    result.destroy()
+    destroy result
     raise e
+
+proc visible*(window: PlatformWindow): bool =
+  IsWindowVisible(window.hWnd) != 0
+
+proc `visible=`*(window: PlatformWindow, visible: bool) =
+  if visible:
+    window.show()
+  else:
+    window.hide()
+
+proc decorated*(window: PlatformWindow): bool =
+  let style = GetWindowLongW(window.hWnd, GWL_STYLE)
+  (style and WS_BORDER) != 0
+
+proc `decorated=`*(window: PlatformWindow, decorated: bool) =
+  var style: DWORD
+  if decorated:
+    style = decoratedWindowStyle
+  else:
+    style = undecoratedWindowStyle
+
+  if window.visible:
+    style = style or WS_VISIBLE
+
+  discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
+
+proc resizable*(window: PlatformWindow): bool =
+  let style = GetWindowLongW(window.hWnd, GWL_STYLE)
+  (style and WS_THICKFRAME) != 0
+
+proc `resizable=`*(window: PlatformWindow, resizable: bool) =
+  if not window.decorated:
+    return
+
+  var style = decoratedWindowStyle.DWORD
+  if resizable:
+    style = style or (WS_MAXIMIZEBOX or WS_THICKFRAME)
+  else:
+    style = style and not (WS_MAXIMIZEBOX or WS_THICKFRAME)
+
+  if window.visible:
+    style = style or WS_VISIBLE
+
+  discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
+
+proc size*(window: PlatformWindow): IVec2 =
+  var rect: RECT
+  discard GetClientRect(window.hWnd, rect.addr)
+  ivec2(rect.right, rect.bottom)
+
+proc `size=`*(window: PlatformWindow, size: IVec2) =
+  var rect = RECT(top: 0, left: 0, right: size.x, bottom: size.y)
+  discard AdjustWindowRectExForDpi(
+    rect.addr,
+    decoratedWindowStyle,
+    0,
+    WS_EX_APPWINDOW,
+    GetDpiForWindow(window.hWnd)
+  )
+  discard SetWindowPos(
+    window.hWnd,
+    HWND_TOP,
+    0,
+    0,
+    rect.right - rect.left,
+    rect.bottom - rect.top,
+    SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOMOVE
+  )
+
+proc pos*(window: PlatformWindow): IVec2 =
+  var pos: POINT
+  discard ClientToScreen(window.hWnd, pos.addr)
+  ivec2(pos.x, pos.y)
+
+proc `pos=`*(window: PlatformWindow, pos: IVec2) =
+  var rect = RECT(top: pos.x, left: pos.y, bottom: pos.x, right: pos.y)
+  discard AdjustWindowRectExForDpi(
+    rect.addr,
+    decoratedWindowStyle,
+    0,
+    WS_EX_APPWINDOW,
+    GetDpiForWindow(window.hWnd)
+  )
+  discard SetWindowPos(
+    window.hWnd,
+    HWND_TOP,
+    rect.left,
+    rect.top,
+    0,
+    0,
+    SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOSIZE
+  )

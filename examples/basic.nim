@@ -4,7 +4,7 @@ init()
 
 let
   windowSize = ivec2(1280, 800)
-  window = newWindow("Windy + Boxy", windowSize.x, windowSize.y)
+  window = newWindow("Windy + Boxy", windowSize)
 
 window.makeContextCurrent()
 loadExtensions()
