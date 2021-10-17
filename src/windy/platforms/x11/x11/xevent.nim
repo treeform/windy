@@ -3,10 +3,47 @@ import x, xlib
 {.pragma: libx11, cdecl, dynlib: libX11, importc.}
 
 type
-  IfEventProc* = proc (d: Display, event: ptr XEvent, p: pointer): cint {.cdecl.}
+  IfEventProc* = proc (d: Display, event: ptr XEvent, p: pointer): bool {.cdecl.}
+  ErrorHandleProc* = proc (d: Display, event: ptr XErrorEvent): bool {.cdecl.}
+
+  XEventKind* {.size: cint.sizeof.} = enum
+    xeKeyPress = 2
+    xeKeyRelease = 3
+    xeButtonPress = 4
+    xeButtonRelease = 5
+    xeMotion = 6
+    xeEnter = 7
+    xeLeave = 8
+    xeFocusIn = 9
+    xeFocusOut = 10
+    xeKeymap = 11
+    xeExpose = 12
+    xeGraphicsExpose = 13
+    xeNoExpose = 14
+    xeVisibility = 15
+    xeCreate = 16
+    xeDestroy = 17
+    xeUnmap = 18
+    xeMap = 19
+    xeMapRequest = 20
+    xeReparent = 21
+    xeConfigure = 22
+    xeConfigureRequest = 23
+    xeGravity = 24
+    xeResizeRequest = 25
+    xeCirculate = 26
+    xeCirculateRequest = 27
+    xeProperty = 28
+    xeSelectionClear = 29
+    xeSelectionRequest = 30
+    xeSelection = 31
+    xeColormap = 32
+    xeClientMessage = 33
+    xeMapping = 34
+    xeGenericEvent = 35
 
   XKeyEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: cint
     display*: Display
@@ -21,7 +58,7 @@ type
     same_screen*: cint
 
   XButtonEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: cint
     display*: Display
@@ -36,7 +73,7 @@ type
     same_screen*: cint
 
   XMotionEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: cint
     display*: Display
@@ -51,7 +88,7 @@ type
     same_screen*: cint
 
   XCrossingEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: cint
     display*: Display
@@ -68,7 +105,7 @@ type
     state*: cuint
 
   XFocusChangeEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -77,7 +114,7 @@ type
     detail*: cint
 
   XKeymapEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -85,7 +122,7 @@ type
     key_vector*: array[0..31, cchar]
 
   XExposeEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -95,7 +132,7 @@ type
     count*: cint
 
   XGraphicsExposeEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -107,7 +144,7 @@ type
     minor_code*: cint
 
   XNoExposeEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -116,7 +153,7 @@ type
     minor_code*: cint
 
   XVisibilityEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -124,7 +161,7 @@ type
     state*: cint
 
   XCreateWindowEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -136,7 +173,7 @@ type
     override_redirect*: bool
 
   XDestroyWindowEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -144,7 +181,7 @@ type
     window*: Window
 
   XUnmapEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -153,7 +190,7 @@ type
     from_configure*: bool
 
   XMapEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -162,7 +199,7 @@ type
     override_redirect*: bool
 
   XMapRequestEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -170,7 +207,7 @@ type
     window*: Window
 
   XReparentEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -181,7 +218,7 @@ type
     override_redirect*: bool
 
   XConfigureEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -194,7 +231,7 @@ type
     override_redirect*: bool
 
   XGravityEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -203,7 +240,7 @@ type
     x*, y*: cint
 
   XResizeRequestEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -211,7 +248,7 @@ type
     width*, height*: cint
 
   XConfigureRequestEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -225,7 +262,7 @@ type
     value_mask*: culong
 
   XCirculateEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -234,7 +271,7 @@ type
     place*: cint
 
   XCirculateRequestEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -243,7 +280,7 @@ type
     place*: cint
 
   XPropertyEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -253,7 +290,7 @@ type
     state*: cint
 
   XSelectionClearEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -262,7 +299,7 @@ type
     time*: Time
 
   XSelectionRequestEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -274,7 +311,7 @@ type
     time*: Time
 
   XSelectionEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -285,7 +322,7 @@ type
     time*: Time
 
   XColormapEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -300,7 +337,7 @@ type
     l*: array[5, clong]
 
   XClientMessageEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -310,7 +347,7 @@ type
     data*: XClientMessageData
 
   XMappingEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
@@ -320,7 +357,7 @@ type
     count*: cint
 
   XErrorEvent* = object
-    theType*: cint
+    kind*: XEventKind
     display*: Display
     resourceid*: XID
     serial*: culong
@@ -329,14 +366,14 @@ type
     minor_code*: cuchar
 
   XAnyEvent* = object
-    theType*: cint
+    kind*: XEventKind
     serial*: culong
     send_event*: bool
     display*: Display
     window*: Window
 
   XGenericEvent* = object
-    theType*: cint             ## of event. Always GenericEvent
+    kind*: XEventKind           ## of event. Always GenericEvent
     serial*: culong            ## of last request processed
     send_event*: bool          ## true if from SendEvent request
     display*: Display          ## Display the event was read from
@@ -344,7 +381,7 @@ type
     evtype*: cint              ## actual event type.
 
   XGenericEventCookie* = object
-    theType*: cint             ## of event. Always GenericEvent
+    kind*: XEventKind          ## of event. Always GenericEvent
     serial*: culong            ## of last request processed
     send_event*: bool          ## true if from SendEvent request
     display*: Display          ## Display the event was read from
@@ -354,7 +391,7 @@ type
     data*: pointer
 
   XEvent* {.union.} = object
-    theType*: cint
+    kind*: XEventKind
     xany*: XAnyEvent
     xkey*: XKeyEvent
     xbutton*: XButtonEvent
@@ -391,4 +428,9 @@ type
     pad: array[0..23, clong]
 
 
-proc XCheckIfEvent*(d: Display, e: ptr XEvent, cb: IfEventProc, userData: pointer): cint {.libx11.}
+proc XCheckIfEvent*(d: Display, e: ptr XEvent, cb: IfEventProc, userData: pointer): bool {.libx11.}
+proc XSendEvent*(d: Display, window: Window, propogate: cint, mask: clong, e: ptr XEvent) {.libx11.}
+
+proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint {.libx11.}
+
+proc XSetErrorHandler*(handler: ErrorHandleProc) {.libx11.}
