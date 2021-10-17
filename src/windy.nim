@@ -13,7 +13,6 @@ type
   Window* = ref object
     platform: PlatformWindow
 
-
 proc init*() {.raises: [WindyError]} =
   platformInit()
 
@@ -27,7 +26,6 @@ proc newWindow*(
   depthBits = 24,
   stencilBits = 8
 ): Window {.raises: [WindyError]} =
-  # resizable, fullscreen, transparent, decorated, floating
   result = Window()
   try:
     result.platform = newPlatformWindow(
