@@ -1,4 +1,4 @@
-import x
+import x, vmath
 
 const libX11* =
   when defined(macosx): "libX11.dylib"
@@ -8,6 +8,50 @@ const libX11* =
 
 type
   Display* = ptr object
+    ext_data*: ptr XExtData
+    p1: pointer
+    fd*: cint
+    p2: cint
+    protoMajorVersion*: cint
+    protoMinorVersion*: cint
+    vendor*: cstring
+    p3: XID
+    p4: XID
+    p5: XID
+    p6: cint
+    resourceAlloc*: proc (d: Display): XID {.cdecl.}
+    byteOrder*: cint
+    bitmapUnit*: cint
+    bitmapPad*: cint
+    bitmapBitOrder*: cint
+    nformats*: cint
+    pixmapFormat*: pointer
+    p8: cint
+    release*: cint
+    p9, p10: pointer
+    qlen*: cint
+    lastRequestRead*: culong
+    request*: culong
+    p11: pointer
+    p12: pointer
+    p13: pointer
+    p14: pointer
+    maxRequestSize*: cuint
+    db*: pointer
+    p15: proc (d: Display): cint {.cdecl.}
+    displayName*: cstring
+    defaultScreen*: cint
+    nscreens*: cint
+    screens*: ptr Screen
+    motion_buffer*: culong
+    p16: culong
+    minKeycode*: cint
+    maxKeycode*: cint
+    p17: pointer
+    p18: pointer
+    p19: cint
+    xdefaults: cstring
+  
   GC* = ptr object
   XIM* = ptr object
   XIC* = ptr object
@@ -59,51 +103,6 @@ type
     saveUnders*: cint
     rootInputMask*: clong
 
-  XPrivDisplay* = object
-    ext_data*: ptr XExtData
-    private1*: pointer
-    fd*: cint
-    private2*: cint
-    protoMajorVersion*: cint
-    protoMinorVersion*: cint
-    vendor*: cstring
-    private3*: XID
-    private4*: XID
-    private5*: XID
-    private6*: cint
-    resourceAlloc*: proc (d: Display): XID {.cdecl.}
-    byteOrder*: cint
-    bitmapUnit*: cint
-    bitmapPad*: cint
-    bitmapBitOrder*: cint
-    nformats*: cint
-    pixmapFormat*: pointer
-    private8*: cint
-    release*: cint
-    private9*, private10*: pointer
-    qlen*: cint
-    lastRequestRead*: culong
-    request*: culong
-    private11*: pointer
-    private12*: pointer
-    private13*: pointer
-    private14*: pointer
-    maxRequestSize*: cuint
-    db*: pointer
-    private15*: proc (d: Display): cint {.cdecl.}
-    displayName*: cstring
-    defaultScreen*: cint
-    nscreens*: cint
-    screens*: ptr Screen
-    motion_buffer*: culong
-    private16*: culong
-    minKeycode*: cint
-    maxKeycode*: cint
-    private17*: pointer
-    private18*: pointer
-    private19*: cint
-    xdefaults*: cstring
-
   XSetWindowAttributes* = object
     backgroundPixmap*: Pixmap
     backgroundPixel*: culong
@@ -148,13 +147,12 @@ type
   
   XSizeHints* = object
     flags*: clong
-    x*, y*: cint
-    width*, height*: cint
-    minWidth*, minHeight*: cint
-    maxWidth*, maxHeight*: cint
-    widthInc*, heightInc*: cint
-    minAspect*, maxAspect*: tuple[x, y: cint]
-    baseWidth*, baseHeight*: cint
+    pos*: IVec2
+    size*: IVec2
+    minSize*, maxSize*: IVec2
+    incSize*: IVec2
+    minAspect*, maxAspect*: IVec2
+    baseSize*: IVec2
     winGravity*: cint
 
 const
@@ -175,17 +173,15 @@ const
 
 
 proc XOpenDisplay*(displayName: cstring): Display {.libx11.}
+proc XSync*(d: Display, disc = false) {.libx11.}
 
 proc XFree*(x: pointer) {.libx11.}
 
-proc XRaiseWindow*(d: Display, window: Window) {.libx11.}
-proc XLowerWindow*(d: Display, window: Window) {.libx11.}
-
 proc screen(d: Display, id: cint): ptr Screen =
-  cast[ptr Screen](cast[int](cast[ptr XPrivDisplay](d)[].screens) + id * Screen.sizeof)
+  cast[ptr Screen](cast[int](d[].screens) + id * Screen.sizeof)
 
 proc defaultScreen*(d: Display): cint =
-  cast[ptr XPrivDisplay](d)[].defaultScreen
+  d[].defaultScreen
 
 proc defaultRootWindow*(d: Display): Window =
   d.screen(d.defaultScreen).root
@@ -207,6 +203,11 @@ proc XCreateWindow*(
 proc XDestroyWindow*(d: Display, window: Window) {.libx11.}
 
 proc XMapWindow*(d: Display, window: Window) {.libx11.}
+proc XUnmapWindow*(d: Display, window: Window) {.libx11.}
+
+proc XRaiseWindow*(d: Display, window: Window) {.libx11.}
+proc XLowerWindow*(d: Display, window: Window) {.libx11.}
+
 proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: cint) {.libx11.}
 proc XSelectInput*(d: Display, window: Window, inputs: clong) {.libx11.}
 
@@ -247,3 +248,16 @@ proc XMatchVisualInfo*(d: Display, screen: cint, depth: cint, flags: cint, resul
 proc XSetTransientForHint*(d: Display, window: Window, root: Window) {.libx11.}
 
 proc XSetNormalHints*(d: Display, window: Window, hints: ptr XSizeHints) {.libx11.}
+proc XGetNormalHints*(d: Display, window: Window, res: ptr XSizeHints) {.libx11.}
+
+proc XGetGeometry*(
+  d: Display, window: Drawable,
+  root: ptr Window,
+  x, y: ptr int32,
+  w, h: ptr uint32,
+  borderW: ptr uint32,
+  depth: ptr uint32
+) {.libx11.}
+
+proc XResizeWindow*(d: Display, window: Window, w, h: uint32) {.libx11.}
+proc XMoveWindow*(d: Display, window: Window, x, y: int32) {.libx11.}

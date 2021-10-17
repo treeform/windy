@@ -30,27 +30,16 @@ proc newWindow*(
   # resizable, fullscreen, transparent, decorated, floating
   result = Window()
   try:
-    when defined(windows) or defined(macosx):
-      result.platform = newPlatformWindow(
-        title,
-        size,
-        vsync,
-        openglMajorVersion,
-        openglMinorVersion,
-        msaa,
-        depthBits,
-        stencilBits
-      )
-    elif defined(linux):
-      result.platform = newPlatformWindow(
-        title,
-        size,
-        vsync,
-        true, # resizable
-        false, # fullscreen
-        false, # transparent
-        true, # decorated
-      )
+    result.platform = newPlatformWindow(
+      title,
+      size,
+      vsync,
+      openglMajorVersion,
+      openglMinorVersion,
+      msaa,
+      depthBits,
+      stencilBits
+    )
   except:
     raise newException(
       WindyError,
