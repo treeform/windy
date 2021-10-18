@@ -11,7 +11,7 @@ requires "vmath >= 1.1.0"
 task bindings, "Generate bindings":
 
   proc compile(libName: string, flags = "") =
-    exec "nim c -f " & flags & " -d:release -d:noAutoGLerrorCheck --app:lib --gc:arc --tlsEmulation:off --out:" & libName & " --outdir:bindings/generated bindings/bindings.nim"
+    exec "nim c -f " & flags & " -d:release --app:lib --gc:arc --tlsEmulation:off --out:" & libName & " --outdir:bindings/generated bindings/bindings.nim"
 
   when defined(windows):
     compile "windy.dll"
