@@ -133,6 +133,12 @@ proc getDC(hWnd: HWND): HDC =
   if result == 0:
     raise newException(WindyError, "Error getting window DC")
 
+proc getWindowStyle(hWnd: HWND): DWORD =
+  GetWindowLongW(hWnd, GWL_STYLE)
+
+proc setWindowStyle(hWnd: HWND, style: DWORD) =
+  SetWindowLongW(hWnd, style, GWL_STYLE)
+
 proc makeContextCurrent(hdc: HDC, hglrc: HGLRC) =
   if wglMakeCurrent(hdc, hglrc) == 0:
     raise newException(WindyError, "Error activating OpenGL rendering context")
@@ -396,15 +402,23 @@ proc newPlatformWindow*(
 proc visible*(window: PlatformWindow): bool =
   IsWindowVisible(window.hWnd) != 0
 
-proc `visible=`*(window: PlatformWindow, visible: bool) =
-  if visible:
-    window.show()
-  else:
-    window.hide()
-
 proc decorated*(window: PlatformWindow): bool =
-  let style = GetWindowLongW(window.hWnd, GWL_STYLE)
+  let style = getWindowStyle(window.hWnd)
   (style and WS_BORDER) != 0
+
+proc resizable*(window: PlatformWindow): bool =
+  let style = getWindowStyle(window.hWnd)
+  (style and WS_THICKFRAME) != 0
+
+proc size*(window: PlatformWindow): IVec2 =
+  var rect: RECT
+  discard GetClientRect(window.hWnd, rect.addr)
+  ivec2(rect.right, rect.bottom)
+
+proc pos*(window: PlatformWindow): IVec2 =
+  var pos: POINT
+  discard ClientToScreen(window.hWnd, pos.addr)
+  ivec2(pos.x, pos.y)
 
 proc `decorated=`*(window: PlatformWindow, decorated: bool) =
   var style: DWORD
@@ -416,11 +430,13 @@ proc `decorated=`*(window: PlatformWindow, decorated: bool) =
   if window.visible:
     style = style or WS_VISIBLE
 
-  discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
+  setWindowStyle(window.hWnd, style)
 
-proc resizable*(window: PlatformWindow): bool =
-  let style = GetWindowLongW(window.hWnd, GWL_STYLE)
-  (style and WS_THICKFRAME) != 0
+proc `visible=`*(window: PlatformWindow, visible: bool) =
+  if visible:
+    window.show()
+  else:
+    window.hide()
 
 proc `resizable=`*(window: PlatformWindow, resizable: bool) =
   if not window.decorated:
@@ -435,18 +451,13 @@ proc `resizable=`*(window: PlatformWindow, resizable: bool) =
   if window.visible:
     style = style or WS_VISIBLE
 
-  discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
-
-proc size*(window: PlatformWindow): IVec2 =
-  var rect: RECT
-  discard GetClientRect(window.hWnd, rect.addr)
-  ivec2(rect.right, rect.bottom)
+  setWindowStyle(window.hWnd, style)
 
 proc `size=`*(window: PlatformWindow, size: IVec2) =
   var rect = RECT(top: 0, left: 0, right: size.x, bottom: size.y)
   discard AdjustWindowRectExForDpi(
     rect.addr,
-    decoratedWindowStyle,
+    getWindowStyle(window.hWnd),
     0,
     WS_EX_APPWINDOW,
     GetDpiForWindow(window.hWnd)
@@ -461,16 +472,11 @@ proc `size=`*(window: PlatformWindow, size: IVec2) =
     SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOMOVE
   )
 
-proc pos*(window: PlatformWindow): IVec2 =
-  var pos: POINT
-  discard ClientToScreen(window.hWnd, pos.addr)
-  ivec2(pos.x, pos.y)
-
 proc `pos=`*(window: PlatformWindow, pos: IVec2) =
   var rect = RECT(top: pos.x, left: pos.y, bottom: pos.x, right: pos.y)
   discard AdjustWindowRectExForDpi(
     rect.addr,
-    decoratedWindowStyle,
+    getWindowStyle(window.hWnd),
     0,
     WS_EX_APPWINDOW,
     GetDpiForWindow(window.hWnd)
