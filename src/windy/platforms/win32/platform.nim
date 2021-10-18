@@ -51,7 +51,7 @@ var
   initialized: bool
   windows*: seq[PlatformWindow]
 
-proc wstr*(str: string): string =
+proc wstr(str: string): string =
   let wlen = MultiByteToWideChar(
     CP_UTF8,
     0,
@@ -133,11 +133,11 @@ proc getDC(hWnd: HWND): HDC =
   if result == 0:
     raise newException(WindyError, "Error getting window DC")
 
-proc getWindowStyle(hWnd: HWND): DWORD =
+proc getWindowStyle(hWnd: HWND): LONG =
   GetWindowLongW(hWnd, GWL_STYLE)
 
-proc setWindowStyle(hWnd: HWND, style: DWORD) =
-  SetWindowLongW(hWnd, style, GWL_STYLE)
+proc setWindowStyle(hWnd: HWND, style: LONG) =
+  discard SetWindowLongW(hWnd, style, GWL_STYLE)
 
 proc makeContextCurrent(hdc: HDC, hglrc: HGLRC) =
   if wglMakeCurrent(hdc, hglrc) == 0:
@@ -421,7 +421,7 @@ proc pos*(window: PlatformWindow): IVec2 =
   ivec2(pos.x, pos.y)
 
 proc `decorated=`*(window: PlatformWindow, decorated: bool) =
-  var style: DWORD
+  var style: LONG
   if decorated:
     style = decoratedWindowStyle
   else:
@@ -442,7 +442,7 @@ proc `resizable=`*(window: PlatformWindow, resizable: bool) =
   if not window.decorated:
     return
 
-  var style = decoratedWindowStyle.DWORD
+  var style = decoratedWindowStyle.LONG
   if resizable:
     style = style or (WS_MAXIMIZEBOX or WS_THICKFRAME)
   else:
