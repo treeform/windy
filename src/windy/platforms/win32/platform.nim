@@ -490,3 +490,6 @@ proc `pos=`*(window: PlatformWindow, pos: IVec2) =
     0,
     SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOSIZE
   )
+
+proc framebufferSize*(window: PlatformWindow): IVec2 =
+  window.size

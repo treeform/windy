@@ -1,321 +1,260 @@
-// gcc Cocoa.m -o OSXWindow -framework Cocoa -framework Quartz -framework OpenGL
-
 #import <Cocoa/Cocoa.h>
-#import <QuartzCore/CVDisplayLink.h>
-#import <OpenGL/OpenGL.h>
-#include <OpenGL/gl3.h>
 
+NSInteger const decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask;
+NSInteger const undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
 
-@class View;
-
-@interface View : NSOpenGLView <NSWindowDelegate> {
-@public
-	CVDisplayLinkRef displayLink;
-	bool running;
-	NSRect windowRect;
+static void postEmptyEvent(void) {
+    NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined
+                                        location:NSMakePoint(0, 0)
+                                   modifierFlags:0
+                                       timestamp:0
+                                    windowNumber:0
+                                         context:nil
+                                         subtype:0
+                                           data1:0
+                                           data2:0];
+    [NSApp postEvent:event atStart:YES];
 }
+
+static void createMenuBar(void) {
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    id menubar = [NSMenu new];
+    id appMenuItem = [NSMenuItem new];
+    [menubar addItem:appMenuItem];
+    [NSApp setMainMenu:menubar];
+
+    id appMenu = [NSMenu new];
+    NSString* appName = [[NSProcessInfo processInfo] processName];
+    id quitTitle = [@"Quit " stringByAppendingString:appName];
+    id quitMenuItem = [[NSMenuItem alloc] initWithTitle:quitTitle
+                                                 action:@selector(terminate:) keyEquivalent:@"q"];
+    [appMenu addItem:quitMenuItem];
+    [appMenuItem setSubmenu:appMenu];
+}
+
+static int pickOpenGLProfile(int majorVersion) {
+    if (majorVersion == 4) {
+        return NSOpenGLProfileVersion4_1Core;
+    }
+    if (majorVersion == 3) {
+        return NSOpenGLProfileVersion3_2Core;
+    }
+    return NSOpenGLProfileVersionLegacy;
+}
+
+static int convertY(int y) {
+    // Converts y from relative to the bottom of the screen to relative to the top of the screen.
+    int screenHeight = (int)CGDisplayBounds(CGMainDisplayID()).size.height;
+    return screenHeight - y - 1;
+}
+
+@interface WindyApplicationDelegate : NSObject <NSApplicationDelegate>
 @end
 
-@implementation View
-- (id) initWithFrame: (NSRect) frame {
+@implementation WindyApplicationDelegate
 
-	running = true;
-
-	// No multisampling
-	int samples = 0;
-
-	// Keep multisampling attributes at the start of the attribute lists
-    // since code below assumes they are array elements 0 through 4.
-	NSOpenGLPixelFormatAttribute windowedAttrs[] =
-	{
-		NSOpenGLPFAMultisample,
-		NSOpenGLPFASampleBuffers, samples ? 1 : 0,
-		NSOpenGLPFASamples, samples,
-		NSOpenGLPFAAccelerated,
-		NSOpenGLPFADoubleBuffer,
-		NSOpenGLPFAColorSize, 32,
-		NSOpenGLPFADepthSize, 24,
-		NSOpenGLPFAAlphaSize, 8,
-		NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion4_1Core,
-		0
-	};
-
-	// Try to choose a supported pixel format
-	NSOpenGLPixelFormat* pf = [
-        [NSOpenGLPixelFormat alloc]
-        initWithAttributes:windowedAttrs
-    ];
-
-	if (!pf) {
-		bool valid = false;
-		while (!pf && samples > 0) {
-			samples /= 2;
-			windowedAttrs[2] = samples ? 1 : 0;
-			windowedAttrs[4] = samples;
-			pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:windowedAttrs];
-			if (pf) {
-				valid = true;
-				break;
-			}
-		}
-
-		if (!valid) {
-			NSLog(@"OpenGL pixel format not supported.");
-			return nil;
-		}
-	}
-
-	self = [super initWithFrame:frame pixelFormat:[pf autorelease]];
-
-	return self;
+- (void)applicationWillFinishLaunching:(NSNotification*)notification {
+    createMenuBar();
 }
 
-- (void) prepareOpenGL {
-	[super prepareOpenGL];
-
-	// Make all the OpenGL calls to setup rendering and build the necessary rendering objects
-	[[self openGLContext] makeCurrentContext];
-	// Synchronize buffer swaps with vertical refresh rate
-	GLint swapInt = 1; // Vsynch on!
-	[[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
-
-	// Create a display link capable of being used with all active displays
-	CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
-
-	CGLContextObj cglContext = (CGLContextObj)[[self openGLContext] CGLContextObj];
-	CGLPixelFormatObj cglPixelFormat = (CGLPixelFormatObj)[[self pixelFormat] CGLPixelFormatObj];
-	CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
-
-	GLint dim[2] = {windowRect.size.width, windowRect.size.height};
-	CGLSetParameter(cglContext, kCGLCPSurfaceBackingSize, dim);
-	CGLEnable(cglContext, kCGLCESurfaceBackingSize);
-
-	// Activate the display link
-	CVDisplayLinkStart(displayLink);
+- (void)applicationDidFinishLaunching:(NSNotification*)notification {
+    // Post an empty event then stop the NSApp run from innerInit()
+    postEmptyEvent();
+    [NSApp stop:nil];
 }
 
-// Tell the window to accept input events
-- (BOOL)acceptsFirstResponder {
-	return YES;
-}
+@end
 
-- (void)mouseMoved:(NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	// NSLog(@"mouseMoved: %lf, %lf", point.x, point.y);
-}
+@interface WindyWindow : NSWindow <NSWindowDelegate>
+@end
 
-- (void) mouseDragged: (NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	// NSLog(@"mouseDragged: %lf, %lf", point.x, point.y);
-}
+@implementation WindyWindow
 
-- (void)scrollWheel: (NSEvent*) event  {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	NSLog(@"Mouse wheel at: %lf, %lf. Delta: %lf", point.x, point.y, [event deltaY]);
-}
-
-- (void) mouseDown: (NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	NSLog(@"Left mouse down: %lf, %lf", point.x, point.y);
-}
-
-- (void) mouseUp: (NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	NSLog(@"Left mouse up: %lf, %lf", point.x, point.y);
-}
-
-- (void) rightMouseDown: (NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	NSLog(@"Right mouse down: %lf, %lf", point.x, point.y);
-}
-
-- (void) rightMouseUp: (NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	NSLog(@"Right mouse up: %lf, %lf", point.x, point.y);
-}
-
-- (void)otherMouseDown: (NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	NSLog(@"Middle mouse down: %lf, %lf", point.x, point.y);
-}
-
-- (void)otherMouseUp: (NSEvent*) event {
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-	NSLog(@"Middle mouse up: %lf, %lf", point.x, point.y);
-}
-
-- (void) mouseEntered: (NSEvent*)event {
-	NSLog(@"Mouse entered");
-}
-
-- (void) mouseExited: (NSEvent*)event {
-	NSLog(@"Mouse left");
-}
-
-- (void) keyDown: (NSEvent*) event {
-	if ([event isARepeat] == NO) {
-		NSLog(@"Key down: %d", [event keyCode]);
-	}
-}
-
-- (void) keyUp: (NSEvent*) event {
-	NSLog(@"Key up: %d", [event keyCode]);
-}
-
-
-// Resize
 - (void)windowDidResize:(NSNotification*)notification {
-	NSSize size = [ [ self.window contentView ] frame ].size;
-	[[self openGLContext] makeCurrentContext];
-	CGLLockContext((CGLContextObj)[[self openGLContext] CGLContextObj]);
-	NSLog(@"Window resize: %lf, %lf", size.width, size.height);
-	// Temp
-	windowRect.size.width = size.width;
-	windowRect.size.height = size.height;
-	glViewport(0, 0, windowRect.size.width, windowRect.size.height);
-	// End temp
-	CGLUnlockContext((CGLContextObj)[[self openGLContext] CGLContextObj]);
 }
 
-- (void)resumeDisplayRenderer  {
-    CVDisplayLinkStop(displayLink);
+- (void)windowDidMove:(NSNotification*)notification {
 }
 
-- (void)haltDisplayRenderer  {
-    CVDisplayLinkStop(displayLink);
+- (BOOL)windowShouldClose:(id)sender {
+    return YES;
 }
 
-// Terminate window when the red X is pressed
--(void)windowWillClose:(NSNotification *)notification {
-	if (running) {
-		running = false;
-
-		NSLog(@"Cleanup");
-
-		CVDisplayLinkStop(displayLink);
-		CVDisplayLinkRelease(displayLink);
-
-	}
-
-	[NSApp terminate:self];
-}
-
-// Cleanup
-- (void) dealloc {
-	[super dealloc];
-}
 @end
+
+@interface WindyContentView : NSOpenGLView
+@end
+
+@implementation WindyContentView
+
+- (id) initWithFrameAndConfig:(NSRect)frame
+                        vsync:(bool)vsync
+           openglMajorVersion:(int)openglMajorVersion
+           openglMinorVersion:(int)openglMinorVersion
+                         msaa:(int)msaa
+                    depthBits:(int)depthBits
+                  stencilBits:(int)stencilBits {
+    NSOpenGLPixelFormatAttribute attribs[] = {
+        NSOpenGLPFAMultisample,
+        NSOpenGLPFASampleBuffers, msaa > 0 ? 1 : 0,
+        NSOpenGLPFASamples, msaa,
+        NSOpenGLPFAAccelerated,
+        NSOpenGLPFADoubleBuffer,
+        NSOpenGLPFAColorSize, 32,
+        NSOpenGLPFAAlphaSize, 8,
+        NSOpenGLPFADepthSize, depthBits,
+        NSOpenGLPFAStencilSize, stencilBits,
+        NSOpenGLPFAOpenGLProfile, pickOpenGLProfile(openglMajorVersion),
+        0
+    };
+
+    NSOpenGLPixelFormat* pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
+
+    self = [super initWithFrame:frame pixelFormat:pf];
+
+    [[self openGLContext] makeCurrentContext];
+
+    GLint swapInterval = vsync ? 1 : 0;
+    [[self openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+
+    return self;
+}
+
+@end
+
+WindyApplicationDelegate* appDelegate;
 
 void innerInit() {
     [NSApplication sharedApplication];
+
+    appDelegate = [[WindyApplicationDelegate alloc] init];
+    [NSApp setDelegate:appDelegate];
+
+    [NSApp run]; // We will break out of this in applicationDidFinishLaunching
+}
+
+void innerNewPlatformWindow(
+    char* title,
+    int width,
+    int height,
+    bool vsync,
+    int openglMajorVersion,
+    int openglMinorVersion,
+    int msaa,
+    int depthBits,
+    int stencilBits,
+    WindyWindow** windowRet
+) {
+    NSRect contentRect = NSMakeRect(0, 0, width, height);
+
+    WindyWindow* window = [[WindyWindow alloc] initWithContentRect:contentRect
+                                                         styleMask:decoratedWindowMask
+                                                           backing:NSBackingStoreBuffered
+                                                             defer:NO];
+
+    WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
+                                                                        vsync:vsync
+                                                           openglMajorVersion:openglMajorVersion
+                                                           openglMinorVersion:openglMinorVersion
+                                                                         msaa:msaa
+                                                                    depthBits:depthBits
+                                                                  stencilBits:stencilBits];
+
+    [window setContentView:view];
+    [window setTitle:[NSString stringWithUTF8String:title]];
+    [window setDelegate:window];
+
+    *windowRet = window;
+}
+
+void innerMakeContextCurrent(WindyWindow* window) {
+    [[[window contentView] openGLContext] makeCurrentContext];
+}
+
+void innerSwapBuffers(WindyWindow* window) {
+    [[[window contentView] openGLContext] flushBuffer];
 }
 
 void innerPollEvents() {
-    @autoreleasepool {
-        while(true)
-        {
-            NSEvent* event = [NSApp
-                nextEventMatchingMask:NSEventMaskAny
-                untilDate:[NSDate distantPast]
-                inMode:NSDefaultRunLoopMode
-                dequeue:YES
-            ];
-            if (event == nil)
-                break;
-            [NSApp sendEvent:event];
+    while (true) {
+        NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
+                                            untilDate:[NSDate distantPast]
+                                               inMode:NSDefaultRunLoopMode
+                                              dequeue:YES];
+        if (event == nil) {
+            break;
         }
+
+        [NSApp sendEvent:event];
     }
 }
 
-void innerMakeContextCurrent(View* view) {
-    [[view openGLContext] makeCurrentContext];
+bool innerGetVisible(WindyWindow* window) {
+    return window.isVisible;
 }
 
-void innerSwapBuffers(View* view) {
-    CGLFlushDrawable((CGLContextObj)[[view openGLContext] CGLContextObj]);
+bool innerGetDecorated(WindyWindow* window) {
+    return (window.styleMask & NSTitledWindowMask) != 0;
 }
 
+bool innerGetResizable(WindyWindow* window) {
+    return (window.styleMask & NSResizableWindowMask) != 0;
+}
 
-void innerNewPlatformWindow(
-    char* utf8Title,
-    int w,
-    int h,
-    NSWindow **windowRet,
-    View **viewRet
-) {
-	// Create a window:
+void innerGetSize(WindyWindow* window, int* width, int* height) {
+    NSRect contentRect = [[window contentView] frame];
+    *width = contentRect.size.width;
+    *height = contentRect.size.height;
+}
 
-	// Style flags
-	NSUInteger windowStyle =
-        NSTitledWindowMask |
-        NSClosableWindowMask |
-        NSResizableWindowMask |
-        NSMiniaturizableWindowMask;
+void innerGetPos(WindyWindow* window, int* x, int* y) {
+    NSRect contentRect = [window contentRectForFrameRect:[window frame]];
+    *x = contentRect.origin.x;
+    *y = convertY(contentRect.origin.y + contentRect.size.height - 1);
+}
 
-	// Window bounds (x, y, width, height)
-	NSRect screenRect = [[NSScreen mainScreen] frame];
-	NSRect viewRect = NSMakeRect(0, 0, w, h);
-	NSRect windowRect = NSMakeRect(
-        NSMidX(screenRect) - NSMidX(viewRect),
-        NSMidY(screenRect) - NSMidY(viewRect),
-        viewRect.size.width,
-        viewRect.size.height
-    );
+void innerSetVisible(WindyWindow* window, bool visible) {
+    if (visible) {
+        [window orderFront:nil];
+    } else {
+        [window orderOut:nil];
+    }
+}
 
-	NSWindow* window = [[NSWindow alloc]
-        initWithContentRect:windowRect
-        styleMask:windowStyle
-        backing:NSBackingStoreBuffered
-        defer:NO
-    ];
-	[window autorelease];
+void innerSetDecorated(WindyWindow* window, bool decorated) {
+    window.styleMask = decorated ? decoratedWindowMask : undecoratedWindowMask;
+}
 
-	// Window controller
-	NSWindowController * windowController =
-        [[NSWindowController alloc] initWithWindow:window];
-	[windowController autorelease];
+void innerSetResizable(WindyWindow* window, bool resizable) {
+    if (!innerGetDecorated(window)) {
+        return;
+    }
 
-	// Since Snow Leopard, programs without application bundles and Info.plist files don't get a menubar
-	// and can't be brought to the front unless the presentation option is changed
-	[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    if (resizable) {
+        window.styleMask |= NSResizableWindowMask;
+    } else {
+        window.styleMask &= ~NSResizableWindowMask;
+    }
+}
 
-	// Next, we need to create the menu bar. You don't need to give the first item in the menubar a name
-	// (it will get the application's name automatically)
-	id menubar = [[NSMenu new] autorelease];
-	id appMenuItem = [[NSMenuItem new] autorelease];
-	[menubar addItem:appMenuItem];
-	[NSApp setMainMenu:menubar];
+void innerSetSize(WindyWindow* window, int width, int height) {
+    NSRect contentRect = [window contentRectForFrameRect:[window frame]];
+    contentRect.origin.y += contentRect.size.height - height;
+    contentRect.size = NSMakeSize(width, height);
+    [window setFrame:[window frameRectForContentRect:contentRect]
+                                             display:YES];
+}
 
-	// Then we add the quit item to the menu. Fortunately the action is simple since terminate: is
-	// already implemented in NSApplication and the NSApplication is always in the responder chain.
-	id appMenu = [[NSMenu new] autorelease];
-	id appName = [[NSProcessInfo processInfo] processName];
-	id quitTitle = [@"Quit " stringByAppendingString:appName];
-	id quitMenuItem = [[[NSMenuItem alloc] initWithTitle:quitTitle
-		action:@selector(terminate:) keyEquivalent:@"q"] autorelease];
-	[appMenu addItem:quitMenuItem];
-	[appMenuItem setSubmenu:appMenu];
+void innerSetPos(WindyWindow* window, int x, int y) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect rect = NSMakeRect(x, convertY(y + contentRect.size.height - 1), 0, 0);
+    [window setFrameOrigin:rect.origin];
+}
 
-	// Create app delegate to handle system events
-	View* view = [[[View alloc] initWithFrame:windowRect] autorelease];
-	view->windowRect = windowRect;
-	[window setAcceptsMouseMovedEvents:YES];
-	[window setContentView:view];
-	[window setDelegate:view];
-
-	// Add fullscreen button
-	[window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
-
-	// Show window and run event loop
-    [NSApp activateIgnoringOtherApps:YES];
-    [window makeKeyAndOrderFront: nil];
-
-    NSString *title = [NSString stringWithUTF8String:utf8Title];
-    [window setTitle:title];
-
-    // Window need to process some events to initilize openGL
-    innerPollEvents();
-
-    windowRet[0] = window;
-    viewRet[0] = view;
+void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+    *width = backingRect.size.width;
+    *height = backingRect.size.height;
 }

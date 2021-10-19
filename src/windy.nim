@@ -5,7 +5,7 @@ export common, vmath
 when defined(windows):
   import windy/platforms/win32/platform
 elif defined(macosx):
-  import windy/platforms/macos2/platform
+  import windy/platforms/macos/platform
 elif defined(linux):
   import windy/platforms/x11/platform
 
@@ -81,5 +81,8 @@ proc `size=`*(window: Window, size: IVec2) =
 proc pos*(window: Window): IVec2 =
   window.platform.pos
 
-proc `pos=`*(window: Window, pos: Ivec2) =
+proc `pos=`*(window: Window, pos: IVec2) =
   window.platform.pos = pos
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.platform.framebufferSize
