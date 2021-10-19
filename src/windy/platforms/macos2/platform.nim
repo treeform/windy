@@ -106,22 +106,16 @@ proc `resizable=`*(window: PlatformWindow, resizable: bool) =
   innerSetResizable(window.windowPtr, resizable)
 
 proc size*(window: PlatformWindow): IVec2 =
-  var width, height: int32
-  innerGetSize(window.windowPtr, width.addr, height.addr)
-  ivec2(width, height)
+  innerGetSize(window.windowPtr, result.x.addr, result.y.addr)
 
 proc `size=`*(window: PlatformWindow, size: IVec2) =
   innerSetSize(window.windowPtr, size.x, size.y)
 
 proc pos*(window: PlatformWindow): IVec2 =
-  var x, y: int32
-  innerGetPos(window.windowPtr, x.addr, y.addr)
-  ivec2(x, y)
+  innerGetPos(window.windowPtr, result.x.addr, result.y.addr)
 
 proc `pos=`*(window: PlatformWindow, pos: IVec2) =
   innerSetPos(window.windowPtr, pos.x, pos.y)
 
 proc framebufferSize*(window: PlatformWindow): IVec2 =
-  var width, height: int32
-  innerGetFramebufferSize(window.windowPtr, width.addr, height.addr)
-  ivec2(width, height)
+  innerGetFramebufferSize(window.windowPtr, result.x.addr, result.y.addr)
