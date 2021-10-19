@@ -95,8 +95,7 @@ static int convertY(int y) {
                          msaa:(int)msaa
                     depthBits:(int)depthBits
                   stencilBits:(int)stencilBits {
-    NSOpenGLPixelFormatAttribute attribs[] =
-    {
+    NSOpenGLPixelFormatAttribute attribs[] = {
         NSOpenGLPFAMultisample,
         NSOpenGLPFASampleBuffers, msaa > 0 ? 1 : 0,
         NSOpenGLPFASamples, msaa,
