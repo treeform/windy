@@ -240,3 +240,10 @@ void innerSetPos(WindyWindow* window, int x, int y) {
     NSRect rect = NSMakeRect(x, convertY(y + contentRect.size.height - 1), 0, 0);
     [window setFrameOrigin:rect.origin];
 }
+
+void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+    *width = backingRect.size.width;
+    *height = backingRect.size.height;
+}
