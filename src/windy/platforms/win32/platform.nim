@@ -29,7 +29,11 @@ const
 
 type
   Window* = ref object
-    onCloseRequest*: WindowCallback
+    onCloseRequest*: Callback
+    onMove*: Callback
+    onResize*: Callback
+    onFocus*: Callback
+    onUnfocus*: Callback
 
     hWnd: HWND
     hdc: HDC
@@ -130,6 +134,10 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
 
 proc destroy(window: Window) =
   window.onCloseRequest = nil
+  window.onMove = nil
+  window.onResize = nil
+  window.onFocus = nil
+  window.onUnfocus = nil
 
   if window.hglrc != 0:
     discard wglMakeCurrent(window.hdc, 0)
@@ -280,8 +288,25 @@ proc wndProc(
 
   case uMsg:
   of WM_CLOSE:
-    window.onCloseRequest()
-    return 0;
+    if window.onCloseRequest != nil:
+      window.onCloseRequest()
+    return 0
+  of WM_MOVE:
+    if window.onMove != nil:
+      window.onMove()
+    return 0
+  of WM_SIZE:
+    if window.onResize != nil:
+      window.onResize()
+    return 0
+  of WM_SETFOCUS:
+    if window.onFocus != nil:
+      window.onFocus()
+    return 0
+  of WM_KILLFOCUS:
+    if window.onUnfocus != nil:
+      window.onUnfocus()
+    return 0
   else:
     discard
 
@@ -520,3 +545,6 @@ proc `pos=`*(window: Window, pos: IVec2) =
 
 proc framebufferSize*(window: Window): IVec2 =
   window.size
+
+proc focused*(window: Window): bool =
+  window.hWnd == GetActiveWindow()
