@@ -66,10 +66,21 @@ static int convertY(int y) {
 
 @end
 
-@interface WindyWindow : NSWindow
+@interface WindyWindow : NSWindow <NSWindowDelegate>
 @end
 
 @implementation WindyWindow
+
+- (void)windowDidResize:(NSNotification*)notification {
+}
+
+- (void)windowDidMove:(NSNotification*)notification {
+}
+
+- (BOOL)windowShouldClose:(id)sender {
+    return YES;
+}
+
 @end
 
 @interface WindyContentView : NSOpenGLView
@@ -153,6 +164,7 @@ void innerNewPlatformWindow(
 
     [window setContentView:view];
     [window setTitle:[NSString stringWithUTF8String:title]];
+    [window setDelegate:window];
 
     *windowRet = window;
 }
