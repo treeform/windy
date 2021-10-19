@@ -1,34 +1,62 @@
 {.
-  passL: "-framework Cocoa -framework OpenGL -framework Metal -framework QuartzCore",
+  passL: "-framework Cocoa",
   compile: "macos.m",
 .}
 
-import ../../common
+import ../../common, vmath
 
-type
-  PlatformWindow* = ref object
-    windowPtr: pointer
-    viewPtr: pointer
+type PlatformWindow* = ref object
+  windowPtr: pointer
 
 proc innerInit() {.importc.}
+
 proc innerNewPlatformWindow(
-  titie: cstring,
-  w:cint,
-  h:cint,
-  windowPtr: ptr[pointer],
-  viewPtr: ptr[pointer]
+  title: cstring,
+  width: int32,
+  height: int32,
+  vsync: bool,
+  openglMajorVersion: int32,
+  openglMinorVersion: int32,
+  msaa: int32,
+  depthBits: int32,
+  stencilBits: int32,
+  windowRet: ptr pointer
 ) {.importc.}
+
+proc innerMakeContextCurrent(windowPtr: pointer) {.importc.}
+
+proc innerSwapBuffers(windowPtr: pointer) {.importc.}
+
 proc innerPollEvents() {.importc.}
-proc innerMakeContextCurrent(viewPtr: pointer) {.importc.}
-proc innerSwapBuffers(viewPtr: pointer) {.importc.}
+
+proc innerGetVisible(windowPtr: pointer): bool {.importc.}
+
+proc innerSetVisible(windowPtr: pointer, visible: bool) {.importc.}
+
+proc innerGetDecorated(windowPtr: pointer): bool {.importc.}
+
+proc innerSetDecorated(windowPtr: pointer, decorated: bool) {.importc.}
+
+proc innerGetResizable(windowPtr: pointer): bool {.importc.}
+
+proc innerSetResizable(windowPtr: pointer, resizable: bool) {.importc.}
+
+proc innerGetSize(windowPtr: pointer, width, height: ptr int32) {.importc.}
+
+proc innerSetSize(windowPtr: pointer, width, height: int32) {.importc.}
+
+proc innerGetPos(windowPtr: pointer, x, y: ptr int32) {.importc.}
+
+proc innerSetPos(windowPtr: pointer, x, y: int32) {.importc.}
+
+proc innerGetFramebufferSize(windowPtr: pointer, x, y: ptr int32) {.importc.}
 
 proc platformInit*() =
   innerInit()
 
 proc newPlatformWindow*(
   title: string,
-  w: int,
-  h: int,
+  size: IVec2,
   vsync: bool,
   openglMajorVersion: int,
   openglMinorVersion: int,
@@ -39,17 +67,55 @@ proc newPlatformWindow*(
   result = PlatformWindow()
   innerNewPlatformWindow(
     title,
-    w.cint,
-    h.cint,
-    result.windowPtr.addr,
-    result.viewPtr.addr
+    size.x,
+    size.y,
+    vsync,
+    openglMajorVersion.int32,
+    openglMinorVersion.int32,
+    msaa.int32,
+    depthBits.int32,
+    stencilBits.int32,
+    result.windowPtr.addr
   )
 
 proc makeContextCurrent*(window: PlatformWindow) =
-  innerMakeContextCurrent(window.viewPtr)
+  innerMakeContextCurrent(window.windowPtr)
 
 proc swapBuffers*(window: PlatformWindow) =
-  innerSwapBuffers(window.viewPtr)
+  innerSwapBuffers(window.windowPtr)
 
 proc platformPollEvents*() =
   innerPollEvents()
+
+proc visible*(window: PlatformWindow): bool =
+  innerGetVisible(window.windowPtr)
+
+proc `visible=`*(window: PlatformWindow, visible: bool) =
+  innerSetVisible(window.windowPtr, visible)
+
+proc decorated*(window: PlatformWindow): bool =
+  innerGetDecorated(window.windowPtr)
+
+proc `decorated=`*(window: PlatformWindow, decorated: bool) =
+  innerSetDecorated(window.windowPtr, decorated)
+
+proc resizable*(window: PlatformWindow): bool =
+  innerGetResizable(window.windowPtr)
+
+proc `resizable=`*(window: PlatformWindow, resizable: bool) =
+  innerSetResizable(window.windowPtr, resizable)
+
+proc size*(window: PlatformWindow): IVec2 =
+  innerGetSize(window.windowPtr, result.x.addr, result.y.addr)
+
+proc `size=`*(window: PlatformWindow, size: IVec2) =
+  innerSetSize(window.windowPtr, size.x, size.y)
+
+proc pos*(window: PlatformWindow): IVec2 =
+  innerGetPos(window.windowPtr, result.x.addr, result.y.addr)
+
+proc `pos=`*(window: PlatformWindow, pos: IVec2) =
+  innerSetPos(window.windowPtr, pos.x, pos.y)
+
+proc framebufferSize*(window: PlatformWindow): IVec2 =
+  innerGetFramebufferSize(window.windowPtr, result.x.addr, result.y.addr)
