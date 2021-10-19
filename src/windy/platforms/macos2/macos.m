@@ -43,6 +43,12 @@ static int pickOpenGLProfile(int majorVersion) {
     return NSOpenGLProfileVersionLegacy;
 }
 
+static int convertY(int y) {
+    // Converts y from relative to the bottom of the screen to relative to the top of the screen.
+    int screenHeight = (int)CGDisplayBounds(CGMainDisplayID()).size.height;
+    return screenHeight - y - 1;
+}
+
 @interface WindyApplicationDelegate : NSObject <NSApplicationDelegate>
 @end
 
@@ -194,7 +200,7 @@ void innerGetSize(WindyWindow* window, int* width, int* height) {
 void innerGetPos(WindyWindow* window, int* x, int* y) {
     NSRect contentRect = [window contentRectForFrameRect:[window frame]];
     *x = contentRect.origin.x;
-    *y = contentRect.origin.y;
+    *y = convertY(contentRect.origin.y + contentRect.size.height - 1);
 }
 
 void innerSetVisible(WindyWindow* window, bool visible) {
@@ -230,6 +236,14 @@ void innerSetSize(WindyWindow* window, int width, int height) {
 }
 
 void innerSetPos(WindyWindow* window, int x, int y) {
-    NSRect rect = NSMakeRect(x, y, 0, 0);
+    NSRect contentRect = [[window contentView] frame];
+    NSRect rect = NSMakeRect(x, convertY(y + contentRect.size.height - 1), 0, 0);
     [window setFrameOrigin:rect.origin];
+}
+
+void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+    *width = backingRect.size.width;
+    *height = backingRect.size.height;
 }

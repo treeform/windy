@@ -81,5 +81,8 @@ proc `size=`*(window: Window, size: IVec2) =
 proc pos*(window: Window): IVec2 =
   window.platform.pos
 
-proc `pos=`*(window: Window, pos: Ivec2) =
+proc `pos=`*(window: Window, pos: IVec2) =
   window.platform.pos = pos
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.platform.framebufferSize

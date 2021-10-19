@@ -49,6 +49,8 @@ proc innerGetPos(windowPtr: pointer, x, y: ptr int32) {.importc.}
 
 proc innerSetPos(windowPtr: pointer, x, y: int32) {.importc.}
 
+proc innerGetFramebufferSize(windowPtr: pointer, x, y: ptr int32) {.importc.}
+
 proc platformInit*() =
   innerInit()
 
@@ -116,5 +118,10 @@ proc pos*(window: PlatformWindow): IVec2 =
   innerGetPos(window.windowPtr, x.addr, y.addr)
   ivec2(x, y)
 
-proc `pos=`*(window: PlatformWindow, pos: Ivec2) =
+proc `pos=`*(window: PlatformWindow, pos: IVec2) =
   innerSetPos(window.windowPtr, pos.x, pos.y)
+
+proc framebufferSize*(window: PlatformWindow): IVec2 =
+  var width, height: int32
+  innerGetFramebufferSize(window.windowPtr, width.addr, height.addr)
+  ivec2(width, height)
