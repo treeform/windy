@@ -29,6 +29,8 @@ const
 
 type
   Window* = ref object
+    onCloseRequest*: WindowCallback
+
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
@@ -49,13 +51,21 @@ var
 
 var
   initialized: bool
-  windows*: seq[Window]
+  windows: seq[Window]
+
+proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
+  ## Returns the window for this handle, else -1
+  for i, window in windows:
+    if window.hWnd == hWnd:
+      return i
+  -1
 
 proc forHandle(windows: seq[Window], hWnd: HWND): Window =
-  ## Returns the Window for this window handle, else nil
-  for window in windows:
-    if window.hWnd == hWnd:
-      return window
+  ## Returns the window for this window handle, else nil
+  let index = windows.indexForHandle(hWnd)
+  if index == -1:
+    return nil
+  windows[index]
 
 proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   let windowClassName = windowClassName.wstr()
@@ -119,6 +129,8 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   discard SetPropW(result, cast[ptr WCHAR](key[0].unsafeAddr), 1)
 
 proc destroy(window: Window) =
+  window.onCloseRequest = nil
+
   if window.hglrc != 0:
     discard wglMakeCurrent(window.hdc, 0)
     discard wglDeleteContext(window.hglrc)
@@ -127,7 +139,12 @@ proc destroy(window: Window) =
     discard ReleaseDC(window.hWnd, window.hdc)
     window.hdc = 0
   if window.hWnd != 0:
+    let key = "Windy".wstr()
+    discard RemovePropW(window.hWnd, cast[ptr WCHAR](key[0].unsafeAddr))
     discard DestroyWindow(window.hWnd)
+    let index = windows.indexForHandle(window.hWnd)
+    if index != -1:
+      windows.delete(index)
     window.hWnd = 0
 
 proc getDC(hWnd: HWND): HDC =
@@ -261,6 +278,13 @@ proc wndProc(
   if window == nil:
     return
 
+  case uMsg:
+  of WM_CLOSE:
+    window.onCloseRequest()
+    return 0;
+  else:
+    discard
+
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
 proc init*() =
@@ -295,6 +319,9 @@ proc makeContextCurrent*(window: Window) =
 proc swapBuffers*(window: Window) =
   if SwapBuffers(window.hdc) == 0:
     raise newException(WindyError, "Error swapping buffers")
+
+proc close*(window: Window) =
+  destroy window
 
 proc newWindow*(
   title: string,

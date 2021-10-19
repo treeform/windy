@@ -11,6 +11,12 @@ loadExtensions()
 
 window.visible = true
 
+var running = true
+
+window.onCloseRequest = proc() =
+  running = false
+  window.close()
+
 echo "GL_VERSION: ", cast[cstring](glGetString(GL_VERSION))
 echo "GL_VENDOR: ", cast[cstring](glGetString(GL_VENDOR))
 echo "GL_RENDERER: ", cast[cstring](glGetString(GL_RENDERER))
@@ -25,6 +31,6 @@ proc display() =
   bxy.endFrame()
   window.swapBuffers()
 
-while true:
-  pollEvents()
+while running:
   display()
+  pollEvents()

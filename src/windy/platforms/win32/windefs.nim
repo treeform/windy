@@ -453,6 +453,11 @@ proc GetPropW*(
   lpString: LPCWSTR
 ): BOOL {.importc, stdcall, dynlib: "User32".}
 
+proc RemovePropW*(
+  hWnd: HWND,
+  lpString: LPCWSTR
+): HANDLE {.importc, stdcall, dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
