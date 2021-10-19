@@ -51,24 +51,11 @@ var
   initialized: bool
   windows*: seq[PlatformWindow]
 
-proc wstr(str: string): string =
-  let wlen = MultiByteToWideChar(
-    CP_UTF8,
-    0,
-    str[0].unsafeAddr,
-    str.len.int32,
-    nil,
-    0
-  )
-  result = newString(wlen * 2 + 1)
-  discard MultiByteToWideChar(
-    CP_UTF8,
-    0,
-    str[0].unsafeAddr,
-    str.len.int32,
-    cast[ptr WCHAR](result[0].addr),
-    wlen
-  )
+proc forHandle(windows: seq[PlatformWindow], hWnd: HWND): PlatformWindow =
+  ## Returns the PlatformWindow for this window handle, else nil
+  for window in windows:
+    if window.hWnd == hWnd:
+      return window
 
 proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   let windowClassName = windowClassName.wstr()
@@ -127,6 +114,21 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   )
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
+
+  let key = "Windy".wstr()
+  discard SetPropW(result, cast[ptr WCHAR](key[0].unsafeAddr), 1)
+
+proc destroy(window: PlatformWindow) =
+  if window.hglrc != 0:
+    discard wglMakeCurrent(window.hdc, 0)
+    discard wglDeleteContext(window.hglrc)
+    window.hglrc = 0
+  if window.hdc != 0:
+    discard ReleaseDC(window.hWnd, window.hdc)
+    window.hdc = 0
+  if window.hWnd != 0:
+    discard DestroyWindow(window.hWnd)
+    window.hWnd = 0
 
 proc getDC(hWnd: HWND): HDC =
   result = GetDC(hWnd)
@@ -248,6 +250,17 @@ proc wndProc(
   lParam: LPARAM
 ): LRESULT {.stdcall.} =
   # echo wmEventName(uMsg)
+  let
+    key = "Windy".wstr()
+    data = GetPropW(hWnd, cast[ptr WCHAR](key[0].unsafeAddr))
+  if data == 0:
+    # This event is for a window being created (CreateWindowExW has not returned)
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+  let window = windows.forHandle(hWnd)
+  if window == nil:
+    return
+
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
 proc platformInit*() =
@@ -269,18 +282,6 @@ proc platformPollEvents*() =
     else:
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
-
-proc destroy(window: PlatformWindow) =
-  if window.hglrc != 0:
-    discard wglMakeCurrent(window.hdc, 0)
-    discard wglDeleteContext(window.hglrc)
-    window.hglrc = 0
-  if window.hdc != 0:
-    discard ReleaseDC(window.hWnd, window.hdc)
-    window.hdc = 0
-  if window.hWnd != 0:
-    discard DestroyWindow(window.hWnd)
-    window.hWnd = 0
 
 proc show(window: PlatformWindow) =
   discard ShowWindow(window.hWnd, SW_SHOW)
@@ -349,7 +350,6 @@ proc newPlatformWindow*(
       numFormats.addr
     ) == 0:
       raise newException(WindyError, "Error choosing pixel format")
-
     if numFormats == 0:
       raise newException(WindyError, "No pixel format chosen")
 
