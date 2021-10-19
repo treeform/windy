@@ -4,8 +4,6 @@ const libX11* =
   when defined(macosx): "libX11.dylib"
   else: "libX11.so(|.6)"
 
-{.pragma: libx11, cdecl, dynlib: libX11, importc.}
-
 type
   Display* = ptr object
     ext_data*: ptr XExtData
@@ -60,7 +58,7 @@ type
     number*: cint
     next*: ptr XExtData
     freePrivate*: proc (extension: ptr XExtData): cint {.cdecl.}
-    private_data*: pointer
+    privateData*: pointer
 
   Visual* = object
     extData*: ptr XExtData
@@ -89,8 +87,8 @@ type
     extData*: ptr XExtData
     display*: Display
     root*: Window
-    width*, height*: cint
-    mwidth*, mheight*: cint
+    size*: IVec2
+    msize*: IVec2
     ndepths*: cint
     depths*: ptr Depth
     rootDepth*: cint
@@ -134,13 +132,11 @@ type
     arcMode*: cint
     tile*: Pixmap
     stipple*: Pixmap
-    tsXOrigin*: cint
-    tsYOrigin*: cint
+    tsOrigin*: IVec2
     font*: Font
     subwindowMode*: cint
     graphicsExposures*: cint
-    clipXOrigin*: cint
-    clipYOrigin*: cint
+    clipOrigin*: IVec2
     clipMask*: Pixmap
     dashOffset*: cint
     dashes*: cchar
@@ -172,24 +168,30 @@ const
   XLookupBoth* = 4
 
 
-proc XOpenDisplay*(displayName: cstring): Display {.libx11.}
-proc XSync*(d: Display, disc = false) {.libx11.}
+using d: Display
 
-proc XFree*(x: pointer) {.libx11.}
 
-proc screen(d: Display, id: cint): ptr Screen =
-  cast[ptr Screen](cast[int](d[].screens) + id * Screen.sizeof)
+proc screen(d; id: cint): ptr Screen =
+  cast[ptr Screen](cast[int](d.screens) + id * Screen.sizeof)
 
-proc defaultScreen*(d: Display): cint =
-  d[].defaultScreen
+proc defaultScreen*(d): cint =
+  d.defaultScreen
 
-proc defaultRootWindow*(d: Display): Window =
+proc defaultRootWindow*(d): Window =
   d.screen(d.defaultScreen).root
 
-proc XCreateColormap*(d: Display, root: Window, visual: ptr Visual, flags: cint): Colormap {.libx11.}
+
+{.push, cdecl, dynlib: libX11, importc.}
+
+proc XOpenDisplay*(displayName: cstring): Display
+proc XSync*(d; disc = false)
+
+proc XFree*(x: pointer)
+
+proc XCreateColormap*(d; root: Window, visual: ptr Visual, flags: cint): Colormap
 
 proc XCreateWindow*(
-  d: Display,
+  d;
   root: Window,
   x, y: cint,
   w, h: cuint,
@@ -199,65 +201,67 @@ proc XCreateWindow*(
   visual: ptr Visual,
   valueMask: culong,
   attributes: ptr XSetWindowAttributes
-): Window {.libx11.}
-proc XDestroyWindow*(d: Display, window: Window) {.libx11.}
+): Window
+proc XDestroyWindow*(d; window: Window)
 
-proc XMapWindow*(d: Display, window: Window) {.libx11.}
-proc XUnmapWindow*(d: Display, window: Window) {.libx11.}
+proc XMapWindow*(d; window: Window)
+proc XUnmapWindow*(d; window: Window)
 
-proc XRaiseWindow*(d: Display, window: Window) {.libx11.}
-proc XLowerWindow*(d: Display, window: Window) {.libx11.}
+proc XRaiseWindow*(d; window: Window)
+proc XLowerWindow*(d; window: Window)
 
-proc XSetWMProtocols*(d: Display, window: Window, wmProtocols: ptr Atom, len: cint) {.libx11.}
-proc XSelectInput*(d: Display, window: Window, inputs: clong) {.libx11.}
+proc XSetWMProtocols*(d; window: Window, wmProtocols: ptr Atom, len: cint)
+proc XSelectInput*(d; window: Window, inputs: clong)
 
 proc XChangeProperty*(
-  d: Display, window: Window, property: Atom, kind: Atom,
+  d; window: Window, property: Atom, kind: Atom,
   format: cint, mode: PropMode, data: cstring, len: cint
-) {.libx11.}
+)
 
 proc XGetWindowProperty*(
-  d: Display, window: Window, property: Atom,
+  d; window: Window, property: Atom,
   offset: clong, len: clong, delete: bool, requiredKind: Atom,
   kindReturn: ptr Atom, formatReturn: ptr cint, lenReturn: ptr culong,
   bytesAfterReturn: ptr culong, dataReturn: ptr cstring
-) {.libx11.}
+)
 
 proc Xutf8SetWMProperties*(
-  d: Display, window: Window,
+  d; window: Window,
   name: cstring, iconName: cstring,
   argv: ptr cstring, argc: cint,
   normalHints: pointer, wmHints: pointer, classHints: pointer
-) {.libx11.}
+)
 
-proc XInternAtom*(d: Display, name: cstring, onlyIfExist: cint): Atom {.libx11.}
+proc XInternAtom*(d; name: cstring, onlyIfExist: cint): Atom
 
-proc XOpenIM*(d: Display, db: pointer = nil, resName: cstring = nil, resClass: cstring = nil): XIM {.libx11.}
-proc XCloseIM*(im: XIM) {.libx11.}
+proc XOpenIM*(d; db: pointer = nil, resName: cstring = nil, resClass: cstring = nil): XIM
+proc XCloseIM*(im: XIM)
 
-proc XCreateIC*(im: XIM): XIC {.varargs, libx11.}
-proc XDestroyIC*(ic: XIC) {.libx11.}
-proc XSetICFocus*(ic: XIC) {.libx11.}
-proc XUnsetICFocus*(ic: XIC) {.libx11.}
+proc XCreateIC*(im: XIM): XIC {.varargs.}
+proc XDestroyIC*(ic: XIC)
+proc XSetICFocus*(ic: XIC)
+proc XUnsetICFocus*(ic: XIC)
 
-proc XCreateGC*(d: Display, o: Drawable, flags: culong, gcv: ptr XGCValues): GC {.libx11.}
-proc XFreeGC*(d: Display, gc: GC) {.libx11.}
+proc XCreateGC*(d; o: Drawable, flags: culong, gcv: ptr XGCValues): GC
+proc XFreeGC*(d; gc: GC)
 
-proc XMatchVisualInfo*(d: Display, screen: cint, depth: cint, flags: cint, result: ptr XVisualInfo) {.libx11.}
+proc XMatchVisualInfo*(d; screen: cint, depth: cint, flags: cint, result: ptr XVisualInfo)
 
-proc XSetTransientForHint*(d: Display, window: Window, root: Window) {.libx11.}
+proc XSetTransientForHint*(d; window: Window, root: Window)
 
-proc XSetNormalHints*(d: Display, window: Window, hints: ptr XSizeHints) {.libx11.}
-proc XGetNormalHints*(d: Display, window: Window, res: ptr XSizeHints) {.libx11.}
+proc XSetNormalHints*(d; window: Window, hints: ptr XSizeHints)
+proc XGetNormalHints*(d; window: Window, res: ptr XSizeHints)
 
 proc XGetGeometry*(
-  d: Display, window: Drawable,
+  d; window: Drawable,
   root: ptr Window,
   x, y: ptr int32,
   w, h: ptr uint32,
   borderW: ptr uint32,
   depth: ptr uint32
-) {.libx11.}
+)
 
-proc XResizeWindow*(d: Display, window: Window, w, h: uint32) {.libx11.}
-proc XMoveWindow*(d: Display, window: Window, x, y: int32) {.libx11.}
+proc XResizeWindow*(d; window: Window; w, h: uint32)
+proc XMoveWindow*(d; window: Window; x, y: int32)
+
+{.pop.}

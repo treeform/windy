@@ -24,7 +24,7 @@ var
   windows*: seq[PlatformWindow]
   display: Display
   decoratedAtom: Atom
-  wmForFramelessKind: WmForDecoratedKind
+  wmForDecoratedKind: WmForDecoratedKind
 
 
 proc atom[name: static string](): Atom =
@@ -48,7 +48,7 @@ proc platformInit* =
   if display == nil:
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
   
-  wmForFramelessKind =
+  wmForDecoratedKind =
     if (decoratedAtom = atomIfExist"_MOTIF_WM_HINTS"; decoratedAtom != 0):
       WmForDecoratedKind.motiv
     elif (decoratedAtom = atomIfExist"KWM_WIN_DECORATION"; decoratedAtom != 0):
@@ -172,6 +172,10 @@ proc `size=`*(window: PlatformWindow, v: IVec2) =
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
 
 
+proc framebufferSize*(window: PlatformWindow): IVec2 =
+  window.size
+
+
 proc pos*(window: PlatformWindow): IVec2 =
   window.handle.geometry.pos
 
@@ -187,7 +191,7 @@ proc `decorated=`*(window: PlatformWindow, v: bool) =
 
   let size = window.size # save current window size
 
-  case wmForFramelessKind
+  case wmForDecoratedKind
   of WmForDecoratedKind.motiv:
     type MWMHints = object
       flags: culong

@@ -45,10 +45,10 @@ proc newWindow*(
       getCurrentException()
     )
 
-proc makeContextCurrent*(window: Window) {.raises: [WindyError]} =
+proc makeContextCurrent*(window: Window) =
   window.platform.makeContextCurrent()
 
-proc swapBuffers*(window: Window) {.raises: [WindyError]} =
+proc swapBuffers*(window: Window) =
   window.platform.swapBuffers()
 
 proc pollEvents*() =

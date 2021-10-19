@@ -1,7 +1,5 @@
 import x, xlib
 
-{.pragma: libx11, cdecl, dynlib: libX11, importc.}
-
 type
   IfEventProc* = proc (d: Display, event: ptr XEvent, p: pointer): bool {.cdecl.}
   ErrorHandleProc* = proc (d: Display, event: ptr XErrorEvent): bool {.cdecl.}
@@ -428,9 +426,15 @@ type
     pad: array[0..23, clong]
 
 
-proc XCheckIfEvent*(d: Display, e: ptr XEvent, cb: IfEventProc, userData: pointer): bool {.libx11.}
-proc XSendEvent*(d: Display, window: Window, propogate: cint, mask: clong, e: ptr XEvent) {.libx11.}
+using d: Display
 
-proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint {.libx11.}
+{.push, cdecl, dynlib: libX11, importc.}
 
-proc XSetErrorHandler*(handler: ErrorHandleProc) {.libx11.}
+proc XCheckIfEvent*(d; e: ptr XEvent, cb: IfEventProc, userData: pointer): bool
+proc XSendEvent*(d; window: Window, propogate: cint, mask: clong, e: ptr XEvent)
+
+proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint
+
+proc XSetErrorHandler*(handler: ErrorHandleProc)
+
+{.pop.}
