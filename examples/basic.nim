@@ -16,13 +16,13 @@ proc display() =
   bxy.endFrame()
   window.swapBuffers()
 
-window.visible = true
-
 var running = true
 
 window.onCloseRequest = proc() =
   running = false
   window.close()
+
+window.visible = true
 
 while running:
   display()

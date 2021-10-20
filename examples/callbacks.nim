@@ -1,4 +1,4 @@
-import boxy, opengl, windy
+import boxy, opengl, os, windy
 
 init()
 
@@ -15,8 +15,6 @@ proc display() =
   bxy.drawRect(rect(vec2(100, 100), vec2(200, 200)), color(1, 0, 1, 1))
   bxy.endFrame()
   window.swapBuffers()
-
-window.visible = true
 
 var running = true
 
@@ -39,6 +37,11 @@ window.onResize = proc() =
 window.onFocusChange = proc() =
   echo "onFocusChange ", window.focused
 
+window.visible = true
+
 while running:
-  display()
+  if window.minimized or not window.visible:
+    sleep(10)
+  else:
+    display()
   pollEvents()
