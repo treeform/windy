@@ -1,5 +1,24 @@
 import ../../common, strutils, windefs
 
+proc wstr*(str: string): string =
+  let wlen = MultiByteToWideChar(
+    CP_UTF8,
+    0,
+    str[0].unsafeAddr,
+    str.len.int32,
+    nil,
+    0
+  )
+  result = newString(wlen * 2 + 1)
+  discard MultiByteToWideChar(
+    CP_UTF8,
+    0,
+    str[0].unsafeAddr,
+    str.len.int32,
+    cast[ptr WCHAR](result[0].addr),
+    wlen
+  )
+
 proc checkHRESULT*(hresult: HRESULT) =
   if hresult != S_OK:
     raise newException(WindyError, "Unexpected hresult " & toHex(hresult))

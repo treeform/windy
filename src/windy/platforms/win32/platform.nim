@@ -28,7 +28,12 @@ const
   WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB = 0x0002
 
 type
-  PlatformWindow* = ref object
+  Window* = ref object
+    onCloseRequest*: Callback
+    onMove*: Callback
+    onResize*: Callback
+    onFocusChange*: Callback
+
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
@@ -49,26 +54,21 @@ var
 
 var
   initialized: bool
-  windows*: seq[PlatformWindow]
+  windows: seq[Window]
 
-proc wstr(str: string): string =
-  let wlen = MultiByteToWideChar(
-    CP_UTF8,
-    0,
-    str[0].unsafeAddr,
-    str.len.int32,
-    nil,
-    0
-  )
-  result = newString(wlen * 2 + 1)
-  discard MultiByteToWideChar(
-    CP_UTF8,
-    0,
-    str[0].unsafeAddr,
-    str.len.int32,
-    cast[ptr WCHAR](result[0].addr),
-    wlen
-  )
+proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
+  ## Returns the window for this handle, else -1
+  for i, window in windows:
+    if window.hWnd == hWnd:
+      return i
+  -1
+
+proc forHandle(windows: seq[Window], hWnd: HWND): Window =
+  ## Returns the window for this window handle, else nil
+  let index = windows.indexForHandle(hWnd)
+  if index == -1:
+    return nil
+  windows[index]
 
 proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   let windowClassName = windowClassName.wstr()
@@ -127,6 +127,31 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   )
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
+
+  let key = "Windy".wstr()
+  discard SetPropW(result, cast[ptr WCHAR](key[0].unsafeAddr), 1)
+
+proc destroy(window: Window) =
+  window.onCloseRequest = nil
+  window.onMove = nil
+  window.onResize = nil
+  window.onFocusChange = nil
+
+  if window.hglrc != 0:
+    discard wglMakeCurrent(window.hdc, 0)
+    discard wglDeleteContext(window.hglrc)
+    window.hglrc = 0
+  if window.hdc != 0:
+    discard ReleaseDC(window.hWnd, window.hdc)
+    window.hdc = 0
+  if window.hWnd != 0:
+    let key = "Windy".wstr()
+    discard RemovePropW(window.hWnd, cast[ptr WCHAR](key[0].unsafeAddr))
+    discard DestroyWindow(window.hWnd)
+    let index = windows.indexForHandle(window.hWnd)
+    if index != -1:
+      windows.delete(index)
+    window.hWnd = 0
 
 proc getDC(hWnd: HWND): HDC =
   result = GetDC(hWnd)
@@ -241,6 +266,14 @@ proc loadLibraries() =
     GetProcAddress(user32, "AdjustWindowRectExForDpi")
   )
 
+proc callCallback(name: string, callback: Callback) {.raises: [].} =
+  if callback == nil:
+    return
+  try:
+    callback()
+  except:
+    quit("Exception during " & name & " callback: " & getCurrentExceptionMsg())
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -248,9 +281,36 @@ proc wndProc(
   lParam: LPARAM
 ): LRESULT {.stdcall.} =
   # echo wmEventName(uMsg)
+  let
+    key = "Windy".wstr()
+    data = GetPropW(hWnd, cast[ptr WCHAR](key[0].unsafeAddr))
+  if data == 0:
+    # This event is for a window being created (CreateWindowExW has not returned)
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+  let window = windows.forHandle(hWnd)
+  if window == nil:
+    return
+
+  case uMsg:
+  of WM_CLOSE:
+    callCallback("onCloseRequest", window.onCloseRequest)
+    return 0
+  of WM_MOVE:
+    callCallback("onMove", window.onMove)
+    return 0
+  of WM_SIZE:
+    callCallback("onResize", window.onResize)
+    return 0
+  of WM_SETFOCUS, WM_KILLFOCUS:
+    callCallback("onFocusChange", window.onFocusChange)
+    return 0
+  else:
+    discard
+
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-proc platformInit*() =
+proc init*() =
   if initialized:
     raise newException(WindyError, "Windy is already initialized")
   loadLibraries()
@@ -259,7 +319,7 @@ proc platformInit*() =
   registerWindowClass(windowClassName, wndProc)
   initialized = true
 
-proc platformPollEvents*() =
+proc pollEvents*() =
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
     if msg.message == WM_QUIT:
@@ -270,42 +330,27 @@ proc platformPollEvents*() =
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
 
-proc destroy(window: PlatformWindow) =
-  if window.hglrc != 0:
-    discard wglMakeCurrent(window.hdc, 0)
-    discard wglDeleteContext(window.hglrc)
-    window.hglrc = 0
-  if window.hdc != 0:
-    discard ReleaseDC(window.hWnd, window.hdc)
-    window.hdc = 0
-  if window.hWnd != 0:
-    discard DestroyWindow(window.hWnd)
-    window.hWnd = 0
-
-proc show(window: PlatformWindow) =
-  discard ShowWindow(window.hWnd, SW_SHOW)
-
-proc hide(window: PlatformWindow) =
-  discard ShowWindow(window.hWnd, SW_HIDE)
-
-proc makeContextCurrent*(window: PlatformWindow) =
+proc makeContextCurrent*(window: Window) =
   makeContextCurrent(window.hdc, window.hglrc)
 
-proc swapBuffers*(window: PlatformWindow) =
+proc swapBuffers*(window: Window) =
   if SwapBuffers(window.hdc) == 0:
     raise newException(WindyError, "Error swapping buffers")
 
-proc newPlatformWindow*(
+proc close*(window: Window) =
+  destroy window
+
+proc newWindow*(
   title: string,
   size: IVec2,
-  vsync: bool,
-  openglMajorVersion: int,
-  openglMinorVersion: int,
-  msaa: MSAA,
-  depthBits: int,
-  stencilBits: int
-): PlatformWindow =
-  result = PlatformWindow()
+  vsync = true,
+  openglMajorVersion = 4,
+  openglMinorVersion = 1,
+  msaa = msaaDisabled,
+  depthBits = 24,
+  stencilBits = 8
+): Window =
+  result = Window()
   result.hWnd = createWindow(
     windowClassName,
     title,
@@ -349,7 +394,6 @@ proc newPlatformWindow*(
       numFormats.addr
     ) == 0:
       raise newException(WindyError, "Error choosing pixel format")
-
     if numFormats == 0:
       raise newException(WindyError, "No pixel format chosen")
 
@@ -387,7 +431,7 @@ proc newPlatformWindow*(
 
     # The first call to ShowWindow may ignore the parameter so do an initial
     # call to clear that behavior.
-    result.hide()
+    discard ShowWindow(result.hWnd, SW_HIDE)
 
     result.makeContextCurrent()
 
@@ -399,28 +443,40 @@ proc newPlatformWindow*(
     destroy result
     raise e
 
-proc visible*(window: PlatformWindow): bool =
+proc visible*(window: Window): bool =
   IsWindowVisible(window.hWnd) != 0
 
-proc decorated*(window: PlatformWindow): bool =
+proc decorated*(window: Window): bool =
   let style = getWindowStyle(window.hWnd)
   (style and WS_BORDER) != 0
 
-proc resizable*(window: PlatformWindow): bool =
+proc resizable*(window: Window): bool =
   let style = getWindowStyle(window.hWnd)
   (style and WS_THICKFRAME) != 0
 
-proc size*(window: PlatformWindow): IVec2 =
+proc size*(window: Window): IVec2 =
   var rect: RECT
   discard GetClientRect(window.hWnd, rect.addr)
   ivec2(rect.right, rect.bottom)
 
-proc pos*(window: PlatformWindow): IVec2 =
+proc pos*(window: Window): IVec2 =
   var pos: POINT
   discard ClientToScreen(window.hWnd, pos.addr)
   ivec2(pos.x, pos.y)
 
-proc `decorated=`*(window: PlatformWindow, decorated: bool) =
+proc minimized*(window: Window): bool =
+  IsIconic(window.hWnd) != 0
+
+proc maximized*(window: Window): bool =
+  IsZoomed(window.hWnd) != 0
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.size
+
+proc focused*(window: Window): bool =
+  window.hWnd == GetActiveWindow()
+
+proc `decorated=`*(window: Window, decorated: bool) =
   var style: LONG
   if decorated:
     style = decoratedWindowStyle
@@ -432,13 +488,13 @@ proc `decorated=`*(window: PlatformWindow, decorated: bool) =
 
   setWindowStyle(window.hWnd, style)
 
-proc `visible=`*(window: PlatformWindow, visible: bool) =
+proc `visible=`*(window: Window, visible: bool) =
   if visible:
-    window.show()
+    discard ShowWindow(window.hWnd, SW_SHOW)
   else:
-    window.hide()
+    discard ShowWindow(window.hWnd, SW_HIDE)
 
-proc `resizable=`*(window: PlatformWindow, resizable: bool) =
+proc `resizable=`*(window: Window, resizable: bool) =
   if not window.decorated:
     return
 
@@ -453,7 +509,7 @@ proc `resizable=`*(window: PlatformWindow, resizable: bool) =
 
   setWindowStyle(window.hWnd, style)
 
-proc `size=`*(window: PlatformWindow, size: IVec2) =
+proc `size=`*(window: Window, size: IVec2) =
   var rect = RECT(top: 0, left: 0, right: size.x, bottom: size.y)
   discard AdjustWindowRectExForDpi(
     rect.addr,
@@ -472,7 +528,7 @@ proc `size=`*(window: PlatformWindow, size: IVec2) =
     SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOMOVE
   )
 
-proc `pos=`*(window: PlatformWindow, pos: IVec2) =
+proc `pos=`*(window: Window, pos: IVec2) =
   var rect = RECT(top: pos.x, left: pos.y, bottom: pos.x, right: pos.y)
   discard AdjustWindowRectExForDpi(
     rect.addr,
@@ -491,5 +547,18 @@ proc `pos=`*(window: PlatformWindow, pos: IVec2) =
     SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOSIZE
   )
 
-proc framebufferSize*(window: PlatformWindow): IVec2 =
-  window.size
+proc `minimized=`*(window: Window, minimized: bool) =
+  var cmd: int32
+  if minimized:
+    cmd = SW_MINIMIZE
+  else:
+    cmd = SW_RESTORE
+  discard ShowWindow(window.hWnd, cmd)
+
+proc `maximized=`*(window: Window, maximized: bool) =
+  var cmd: int32
+  if maximized:
+    cmd = SW_MAXIMIZE
+  else:
+    cmd = SW_RESTORE
+  discard ShowWindow(window.hWnd, cmd)
