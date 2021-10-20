@@ -1,5 +1,5 @@
 import x11/[x, xlib, xevent, glx]
-import ../../common, os, vmath
+import ../../common, os, vmath, sets
 
 type
   XWindow = x.Window
@@ -96,9 +96,6 @@ proc property(window: XWindow, property: Atom): tuple[kind: Atom, data: string] 
 proc setProperty(window: XWindow, property: Atom, kind: Atom, format: cint, data: string) =
   display.XChangeProperty(window, property, kind, format, pmReplace, data, data.len.cint)
 
-proc addProperty(window: XWindow, property: Atom, kind: Atom, format: cint, data: string) =
-  display.XChangeProperty(window, property, kind, format, pmAppend, data, data.len.cint)
-
 proc asSeq(s: string, T: type = uint8): seq[T] =
   result = newSeqOfCap[T](s.len div T.sizeof)
   for i in countup(0, s.len - T.sizeof, T.sizeof):
@@ -106,14 +103,14 @@ proc asSeq(s: string, T: type = uint8): seq[T] =
     copyMem(r.addr, s[i].unsafeAddr, T.sizeof)
     result.add cast[ptr T](r.addr)[]
 
-proc asString[T](x: openarray[T]): string =
+proc asString[T](x: seq[T]|HashSet[T]): string =
   result = newStringOfCap(x.len * T.sizeof)
   for v in x:
     for v in cast[ptr array[T.sizeof, char]](v.unsafeAddr)[]:
       result.add v
 
-proc wmState(window: XWindow): seq[Atom] =
-  window.property(atom"_NET_WM_STATE").data.asSeq(Atom)
+proc wmState(window: XWindow): HashSet[Atom] =
+  window.property(atom"_NET_WM_STATE").data.asSeq(Atom).toHashSet
 
 
 proc destroy(window: Window) =
@@ -162,6 +159,45 @@ proc `pos=`*(window: Window, v: IVec2) =
   display.XMoveWindow(window.handle, v.x, v.y)
 
 
+proc maximized*(window: Window): bool =
+  let wmState = window.handle.wmState
+  atom"_NET_WM_STATE_MAXIMIZED_HORZ" in wmState and
+  atom"_NET_WM_STATE_MAXIMIZED_VERT" in wmState
+
+proc `maximized=`*(window: Window, v: bool) =
+  var wmState = window.handle.wmState
+  
+  if v:
+    wmState.incl atom"_NET_WM_STATE_MAXIMIZED_HORZ"
+    wmState.incl atom"_NET_WM_STATE_MAXIMIZED_VERT"
+  else:
+    wmState.excl atom"_NET_WM_STATE_MAXIMIZED_HORZ"
+    wmState.excl atom"_NET_WM_STATE_MAXIMIZED_VERT"
+  
+  window.handle.setProperty(atom"_NET_WM_STATE", xaAtom, 32, wmState.asString)
+
+
+proc minimized*(window: Window): bool =
+  let wState = window.handle.property(atom"WM_STATE").data.asSeq(int32)
+  wState.len >= 1 and wState[0] == 3 or
+  atom"_NET_WM_STATE_HIDDEN" in window.handle.wmState
+
+proc `minimized=`*(window: Window, v: bool) =
+  if v: display.XIconifyWindow(window.handle, display.defaultScreen)
+  else: display.XRaiseWindow(window.handle)
+
+
+proc focused*(window: Window): bool =
+  var
+    focusWindow: XWindow
+    revertTo: RevertTo
+  display.XGetInputFocus(focusWindow.addr, revertTo.addr)
+  focusWindow == window.handle
+
+proc focus*(window: Window) =
+  display.XSetInputFocus(window.handle, rtNone)
+
+
 proc decorated*(window: Window): bool =
   window.`"_decorated"`
 
@@ -172,25 +208,10 @@ proc `decorated=`*(window: Window, v: bool) =
 
   case wmForDecoratedKind
   of WmForDecoratedKind.motiv:
-    type MWMHints = object
-      flags: culong
-      functions: culong
-      decorations: culong
-      input_mode: culong
-      status: culong
-    
-    var hints = MWMHints(flags: culong (if v: 0 else: 1) shl 1)
-    display.XChangeProperty(
-      window.handle, decoratedAtom, decoratedAtom, 32, pmReplace,
-      cast[ptr cuchar](hints.addr), MWMHints.sizeof div 4
-    )
+    window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[v.int32 shl 1, 0, 0, 0, 0].asString)
 
   of WmForDecoratedKind.kwm, WmForDecoratedKind.other:
-    var hints: clong = if v: 1 else: 0
-    display.XChangeProperty(
-      window.handle, decoratedAtom, decoratedAtom, 32, pmReplace,
-      cast[ptr cuchar](hints.addr), clong.sizeof div 4
-    )
+    window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[v.int32].asString)
 
   else: display.XSetTransientForHint(window.handle, display.defaultRootWindow)
 
@@ -217,13 +238,12 @@ proc fullscreen*(window: Window): bool =
   atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
 
 proc `fullscreen=`*(window: Window, v: bool) =
-  if window.fullscreen == v: return
-  if v:
-    window.handle.addProperty(atom"_NET_WM_STATE", xaAtom, 32, [atom"_NET_WM_STATE_FULLSCREEN"].asString)
-  else:
-    var wmState = window.handle.wmState
-    wmState.del wmState.find(atom"_NET_WM_STATE_FULLSCREEN")
-    window.handle.setProperty(atom"_NET_WM_STATE", xaAtom, 32, wmState.asString)
+  var wmState = window.handle.wmState
+  
+  if v: wmState.incl atom"_NET_WM_STATE_FULLSCREEN"
+  else: wmState.excl atom"_NET_WM_STATE_FULLSCREEN"
+  
+  window.handle.setProperty(atom"_NET_WM_STATE", xaAtom, 32, wmState.asString)
 
 
 proc title*(window: Window): string =

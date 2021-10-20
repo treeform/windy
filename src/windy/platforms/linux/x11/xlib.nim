@@ -188,6 +188,8 @@ proc XSync*(d; disc = false)
 
 proc XFree*(x: pointer)
 
+proc XInternAtom*(d; name: cstring, onlyIfExist: cint): Atom
+
 proc XCreateColormap*(d; root: Window, visual: ptr Visual, flags: cint): Colormap
 
 proc XCreateWindow*(
@@ -209,6 +211,7 @@ proc XUnmapWindow*(d; window: Window)
 
 proc XRaiseWindow*(d; window: Window)
 proc XLowerWindow*(d; window: Window)
+proc XIconifyWindow*(d; window: Window, screen: cint)
 
 proc XSetWMProtocols*(d; window: Window, wmProtocols: ptr Atom, len: cint)
 proc XSelectInput*(d; window: Window, inputs: clong)
@@ -231,8 +234,6 @@ proc Xutf8SetWMProperties*(
   argv: ptr cstring, argc: cint,
   normalHints: pointer, wmHints: pointer, classHints: pointer
 )
-
-proc XInternAtom*(d; name: cstring, onlyIfExist: cint): Atom
 
 proc XOpenIM*(d; db: pointer = nil, resName: cstring = nil, resClass: cstring = nil): XIM
 proc XCloseIM*(im: XIM)
@@ -263,5 +264,8 @@ proc XGetGeometry*(
 
 proc XResizeWindow*(d; window: Window; w, h: uint32)
 proc XMoveWindow*(d; window: Window; x, y: int32)
+
+proc XGetInputFocus*(d; window: ptr Window, revertTo: ptr RevertTo)
+proc XSetInputFocus*(d; window: Window, revertTo: RevertTo, time: int32 = CurrentTime)
 
 {.pop.}

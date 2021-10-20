@@ -45,6 +45,11 @@ type
   ByteOrder* = enum
     leftToRight = 0
     rightToLeft = 1
+  
+  RevertTo* {.size: int32.sizeof.} = enum
+    rtNone = 0
+    rtRoot = 1
+    rtParent = 2
 
 const
   ParentRelative* = 1
@@ -154,9 +159,6 @@ const
   ReplayKeyboard* = 5
   AsyncBoth* = 6
   SyncBoth* = 7
-  RevertToNone* = 0
-  RevertToPointerRoot* = PointerRoot
-  RevertToParent* = 2
   FirstExtensionError* = 128
   LastExtensionError* = 255
   InputOutput* = 1
