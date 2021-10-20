@@ -171,7 +171,7 @@ const
 using d: Display
 
 
-proc screen(d; id: cint): ptr Screen =
+proc screen*(d; id: cint): ptr Screen =
   cast[ptr Screen](cast[int](d.screens) + id * Screen.sizeof)
 
 proc defaultScreen*(d): cint =

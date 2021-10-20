@@ -153,6 +153,7 @@ proc framebufferSize*(window: Window): IVec2 =
 
 
 proc pos*(window: Window): IVec2 =
+  #TODO: always returns (0, 0)
   window.handle.geometry.pos
 
 proc `pos=`*(window: Window, v: IVec2) =
@@ -253,6 +254,13 @@ proc `title=`*(window: Window, v: string) =
   window.handle.setProperty(atom"_NET_WM_NAME", atom"UTF8_STRING", 8, v)
   window.handle.setProperty(atom"_NET_WM_ICON_NAME", atom"UTF8_STRING", 8, v)
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
+
+
+proc contentScale*(window: Window): float32 =
+  const pixelsPerMillimeter = 25.4
+  const defaultScreenDpi = 96
+  let s = display.screen(display.defaultScreen)
+  (s.size.vec2 * pixelsPerMillimeter / s.msize.vec2 / defaultScreenDpi).x
 
 
 proc newWindow*(
