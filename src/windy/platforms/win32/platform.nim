@@ -32,8 +32,7 @@ type
     onCloseRequest*: Callback
     onMove*: Callback
     onResize*: Callback
-    onFocus*: Callback
-    onUnfocus*: Callback
+    onFocusChange*: Callback
 
     hWnd: HWND
     hdc: HDC
@@ -136,8 +135,7 @@ proc destroy(window: Window) =
   window.onCloseRequest = nil
   window.onMove = nil
   window.onResize = nil
-  window.onFocus = nil
-  window.onUnfocus = nil
+  window.onFocusChange = nil
 
   if window.hglrc != 0:
     discard wglMakeCurrent(window.hdc, 0)
@@ -268,6 +266,14 @@ proc loadLibraries() =
     GetProcAddress(user32, "AdjustWindowRectExForDpi")
   )
 
+proc callCallback(name: string, callback: Callback) {.raises: [].} =
+  if callback == nil:
+    return
+  try:
+    callback()
+  except:
+    quit("Exception during " & name & " callback: " & getCurrentExceptionMsg())
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -288,24 +294,16 @@ proc wndProc(
 
   case uMsg:
   of WM_CLOSE:
-    if window.onCloseRequest != nil:
-      window.onCloseRequest()
+    callCallback("onCloseRequest", window.onCloseRequest)
     return 0
   of WM_MOVE:
-    if window.onMove != nil:
-      window.onMove()
+    callCallback("onMove", window.onMove)
     return 0
   of WM_SIZE:
-    if window.onResize != nil:
-      window.onResize()
+    callCallback("onResize", window.onResize)
     return 0
-  of WM_SETFOCUS:
-    if window.onFocus != nil:
-      window.onFocus()
-    return 0
-  of WM_KILLFOCUS:
-    if window.onUnfocus != nil:
-      window.onUnfocus()
+  of WM_SETFOCUS, WM_KILLFOCUS:
+    callCallback("onFocusChange", window.onFocusChange)
     return 0
   else:
     discard
@@ -331,12 +329,6 @@ proc pollEvents*() =
     else:
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
-
-proc show(window: Window) =
-  discard ShowWindow(window.hWnd, SW_SHOW)
-
-proc hide(window: Window) =
-  discard ShowWindow(window.hWnd, SW_HIDE)
 
 proc makeContextCurrent*(window: Window) =
   makeContextCurrent(window.hdc, window.hglrc)
@@ -439,7 +431,7 @@ proc newWindow*(
 
     # The first call to ShowWindow may ignore the parameter so do an initial
     # call to clear that behavior.
-    result.hide()
+    discard ShowWindow(result.hWnd, SW_HIDE)
 
     result.makeContextCurrent()
 
@@ -472,6 +464,18 @@ proc pos*(window: Window): IVec2 =
   discard ClientToScreen(window.hWnd, pos.addr)
   ivec2(pos.x, pos.y)
 
+proc minimized*(window: Window): bool =
+  IsIconic(window.hWnd) != 0
+
+proc maximized*(window: Window): bool =
+  IsZoomed(window.hWnd) != 0
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.size
+
+proc focused*(window: Window): bool =
+  window.hWnd == GetActiveWindow()
+
 proc `decorated=`*(window: Window, decorated: bool) =
   var style: LONG
   if decorated:
@@ -486,9 +490,9 @@ proc `decorated=`*(window: Window, decorated: bool) =
 
 proc `visible=`*(window: Window, visible: bool) =
   if visible:
-    window.show()
+    discard ShowWindow(window.hWnd, SW_SHOW)
   else:
-    window.hide()
+    discard ShowWindow(window.hWnd, SW_HIDE)
 
 proc `resizable=`*(window: Window, resizable: bool) =
   if not window.decorated:
@@ -543,8 +547,18 @@ proc `pos=`*(window: Window, pos: IVec2) =
     SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOSIZE
   )
 
-proc framebufferSize*(window: Window): IVec2 =
-  window.size
+proc `minimized=`*(window: Window, minimized: bool) =
+  var cmd: int32
+  if minimized:
+    cmd = SW_MINIMIZE
+  else:
+    cmd = SW_RESTORE
+  discard ShowWindow(window.hWnd, cmd)
 
-proc focused*(window: Window): bool =
-  window.hWnd == GetActiveWindow()
+proc `maximized=`*(window: Window, maximized: bool) =
+  var cmd: int32
+  if maximized:
+    cmd = SW_MAXIMIZE
+  else:
+    cmd = SW_RESTORE
+  discard ShowWindow(window.hWnd, cmd)
