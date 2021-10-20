@@ -1,4 +1,4 @@
-import x, xlib
+import x, xlib, vmath
 
 type
   IfEventProc* = proc (d: Display, event: ptr XEvent, p: pointer): bool {.cdecl.}
@@ -49,8 +49,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     state*: cuint
     keycode*: cuint
     same_screen*: cint
@@ -64,8 +64,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     state*: cuint
     button*: cuint
     same_screen*: cint
@@ -79,8 +79,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     state*: cuint
     is_hint*: cchar
     same_screen*: cint
@@ -94,8 +94,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     mode*: cint
     detail*: cint
     same_screen*: bool
@@ -125,8 +125,8 @@ type
     send_event*: bool
     display*: Display
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     count*: cint
 
   XGraphicsExposeEvent* = object
@@ -135,8 +135,8 @@ type
     send_event*: bool
     display*: Display
     drawable*: Drawable
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     count*: cint
     major_code*: cint
     minor_code*: cint
@@ -165,8 +165,8 @@ type
     display*: Display
     parent*: Window
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     border_width*: cint
     override_redirect*: bool
 
@@ -212,7 +212,7 @@ type
     event*: Window
     window*: Window
     parent*: Window
-    x*, y*: cint
+    pos*: IVec2
     override_redirect*: bool
 
   XConfigureEvent* = object
@@ -222,8 +222,8 @@ type
     display*: Display
     event*: Window
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     border_width*: cint
     above*: Window
     override_redirect*: bool
@@ -235,7 +235,7 @@ type
     display*: Display
     event*: Window
     window*: Window
-    x*, y*: cint
+    pos*: IVec2
 
   XResizeRequestEvent* = object
     kind*: XEventKind
@@ -243,7 +243,7 @@ type
     send_event*: bool
     display*: Display
     window*: Window
-    width*, height*: cint
+    size*: IVec2
 
   XConfigureRequestEvent* = object
     kind*: XEventKind
@@ -252,8 +252,8 @@ type
     display*: Display
     parent*: Window
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     border_width*: cint
     above*: Window
     detail*: cint

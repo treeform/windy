@@ -2,14 +2,21 @@ import x11/[x, xlib, xevent, glx]
 import ../../common, os, vmath
 
 type
-  PlatformWindow* = ref object
-    handle: Window
+  XWindow = x.Window
+
+  Window* = ref object
+    onCloseRequest*: Callback
+    onMove*: Callback
+    onResize*: Callback
+    onFocusChange*: Callback
+
+    handle: XWindow
     ctx: GlxContext
     gc: GC
     ic: XIC
     im: XIM
 
-    closed*: bool
+    closed: bool
     `"_visible"`: bool
     `"_decorated"`: bool
 
@@ -21,8 +28,8 @@ type
 
 
 var
-  initialized*: bool
-  windows*: seq[PlatformWindow]
+  initialized: bool
+  windows: seq[Window]
   display: Display
   decoratedAtom: Atom
   wmForDecoratedKind: WmForDecoratedKind
@@ -40,7 +47,7 @@ proc atomIfExist(name: string): Atom = display.XInternAtom(name, 1)
 proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
   raise WindyError.newException("Error dealing with X11: " & $event.errorCode.Status)
 
-proc platformInit* =
+proc init* =
   if initialized: return # no need to raise error
 
   XSetErrorHandler handleXError
@@ -61,37 +68,9 @@ proc platformInit* =
 
   initialized = true
 
-proc newXClientMessageEvent[T](
-  window: Window,
-  messageKind: Atom,
-  data: openarray[T],
-  serial: int = 0,
-  sendEvent: bool = false
-  ): XEvent =
-  if data.len * T.sizeof > XClientMessageData.sizeof:
-    raise WindyError.newException("To much data in client message")
-
-  result = XEvent(xclient: XClientMessageEvent(
-    kind: xeClientMessage,
-    messageType: messageKind,
-    window: window,
-    display: display,
-    serial: serial.culong,
-    sendEvent: sendEvent,
-    format: case T.sizeof
-      of 1: 8
-      of 2: 16
-      of 4: 32
-      of 8: 32
-      else: 8
-  ))
-
-  if data.len != 0:
-    copyMem(result.xclient.data.addr, data[0].unsafeAddr, data.len * T.sizeof)
-
-proc geometry(window: Window): tuple[root: Window; pos, size: IVec2; borderW: int, depth: int] =
+proc geometry(window: XWindow): tuple[root: XWindow; pos, size: IVec2; borderW: int, depth: int] =
   var
-    root: Window
+    root: XWindow
     x, y: int32
     w, h: uint32
     borderW: uint32
@@ -99,7 +78,7 @@ proc geometry(window: Window): tuple[root: Window; pos, size: IVec2; borderW: in
   display.XGetGeometry(window, root.addr, x.addr, y.addr, w.addr, h.addr, borderW.addr, depth.addr)
   (root, ivec2(x, y), ivec2(w.int32, h.int32), borderW.int, depth.int)
 
-proc property(window: Window, property: Atom): tuple[kind: Atom, data: string] =
+proc property(window: XWindow, property: Atom): tuple[kind: Atom, data: string] =
   var
     kind: Atom
     format: cint
@@ -114,10 +93,10 @@ proc property(window: Window, property: Atom): tuple[kind: Atom, data: string] =
   result.data = newString(len)
   if len != 0: copyMem(result.data[0].addr, data, len)
 
-proc setProperty(window: Window, property: Atom, kind: Atom, format: cint, data: string) =
+proc setProperty(window: XWindow, property: Atom, kind: Atom, format: cint, data: string) =
   display.XChangeProperty(window, property, kind, format, pmReplace, data, data.len.cint)
 
-proc addProperty(window: Window, property: Atom, kind: Atom, format: cint, data: string) =
+proc addProperty(window: XWindow, property: Atom, kind: Atom, format: cint, data: string) =
   display.XChangeProperty(window, property, kind, format, pmAppend, data, data.len.cint)
 
 proc asSeq(s: string, T: type = uint8): seq[T] =
@@ -133,61 +112,60 @@ proc asString[T](x: openarray[T]): string =
     for v in cast[ptr array[T.sizeof, char]](v.unsafeAddr)[]:
       result.add v
 
-proc wmState(window: Window): seq[Atom] =
+proc wmState(window: XWindow): seq[Atom] =
   window.property(atom"_NET_WM_STATE").data.asSeq(Atom)
 
 
-proc destroy(window: PlatformWindow) =
+proc destroy(window: Window) =
   if window.ic != nil:   XDestroyIC(window.ic)
   if window.im != nil:   XCloseIM(window.im)
   if window.gc != nil:   display.XFreeGC(window.gc)
   if window.handle != 0: display.XDestroyWindow(window.handle)
+  wasMoved window[]
 
-proc isOpen*(window: PlatformWindow): bool = not window.closed
+proc isOpen*(window: Window): bool = not window.closed
 
-proc close*(window: PlatformWindow) =
-  if window.closed: return
-  var e = newXClientMessageEvent(window.handle, atom"WM_PROTOCOLS", [atom"WM_DELETE_WINDOW", CurrentTime])
-  display.XSendEvent(window.handle, 0, NoEventMask, e.addr)
+proc close*(window: Window) =
+  destroy window
 
 
-proc makeContextCurrent*(window: PlatformWindow) =
+proc makeContextCurrent*(window: Window) =
   display.glXMakeCurrent(window.handle, window.ctx)
 
-proc swapBuffers*(window: PlatformWindow) =
+proc swapBuffers*(window: Window) =
   display.glXSwapBuffers(window.handle)
 
 
-proc visible*(window: PlatformWindow): bool =
+proc visible*(window: Window): bool =
   window.`"_visible"`
 
-proc `visible=`*(window: PlatformWindow, v: bool) =
+proc `visible=`*(window: Window, v: bool) =
   if v: display.XMapWindow(window.handle)
   else: display.XUnmapWindow(window.handle)
 
 
-proc size*(window: PlatformWindow): IVec2 =
+proc size*(window: Window): IVec2 =
   window.handle.geometry.size
 
-proc `size=`*(window: PlatformWindow, v: IVec2) =
+proc `size=`*(window: Window, v: IVec2) =
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
 
 
-proc framebufferSize*(window: PlatformWindow): IVec2 =
+proc framebufferSize*(window: Window): IVec2 =
   window.size
 
 
-proc pos*(window: PlatformWindow): IVec2 =
+proc pos*(window: Window): IVec2 =
   window.handle.geometry.pos
 
-proc `pos=`*(window: PlatformWindow, v: IVec2) =
+proc `pos=`*(window: Window, v: IVec2) =
   display.XMoveWindow(window.handle, v.x, v.y)
 
 
-proc decorated*(window: PlatformWindow): bool =
+proc decorated*(window: Window): bool =
   window.`"_decorated"`
 
-proc `decorated=`*(window: PlatformWindow, v: bool) =
+proc `decorated=`*(window: Window, v: bool) =
   window.`"_decorated"` = v
 
   let size = window.size # save current window size
@@ -219,13 +197,13 @@ proc `decorated=`*(window: PlatformWindow, v: bool) =
   window.size = size # restore window size
 
 
-proc resizable*(window: PlatformWindow): bool =
+proc resizable*(window: Window): bool =
   let size = window.size
   var hints: XSizeHints
   display.XGetNormalHints(window.handle, hints.addr)
   hints.minSize == size and hints.maxSize == size
 
-proc `resizable=`*(window: PlatformWindow, v: bool) =
+proc `resizable=`*(window: Window, v: bool) =
   let size = window.size
   var hints = XSizeHints(
     flags: (1 shl 4) or (1 shl 5),
@@ -235,10 +213,10 @@ proc `resizable=`*(window: PlatformWindow, v: bool) =
   display.XSetNormalHints(window.handle, hints.addr)
 
 
-proc fullscreen*(window: PlatformWindow): bool =
+proc fullscreen*(window: Window): bool =
   atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
 
-proc `fullscreen=`*(window: PlatformWindow, v: bool) =
+proc `fullscreen=`*(window: Window, v: bool) =
   if window.fullscreen == v: return
   if v:
     window.handle.addProperty(atom"_NET_WM_STATE", xaAtom, 32, [atom"_NET_WM_STATE_FULLSCREEN"].asString)
@@ -248,30 +226,30 @@ proc `fullscreen=`*(window: PlatformWindow, v: bool) =
     window.handle.setProperty(atom"_NET_WM_STATE", xaAtom, 32, wmState.asString)
 
 
-proc title*(window: PlatformWindow): string =
+proc title*(window: Window): string =
   window.handle.property(atom"_NET_WM_ICON_NAME").data
 
-proc `title=`*(window: PlatformWindow, v: string) =
+proc `title=`*(window: Window, v: string) =
   window.handle.setProperty(atom"_NET_WM_NAME", atom"UTF8_STRING", 8, v)
   window.handle.setProperty(atom"_NET_WM_ICON_NAME", atom"UTF8_STRING", 8, v)
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
 
-proc newPlatformWindow*(
+proc newWindow*(
   title: string,
   size: IVec2,
-  vsync: bool,
+  vsync = true,
 
   # window constructor can't set opengl version, msaa and stencilBits
   # args mustn't set depthBits directly
-  openglMajorVersion: int,
-  openglMinorVersion: int,
-  msaa: MSAA,
-  depthBits: int,
-  stencilBits: int,
+  openglMajorVersion = 4,
+  openglMinorVersion = 1,
+  msaa = msaaDisabled,
+  depthBits = 24,
+  stencilBits = 8,
   
   transparent = false, # note that transparency CANNOT be changed after window was created
-): PlatformWindow =
+): Window =
   new result
   let root = display.defaultRootWindow
   
@@ -340,23 +318,48 @@ proc newPlatformWindow*(
 
   windows.add result
 
-proc pollEvents(window: PlatformWindow) =
+proc pollEvents(window: Window) =
+  template pushEvent(e) =
+    try:
+      if window.e != nil: window.e()
+    except:
+      raise CatchableError.newException("Exception during " & astToStr(name) & " callback: " & getCurrentExceptionMsg())
+      # it is always bad to quit immediately
+
   var ev: XEvent
   
   proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): bool {.cdecl.} =
-    event.xany.window == cast[PlatformWindow](userData).handle
+    event.xany.window == cast[Window](userData).handle
   
   while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
     case ev.kind
     
     of xeClientMessage:
-      if ev.xclient.data.l[0] == clong atom"WM_DELETE_WINDOW":
-        window.closed = true
-        return
+      pushEvent onCloseRequest
+      return
+
+    of xeFocusIn:
+      if window.ic != nil: XSetICFocus window.ic
+      #TODO: press currently pressed keys
+      pushEvent onFocusChange
+    
+    of xeFocusOut:
+      if window.ic != nil: XUnsetICFocus window.ic
+      #TODO: release currently pressed keys
+      pushEvent onFocusChange
+    
+    of xeMap: window.`"_visible"` = true
+    of xeUnmap: window.`"_visible"` = false
+
+    of xeConfigure:
+      # Configure means resize and move at the same time
+      #TODO: check is it resize or move
+      pushEvent onResize
+      pushEvent onMove
 
     of xeMotion:
       #TODO: push event
-      discard (ev.xmotion.x.int, ev.xmotion.y.int)
+      discard ev.xmotion.pos
     
     of xeButtonPress, xeButtonRelease:
       #TODO: push event
@@ -371,17 +374,6 @@ proc pollEvents(window: PlatformWindow) =
       of 5: discard # scroll down
       
       else: discard
-
-    of xeFocusIn:
-      if window.ic != nil: XSetICFocus window.ic
-      #TODO: press currently pressed keys
-    
-    of xeFocusOut:
-      if window.ic != nil: XUnsetICFocus window.ic
-      #TODO: release currently pressed keys
-    
-    of xeMap: window.`"_visible"` = true
-    of xeUnmap: window.`"_visible"` = false
     
     of xeKeyPress:
       #TODO: handle key press
@@ -403,7 +395,7 @@ proc pollEvents(window: PlatformWindow) =
 
     else: discard
 
-proc platformPollEvents* =
+proc pollEvents* =
   let ws = windows
   windows = @[]
 
