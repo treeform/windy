@@ -458,6 +458,10 @@ proc RemovePropW*(
   lpString: LPCWSTR
 ): HANDLE {.importc, stdcall, dynlib: "User32".}
 
+proc IsIconic*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc IsZoomed*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR

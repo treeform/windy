@@ -2,7 +2,7 @@ import boxy, opengl, windy
 
 init()
 
-let window = newWindow("Windy Basic", ivec2(1280, 800))
+let window = newWindow("Windy Callbacks", ivec2(1280, 800))
 
 window.makeContextCurrent()
 loadExtensions()
@@ -21,8 +21,23 @@ window.visible = true
 var running = true
 
 window.onCloseRequest = proc() =
+  echo "onCloseRequest"
   running = false
   window.close()
+
+window.onMove = proc() =
+  echo "onMove ", window.pos
+
+window.onResize = proc() =
+  echo "onResize ", window.size
+  if window.minimized:
+    echo "(minimized)"
+  if window.maximized:
+    echo "(maximized)"
+  display()
+
+window.onFocusChange = proc() =
+  echo "onFocusChange ", window.focused
 
 while running:
   display()
