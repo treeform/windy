@@ -81,6 +81,8 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_ENABLE"
   of WM_DESTROY:
     "WM_DESTROY"
+  of WM_DPICHANGED:
+    "WM_DPICHANGED"
   of WM_NULL:
     "WM_NULL"
   else:
