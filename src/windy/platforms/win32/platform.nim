@@ -305,6 +305,19 @@ proc wndProc(
   of WM_SETFOCUS, WM_KILLFOCUS:
     callCallback("onFocusChange", window.onFocusChange)
     return 0
+  of WM_DPICHANGED:
+    # Resize to the suggested size (this triggers WM_SIZE)
+    let suggested = cast[ptr RECT](lParam)
+    discard SetWindowPos(
+      window.hWnd,
+      HWND_TOP,
+      suggested.left,
+      suggested.top,
+      suggested.right - suggested.left,
+      suggested.bottom - suggested.top,
+      SWP_NOACTIVATE or SWP_NOZORDER
+    )
+    return 0
   else:
     discard
 
@@ -472,6 +485,10 @@ proc maximized*(window: Window): bool =
 
 proc framebufferSize*(window: Window): IVec2 =
   window.size
+
+proc contentScale*(window: Window): float32 =
+  let dpi = GetDpiForWindow(window.hWnd)
+  result = dpi.float32 / defaultScreenDpi
 
 proc focused*(window: Window): bool =
   window.hWnd == GetActiveWindow()

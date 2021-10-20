@@ -27,7 +27,7 @@ window.onMove = proc() =
   echo "onMove ", window.pos
 
 window.onResize = proc() =
-  echo "onResize ", window.size
+  echo "onResize ", window.size, " content scale = ", window.contentScale
   if window.minimized:
     echo "(minimized)"
   if window.maximized:
