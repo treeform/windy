@@ -85,5 +85,13 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_DPICHANGED"
   of WM_NULL:
     "WM_NULL"
+  of WM_MOUSEMOVE:
+    "WM_MOUSEMOVE"
+  of WM_MOUSEWHEEL:
+    "WM_MOUSEWHEEL"
+  of WM_MOUSEHWHEEL:
+    "WM_MOUSEHWHEEL"
+  of WM_MOUSELEAVE:
+    "WM_MOUSELEAVE"
   else:
     "WM " & $wm & " " & $toHex(wm)

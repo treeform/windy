@@ -37,6 +37,14 @@ window.onResize = proc() =
 window.onFocusChange = proc() =
   echo "onFocusChange ", window.focused
 
+window.onMouseMove = proc() =
+  echo "onMouseMove from ",
+    window.mousePrevPos, " to ", window.mousePos,
+    " (delta ", window.mouseDelta, ")"
+
+window.onScroll = proc(delta: Vec2) =
+  echo "onScroll ", delta
+
 window.visible = true
 
 while running:

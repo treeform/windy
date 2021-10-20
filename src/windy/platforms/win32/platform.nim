@@ -3,6 +3,7 @@ import ../../common, utils, vmath, windefs
 const
   windowClassName = "WINDY0"
   defaultScreenDpi = 96
+  wheelDelta = 120
   decoratedWindowStyle = WS_OVERLAPPEDWINDOW
   undecoratedWindowStyle = WS_POPUP
 
@@ -33,6 +34,11 @@ type
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
+    onMouseMove*: Callback
+    onScroll*: ScrollCallback
+
+    mouse: Mouse
+    trackMouseEventRegistered: bool
 
     hWnd: HWND
     hdc: HDC
@@ -266,14 +272,6 @@ proc loadLibraries() =
     GetProcAddress(user32, "AdjustWindowRectExForDpi")
   )
 
-proc callCallback(name: string, callback: Callback) {.raises: [].} =
-  if callback == nil:
-    return
-  try:
-    callback()
-  except:
-    quit("Exception during " & name & " callback: " & getCurrentExceptionMsg())
-
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -294,16 +292,20 @@ proc wndProc(
 
   case uMsg:
   of WM_CLOSE:
-    callCallback("onCloseRequest", window.onCloseRequest)
+    if window.onCloseRequest != nil:
+      window.onCloseRequest()
     return 0
   of WM_MOVE:
-    callCallback("onMove", window.onMove)
+    if window.onMove != nil:
+      window.onMove()
     return 0
   of WM_SIZE:
-    callCallback("onResize", window.onResize)
+    if window.onResize != nil:
+      window.onResize()
     return 0
   of WM_SETFOCUS, WM_KILLFOCUS:
-    callCallback("onFocusChange", window.onFocusChange)
+    if window.onFocusChange != nil:
+      window.onFocusChange()
     return 0
   of WM_DPICHANGED:
     # Resize to the suggested size (this triggers WM_SIZE)
@@ -317,6 +319,41 @@ proc wndProc(
       suggested.bottom - suggested.top,
       SWP_NOACTIVATE or SWP_NOZORDER
     )
+    return 0
+  of WM_MOUSEMOVE:
+    if not window.trackMouseEventRegistered:
+      var tme: TRACKMOUSEEVENTSTRUCT
+      tme.cbSize = sizeof(TRACKMOUSEEVENTSTRUCT).DWORD
+      tme.dwFlags = TME_LEAVE
+      tme.hWndTrack = window.hWnd
+      discard TrackMouseEvent(tme.addr)
+      window.trackMouseEventRegistered = true
+
+    window.mouse.prevPos = window.mouse.pos
+    var pos: POINT
+    discard GetCursorPos(pos.addr)
+    discard ScreenToClient(window.hWnd, pos.addr)
+    window.mouse.pos = ivec2(pos.x, pos.y)
+    window.mouse.delta = window.mouse.pos - window.mouse.prevPos
+    if window.onMouseMove != nil:
+      window.onMouseMove()
+    return 0
+  of WM_MOUSELEAVE:
+    window.trackMouseEventRegistered = false
+    return 0
+  of WM_MOUSEWHEEL:
+    let
+      hiword = cast[int16]((wParam shr 16))
+      delta = vec2(0, hiword.float32 / wheelDelta)
+    if window.onScroll != nil:
+      window.onScroll(delta)
+    return 0
+  of WM_MOUSEHWHEEL:
+    let
+      hiword = cast[int16]((wParam shr 16))
+      delta = vec2(hiword.float32 / wheelDelta, 0)
+    if window.onScroll != nil:
+      window.onScroll(delta)
     return 0
   else:
     discard
@@ -492,6 +529,15 @@ proc contentScale*(window: Window): float32 =
 
 proc focused*(window: Window): bool =
   window.hWnd == GetActiveWindow()
+
+proc mousePos*(window: Window): IVec2 =
+  window.mouse.pos
+
+proc mousePrevPos*(window: Window): IVec2 =
+  window.mouse.prevPos
+
+proc mouseDelta*(window: Window): IVec2 =
+  window.mouse.delta
 
 proc `decorated=`*(window: Window, decorated: bool) =
   var style: LONG
