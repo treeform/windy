@@ -442,6 +442,22 @@ proc ClientToScreen*(
   lpPoint: LPPOINT
 ): BOOL {.importc, stdcall, dynlib: "User32".}
 
+proc SetPropW*(
+  hWnd: HWND,
+  lpString: LPCWSTR,
+  hData: HANDLE
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc GetPropW*(
+  hWnd: HWND,
+  lpString: LPCWSTR
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc RemovePropW*(
+  hWnd: HWND,
+  lpString: LPCWSTR
+): HANDLE {.importc, stdcall, dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
