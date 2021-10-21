@@ -1,4 +1,4 @@
-import ../../common, utils, vmath, windefs
+import ../../common, ../../internal, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
