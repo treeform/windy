@@ -45,6 +45,12 @@ window.onMouseMove = proc() =
 window.onScroll = proc() =
   echo "onScroll ", window.scrollDelta
 
+window.onButtonPress = proc(button: Button) =
+  echo "onButtonPress ", button
+
+window.onButtonRelease = proc(button: Button) =
+  echo "onButtonRelease ", button
+
 window.visible = true
 
 while running:

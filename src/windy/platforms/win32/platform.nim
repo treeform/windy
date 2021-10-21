@@ -1,4 +1,4 @@
-import ../../common, ../../internal, utils, vmath, windefs
+import ../../common, ../../internal, bitty, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -36,14 +36,20 @@ type
     onFocusChange*: Callback
     onMouseMove*: Callback
     onScroll*: Callback
+    onButtonPress*: ButtonCallback
+    onButtonRelease*: ButtonCallback
 
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
+    buttonPressed, buttonDown, buttonReleased: BitArray
 
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+
+  ButtonView* = object
+    states: BitArray
 
 var
   wglCreateContext: wglCreateContext
@@ -353,6 +359,38 @@ proc wndProc(
     if window.onScroll != nil:
       window.onScroll()
     return 0
+  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN:
+    let button =
+      case uMsg:
+      of WM_LBUTTONDOWN:
+        MouseLeft
+      of WM_RBUTTONDOWN:
+        MouseRight
+      else:
+        MouseMidde
+    window.buttonDown[button.ord] = true
+    window.buttonPressed[button.ord] = true
+    if window.onButtonPress != nil:
+      window.onButtonPress(button)
+    if button == MouseLeft:
+      discard SetCapture(window.hWnd)
+    return 0
+  of WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
+    let button =
+      case uMsg:
+      of WM_LBUTTONUP:
+        MouseLeft
+      of WM_RBUTTONUP:
+        MouseRight
+      else:
+        MouseMidde
+    window.buttonDown[button.ord] = false
+    window.buttonReleased[button.ord] = true
+    if window.onButtonRelease != nil:
+      window.onButtonRelease(button)
+    if button == MouseLeft:
+      discard ReleaseCapture()
+    return 0
   else:
     discard
 
@@ -371,6 +409,8 @@ proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.perFrame = PerFrame()
+    window.buttonPressed.clear()
+    window.buttonReleased.clear()
 
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
@@ -408,6 +448,9 @@ proc newWindow*(
     title,
     size
   )
+  result.buttonDown = newBitArray(Button.high.ord + 1)
+  result.buttonPressed = newBitArray(Button.high.ord + 1)
+  result.buttonReleased = newBitArray(Button.high.ord + 1)
 
   try:
     result.hdc = getDC(result.hWnd)
@@ -543,6 +586,18 @@ proc mouseDelta*(window: Window): IVec2 =
 
 proc scrollDelta*(window: Window): Vec2 =
   window.perFrame.scrollDelta
+
+proc buttonDown*(window: Window): ButtonView =
+  ButtonView(states: window.buttonDown)
+
+proc buttonPressed*(window: Window): ButtonView =
+  ButtonView(states: window.buttonPressed)
+
+proc buttonReleased*(window: Window): ButtonView =
+  ButtonView(states: window.buttonReleased)
+
+proc `[]`*(buttonView: ButtonView, button: Button): bool =
+  buttonView.states[button.ord]
 
 proc `decorated=`*(window: Window, decorated: bool) =
   var style: LONG
