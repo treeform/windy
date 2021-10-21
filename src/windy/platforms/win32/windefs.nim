@@ -110,6 +110,12 @@ type
     ptMinPosition*: POINT
     ptMaxPosition*: POINT
     rcNormalPosition*: RECT
+  TRACKMOUSEEVENTSTRUCT* {.pure.} = object
+    cbSize*: DWORD
+    dwFlags*: DWORD
+    hWndTrack*: HWND
+    dwHoverTime*: DWORD
+  LPTRACKMOUSEEVENTSTRUCT* = ptr TRACKMOUSEEVENTSTRUCT
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -209,6 +215,9 @@ const
   WM_NCCALCSIZE* = 0x0083
   WM_NCPAINT* = 0x0085
   WM_NCACTIVATE* = 0x0086
+  WM_MOUSEMOVE* = 0x0200
+  WM_MOUSEWHEEL* = 0x020A
+  WM_MOUSEHWHEEL* = 0x020E
   WM_IME_SETCONTEXT* = 0x0281
   WM_IME_NOTIFY* = 0x0282
   WM_IME_CONTROL* = 0x0283
@@ -218,6 +227,7 @@ const
   WM_IME_REQUEST* = 0x0288
   WM_IME_KEYDOWN* = 0x0290
   WM_IME_KEYUP* = 0x0291
+  WM_MOUSELEAVE* = 0x02A3
   WM_DPICHANGED* = 0x02E0
   WM_DWMCOMPOSITIONCHANGED* = 0x031e
   WM_DWMNCRENDERINGCHANGED* = 0x031f
@@ -280,6 +290,11 @@ const
   MONITOR_DEFAULTTONULL* = 0x00000000
   MONITOR_DEFAULTTOPRIMARY* = 0x00000001
   MONITOR_DEFAULTTONEAREST* = 0x00000002
+  TME_HOVER* = 0x00000001
+  TME_LEAVE* = 0x00000002
+  TME_NONCLIENT* = 0x00000010
+  TME_QUERY* = 0x40000000
+  TME_CANCEL* = 0x80000000'i32
 
 proc GetLastError*(): DWORD {.importc, stdcall, dynlib: "Kernel32".}
 
@@ -446,6 +461,11 @@ proc ClientToScreen*(
   lpPoint: LPPOINT
 ): BOOL {.importc, stdcall, dynlib: "User32".}
 
+proc ScreenToClient*(
+  hWnd: HWND,
+  lpPoint: LPPOINT
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
 proc SetPropW*(
   hWnd: HWND,
   lpString: LPCWSTR,
@@ -465,6 +485,14 @@ proc RemovePropW*(
 proc IsIconic*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
 
 proc IsZoomed*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc GetCursorPos*(
+  lpPoint: LPPOINT
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc TrackMouseEvent*(
+  lpEventTrack: LPTRACKMOUSEEVENTSTRUCT
+): BOOL {.importc, stdcall, dynlib: "User32".}
 
 proc ChoosePixelFormat*(
   hdc: HDC,
