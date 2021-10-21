@@ -40,7 +40,7 @@ window.onFocusChange = proc() =
 window.onMouseMove = proc() =
   echo "onMouseMove from ",
     window.mousePrevPos, " to ", window.mousePos,
-    " (delta ", window.mouseDelta, ")"
+    " delta = ", window.mouseDelta
 
 window.onScroll = proc() =
   echo "onScroll ", window.scrollDelta
