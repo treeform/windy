@@ -35,10 +35,11 @@ type
     onResize*: Callback
     onFocusChange*: Callback
     onMouseMove*: Callback
-    onScroll*: ScrollCallback
+    onScroll*: Callback
 
-    mouse: Mouse
+    perFrame: PerFrame
     trackMouseEventRegistered: bool
+    mousePos: IVec2
 
     hWnd: HWND
     hdc: HDC
@@ -329,12 +330,12 @@ proc wndProc(
       discard TrackMouseEvent(tme.addr)
       window.trackMouseEventRegistered = true
 
-    window.mouse.prevPos = window.mouse.pos
+    window.perFrame.mousePrevPos = window.mousePos
     var pos: POINT
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
-    window.mouse.pos = ivec2(pos.x, pos.y)
-    window.mouse.delta = window.mouse.pos - window.mouse.prevPos
+    window.mousePos = ivec2(pos.x, pos.y)
+    window.perFrame.mouseDelta = window.mousePos - window.perFrame.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
     return 0
@@ -342,18 +343,16 @@ proc wndProc(
     window.trackMouseEventRegistered = false
     return 0
   of WM_MOUSEWHEEL:
-    let
-      hiword = cast[int16]((wParam shr 16))
-      delta = vec2(0, hiword.float32 / wheelDelta)
+    let hiword = cast[int16]((wParam shr 16))
+    window.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
     if window.onScroll != nil:
-      window.onScroll(delta)
+      window.onScroll()
     return 0
   of WM_MOUSEHWHEEL:
-    let
-      hiword = cast[int16]((wParam shr 16))
-      delta = vec2(hiword.float32 / wheelDelta, 0)
+    let hiword = cast[int16]((wParam shr 16))
+    window.perFrame.scrollDelta = vec2(hiword.float32 / wheelDelta, 0)
     if window.onScroll != nil:
-      window.onScroll(delta)
+      window.onScroll()
     return 0
   else:
     discard
@@ -370,6 +369,10 @@ proc init*() =
   initialized = true
 
 proc pollEvents*() =
+  # Clear all per-frame data
+  for window in windows:
+    window.perFrame = PerFrame()
+
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
     if msg.message == WM_QUIT:
@@ -531,13 +534,16 @@ proc focused*(window: Window): bool =
   window.hWnd == GetActiveWindow()
 
 proc mousePos*(window: Window): IVec2 =
-  window.mouse.pos
+  window.mousePos
 
 proc mousePrevPos*(window: Window): IVec2 =
-  window.mouse.prevPos
+  window.perFrame.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
-  window.mouse.delta
+  window.perFrame.mouseDelta
+
+proc scrollDelta*(window: Window): Vec2 =
+  window.perFrame.scrollDelta
 
 proc `decorated=`*(window: Window, decorated: bool) =
   var style: LONG

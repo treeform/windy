@@ -7,7 +7,8 @@ type
     msaaDisabled = 0, msaa2x = 2, msaa4x = 4, msaa8x = 8
 
   Callback* = proc()
-  ScrollCallback* = proc(delta: Vec2)
 
-  Mouse* = object
-    pos*, prevPos*, delta*: IVec2
+  PerFrame* = object
+    mousePrevPos*: IVec2
+    mouseDelta*: IVec2
+    scrollDelta*: Vec2

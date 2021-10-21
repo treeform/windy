@@ -42,8 +42,8 @@ window.onMouseMove = proc() =
     window.mousePrevPos, " to ", window.mousePos,
     " (delta ", window.mouseDelta, ")"
 
-window.onScroll = proc(delta: Vec2) =
-  echo "onScroll ", delta
+window.onScroll = proc() =
+  echo "onScroll ", window.scrollDelta
 
 window.visible = true
 
