@@ -322,14 +322,6 @@ proc wndProc(
     )
     return 0
   of WM_MOUSEMOVE:
-    if not window.trackMouseEventRegistered:
-      var tme: TRACKMOUSEEVENTSTRUCT
-      tme.cbSize = sizeof(TRACKMOUSEEVENTSTRUCT).DWORD
-      tme.dwFlags = TME_LEAVE
-      tme.hWndTrack = window.hWnd
-      discard TrackMouseEvent(tme.addr)
-      window.trackMouseEventRegistered = true
-
     window.perFrame.mousePrevPos = window.mousePos
     var pos: POINT
     discard GetCursorPos(pos.addr)
@@ -338,6 +330,13 @@ proc wndProc(
     window.perFrame.mouseDelta = window.mousePos - window.perFrame.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
+    if not window.trackMouseEventRegistered:
+      var tme: TRACKMOUSEEVENTSTRUCT
+      tme.cbSize = sizeof(TRACKMOUSEEVENTSTRUCT).DWORD
+      tme.dwFlags = TME_LEAVE
+      tme.hWndTrack = window.hWnd
+      discard TrackMouseEvent(tme.addr)
+      window.trackMouseEventRegistered = true
     return 0
   of WM_MOUSELEAVE:
     window.trackMouseEventRegistered = false
