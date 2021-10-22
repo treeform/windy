@@ -40,10 +40,16 @@ window.onFocusChange = proc() =
 window.onMouseMove = proc() =
   echo "onMouseMove from ",
     window.mousePrevPos, " to ", window.mousePos,
-    " (delta ", window.mouseDelta, ")"
+    " delta = ", window.mouseDelta
 
-window.onScroll = proc(delta: Vec2) =
-  echo "onScroll ", delta
+window.onScroll = proc() =
+  echo "onScroll ", window.scrollDelta
+
+window.onButtonPress = proc(button: Button) =
+  echo "onButtonPress ", button
+
+window.onButtonRelease = proc(button: Button) =
+  echo "onButtonRelease ", button
 
 window.visible = true
 

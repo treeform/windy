@@ -1,4 +1,4 @@
-import ../../common, utils, vmath, windefs
+import ../../common, ../../internal, bitty, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -35,14 +35,21 @@ type
     onResize*: Callback
     onFocusChange*: Callback
     onMouseMove*: Callback
-    onScroll*: ScrollCallback
+    onScroll*: Callback
+    onButtonPress*: ButtonCallback
+    onButtonRelease*: ButtonCallback
 
-    mouse: Mouse
+    perFrame: PerFrame
     trackMouseEventRegistered: bool
+    mousePos: IVec2
+    buttonPressed, buttonDown, buttonReleased: BitArray
 
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+
+  ButtonView* = object
+    states: BitArray
 
 var
   wglCreateContext: wglCreateContext
@@ -321,6 +328,14 @@ proc wndProc(
     )
     return 0
   of WM_MOUSEMOVE:
+    window.perFrame.mousePrevPos = window.mousePos
+    var pos: POINT
+    discard GetCursorPos(pos.addr)
+    discard ScreenToClient(window.hWnd, pos.addr)
+    window.mousePos = ivec2(pos.x, pos.y)
+    window.perFrame.mouseDelta = window.mousePos - window.perFrame.mousePrevPos
+    if window.onMouseMove != nil:
+      window.onMouseMove()
     if not window.trackMouseEventRegistered:
       var tme: TRACKMOUSEEVENTSTRUCT
       tme.cbSize = sizeof(TRACKMOUSEEVENTSTRUCT).DWORD
@@ -328,32 +343,53 @@ proc wndProc(
       tme.hWndTrack = window.hWnd
       discard TrackMouseEvent(tme.addr)
       window.trackMouseEventRegistered = true
-
-    window.mouse.prevPos = window.mouse.pos
-    var pos: POINT
-    discard GetCursorPos(pos.addr)
-    discard ScreenToClient(window.hWnd, pos.addr)
-    window.mouse.pos = ivec2(pos.x, pos.y)
-    window.mouse.delta = window.mouse.pos - window.mouse.prevPos
-    if window.onMouseMove != nil:
-      window.onMouseMove()
     return 0
   of WM_MOUSELEAVE:
     window.trackMouseEventRegistered = false
     return 0
   of WM_MOUSEWHEEL:
-    let
-      hiword = cast[int16]((wParam shr 16))
-      delta = vec2(0, hiword.float32 / wheelDelta)
+    let hiword = cast[int16]((wParam shr 16))
+    window.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
     if window.onScroll != nil:
-      window.onScroll(delta)
+      window.onScroll()
     return 0
   of WM_MOUSEHWHEEL:
-    let
-      hiword = cast[int16]((wParam shr 16))
-      delta = vec2(hiword.float32 / wheelDelta, 0)
+    let hiword = cast[int16]((wParam shr 16))
+    window.perFrame.scrollDelta = vec2(hiword.float32 / wheelDelta, 0)
     if window.onScroll != nil:
-      window.onScroll(delta)
+      window.onScroll()
+    return 0
+  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN:
+    let button =
+      case uMsg:
+      of WM_LBUTTONDOWN:
+        MouseLeft
+      of WM_RBUTTONDOWN:
+        MouseRight
+      else:
+        MouseMidde
+    window.buttonDown[button.ord] = true
+    window.buttonPressed[button.ord] = true
+    if window.onButtonPress != nil:
+      window.onButtonPress(button)
+    if button == MouseLeft:
+      discard SetCapture(window.hWnd)
+    return 0
+  of WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
+    let button =
+      case uMsg:
+      of WM_LBUTTONUP:
+        MouseLeft
+      of WM_RBUTTONUP:
+        MouseRight
+      else:
+        MouseMidde
+    window.buttonDown[button.ord] = false
+    window.buttonReleased[button.ord] = true
+    if window.onButtonRelease != nil:
+      window.onButtonRelease(button)
+    if button == MouseLeft:
+      discard ReleaseCapture()
     return 0
   else:
     discard
@@ -370,6 +406,12 @@ proc init*() =
   initialized = true
 
 proc pollEvents*() =
+  # Clear all per-frame data
+  for window in windows:
+    window.perFrame = PerFrame()
+    window.buttonPressed.clear()
+    window.buttonReleased.clear()
+
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
     if msg.message == WM_QUIT:
@@ -406,6 +448,9 @@ proc newWindow*(
     title,
     size
   )
+  result.buttonDown = newBitArray(Button.high.ord + 1)
+  result.buttonPressed = newBitArray(Button.high.ord + 1)
+  result.buttonReleased = newBitArray(Button.high.ord + 1)
 
   try:
     result.hdc = getDC(result.hWnd)
@@ -531,13 +576,28 @@ proc focused*(window: Window): bool =
   window.hWnd == GetActiveWindow()
 
 proc mousePos*(window: Window): IVec2 =
-  window.mouse.pos
+  window.mousePos
 
 proc mousePrevPos*(window: Window): IVec2 =
-  window.mouse.prevPos
+  window.perFrame.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
-  window.mouse.delta
+  window.perFrame.mouseDelta
+
+proc scrollDelta*(window: Window): Vec2 =
+  window.perFrame.scrollDelta
+
+proc buttonDown*(window: Window): ButtonView =
+  ButtonView(states: window.buttonDown)
+
+proc buttonPressed*(window: Window): ButtonView =
+  ButtonView(states: window.buttonPressed)
+
+proc buttonReleased*(window: Window): ButtonView =
+  ButtonView(states: window.buttonReleased)
+
+proc `[]`*(buttonView: ButtonView, button: Button): bool =
+  buttonView.states[button.ord]
 
 proc `decorated=`*(window: Window, decorated: bool) =
   var style: LONG
