@@ -359,37 +359,30 @@ proc wndProc(
     if window.onScroll != nil:
       window.onScroll()
     return 0
-  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN:
+  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN,
+    WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
     let button =
       case uMsg:
-      of WM_LBUTTONDOWN:
+      of WM_LBUTTONDOWN, WM_LBUTTONUP:
         MouseLeft
-      of WM_RBUTTONDOWN:
+      of WM_RBUTTONDOWN, WM_RBUTTONUP:
         MouseRight
       else:
         MouseMidde
-    window.buttonDown[button.ord] = true
-    window.buttonPressed[button.ord] = true
-    if window.onButtonPress != nil:
-      window.onButtonPress(button)
-    if button == MouseLeft:
-      discard SetCapture(window.hWnd)
-    return 0
-  of WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
-    let button =
-      case uMsg:
-      of WM_LBUTTONUP:
-        MouseLeft
-      of WM_RBUTTONUP:
-        MouseRight
-      else:
-        MouseMidde
-    window.buttonDown[button.ord] = false
-    window.buttonReleased[button.ord] = true
-    if window.onButtonRelease != nil:
-      window.onButtonRelease(button)
-    if button == MouseLeft:
-      discard ReleaseCapture()
+    if uMsg in {WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
+      window.buttonDown[button.ord] = true
+      window.buttonPressed[button.ord] = true
+      if window.onButtonPress != nil:
+        window.onButtonPress(button)
+      if button == MouseLeft:
+        discard SetCapture(window.hWnd)
+    else:
+      window.buttonDown[button.ord] = false
+      window.buttonReleased[button.ord] = true
+      if window.onButtonRelease != nil:
+        window.onButtonRelease(button)
+      if button == MouseLeft:
+        discard ReleaseCapture()
     return 0
   else:
     discard
