@@ -14,7 +14,7 @@ type
     ButtonUnknown
     MouseLeft
     MouseRight
-    MouseMidde
+    MouseMiddle
     Key0
     Key1
     Key2

@@ -30,6 +30,7 @@ const
 
 type
   Window* = ref object
+    closeRequested*: bool
     onCloseRequest*: Callback
     onMove*: Callback
     onResize*: Callback
@@ -40,6 +41,7 @@ type
     onButtonRelease*: ButtonCallback
     onTextInput*: TextInputCallback
 
+    closed: bool
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
@@ -67,6 +69,9 @@ var
   AdjustWindowRectExForDpi: AdjustWindowRectExForDpi
 
 var
+  quitRequested*: bool
+  onQuitRequest*: Callback
+
   initialized: bool
   windows: seq[Window]
 
@@ -313,6 +318,7 @@ proc wndProc(
 
   case uMsg:
   of WM_CLOSE:
+    window.closeRequested = true
     if window.onCloseRequest != nil:
       window.onCloseRequest()
     return 0
@@ -382,7 +388,7 @@ proc wndProc(
       of WM_RBUTTONDOWN, WM_RBUTTONUP:
         MouseRight
       else:
-        MouseMidde
+        MouseMiddle
     if uMsg in {WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
       window.handleButtonPress(button)
       if button == MouseLeft:
@@ -443,7 +449,9 @@ proc pollEvents*() =
     if msg.message == WM_QUIT:
       for window in windows:
         discard wndProc(window.hwnd, WM_CLOSE, 0, 0)
-      # app.quitRequested = true
+      quitRequested = true
+      if onQuitRequest != nil:
+        onQuitRequest()
     else:
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
@@ -468,113 +476,10 @@ proc swapBuffers*(window: Window) =
 
 proc close*(window: Window) =
   destroy window
+  window.closed = true
 
-proc newWindow*(
-  title: string,
-  size: IVec2,
-  vsync = true,
-  openglMajorVersion = 4,
-  openglMinorVersion = 1,
-  msaa = msaaDisabled,
-  depthBits = 24,
-  stencilBits = 8
-): Window =
-  result = Window()
-  result.hWnd = createWindow(
-    windowClassName,
-    title,
-    size
-  )
-  result.buttonDown = newBitArray(Button.high.ord + 1)
-  result.buttonPressed = newBitArray(Button.high.ord + 1)
-  result.buttonReleased = newBitArray(Button.high.ord + 1)
-  result.buttonToggle = newBitArray(Button.high.ord + 1)
-
-  try:
-    result.hdc = getDC(result.hWnd)
-
-    let pixelFormatAttribs = [
-      WGL_DRAW_TO_WINDOW_ARB.int32,
-      1,
-      WGL_SUPPORT_OPENGL_ARB,
-      1,
-      WGL_DOUBLE_BUFFER_ARB,
-      1,
-      WGL_ACCELERATION_ARB,
-      WGL_FULL_ACCELERATION_ARB,
-      WGL_PIXEL_TYPE_ARB,
-      WGL_TYPE_RGBA_ARB,
-      WGL_COLOR_BITS_ARB,
-      32,
-      WGL_DEPTH_BITS_ARB,
-      depthBits.int32,
-      WGL_STENCIL_BITS_ARB,
-      stencilBits.int32,
-      WGL_SAMPLES_ARB,
-      msaa.int32,
-      0
-    ]
-
-    var
-      pixelFormat: int32
-      numFormats: UINT
-    if wglChoosePixelFormatARB(
-      result.hdc,
-      pixelFormatAttribs[0].unsafeAddr,
-      nil,
-      1,
-      pixelFormat.addr,
-      numFormats.addr
-    ) == 0:
-      raise newException(WindyError, "Error choosing pixel format")
-    if numFormats == 0:
-      raise newException(WindyError, "No pixel format chosen")
-
-    var pfd: PIXELFORMATDESCRIPTOR
-    if DescribePixelFormat(
-      result.hdc,
-      pixelFormat,
-      sizeof(PIXELFORMATDESCRIPTOR).UINT,
-      pfd.addr
-    ) == 0:
-      raise newException(WindyError, "Error describing pixel format")
-
-    if SetPixelFormat(result.hdc, pixelFormat, pfd.addr) == 0:
-      raise newException(WindyError, "Error setting pixel format")
-
-    let contextAttribs = [
-      WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
-      openglMajorVersion.int32,
-      WGL_CONTEXT_MINOR_VERSION_ARB,
-      openglMinorVersion.int32,
-      WGL_CONTEXT_PROFILE_MASK_ARB,
-      WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-      WGL_CONTEXT_FLAGS_ARB,
-      WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-      0
-    ]
-
-    result.hglrc = wglCreateContextAttribsARB(
-      result.hdc,
-      0,
-      contextAttribs[0].unsafeAddr
-    )
-    if result.hglrc == 0:
-      raise newException(WindyError, "Error creating OpenGL context")
-
-    # The first call to ShowWindow may ignore the parameter so do an initial
-    # call to clear that behavior.
-    discard ShowWindow(result.hWnd, SW_HIDE)
-
-    result.makeContextCurrent()
-
-    if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
-      raise newException(WindyError, "Error setting swap interval")
-
-    windows.add(result)
-  except WindyError as e:
-    destroy result
-    raise e
+proc closed*(window: Window): bool =
+  window.closed
 
 proc visible*(window: Window): bool =
   IsWindowVisible(window.hWnd) != 0
@@ -723,3 +628,114 @@ proc `maximized=`*(window: Window, maximized: bool) =
   else:
     cmd = SW_RESTORE
   discard ShowWindow(window.hWnd, cmd)
+
+proc newWindow*(
+  title: string,
+  size: IVec2,
+  visible = true,
+  vsync = true,
+  openglMajorVersion = 4,
+  openglMinorVersion = 1,
+  msaa = msaaDisabled,
+  depthBits = 24,
+  stencilBits = 8
+): Window =
+  result = Window()
+  result.hWnd = createWindow(
+    windowClassName,
+    title,
+    size
+  )
+  result.buttonDown = newBitArray(Button.high.ord + 1)
+  result.buttonPressed = newBitArray(Button.high.ord + 1)
+  result.buttonReleased = newBitArray(Button.high.ord + 1)
+  result.buttonToggle = newBitArray(Button.high.ord + 1)
+
+  try:
+    result.hdc = getDC(result.hWnd)
+
+    let pixelFormatAttribs = [
+      WGL_DRAW_TO_WINDOW_ARB.int32,
+      1,
+      WGL_SUPPORT_OPENGL_ARB,
+      1,
+      WGL_DOUBLE_BUFFER_ARB,
+      1,
+      WGL_ACCELERATION_ARB,
+      WGL_FULL_ACCELERATION_ARB,
+      WGL_PIXEL_TYPE_ARB,
+      WGL_TYPE_RGBA_ARB,
+      WGL_COLOR_BITS_ARB,
+      32,
+      WGL_DEPTH_BITS_ARB,
+      depthBits.int32,
+      WGL_STENCIL_BITS_ARB,
+      stencilBits.int32,
+      WGL_SAMPLES_ARB,
+      msaa.int32,
+      0
+    ]
+
+    var
+      pixelFormat: int32
+      numFormats: UINT
+    if wglChoosePixelFormatARB(
+      result.hdc,
+      pixelFormatAttribs[0].unsafeAddr,
+      nil,
+      1,
+      pixelFormat.addr,
+      numFormats.addr
+    ) == 0:
+      raise newException(WindyError, "Error choosing pixel format")
+    if numFormats == 0:
+      raise newException(WindyError, "No pixel format chosen")
+
+    var pfd: PIXELFORMATDESCRIPTOR
+    if DescribePixelFormat(
+      result.hdc,
+      pixelFormat,
+      sizeof(PIXELFORMATDESCRIPTOR).UINT,
+      pfd.addr
+    ) == 0:
+      raise newException(WindyError, "Error describing pixel format")
+
+    if SetPixelFormat(result.hdc, pixelFormat, pfd.addr) == 0:
+      raise newException(WindyError, "Error setting pixel format")
+
+    let contextAttribs = [
+      WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
+      openglMajorVersion.int32,
+      WGL_CONTEXT_MINOR_VERSION_ARB,
+      openglMinorVersion.int32,
+      WGL_CONTEXT_PROFILE_MASK_ARB,
+      WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+      WGL_CONTEXT_FLAGS_ARB,
+      WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+      0
+    ]
+
+    result.hglrc = wglCreateContextAttribsARB(
+      result.hdc,
+      0,
+      contextAttribs[0].unsafeAddr
+    )
+    if result.hglrc == 0:
+      raise newException(WindyError, "Error creating OpenGL context")
+
+    # The first call to ShowWindow may ignore the parameter so do an initial
+    # call to clear that behavior.
+    discard ShowWindow(result.hWnd, SW_HIDE)
+
+    result.makeContextCurrent()
+
+    if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
+      raise newException(WindyError, "Error setting swap interval")
+
+    windows.add(result)
+
+    if visible:
+      result.visible = true
+  except WindyError as e:
+    destroy result
+    raise e
