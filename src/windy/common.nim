@@ -8,7 +8,7 @@ type
 
   Callback* = proc()
   ButtonCallback* = proc(button: Button)
-  TextInputCallback* = proc(rune: Rune)
+  RuneCallback* = proc(rune: Rune)
 
   Button* = enum
     ButtonUnknown

@@ -47,8 +47,8 @@ window.onButtonPress = proc(button: Button) =
 window.onButtonRelease = proc(button: Button) =
   echo "onButtonRelease ", button
 
-window.onTextInput = proc(rune: Rune) =
-  echo "onTextInput ", rune
+window.onRune = proc(rune: Rune) =
+  echo "onRune ", rune
 
 while not window.closeRequested:
   if window.minimized or not window.visible:

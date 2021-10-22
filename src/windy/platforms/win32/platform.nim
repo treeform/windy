@@ -39,7 +39,7 @@ type
     onScroll*: Callback
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
-    onTextInput*: TextInputCallback
+    onRune*: RuneCallback
 
     closed: bool
     perFrame: PerFrame
@@ -420,8 +420,8 @@ proc wndProc(
       return TRUE
     let codepoint = wParam.uint32
     if codepoint > 32 and not (codepoint > 126 and codepoint < 160):
-      if window.onTextInput != nil:
-        window.onTextInput(Rune(codepoint))
+      if window.onRune != nil:
+        window.onRune(Rune(codepoint))
     return 0
   else:
     discard
