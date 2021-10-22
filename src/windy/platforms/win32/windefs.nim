@@ -154,7 +154,10 @@ type
 template MAKEINTRESOURCE*(i: untyped): untyped = cast[LPWSTR](i and 0xffff)
 
 const
+  FALSE* = 0
+  TRUE* = 1
   S_OK* = 0
+  UNICODE_NOCHAR* = 0xFFFF
   CP_UTF8* = 65001
   CS_VREDRAW* = 0x0001
   CS_HREDRAW* = 0x0002
@@ -221,6 +224,8 @@ const
   WM_CHAR* = 0x0102
   WM_SYSKEYDOWN* = 0x0104
   WM_SYSKEYUP* = 0x0105
+  WM_SYSCHAR* = 0x0106
+  WM_UNICHAR* = 0x0109
   WM_MOUSEMOVE* = 0x0200
   WM_LBUTTONDOWN* = 0x0201
   WM_LBUTTONUP* = 0x0202

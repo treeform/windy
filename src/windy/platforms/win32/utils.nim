@@ -237,5 +237,9 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_SYSKEYDOWN"
   of WM_SYSKEYUP:
     "WM_SYSKEYUP"
+  of WM_SYSCHAR:
+    "WM_SYSCHAR"
+  of WM_UNICHAR:
+    "WM_UNICHAR"
   else:
     "WM " & $wm & " " & $toHex(wm)

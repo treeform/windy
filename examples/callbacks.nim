@@ -51,6 +51,9 @@ window.onButtonPress = proc(button: Button) =
 window.onButtonRelease = proc(button: Button) =
   echo "onButtonRelease ", button
 
+window.onTextInput = proc(rune: Rune) =
+  echo "onTextInput ", rune
+
 window.visible = true
 
 while running:

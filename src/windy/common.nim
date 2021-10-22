@@ -1,3 +1,5 @@
+import unicode
+
 type
   WindyError* = object of ValueError
 
@@ -6,6 +8,7 @@ type
 
   Callback* = proc()
   ButtonCallback* = proc(button: Button)
+  TextInputCallback* = proc(rune: Rune)
 
   Button* = enum
     ButtonUnknown

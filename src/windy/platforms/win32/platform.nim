@@ -1,4 +1,4 @@
-import ../../common, ../../internal, bitty, utils, vmath, windefs
+import ../../common, ../../internal, bitty, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -38,6 +38,7 @@ type
     onScroll*: Callback
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
+    onTextInput*: TextInputCallback
 
     perFrame: PerFrame
     trackMouseEventRegistered: bool
@@ -408,6 +409,14 @@ proc wndProc(
         else:
           window.handleButtonRelease(button)
       return 0
+  of WM_CHAR, WM_SYSCHAR, WM_UNICHAR:
+    if uMsg == WM_UNICHAR and wParam == UNICODE_NOCHAR:
+      return TRUE
+    let codepoint = wParam.uint32
+    if codepoint > 32 and not (codepoint > 126 and codepoint < 160):
+      if window.onTextInput != nil:
+        window.onTextInput(Rune(codepoint))
+    return 0
   else:
     discard
 

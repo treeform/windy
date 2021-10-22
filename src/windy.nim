@@ -1,6 +1,6 @@
-import vmath, windy/common
+import unicode, vmath, windy/common
 
-export common, vmath
+export common, unicode, vmath
 
 when defined(windows):
   import windy/platforms/win32/platform
