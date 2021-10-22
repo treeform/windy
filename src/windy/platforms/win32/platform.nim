@@ -42,7 +42,7 @@ type
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
-    buttonPressed, buttonDown, buttonReleased: BitArray
+    buttonPressed, buttonDown, buttonReleased, buttonToggle: BitArray
 
     hWnd: HWND
     hdc: HDC
@@ -279,6 +279,19 @@ proc loadLibraries() =
     GetProcAddress(user32, "AdjustWindowRectExForDpi")
   )
 
+proc handleButtonPress(window: Window, button: Button) =
+  window.buttonDown[button.ord] = true
+  window.buttonPressed[button.ord] = true
+  window.buttonToggle[button.ord] = not window.buttonToggle[button.ord]
+  if window.onButtonPress != nil:
+    window.onButtonPress(button)
+
+proc handleButtonRelease(window: Window, button: Button) =
+  window.buttonDown[button.ord] = false
+  window.buttonReleased[button.ord] = true
+  if window.onButtonRelease != nil:
+    window.onButtonRelease(button)
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -348,13 +361,13 @@ proc wndProc(
     window.trackMouseEventRegistered = false
     return 0
   of WM_MOUSEWHEEL:
-    let hiword = cast[int16]((wParam shr 16))
+    let hiword = HIWORD(wParam)
     window.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
     if window.onScroll != nil:
       window.onScroll()
     return 0
   of WM_MOUSEHWHEEL:
-    let hiword = cast[int16]((wParam shr 16))
+    let hiword = HIWORD(wParam)
     window.perFrame.scrollDelta = vec2(hiword.float32 / wheelDelta, 0)
     if window.onScroll != nil:
       window.onScroll()
@@ -370,20 +383,31 @@ proc wndProc(
       else:
         MouseMidde
     if uMsg in {WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
-      window.buttonDown[button.ord] = true
-      window.buttonPressed[button.ord] = true
-      if window.onButtonPress != nil:
-        window.onButtonPress(button)
+      window.handleButtonPress(button)
       if button == MouseLeft:
         discard SetCapture(window.hWnd)
     else:
-      window.buttonDown[button.ord] = false
-      window.buttonReleased[button.ord] = true
-      if window.onButtonRelease != nil:
-        window.onButtonRelease(button)
+      window.handleButtonRelease(button)
       if button == MouseLeft:
         discard ReleaseCapture()
     return 0
+  of WM_KEYDOWN, WM_SYSKEYDOWN, WM_KEYUP, WM_SYSKEYUP:
+    if wParam == VK_PROCESSKEY:
+      # IME
+      discard
+    elif wParam == VK_SNAPSHOT:
+      window.handleButtonPress(KeyPrintScreen)
+      window.handleButtonRelease(KeyPrintScreen)
+    else:
+      let
+        scancode = (HIWORD(lParam) and (KF_EXTENDED or 0xff))
+        button = scancodeToButton[scancode]
+      if button != ButtonUnknown:
+        if (HIWORD(lParam) and KF_UP) == 0:
+          window.handleButtonPress(button)
+        else:
+          window.handleButtonRelease(button)
+      return 0
   else:
     discard
 
@@ -415,6 +439,17 @@ proc pollEvents*() =
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
 
+  let activeWindow = windows.forHandle(GetActiveWindow())
+  if activeWindow != nil:
+    # When both shift keys are down the first one released does not trigger a
+    # key up event so we fake it here.
+    if activeWindow.buttonDown[KeyLeftShift.ord]:
+      if (GetKeyState(VK_LSHIFT) and KF_UP) == 0:
+        activeWindow.handleButtonRelease(KeyLeftShift)
+    if activeWindow.buttonDown[KeyRightShift.ord]:
+      if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
+        activeWindow.handleButtonRelease(KeyRightShift)
+
 proc makeContextCurrent*(window: Window) =
   makeContextCurrent(window.hdc, window.hglrc)
 
@@ -444,6 +479,7 @@ proc newWindow*(
   result.buttonDown = newBitArray(Button.high.ord + 1)
   result.buttonPressed = newBitArray(Button.high.ord + 1)
   result.buttonReleased = newBitArray(Button.high.ord + 1)
+  result.buttonToggle = newBitArray(Button.high.ord + 1)
 
   try:
     result.hdc = getDC(result.hWnd)
