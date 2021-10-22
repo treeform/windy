@@ -16,12 +16,8 @@ proc display() =
   bxy.endFrame()
   window.swapBuffers()
 
-var running = true
-
 window.onCloseRequest = proc() =
   echo "onCloseRequest"
-  running = false
-  window.close()
 
 window.onMove = proc() =
   echo "onMove ", window.pos
@@ -51,9 +47,10 @@ window.onButtonPress = proc(button: Button) =
 window.onButtonRelease = proc(button: Button) =
   echo "onButtonRelease ", button
 
-window.visible = true
+window.onRune = proc(rune: Rune) =
+  echo "onRune ", rune
 
-while running:
+while not window.closeRequested:
   if window.minimized or not window.visible:
     sleep(10)
   else:

@@ -1,4 +1,4 @@
-import ../../common, ../../internal, bitty, utils, vmath, windefs
+import ../../common, ../../internal, bitty, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -30,6 +30,7 @@ const
 
 type
   Window* = ref object
+    closeRequested*: bool
     onCloseRequest*: Callback
     onMove*: Callback
     onResize*: Callback
@@ -38,11 +39,13 @@ type
     onScroll*: Callback
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
+    onRune*: RuneCallback
 
+    closed: bool
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
-    buttonPressed, buttonDown, buttonReleased: BitArray
+    buttonPressed, buttonDown, buttonReleased, buttonToggle: BitArray
 
     hWnd: HWND
     hdc: HDC
@@ -66,6 +69,9 @@ var
   AdjustWindowRectExForDpi: AdjustWindowRectExForDpi
 
 var
+  quitRequested*: bool
+  onQuitRequest*: Callback
+
   initialized: bool
   windows: seq[Window]
 
@@ -279,6 +285,19 @@ proc loadLibraries() =
     GetProcAddress(user32, "AdjustWindowRectExForDpi")
   )
 
+proc handleButtonPress(window: Window, button: Button) =
+  window.buttonDown[button.ord] = true
+  window.buttonPressed[button.ord] = true
+  window.buttonToggle[button.ord] = not window.buttonToggle[button.ord]
+  if window.onButtonPress != nil:
+    window.onButtonPress(button)
+
+proc handleButtonRelease(window: Window, button: Button) =
+  window.buttonDown[button.ord] = false
+  window.buttonReleased[button.ord] = true
+  if window.onButtonRelease != nil:
+    window.onButtonRelease(button)
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -299,6 +318,7 @@ proc wndProc(
 
   case uMsg:
   of WM_CLOSE:
+    window.closeRequested = true
     if window.onCloseRequest != nil:
       window.onCloseRequest()
     return 0
@@ -348,48 +368,60 @@ proc wndProc(
     window.trackMouseEventRegistered = false
     return 0
   of WM_MOUSEWHEEL:
-    let hiword = cast[int16]((wParam shr 16))
+    let hiword = HIWORD(wParam)
     window.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
     if window.onScroll != nil:
       window.onScroll()
     return 0
   of WM_MOUSEHWHEEL:
-    let hiword = cast[int16]((wParam shr 16))
+    let hiword = HIWORD(wParam)
     window.perFrame.scrollDelta = vec2(hiword.float32 / wheelDelta, 0)
     if window.onScroll != nil:
       window.onScroll()
     return 0
-  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN:
+  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN,
+    WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
     let button =
       case uMsg:
-      of WM_LBUTTONDOWN:
+      of WM_LBUTTONDOWN, WM_LBUTTONUP:
         MouseLeft
-      of WM_RBUTTONDOWN:
+      of WM_RBUTTONDOWN, WM_RBUTTONUP:
         MouseRight
       else:
-        MouseMidde
-    window.buttonDown[button.ord] = true
-    window.buttonPressed[button.ord] = true
-    if window.onButtonPress != nil:
-      window.onButtonPress(button)
-    if button == MouseLeft:
-      discard SetCapture(window.hWnd)
+        MouseMiddle
+    if uMsg in {WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
+      window.handleButtonPress(button)
+      if button == MouseLeft:
+        discard SetCapture(window.hWnd)
+    else:
+      window.handleButtonRelease(button)
+      if button == MouseLeft:
+        discard ReleaseCapture()
     return 0
-  of WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
-    let button =
-      case uMsg:
-      of WM_LBUTTONUP:
-        MouseLeft
-      of WM_RBUTTONUP:
-        MouseRight
-      else:
-        MouseMidde
-    window.buttonDown[button.ord] = false
-    window.buttonReleased[button.ord] = true
-    if window.onButtonRelease != nil:
-      window.onButtonRelease(button)
-    if button == MouseLeft:
-      discard ReleaseCapture()
+  of WM_KEYDOWN, WM_SYSKEYDOWN, WM_KEYUP, WM_SYSKEYUP:
+    if wParam == VK_PROCESSKEY:
+      # IME
+      discard
+    elif wParam == VK_SNAPSHOT:
+      window.handleButtonPress(KeyPrintScreen)
+      window.handleButtonRelease(KeyPrintScreen)
+    else:
+      let
+        scancode = (HIWORD(lParam) and (KF_EXTENDED or 0xff))
+        button = scancodeToButton[scancode]
+      if button != ButtonUnknown:
+        if (HIWORD(lParam) and KF_UP) == 0:
+          window.handleButtonPress(button)
+        else:
+          window.handleButtonRelease(button)
+      return 0
+  of WM_CHAR, WM_SYSCHAR, WM_UNICHAR:
+    if uMsg == WM_UNICHAR and wParam == UNICODE_NOCHAR:
+      return TRUE
+    let codepoint = wParam.uint32
+    if codepoint > 32 and not (codepoint > 126 and codepoint < 160):
+      if window.onRune != nil:
+        window.onRune(Rune(codepoint))
     return 0
   else:
     discard
@@ -417,10 +449,23 @@ proc pollEvents*() =
     if msg.message == WM_QUIT:
       for window in windows:
         discard wndProc(window.hwnd, WM_CLOSE, 0, 0)
-      # app.quitRequested = true
+      quitRequested = true
+      if onQuitRequest != nil:
+        onQuitRequest()
     else:
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
+
+  let activeWindow = windows.forHandle(GetActiveWindow())
+  if activeWindow != nil:
+    # When both shift keys are down the first one released does not trigger a
+    # key up event so we fake it here.
+    if activeWindow.buttonDown[KeyLeftShift.ord]:
+      if (GetKeyState(VK_LSHIFT) and KF_UP) == 0:
+        activeWindow.handleButtonRelease(KeyLeftShift)
+    if activeWindow.buttonDown[KeyRightShift.ord]:
+      if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
+        activeWindow.handleButtonRelease(KeyRightShift)
 
 proc makeContextCurrent*(window: Window) =
   makeContextCurrent(window.hdc, window.hglrc)
@@ -431,112 +476,10 @@ proc swapBuffers*(window: Window) =
 
 proc close*(window: Window) =
   destroy window
+  window.closed = true
 
-proc newWindow*(
-  title: string,
-  size: IVec2,
-  vsync = true,
-  openglMajorVersion = 4,
-  openglMinorVersion = 1,
-  msaa = msaaDisabled,
-  depthBits = 24,
-  stencilBits = 8
-): Window =
-  result = Window()
-  result.hWnd = createWindow(
-    windowClassName,
-    title,
-    size
-  )
-  result.buttonDown = newBitArray(Button.high.ord + 1)
-  result.buttonPressed = newBitArray(Button.high.ord + 1)
-  result.buttonReleased = newBitArray(Button.high.ord + 1)
-
-  try:
-    result.hdc = getDC(result.hWnd)
-
-    let pixelFormatAttribs = [
-      WGL_DRAW_TO_WINDOW_ARB.int32,
-      1,
-      WGL_SUPPORT_OPENGL_ARB,
-      1,
-      WGL_DOUBLE_BUFFER_ARB,
-      1,
-      WGL_ACCELERATION_ARB,
-      WGL_FULL_ACCELERATION_ARB,
-      WGL_PIXEL_TYPE_ARB,
-      WGL_TYPE_RGBA_ARB,
-      WGL_COLOR_BITS_ARB,
-      32,
-      WGL_DEPTH_BITS_ARB,
-      depthBits.int32,
-      WGL_STENCIL_BITS_ARB,
-      stencilBits.int32,
-      WGL_SAMPLES_ARB,
-      msaa.int32,
-      0
-    ]
-
-    var
-      pixelFormat: int32
-      numFormats: UINT
-    if wglChoosePixelFormatARB(
-      result.hdc,
-      pixelFormatAttribs[0].unsafeAddr,
-      nil,
-      1,
-      pixelFormat.addr,
-      numFormats.addr
-    ) == 0:
-      raise newException(WindyError, "Error choosing pixel format")
-    if numFormats == 0:
-      raise newException(WindyError, "No pixel format chosen")
-
-    var pfd: PIXELFORMATDESCRIPTOR
-    if DescribePixelFormat(
-      result.hdc,
-      pixelFormat,
-      sizeof(PIXELFORMATDESCRIPTOR).UINT,
-      pfd.addr
-    ) == 0:
-      raise newException(WindyError, "Error describing pixel format")
-
-    if SetPixelFormat(result.hdc, pixelFormat, pfd.addr) == 0:
-      raise newException(WindyError, "Error setting pixel format")
-
-    let contextAttribs = [
-      WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
-      openglMajorVersion.int32,
-      WGL_CONTEXT_MINOR_VERSION_ARB,
-      openglMinorVersion.int32,
-      WGL_CONTEXT_PROFILE_MASK_ARB,
-      WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-      WGL_CONTEXT_FLAGS_ARB,
-      WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-      0
-    ]
-
-    result.hglrc = wglCreateContextAttribsARB(
-      result.hdc,
-      0,
-      contextAttribs[0].unsafeAddr
-    )
-    if result.hglrc == 0:
-      raise newException(WindyError, "Error creating OpenGL context")
-
-    # The first call to ShowWindow may ignore the parameter so do an initial
-    # call to clear that behavior.
-    discard ShowWindow(result.hWnd, SW_HIDE)
-
-    result.makeContextCurrent()
-
-    if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
-      raise newException(WindyError, "Error setting swap interval")
-
-    windows.add(result)
-  except WindyError as e:
-    destroy result
-    raise e
+proc closed*(window: Window): bool =
+  window.closed
 
 proc visible*(window: Window): bool =
   IsWindowVisible(window.hWnd) != 0
@@ -685,3 +628,114 @@ proc `maximized=`*(window: Window, maximized: bool) =
   else:
     cmd = SW_RESTORE
   discard ShowWindow(window.hWnd, cmd)
+
+proc newWindow*(
+  title: string,
+  size: IVec2,
+  visible = true,
+  vsync = true,
+  openglMajorVersion = 4,
+  openglMinorVersion = 1,
+  msaa = msaaDisabled,
+  depthBits = 24,
+  stencilBits = 8
+): Window =
+  result = Window()
+  result.hWnd = createWindow(
+    windowClassName,
+    title,
+    size
+  )
+  result.buttonDown = newBitArray(Button.high.ord + 1)
+  result.buttonPressed = newBitArray(Button.high.ord + 1)
+  result.buttonReleased = newBitArray(Button.high.ord + 1)
+  result.buttonToggle = newBitArray(Button.high.ord + 1)
+
+  try:
+    result.hdc = getDC(result.hWnd)
+
+    let pixelFormatAttribs = [
+      WGL_DRAW_TO_WINDOW_ARB.int32,
+      1,
+      WGL_SUPPORT_OPENGL_ARB,
+      1,
+      WGL_DOUBLE_BUFFER_ARB,
+      1,
+      WGL_ACCELERATION_ARB,
+      WGL_FULL_ACCELERATION_ARB,
+      WGL_PIXEL_TYPE_ARB,
+      WGL_TYPE_RGBA_ARB,
+      WGL_COLOR_BITS_ARB,
+      32,
+      WGL_DEPTH_BITS_ARB,
+      depthBits.int32,
+      WGL_STENCIL_BITS_ARB,
+      stencilBits.int32,
+      WGL_SAMPLES_ARB,
+      msaa.int32,
+      0
+    ]
+
+    var
+      pixelFormat: int32
+      numFormats: UINT
+    if wglChoosePixelFormatARB(
+      result.hdc,
+      pixelFormatAttribs[0].unsafeAddr,
+      nil,
+      1,
+      pixelFormat.addr,
+      numFormats.addr
+    ) == 0:
+      raise newException(WindyError, "Error choosing pixel format")
+    if numFormats == 0:
+      raise newException(WindyError, "No pixel format chosen")
+
+    var pfd: PIXELFORMATDESCRIPTOR
+    if DescribePixelFormat(
+      result.hdc,
+      pixelFormat,
+      sizeof(PIXELFORMATDESCRIPTOR).UINT,
+      pfd.addr
+    ) == 0:
+      raise newException(WindyError, "Error describing pixel format")
+
+    if SetPixelFormat(result.hdc, pixelFormat, pfd.addr) == 0:
+      raise newException(WindyError, "Error setting pixel format")
+
+    let contextAttribs = [
+      WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
+      openglMajorVersion.int32,
+      WGL_CONTEXT_MINOR_VERSION_ARB,
+      openglMinorVersion.int32,
+      WGL_CONTEXT_PROFILE_MASK_ARB,
+      WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+      WGL_CONTEXT_FLAGS_ARB,
+      WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+      0
+    ]
+
+    result.hglrc = wglCreateContextAttribsARB(
+      result.hdc,
+      0,
+      contextAttribs[0].unsafeAddr
+    )
+    if result.hglrc == 0:
+      raise newException(WindyError, "Error creating OpenGL context")
+
+    # The first call to ShowWindow may ignore the parameter so do an initial
+    # call to clear that behavior.
+    discard ShowWindow(result.hWnd, SW_HIDE)
+
+    result.makeContextCurrent()
+
+    if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
+      raise newException(WindyError, "Error setting swap interval")
+
+    windows.add(result)
+
+    if visible:
+      result.visible = true
+  except WindyError as e:
+    destroy result
+    raise e

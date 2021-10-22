@@ -16,14 +16,6 @@ proc display() =
   bxy.endFrame()
   window.swapBuffers()
 
-var running = true
-
-window.onCloseRequest = proc() =
-  running = false
-  window.close()
-
-window.visible = true
-
-while running:
+while not window.closeRequested:
   display()
   pollEvents()

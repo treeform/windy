@@ -9,6 +9,7 @@ else:
 
 type
   BYTE* = uint8
+  SHORT* = int16
   BOOL* = int32
   LONG* = int32
   WORD* = uint16
@@ -153,7 +154,10 @@ type
 template MAKEINTRESOURCE*(i: untyped): untyped = cast[LPWSTR](i and 0xffff)
 
 const
+  FALSE* = 0
+  TRUE* = 1
   S_OK* = 0
+  UNICODE_NOCHAR* = 0xFFFF
   CP_UTF8* = 65001
   CS_VREDRAW* = 0x0001
   CS_HREDRAW* = 0x0002
@@ -215,6 +219,13 @@ const
   WM_NCCALCSIZE* = 0x0083
   WM_NCPAINT* = 0x0085
   WM_NCACTIVATE* = 0x0086
+  WM_KEYDOWN* = 0x0100
+  WM_KEYUP* = 0x0101
+  WM_CHAR* = 0x0102
+  WM_SYSKEYDOWN* = 0x0104
+  WM_SYSKEYUP* = 0x0105
+  WM_SYSCHAR* = 0x0106
+  WM_UNICHAR* = 0x0109
   WM_MOUSEMOVE* = 0x0200
   WM_LBUTTONDOWN* = 0x0201
   WM_LBUTTONUP* = 0x0202
@@ -304,6 +315,13 @@ const
   TME_NONCLIENT* = 0x00000010
   TME_QUERY* = 0x40000000
   TME_CANCEL* = 0x80000000'i32
+  KF_EXTENDED* = 0x0100
+  KF_UP* = 0x8000
+  VK_CONTROL* = 0x11
+  VK_SNAPSHOT* = 0x2C
+  VK_LSHIFT* = 0xA0
+  VK_RSHIFT* = 0xA1
+  VK_PROCESSKEY* = 0xE5
 
 proc GetLastError*(): DWORD {.importc, stdcall, dynlib: "Kernel32".}
 
@@ -506,6 +524,8 @@ proc TrackMouseEvent*(
 proc SetCapture*(hWnd: HWND): HWND {.importc, stdcall, dynlib: "User32".}
 
 proc ReleaseCapture*(): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc GetKeyState*(nVirtKey: int32): SHORT {.importc, stdcall, dynlib: "User32".}
 
 proc ChoosePixelFormat*(
   hdc: HDC,
