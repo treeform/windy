@@ -1,7 +1,5 @@
 import boxy, opengl, windy
 
-init()
-
 let window = newWindow("Windy Basic", ivec2(1280, 800))
 
 window.makeContextCurrent()

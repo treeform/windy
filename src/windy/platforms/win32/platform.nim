@@ -640,6 +640,10 @@ proc newWindow*(
   depthBits = 24,
   stencilBits = 8
 ): Window =
+  ## Creates a new window. Intitializes Windy if needed.
+  if not initialized:
+    init()
+
   result = Window()
   result.hWnd = createWindow(
     windowClassName,
