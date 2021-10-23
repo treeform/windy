@@ -117,6 +117,12 @@ type
     hWndTrack*: HWND
     dwHoverTime*: DWORD
   LPTRACKMOUSEEVENTSTRUCT* = ptr TRACKMOUSEEVENTSTRUCT
+  MONITORINFO* {.pure.} = object
+    cbSize*: DWORD
+    rcMonitor*: RECT
+    rcWork*: RECT
+    dwFlags*: DWORD
+  LPMONITORINFO* = ptr MONITORINFO
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -196,6 +202,7 @@ const
   WS_POPUPWINDOW* = WS_POPUP or WS_BORDER or WS_SYSMENU
   WS_CHILDWINDOW* = WS_CHILD
   WS_EX_APPWINDOW* = 0x00040000
+  WS_EX_TOPMOST* = 0x00000008
   WM_NULL* = 0x0000
   WM_CREATE* = 0x0001
   WM_DESTROY* = 0x0002
@@ -226,6 +233,7 @@ const
   WM_SYSKEYUP* = 0x0105
   WM_SYSCHAR* = 0x0106
   WM_UNICHAR* = 0x0109
+  WM_SYSCOMMAND* = 0x0112
   WM_MOUSEMOVE* = 0x0200
   WM_LBUTTONDOWN* = 0x0201
   WM_LBUTTONUP* = 0x0202
@@ -255,6 +263,9 @@ const
   WM_DWMWINDOWMAXIMIZEDCHANGE* = 0x0321
   WM_DWMSENDICONICTHUMBNAIL* = 0x0323
   WM_DWMSENDICONICLIVEPREVIEWBITMAP* = 0x0326
+  SC_RESTORE* = 0xF120
+  SC_MINIMIZE* = 0xF020
+  SC_MAXIMIZE* = 0xF030
   SW_HIDE* = 0
   SW_SHOWNORMAL* = 1
   SW_NORMAL* = 1
@@ -442,6 +453,11 @@ proc MonitorFromWindow*(
   dwFlags: DWORD
 ): HMONITOR {.importc, stdcall, dynlib: "User32".}
 
+proc GetMonitorInfoW*(
+  hMonitor: HMONITOR,
+  lpmi: LPMONITORINFO
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
 proc GetWindowPlacement*(
   hWnd: HWND,
   lpwndpl: ptr WINDOWPLACEMENT
@@ -531,6 +547,13 @@ proc SetWindowTextW*(
   hWnd: HWND,
   lpString: LPWSTR
 ): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc SendMessageW*(
+  hWnd: HWND,
+  uMsg: UINT,
+  wParam: WPARAM,
+  lParam: LPARAM
+): LRESULT {.importc, stdcall, dynlib: "User32".}
 
 proc ChoosePixelFormat*(
   hdc: HDC,
