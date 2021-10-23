@@ -1,4 +1,4 @@
-import unicode, os, sets, sequtils
+import unicode, os, sets, sequtils, strformat
 import vmath
 import ../../common, ../../internal
 import x11/[x, xlib, xevent, glx, keysym]
@@ -40,6 +40,8 @@ type
     motiv
     kwm
     other
+  
+  ButtonView* = distinct set[Button]
 
 
 var
@@ -113,7 +115,10 @@ proc property(window: XWindow, property: Atom): tuple[kind: Atom, data: string] 
   if len != 0: copyMem(result.data[0].addr, data, len)
 
 proc setProperty(window: XWindow, property: Atom, kind: Atom, format: cint, data: string) =
-  display.XChangeProperty(window, property, kind, format, pmReplace, data, data.len.cint)
+  display.XChangeProperty(window, property, kind, format, pmReplace, data, data.len.cint div (format div 8))
+
+proc delProperty(window: XWindow, property: Atom) =
+  display.XDeleteProperty(window, property)
 
 proc asSeq(s: string, T: type = uint8): seq[T] =
   result = newSeqOfCap[T](s.len div T.sizeof)
@@ -125,15 +130,43 @@ proc asSeq(s: string, T: type = uint8): seq[T] =
 proc asString[T](x: seq[T]|HashSet[T]): string =
   result = newStringOfCap(x.len * T.sizeof)
   for v in x:
-    for v in cast[ptr array[T.sizeof, char]](v.unsafeAddr)[]:
+    for v in cast[array[T.sizeof, char]](v):
       result.add v
 
 proc invert[T](x: var set[T], v: T) =
   if x.contains v: x.excl v
-  else: x.excl v
+  else: x.incl v
+
+proc send*(a: XWindow, e: XEvent, mask: clong = NoEventMask, propagate = false) =
+  display.XSendEvent(a, propagate, mask, e.unsafeAddr)
+
+proc newClientMessage*[T](window: XWindow, messageKind: Atom, data: openarray[T], serial: int = 0, sendEvent: bool = false): XEvent =
+  result.kind = xeClientMessage
+  result.client.messageType = messageKind
+  if data.len * T.sizeof > XClientMessageData.sizeof:
+    raise WindyError.newException(&"To much data in client message (>{XClientMessageData.sizeof} bytes)")
+  if data.len > 0:
+    copyMem(result.client.data.addr, data[0].unsafeaddr, data.len * T.sizeof)
+  result.client.format = case T.sizeof
+    of 1: 8
+    of 2: 16
+    of 4: 32
+    of 8: 32
+    else: 8
+  result.client.window = window
+  result.client.display = display
+  result.client.serial = serial.culong
+  result.client.sendEvent = sendEvent
 
 proc wmState(window: XWindow): HashSet[Atom] =
   window.property(atom"_NET_WM_STATE").data.asSeq(Atom).toHashSet
+
+proc wmStateSend(window: XWindow, op: int, atom: Atom) =
+  # op: 2 - switch, 1 - set true, 0 - set false
+  display.defaultRootWindow.send(
+    window.newClientMessage(atom"_NET_WM_STATE", [Atom op, atom]),
+    SubstructureNotifyMask or SubstructureRedirectMask
+  )
 
 proc keysymToButton(sym: KeySym): Button =
   case sym
@@ -307,16 +340,8 @@ proc maximized*(window: Window): bool =
   atom"_NET_WM_STATE_MAXIMIZED_VERT" in wmState
 
 proc `maximized=`*(window: Window, v: bool) =
-  var wmState = window.handle.wmState
-  
-  if v:
-    wmState.incl atom"_NET_WM_STATE_MAXIMIZED_HORZ"
-    wmState.incl atom"_NET_WM_STATE_MAXIMIZED_VERT"
-  else:
-    wmState.excl atom"_NET_WM_STATE_MAXIMIZED_HORZ"
-    wmState.excl atom"_NET_WM_STATE_MAXIMIZED_VERT"
-  
-  window.handle.setProperty(atom"_NET_WM_STATE", xaAtom, 32, wmState.asString)
+  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_MAXIMIZED_HORZ"
+  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_MAXIMIZED_VERT"
 
 
 proc minimized*(window: Window): bool =
@@ -348,14 +373,31 @@ proc `decorated=`*(window: Window, v: bool) =
 
   let size = window.size # save current window size
 
-  case wmForDecoratedKind
-  of WmForDecoratedKind.motiv:
-    window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[v.int32 shl 1, 0, 0, 0, 0].asString)
+  if not v:
+    case wmForDecoratedKind
+    of WmForDecoratedKind.motiv:
+      window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[1 shl 1, 0, 0, 0, 0].asString)
+    of WmForDecoratedKind.kwm, WmForDecoratedKind.other:
+      window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[0'i32].asString)
+    else: return
+    
+    display.XSetTransientForHint(window.handle, display.defaultRootWindow)
+    if window.visible:
+      # "reopen" window
+      display.XUnmapWindow(window.handle)
+      display.XMapWindow(window.handle)
 
-  of WmForDecoratedKind.kwm, WmForDecoratedKind.other:
-    window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[v.int32].asString)
-
-  else: display.XSetTransientForHint(window.handle, display.defaultRootWindow)
+  else:
+    case wmForDecoratedKind
+    of WmForDecoratedKind.motiv, WmForDecoratedKind.kwm, WmForDecoratedKind.other:
+      window.handle.delProperty(decoratedAtom)
+    else: return
+    
+    display.XSetTransientForHint(window.handle, 0)
+    if window.visible:
+      # "reopen" window
+      display.XUnmapWindow(window.handle)
+      display.XMapWindow(window.handle)
 
   window.size = size # restore window size
 
@@ -380,16 +422,11 @@ proc fullscreen*(window: Window): bool =
   atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
 
 proc `fullscreen=`*(window: Window, v: bool) =
-  var wmState = window.handle.wmState
-  
-  if v: wmState.incl atom"_NET_WM_STATE_FULLSCREEN"
-  else: wmState.excl atom"_NET_WM_STATE_FULLSCREEN"
-  
-  window.handle.setProperty(atom"_NET_WM_STATE", xaAtom, 32, wmState.asString)
+  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_FULLSCREEN"
 
 
 proc title*(window: Window): string =
-  window.handle.property(atom"_NET_WM_ICON_NAME").data
+  window.handle.property(atom"_NET_WM_NAME").data
 
 proc `title=`*(window: Window, v: string) =
   window.handle.setProperty(atom"_NET_WM_NAME", atom"UTF8_STRING", 8, v)
@@ -422,6 +459,8 @@ proc newWindow*(
 ): Window =
   init()
   new result
+  result.`"_decorated"` = true
+  
   let root = display.defaultRootWindow
   
   var vi: XVisualInfo
@@ -491,6 +530,7 @@ proc newWindow*(
     result.visible = true
 
   windows.add result
+
 
 proc pollEvents(window: Window) =
   template pushEvent(e) =
@@ -605,6 +645,34 @@ proc pollEvents(window: Window) =
           for r in s.runes: pushEvent onRune, r
         
     else: discard
+    
+
+proc mousePos*(window: Window): IVec2 =
+  window.mousePos
+
+proc mousePrevPos*(window: Window): IVec2 =
+  window.perFrame.mousePrevPos
+
+proc mouseDelta*(window: Window): IVec2 =
+  window.perFrame.mouseDelta
+
+proc scrollDelta*(window: Window): Vec2 =
+  window.perFrame.scrollDelta
+
+proc buttonDown*(window: Window): ButtonView =
+  ButtonView window.buttonDown
+
+proc buttonPressed*(window: Window): ButtonView =
+  ButtonView window.buttonPressed
+
+proc buttonReleased*(window: Window): ButtonView =
+  ButtonView window.buttonReleased
+
+proc buttonToggle*(window: Window): ButtonView =
+  ButtonView window.buttonToggle
+
+proc `[]`*(buttonView: ButtonView, button: Button): bool =
+  (set[Button])(buttonView).contains button
 
 proc pollEvents* =
   let ws = windows

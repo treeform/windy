@@ -17,7 +17,7 @@ type
   
   KeyCode* = cuchar
 
-  PropMode* = enum
+  PropMode* {.size: int32.sizeof.} = enum
     pmReplace = 0
     pmPrepend = 1
     pmAppend = 2

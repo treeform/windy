@@ -239,17 +239,17 @@ proc XIconifyWindow*(d; window: Window, screen: cint)
 proc XSetWMProtocols*(d; window: Window, wmProtocols: ptr Atom, len: cint)
 proc XSelectInput*(d; window: Window, inputs: clong)
 
-proc XChangeProperty*(
-  d; window: Window, property: Atom, kind: Atom,
-  format: cint, mode: PropMode, data: cstring, len: cint
-)
-
 proc XGetWindowProperty*(
   d; window: Window, property: Atom,
   offset: clong, len: clong, delete: bool, requiredKind: Atom,
   kindReturn: ptr Atom, formatReturn: ptr cint, lenReturn: ptr culong,
   bytesAfterReturn: ptr culong, dataReturn: ptr cstring
 )
+proc XChangeProperty*(
+  d; window: Window, property: Atom, kind: Atom,
+  format: cint, mode: PropMode, data: cstring, len: cint
+)
+proc XDeleteProperty*(d; window: Window, property: Atom)
 
 proc Xutf8SetWMProperties*(
   d; window: Window,

@@ -431,7 +431,7 @@ using d: Display
 {.push, cdecl, dynlib: libX11, importc.}
 
 proc XCheckIfEvent*(d; e: ptr XEvent, cb: IfEventProc, userData: pointer): bool
-proc XSendEvent*(d; window: Window, propogate: cint, mask: clong, e: ptr XEvent)
+proc XSendEvent*(d; window: Window, propogate: bool, mask: clong, e: ptr XEvent)
 
 proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint
 
