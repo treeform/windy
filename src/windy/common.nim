@@ -15,6 +15,8 @@ type
     MouseLeft
     MouseRight
     MouseMiddle
+    MouseBackward
+    MouseForward
     Key0
     Key1
     Key2
@@ -51,22 +53,22 @@ type
     KeyX
     KeyY
     KeyZ
-    KeyBacktick
-    KeyMinus
-    KeyEqual
+    KeyBacktick     # `
+    KeyMinus        # -
+    KeyEqual        # =
     KeyBackspace
     KeyTab
-    KeyLeftBracket
-    KeyRightBracket
-    KeyBackslash
+    KeyLeftBracket  # [
+    KeyRightBracket # ]
+    KeyBackslash    # \
     KeyCapsLock
-    KeySemicolon
-    KeyApostraphe
+    KeySemicolon    # :
+    KeyApostraphe   # '
     KeyEnter
     KeyLeftShift
-    KeyComma
-    KeyPeriod
-    KeySlash
+    KeyComma        # ,
+    KeyPeriod       # .
+    KeySlash        # /
     KeyRightShift
     KeyLeftControl
     KeyLeftSuper
@@ -113,10 +115,10 @@ type
     Numpad7
     Numpad8
     Numpad9
-    NumpadDecimal
+    NumpadDecimal  # .
     NumpadEnter
-    NumpadAdd
-    NumbadSubtract
-    NumpadMultiply
-    NumpadDivide
-    NumpadEqual
+    NumpadAdd      # +
+    NumpadSubtract # -
+    NumpadMultiply # *
+    NumpadDivide   # /
+    NumpadEqual    # =

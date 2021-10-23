@@ -390,39 +390,39 @@ type
 
   XEvent* {.union.} = object
     kind*: XEventKind
-    xany*: XAnyEvent
-    xkey*: XKeyEvent
-    xbutton*: XButtonEvent
-    xmotion*: XMotionEvent
-    xcrossing*: XCrossingEvent
-    xfocus*: XFocusChangeEvent
-    xexpose*: XExposeEvent
-    xgraphicsexpose*: XGraphicsExposeEvent
-    xnoexpose*: XNoExposeEvent
-    xvisibility*: XVisibilityEvent
-    xcreatewindow*: XCreateWindowEvent
-    xdestroywindow*: XDestroyWindowEvent
-    xunmap*: XUnmapEvent
-    xmap*: XMapEvent
-    xmaprequest*: XMapRequestEvent
-    xreparent*: XReparentEvent
-    xconfigure*: XConfigureEvent
-    xgravity*: XGravityEvent
-    xresizerequest*: XResizeRequestEvent
-    xconfigurerequest*: XConfigureRequestEvent
-    xcirculate*: XCirculateEvent
-    xcirculaterequest*: XCirculateRequestEvent
-    xproperty*: XPropertyEvent
-    xselectionclear*: XSelectionClearEvent
-    xselectionrequest*: XSelectionRequestEvent
-    xselection*: XSelectionEvent
-    xcolormap*: XColormapEvent
-    xclient*: XClientMessageEvent
-    xmapping*: XMappingEvent
-    xerror*: XErrorEvent
-    xkeymap*: XKeymapEvent
+    any*: XAnyEvent
+    key*: XKeyEvent
+    button*: XButtonEvent
+    motion*: XMotionEvent
+    crossing*: XCrossingEvent
+    focus*: XFocusChangeEvent
+    expose*: XExposeEvent
+    graphicsexpose*: XGraphicsExposeEvent
+    noexpose*: XNoExposeEvent
+    visibility*: XVisibilityEvent
+    createwindow*: XCreateWindowEvent
+    destroywindow*: XDestroyWindowEvent
+    unmap*: XUnmapEvent
+    map*: XMapEvent
+    maprequest*: XMapRequestEvent
+    reparent*: XReparentEvent
+    configure*: XConfigureEvent
+    gravity*: XGravityEvent
+    resizerequest*: XResizeRequestEvent
+    configurerequest*: XConfigureRequestEvent
+    circulate*: XCirculateEvent
+    circulaterequest*: XCirculateRequestEvent
+    property*: XPropertyEvent
+    selectionclear*: XSelectionClearEvent
+    selectionrequest*: XSelectionRequestEvent
+    selection*: XSelectionEvent
+    colormap*: XColormapEvent
+    client*: XClientMessageEvent
+    mapping*: XMappingEvent
+    error*: XErrorEvent
+    keymap*: XKeymapEvent
     xgeneric*: XGenericEvent
-    xcookie*: XGenericEventCookie
+    cookie*: XGenericEventCookie
     pad: array[0..23, clong]
 
 
@@ -436,5 +436,7 @@ proc XSendEvent*(d; window: Window, propogate: cint, mask: clong, e: ptr XEvent)
 proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint
 
 proc XSetErrorHandler*(handler: ErrorHandleProc)
+
+proc XLookupKeysym*(e: ptr XKeyEvent, i: cint): KeySym
 
 {.pop.}

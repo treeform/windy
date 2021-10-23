@@ -16,6 +16,7 @@ proc display() =
 
 window.onCloseRequest = proc() =
   echo "onCloseRequest"
+  window.close()
 
 window.onMove = proc() =
   echo "onMove ", window.pos
@@ -48,7 +49,7 @@ window.onButtonRelease = proc(button: Button) =
 window.onRune = proc(rune: Rune) =
   echo "onRune ", rune
 
-while not window.closeRequested:
+while not window.closed:
   if window.minimized or not window.visible:
     sleep(10)
   else:

@@ -117,6 +117,29 @@ type
     overrideRedirect*: cint
     colormap*: Colormap
     cursor*: Cursor
+
+  XWindowAttributes* = object
+    pos*: IVec2
+    size*: IVec2
+    border_width*: cint
+    depth*: cint
+    visual*: ptr Visual
+    root*: Window
+    c_class*: cint
+    bit_gravity*: cint
+    win_gravity*: cint
+    backing_store*: cint
+    backing_planes*: culong
+    backing_pixel*: culong
+    save_under*: bool
+    colormap*: Colormap
+    map_installed*: bool
+    map_state*: cint
+    all_event_masks*: clong
+    your_event_mask*: clong
+    do_not_propagate_mask*: clong
+    override_redirect*: bool
+    screen*: ptr Screen
   
   XGCValues* = object
     function*: cint
@@ -235,6 +258,13 @@ proc Xutf8SetWMProperties*(
   normalHints: pointer, wmHints: pointer, classHints: pointer
 )
 
+proc XTranslateCoordinates*(
+  d; window: Window, root: Window, x, y: int32,
+  xReturn, yReturn: ptr int32, childReturn: ptr Window
+)
+
+proc XGetWindowAttributes*(d; window: Window, res: ptr XWindowAttributes)
+
 proc XOpenIM*(d; db: pointer = nil, resName: cstring = nil, resClass: cstring = nil): XIM
 proc XCloseIM*(im: XIM)
 
@@ -267,5 +297,8 @@ proc XMoveWindow*(d; window: Window; x, y: int32)
 
 proc XGetInputFocus*(d; window: ptr Window, revertTo: ptr RevertTo)
 proc XSetInputFocus*(d; window: Window, revertTo: RevertTo, time: int32 = CurrentTime)
+
+proc XQueryKeymap*(d; res: var array[32, char])
+proc XKeycodeToKeysym*(d; code: KeyCode, i: cint): KeySym
 
 {.pop.}

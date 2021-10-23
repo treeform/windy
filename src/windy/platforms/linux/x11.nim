@@ -1,5 +1,7 @@
-import x11/[x, xlib, xevent, glx]
-import ../../common, os, vmath, sets
+import unicode, os, sets, sequtils
+import vmath
+import ../../common, ../../internal
+import x11/[x, xlib, xevent, glx, keysym]
 
 type
   XWindow = x.Window
@@ -9,6 +11,19 @@ type
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
+    onMouseMove*: Callback
+    onScroll*: Callback
+    onButtonPress*: ButtonCallback
+    onButtonRelease*: ButtonCallback
+    onRune*: RuneCallback
+
+    mousePos: IVec2
+    buttonClicking, buttonToggle: set[Button]
+
+    perFrame: PerFrame
+    buttonPressed, buttonDown, buttonReleased: set[Button]
+
+    prevSize, prevPos: IVec2
 
     handle: XWindow
     ctx: GlxContext
@@ -28,8 +43,12 @@ type
 
 
 var
+  quitRequested*: bool
+  onQuitRequest*: Callback
+  
   initialized: bool
   windows: seq[Window]
+  
   display: Display
   decoratedAtom: Atom
   wmForDecoratedKind: WmForDecoratedKind
@@ -47,8 +66,8 @@ proc atomIfExist(name: string): Atom = display.XInternAtom(name, 1)
 proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
   raise WindyError.newException("Error dealing with X11: " & $event.errorCode.Status)
 
-proc init* =
-  if initialized: return # no need to raise error
+proc init =
+  if initialized: return
 
   XSetErrorHandler handleXError
 
@@ -109,8 +128,125 @@ proc asString[T](x: seq[T]|HashSet[T]): string =
     for v in cast[ptr array[T.sizeof, char]](v.unsafeAddr)[]:
       result.add v
 
+proc invert[T](x: var set[T], v: T) =
+  if x.contains v: x.excl v
+  else: x.excl v
+
 proc wmState(window: XWindow): HashSet[Atom] =
   window.property(atom"_NET_WM_STATE").data.asSeq(Atom).toHashSet
+
+proc keysymToButton(sym: KeySym): Button =
+  case sym
+  of xk_shiftL:       KeyLeftShift
+  of xk_shiftR:       KeyRightShift
+  of xk_controlL:     KeyLeftControl
+  of xk_controlR:     KeyRightControl
+  of xk_bracketLeft:  KeyLeftBracket
+  of xk_bracketRight: KeyRightBracket
+  of xk_altL:         KeyLeftAlt
+  of xk_altR:         KeyRightAlt
+  of xk_superL:       KeyLeftSuper
+  of xk_superR:       KeyRightSuper
+  of xk_menu:         KeyMenu
+  of xk_escape:       KeyEscape
+  of xk_semicolon:    KeySemicolon
+  of xk_slash:        KeySlash
+  of xk_equal:        KeyEqual
+  of xk_minus:        KeyMinus
+  of xk_comma:        KeyComma
+  of xk_period:       KeyPeriod
+  of xk_apostrophe:   KeyApostraphe
+  of xk_backslash:    KeyBackslash
+  of xk_grave:        KeyBacktick
+  of xk_space:        KeySpace
+  of xk_return:       KeyEnter
+  of xk_kpEnter:      KeyEnter
+  of xk_backspace:    KeyBackspace
+  of xk_tab:          KeyTab
+  of xk_prior:        KeyPage_up
+  of xk_next:         KeyPage_down
+  of xk_end:          KeyEnd
+  of xk_home:         KeyHome
+  of xk_insert:       KeyInsert
+  of xk_delete:       KeyDelete
+  of xk_kpAdd:        NumpadAdd
+  of xk_kpSubtract:   NumpadSubtract
+  of xk_kpMultiply:   NumpadMultiply
+  of xk_kpDivide:     NumpadDivide
+  of xk_capsLock:     KeyCapsLock
+  of xk_numLock:      KeyNumLock
+  of xk_scrollLock:   KeyScrollLock
+  of xk_print:        KeyPrintScreen
+  of xk_kpSeparator:  NumpadDecimal
+  of xk_pause:        KeyPause
+  of xk_f1:           KeyF1
+  of xk_f2:           KeyF2
+  of xk_f3:           KeyF3
+  of xk_f4:           KeyF4
+  of xk_f5:           KeyF5
+  of xk_f6:           KeyF6
+  of xk_f7:           KeyF7
+  of xk_f8:           KeyF8
+  of xk_f9:           KeyF9
+  of xk_f10:          KeyF10
+  of xk_f11:          KeyF11
+  of xk_f12:          KeyF12
+  of xk_left:         KeyLeft
+  of xk_right:        KeyRight
+  of xk_up:           KeyUp
+  of xk_down:         KeyDown
+  of xk_kpInsert:     Numpad0
+  of xk_kpEnd:        Numpad1
+  of xk_kpDown:       Numpad2
+  of xk_kpPagedown:   Numpad3
+  of xk_kpLeft:       Numpad4
+  of xk_kpBegin:      Numpad5
+  of xk_kpRight:      Numpad6
+  of xk_kpHome:       Numpad7
+  of xk_kpUp:         Numpad8
+  of xk_kpPageup:     Numpad9
+  of xk_a:            KeyA
+  of xk_b:            KeyB
+  of xk_c:            KeyC
+  of xk_d:            KeyD
+  of xk_e:            KeyR
+  of xk_f:            KeyF
+  of xk_g:            KeyG
+  of xk_h:            KeyH
+  of xk_i:            KeyI
+  of xk_j:            KeyJ
+  of xk_k:            KeyK
+  of xk_l:            KeyL
+  of xk_m:            KeyM
+  of xk_n:            KeyN
+  of xk_o:            KeyO
+  of xk_p:            KeyP
+  of xk_q:            KeyQ
+  of xk_r:            KeyR
+  of xk_s:            KeyS
+  of xk_t:            KeyT
+  of xk_u:            KeyU
+  of xk_v:            KeyV
+  of xk_w:            KeyW
+  of xk_x:            KeyX
+  of xk_y:            KeyY
+  of xk_z:            KeyZ
+  of xk_0:            Key0
+  of xk_1:            Key1
+  of xk_2:            Key2
+  of xk_3:            Key3
+  of xk_4:            Key4
+  of xk_5:            Key5
+  of xk_6:            Key6
+  of xk_7:            Key7
+  of xk_8:            Key8
+  of xk_9:            Key9
+  else:               ButtonUnknown
+
+proc queryKeyboardState*(): set[0..255] =
+  var r: array[32, char]
+  display.XQueryKeymap(r)
+  result = cast[ptr set[0..255]](r.addr)[]
 
 
 proc destroy(window: Window) =
@@ -119,8 +255,9 @@ proc destroy(window: Window) =
   if window.gc != nil:   display.XFreeGC(window.gc)
   if window.handle != 0: display.XDestroyWindow(window.handle)
   wasMoved window[]
+  window.closed = true
 
-proc isOpen*(window: Window): bool = not window.closed
+proc closed*(window: Window): bool = window.closed
 
 proc close*(window: Window) =
   destroy window
@@ -153,8 +290,12 @@ proc framebufferSize*(window: Window): IVec2 =
 
 
 proc pos*(window: Window): IVec2 =
-  #TODO: always returns (0, 0)
-  window.handle.geometry.pos
+  var
+    child: XWindow
+    xwa: XWindowAttributes
+  display.XTranslateCoordinates(window.handle, display.defaultRootWindow, 0, 0, result.x.addr, result.y.addr, child.addr)
+  display.XGetWindowAttributes(window.handle, xwa.addr)
+  result -= xwa.pos
 
 proc `pos=`*(window: Window, v: IVec2) =
   display.XMoveWindow(window.handle, v.x, v.y)
@@ -266,6 +407,7 @@ proc contentScale*(window: Window): float32 =
 proc newWindow*(
   title: string,
   size: IVec2,
+  visible = true,
   vsync = true,
 
   # window constructor can't set opengl version, msaa and stencilBits
@@ -278,6 +420,7 @@ proc newWindow*(
   
   transparent = false, # note that transparency CANNOT be changed after window was created
 ): Window =
+  init()
   new result
   let root = display.defaultRootWindow
   
@@ -344,20 +487,39 @@ proc newWindow*(
     else:
       raise newException(WindyError, "VSync is not supported")
 
+  if visible:
+    result.visible = true
+
   windows.add result
 
 proc pollEvents(window: Window) =
   template pushEvent(e) =
-    try:
-      if window.e != nil: window.e()
-    except:
-      raise CatchableError.newException("Exception during " & astToStr(name) & " callback: " & getCurrentExceptionMsg())
-      # it is always bad to quit immediately
+    if window.e != nil: window.e()
+  template pushEvent(e, arg) =
+    if window.e != nil: window.e(arg)
+
+  # Clear all per-frame data
+  window.perFrame = PerFrame()
+  window.buttonPressed = {}
+  window.buttonReleased = {}
 
   var ev: XEvent
   
   proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): bool {.cdecl.} =
-    event.xany.window == cast[Window](userData).handle
+    event.any.window == cast[Window](userData).handle
+
+  template pushButtonEvent(button: Button, press: bool = ev.kind == xeButtonPress) =
+    if press:
+      window.buttonDown.incl button
+      window.buttonPressed.incl button
+      window.buttonClicking.incl button
+      window.buttonToggle.invert button
+      pushEvent onButtonPress, button
+    else:
+      window.buttonDown.excl button
+      window.buttonReleased.incl button
+      window.buttonClicking.excl button
+      pushEvent onButtonRelease, button
   
   while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
     case ev.kind
@@ -368,59 +530,80 @@ proc pollEvents(window: Window) =
 
     of xeFocusIn:
       if window.ic != nil: XSetICFocus window.ic
-      #TODO: press currently pressed keys
+      
+      # press currently pressed keys
+      for k in queryKeyboardState().mapit(keysymToButton display.XKeycodeToKeysym(it.cuchar, 0)):
+        if k == ButtonUnknown: continue
+        pushButtonEvent k, true
+      
       pushEvent onFocusChange
     
     of xeFocusOut:
       if window.ic != nil: XUnsetICFocus window.ic
-      #TODO: release currently pressed keys
+      
+      # release currently pressed keys
+      let bd = window.buttonDown
+      window.buttonDown = {}
+      for k in bd: pushButtonEvent k.Button, false
+
       pushEvent onFocusChange
     
     of xeMap: window.`"_visible"` = true
     of xeUnmap: window.`"_visible"` = false
 
     of xeConfigure:
-      # Configure means resize and move at the same time
-      #TODO: check is it resize or move
-      pushEvent onResize
-      pushEvent onMove
+      let pos = window.pos
+      if pos != window.prevPos:
+        window.prevPos = pos
+        pushEvent onMove
+      if ev.configure.size != window.prevSize:
+        window.prevSize = ev.configure.size
+        pushEvent onResize
 
     of xeMotion:
-      #TODO: push event
-      discard ev.xmotion.pos
+      window.perFrame.mousePrevPos = window.mousePos
+      window.mousePos = ev.motion.pos
+      window.perFrame.mouseDelta = window.mousePos - window.perFrame.mousePrevPos
+      window.buttonClicking = {}
+      pushEvent onMouseMove
     
     of xeButtonPress, xeButtonRelease:
-      #TODO: push event
-      case ev.xbutton.button
-      of 1: discard # left
-      of 2: discard # middle
-      of 3: discard # right
-      of 8: discard # backward
-      of 9: discard # forward
+      template pushScrollEvent(delta: Vec2) =
+        window.perFrame.scrollDelta = delta
+        pushEvent onScroll
+
+      case ev.button.button
+      of 1: pushButtonEvent MouseLeft
+      of 2: pushButtonEvent MouseMiddle
+      of 3: pushButtonEvent MouseRight
+      of 8: pushButtonEvent MouseBackward
+      of 9: pushButtonEvent MouseForward
       
-      of 4: discard # scroll up
-      of 5: discard # scroll down
-      
+      of 4: pushScrollEvent vec2(1,  0) # scroll up
+      of 5: pushScrollEvent vec2(-1, 0) # scroll down
+      of 6: pushScrollEvent vec2(0,  1) # scroll left?
+      of 7: pushScrollEvent vec2(0, -1) # scroll right?
       else: discard
     
-    of xeKeyPress:
-      #TODO: handle key press
+    of xeKeyPress, xeKeyRelease:
+      var key = ButtonUnknown
+      var i = 0
+      while i < 4 and key == ButtonUnknown:
+        key = keysymToButton(XLookupKeysym(ev.key.addr, i.cint))
+        inc i
+      if key != ButtonUnknown:
+        pushButtonEvent key, ev.kind == xeKeyPress
 
       # handle text input
-      if window.ic != nil and (ev.xkey.state and ControlMask) == 0:
+      if ev.kind == xeKeyPress and window.ic != nil and (ev.key.state and ControlMask) == 0:
         var
           status: cint
           s = newString(16)
-        s.setLen window.ic.Xutf8LookupString(ev.xkey.addr, s, 16, nil, status.addr)
+        s.setLen window.ic.Xutf8LookupString(ev.key.addr, s, 16, nil, status.addr)
 
         if s != "\u001B":
-          #TODO: push event
-          discard
+          for r in s.runes: pushEvent onRune, r
         
-    of xeKeyRelease:
-      #TODO: handle key release
-      discard
-
     else: discard
 
 proc pollEvents* =
@@ -428,10 +611,10 @@ proc pollEvents* =
   windows = @[]
 
   for window in ws:
-    if window.isOpen:
-      windows.add window
-    else:
+    if window.closed:
       destroy window
+    else:
+      windows.add window
 
   for window in windows:
     pollEvents window
