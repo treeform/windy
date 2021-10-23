@@ -1,6 +1,6 @@
 import boxy, opengl, windy
 
-let window = newWindow("Windy Basic", ivec2(1280, 800))
+let window = newWindow("Toggle Fullscreen", ivec2(1280, 800))
 
 window.makeContextCurrent()
 loadExtensions()
@@ -13,6 +13,10 @@ proc display() =
   bxy.drawRect(rect(vec2(100, 100), vec2(200, 200)), color(1, 0, 1, 1))
   bxy.endFrame()
   window.swapBuffers()
+
+window.onButtonPress = proc(button: Button) =
+  if button == MouseLeft:
+    window.fullscreen = window.buttonToggle[MouseLeft]
 
 while not window.closeRequested:
   display()

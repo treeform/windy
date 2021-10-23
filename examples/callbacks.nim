@@ -1,7 +1,5 @@
 import boxy, opengl, os, windy
 
-init()
-
 let window = newWindow("Windy Callbacks", ivec2(1280, 800))
 
 window.makeContextCurrent()
@@ -16,12 +14,8 @@ proc display() =
   bxy.endFrame()
   window.swapBuffers()
 
-var running = true
-
 window.onCloseRequest = proc() =
   echo "onCloseRequest"
-  running = false
-  window.close()
 
 window.onMove = proc() =
   echo "onMove ", window.pos
@@ -37,9 +31,24 @@ window.onResize = proc() =
 window.onFocusChange = proc() =
   echo "onFocusChange ", window.focused
 
-window.visible = true
+window.onMouseMove = proc() =
+  echo "onMouseMove from ",
+    window.mousePrevPos, " to ", window.mousePos,
+    " delta = ", window.mouseDelta
 
-while running:
+window.onScroll = proc() =
+  echo "onScroll ", window.scrollDelta
+
+window.onButtonPress = proc(button: Button) =
+  echo "onButtonPress ", button
+
+window.onButtonRelease = proc(button: Button) =
+  echo "onButtonRelease ", button
+
+window.onRune = proc(rune: Rune) =
+  echo "onRune ", rune
+
+while not window.closeRequested:
   if window.minimized or not window.visible:
     sleep(10)
   else:
