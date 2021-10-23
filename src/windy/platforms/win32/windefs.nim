@@ -527,6 +527,11 @@ proc ReleaseCapture*(): BOOL {.importc, stdcall, dynlib: "User32".}
 
 proc GetKeyState*(nVirtKey: int32): SHORT {.importc, stdcall, dynlib: "User32".}
 
+proc SetWindowTextW*(
+  hWnd: HWND,
+  lpString: LPWSTR
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR

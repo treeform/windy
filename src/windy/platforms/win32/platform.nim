@@ -41,6 +41,7 @@ type
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
 
+    title: string
     closed: bool
     perFrame: PerFrame
     trackMouseEventRegistered: bool
@@ -90,7 +91,7 @@ proc forHandle(windows: seq[Window], hWnd: HWND): Window =
   windows[index]
 
 proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
-  let windowClassName = windowClassName.wstr()
+  let wideWindowClassName = windowClassName.wstr()
 
   var wc: WNDCLASSEXW
   wc.cbSize = sizeof(WNDCLASSEXW).UINT
@@ -98,7 +99,7 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   wc.lpfnWndProc = wndProc
   wc.hInstance = GetModuleHandleW(nil)
   wc.hCursor = LoadCursorW(0, IDC_ARROW)
-  wc.lpszClassName = cast[ptr WCHAR](windowClassName[0].unsafeAddr)
+  wc.lpszClassName = cast[ptr WCHAR](wideWindowClassName[0].unsafeAddr)
   wc.hIcon = LoadImageW(
     0,
     IDI_APPLICATION,
@@ -113,8 +114,8 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
 
 proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   let
-    windowClassName = windowClassName.wstr()
-    title = title.wstr()
+    wideWindowClassName = windowClassName.wstr()
+    wideTitle = title.wstr()
 
   var size = size
   if size != ivec2(CW_USEDEFAULT, CW_USEDEFAULT):
@@ -132,8 +133,8 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
 
   result = CreateWindowExW(
     WS_EX_APPWINDOW,
-    cast[ptr WCHAR](windowClassName[0].unsafeAddr),
-    cast[ptr WCHAR](title[0].unsafeAddr),
+    cast[ptr WCHAR](wideWindowClassName[0].unsafeAddr),
+    cast[ptr WCHAR](wideTitle[0].unsafeAddr),
     decoratedWindowStyle,
     CW_USEDEFAULT,
     CW_USEDEFAULT,
@@ -478,6 +479,9 @@ proc close*(window: Window) =
   destroy window
   window.closed = true
 
+proc title*(window: Window): string =
+  window.title
+
 proc closed*(window: Window): bool =
   window.closed
 
@@ -491,6 +495,9 @@ proc decorated*(window: Window): bool =
 proc resizable*(window: Window): bool =
   let style = getWindowStyle(window.hWnd)
   (style and WS_THICKFRAME) != 0
+
+proc fullscreen*(window: Window): bool =
+  discard
 
 proc size*(window: Window): IVec2 =
   var rect: RECT
@@ -542,7 +549,21 @@ proc buttonReleased*(window: Window): ButtonView =
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
   buttonView.states[button.ord]
 
+proc `title=`*(window: Window, title: string) =
+  window.title = title
+  var wideTitle = title.wstr()
+  discard SetWindowTextW(window.hWnd, cast[ptr WCHAR](wideTitle[0].addr))
+
+proc `visible=`*(window: Window, visible: bool) =
+  if visible:
+    discard ShowWindow(window.hWnd, SW_SHOW)
+  else:
+    discard ShowWindow(window.hWnd, SW_HIDE)
+
 proc `decorated=`*(window: Window, decorated: bool) =
+  if window.fullscreen:
+    return
+
   var style: LONG
   if decorated:
     style = decoratedWindowStyle
@@ -554,13 +575,9 @@ proc `decorated=`*(window: Window, decorated: bool) =
 
   setWindowStyle(window.hWnd, style)
 
-proc `visible=`*(window: Window, visible: bool) =
-  if visible:
-    discard ShowWindow(window.hWnd, SW_SHOW)
-  else:
-    discard ShowWindow(window.hWnd, SW_HIDE)
-
 proc `resizable=`*(window: Window, resizable: bool) =
+  if window.fullscreen:
+    return
   if not window.decorated:
     return
 
@@ -575,7 +592,13 @@ proc `resizable=`*(window: Window, resizable: bool) =
 
   setWindowStyle(window.hWnd, style)
 
+proc `fullscreen=`*(window: Window, fullscren: bool) =
+  discard
+
 proc `size=`*(window: Window, size: IVec2) =
+  if window.fullscreen:
+    return
+
   var rect = RECT(top: 0, left: 0, right: size.x, bottom: size.y)
   discard AdjustWindowRectExForDpi(
     rect.addr,
@@ -595,6 +618,9 @@ proc `size=`*(window: Window, size: IVec2) =
   )
 
 proc `pos=`*(window: Window, pos: IVec2) =
+  if window.fullscreen:
+    return
+
   var rect = RECT(top: pos.x, left: pos.y, bottom: pos.x, right: pos.y)
   discard AdjustWindowRectExForDpi(
     rect.addr,
@@ -645,6 +671,7 @@ proc newWindow*(
     init()
 
   result = Window()
+  result.title = title
   result.hWnd = createWindow(
     windowClassName,
     title,
