@@ -449,7 +449,7 @@ proc wndProc(
     if uMsg == WM_UNICHAR and wParam == UNICODE_NOCHAR:
       return TRUE
     let codepoint = wParam.uint32
-    if codepoint > 32 and not (codepoint > 126 and codepoint < 160):
+    if codepoint >= 32 and not (codepoint > 126 and codepoint < 160):
       if window.onRune != nil:
         window.onRune(Rune(codepoint))
     return 0
