@@ -126,11 +126,9 @@ proc delProperty(window: XWindow, property: Atom) =
   display.XDeleteProperty(window, property)
 
 proc asSeq(s: string, T: type = uint8): seq[T] =
-  result = newSeqOfCap[T](s.len div T.sizeof)
-  for i in countup(0, s.len - T.sizeof, T.sizeof):
-    var r: array[T.sizeof, char]
-    copyMem(r.addr, s[i].unsafeAddr, T.sizeof)
-    result.add cast[ptr T](r.addr)[]
+  if s.len == 0: return
+  result = newSeq[T]((s.len + T.sizeof - 1) div T.sizeof)
+  copyMem(result[0].addr, s[0].unsafeaddr, s.len)
 
 proc asString[T](x: seq[T]|HashSet[T]): string =
   result = newStringOfCap(x.len * T.sizeof)

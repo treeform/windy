@@ -1,63 +1,35 @@
-import locks, os, nativesockets, net, posix
+import os, posix, nativesockets, asyncnet, asyncdispatch
 import ../../../common
 
 type
-  Interface* = ref object
-    name: string
-    version: int
-    methods: seq[Message]
-    events: seq[Message]
-  
-  Message* = object
-    name: string
-    signature: string
-    types: Interface
-
   Proxy* = ref object of RootObj
-    iface: Interface
-    version: int
-    id: int
     display: Display
-    flags: uint32
-    impl: pointer
+    version: int
+    id: Id
 
   Display* = ref object of Proxy
-    socket: Socket
-    lock: Lock
+    socket: AsyncSocket
+    lastId: Id
 
   Registry* = ref object of Proxy
 
+  Id = distinct uint32
 
-let
-  callbackInterface = Interface(
-    name: "wl_callback", version: 1,
-    events: @[
-      Message(name: "done", signature: "u", types: nil),
-    ]
-  )
 
-  registryInterface = Interface(
-    name: "wl_registry", version: 1,
-    methods: @[
-      Message(name: "bind", signature: "usun", types: nil),
-    ],
-    events: @[
-      Message(name: "global", signature: "usu", types: nil),
-      Message(name: "global_remove", signature: "u", types: nil),
-    ]
-  )
+proc asSeq[A](x: A, B: type = uint8): seq[B] =
+  if x.len == 0: return
+  result = newSeq[B]((A.sizeof + B.sizeof - 1) div B.sizeof)
+  copyMem(result[0].addr, x.unsafeaddr, A.sizeof)
 
-  displayInterface = Interface(
-    name: "wl_display", version: 1,
-    methods: @[
-      Message(name: "sync", signature: "n", types: callbackInterface),
-      Message(name: "get_registry", signature: "n", types: registryInterface),
-    ],
-    events: @[
-      Message(name: "error", signature: "ous", types: nil),
-      Message(name: "delete_id", signature: "u", types: nil),
-    ]
-  )
+proc asSeq(s: string, T: type = uint8): seq[T] =
+  if s.len == 0: return
+  result = newSeq[T]((s.len + T.sizeof - 1) div T.sizeof)
+  copyMem(result[0].addr, s[0].unsafeaddr, s.len)
+
+proc asSeq[A](x: seq[A], B: type = uint8): seq[B] =
+  if x.len == 0: return
+  result = newSeq[B]((x.len * A.sizeof + B.sizeof - 1) div B.sizeof)
+  copyMem(result[0].addr, x[0].unsafeaddr, x.len * A.sizeof)
 
 
 proc openLocalSocket: SocketHandle =
@@ -88,7 +60,8 @@ proc openLocalSocket: SocketHandle =
 
 proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   new result, (proc(d: Display) = close d.socket)
-  initLock result.lock
+  
+  result.display = result
   
   var name =
     if name != "": $name
@@ -106,8 +79,43 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
     close sock
     raise WindyError.newException("Failed to connect to wayland server")
   
-  result.socket = newSocket(sock, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
-  
-  result.iface = displayInterface
-  result.display = result
-  result.version = 1
+  register sock.AsyncFD
+  result.socket = newAsyncSocket(sock.AsyncFD, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
+
+
+template sock: AsyncSocket = this.display.socket
+
+proc newId(d: Display): Id =
+  inc d.lastId
+  d.lastId
+
+
+proc serialize[T](x: T): seq[uint32] =
+  when x is uint32|int32|Id:
+    result.add cast[uint32](x)
+  elif x is string:
+    let x = x & '\0'
+    result.add x.len
+    result.add x.asSeq(uint32)
+  elif x is seq:
+    type T = typeof(x[0])
+    result.add x.len * T.sizeof
+    result.add x.asSeq(uint32)
+  elif x is tuple|object:
+    for x in x.fields:
+      result.add x.serialize
+  elif x is ref|ptr:
+    {.error: "cannot serialize non-value object".}
+  else:
+    result.add x.asSeq(uint32)
+
+
+proc marshal[T](this: Proxy, op: int, data: T) {.async.} =
+  var d = data.serialize
+  d = @[this.id.uint32, (d.len.uint32 shl 16) or (op.uint32 and 0x0000ffff)] & data.serialize
+  await sock.send(d[0].addr, d.len * uint32.sizeof)
+
+
+proc registry*(d: Display): Future[Registry] {.async.} =
+  result = Registry(display: d, id: d.newId)
+  await d.marshal(1, result.id)
