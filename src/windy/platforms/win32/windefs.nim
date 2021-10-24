@@ -557,6 +557,23 @@ proc SendMessageW*(
 
 proc GetDoubleClickTime*(): UINT {.importc, stdcall, dynlib: "User32".}
 
+proc OpenClipboard*(
+  hWndNewOwner: HWND
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc CloseClipboard*(): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc EmptyClipboard*(): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc SetClipboardData*(
+  uFormat: UINT,
+  hMem: HANDLE
+): HANDLE {.importc, stdcall, dynlib: "User32".}
+
+proc GetClipboardData*(
+  uFormat: UINT
+): HANDLE {.importc, stdcall, dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
