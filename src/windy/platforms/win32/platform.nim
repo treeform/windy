@@ -49,8 +49,10 @@ type
     mousePos: IVec2
     buttonPressed, buttonDown, buttonReleased, buttonToggle: set[Button]
     exitFullscreenInfo: ExitFullscreenInfo
-    initialClickPos: IVec2
-    prevClickTimes: array[3, float64]
+    doubleClickPos: IVec2
+    doubleClickTime: float64
+    tripleClickTimes: array[2, float64]
+    quadrupleClickTimes: array[3, float64]
 
     hWnd: HWND
     hdc: HDC
@@ -80,7 +82,7 @@ var
 
 var
   initialized: bool
-  doubleClickInterval: float64
+  platformDoubleClickInterval: float64
   windows: seq[Window]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
@@ -558,27 +560,49 @@ proc handleButtonPress(window: Window, button: Button) =
   if button == MouseLeft:
     let
       clickTime = epochTime()
-      clickIntervals = [
-        clickTime - window.prevClickTimes[0],
-        clickTime - window.prevClickTimes[1],
-        clickTime - window.prevClickTimes[2]
-      ]
+      doubleClickInterval = clickTime - window.doubleClickTime
+      clickDistance = (window.mousePos - window.doubleClickPos).vec2.length
+      clickIsClose = clickDistance <= multiClickRadius * window.contentScale
 
-    let distance = (window.mousePos - window.initialClickPos).vec2.length
-    if distance < multiClickRadius * window.contentScale:
-      if clickIntervals[0] <= doubleClickInterval:
-        window.handleButtonPress(DoubleClick)
-        if clickIntervals[1] <= 2 * doubleClickInterval:
-          window.handleButtonPress(TripleClick)
-          if clickIntervals[2] <= 3 * doubleClickInterval:
-            window.handleButtonPress(QuadrupleClick)
-
-      window.prevClickTimes[2] = window.prevClickTimes[1]
-      window.prevClickTimes[1] = window.prevClickTimes[0]
+    if doubleClickInterval <= platformDoubleClickInterval and clickIsClose:
+      window.handleButtonPress(DoubleClick)
+      window.doubleClickTime = 0
     else:
-      window.initialClickPos = window.mousePos
+      window.doubleClickTime = clickTime
+      window.doubleClickPos = window.mousePos
 
-    window.prevClickTimes[0] = clickTime
+    let
+      tripleClickIntervals = [
+        clickTime - window.tripleClickTimes[0],
+        clickTime - window.tripleClickTimes[1]
+      ]
+      tripleClickInterval = tripleClickIntervals[0] + tripleClickIntervals[1]
+
+    if tripleClickInterval < 1.5 * platformDoubleClickInterval and clickIsClose:
+      window.handleButtonPress(TripleClick)
+      window.tripleClickTimes = [0.float64, 0]
+    else:
+      window.tripleClickTimes[1] = window.tripleClickTimes[0]
+      window.tripleClickTimes[0] = clickTime
+
+    let
+      quadruplelickIntervals = [
+        clickTime - window.quadrupleClickTimes[0],
+        clickTime - window.quadrupleClickTimes[1],
+        clickTime - window.quadrupleClickTimes[2]
+      ]
+      quadruplelickInterval =
+        quadruplelickIntervals[0] +
+        quadruplelickIntervals[1] +
+        quadruplelickIntervals[2]
+
+    if quadruplelickInterval < 2 * platformDoubleClickInterval and clickIsClose:
+      window.handleButtonPress(QuadrupleClick)
+      window.quadrupleClickTimes = [0.float64, 0, 0]
+    else:
+      window.quadrupleClickTimes[2] = window.quadrupleClickTimes[1]
+      window.quadrupleClickTimes[1] = window.quadrupleClickTimes[0]
+      window.quadrupleClickTimes[0] = clickTime
 
 proc handleButtonRelease(window: Window, button: Button) =
   if button == MouseLeft:
@@ -735,7 +759,7 @@ proc init*() =
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
   registerWindowClass(windowClassName, wndProc)
-  doubleClickInterval = GetDoubleClickTime().float64 / 1000
+  platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
   initialized = true
 
 proc pollEvents*() =
