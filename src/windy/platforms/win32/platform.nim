@@ -1,4 +1,4 @@
-import ../../common, ../../internal, unicode, utils, vmath, windefs
+import ../../common, ../../internal, times, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -80,6 +80,8 @@ var
   onQuitRequest*: Callback
 
   initialized: bool
+  doubleClickInterval: float64
+  prevClickTimes: array[3, float64]
   windows: seq[Window]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
@@ -101,7 +103,7 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
 
   var wc: WNDCLASSEXW
   wc.cbSize = sizeof(WNDCLASSEXW).UINT
-  wc.style = CS_HREDRAW or CS_VREDRAW or CS_DBLCLKS
+  wc.style = CS_HREDRAW or CS_VREDRAW
   wc.lpfnWndProc = wndProc
   wc.hInstance = GetModuleHandleW(nil)
   wc.hCursor = LoadCursorW(0, IDC_ARROW)
@@ -325,7 +327,35 @@ proc handleButtonPress(window: Window, button: Button) =
   if window.onButtonPress != nil:
     window.onButtonPress(button)
 
+  if button == MouseLeft:
+    let
+      clickTime = epochTime()
+      clickIntervals = [
+        clickTime - prevClickTimes[0],
+        clickTime - prevClickTimes[1],
+        clickTime - prevClickTimes[2]
+      ]
+
+    if clickIntervals[0] <= doubleClickInterval:
+      window.handleButtonPress(DoubleClick)
+      if clickIntervals[1] <= 2 * doubleClickInterval:
+        window.handleButtonPress(TripleClick)
+        if clickIntervals[2] <= 3 * doubleClickInterval:
+          window.handleButtonPress(QuadrupleClick)
+
+    prevClickTimes[2] = prevClickTimes[1]
+    prevClickTimes[1] = prevClickTimes[0]
+    prevClickTimes[0] = clickTime
+
 proc handleButtonRelease(window: Window, button: Button) =
+  if button == MouseLeft:
+    if QuadrupleClick in window.buttonDown:
+      window.handleButtonRelease(QuadrupleClick)
+    if TripleClick in window.buttonDown:
+      window.handleButtonRelease(TripleClick)
+    if DoubleClick in window.buttonDown:
+      window.handleButtonRelease(DoubleClick)
+
   window.buttonDown.excl button
   window.buttonReleased.incl button
   if window.onButtonRelease != nil:
@@ -472,6 +502,7 @@ proc init*() =
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
   registerWindowClass(windowClassName, wndProc)
+  doubleClickInterval = GetDoubleClickTime().float64 / 1000
   initialized = true
 
 proc pollEvents*() =

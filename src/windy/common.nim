@@ -15,6 +15,9 @@ type
     MouseLeft
     MouseRight
     MouseMiddle
+    DoubleClick
+    TripleClick
+    QuadrupleClick
     Key0
     Key1
     Key2
@@ -61,7 +64,7 @@ type
     KeyBackslash
     KeyCapsLock
     KeySemicolon
-    KeyApostraphe
+    KeyApostrophe
     KeyEnter
     KeyLeftShift
     KeyComma
@@ -116,7 +119,7 @@ type
     NumpadDecimal
     NumpadEnter
     NumpadAdd
-    NumbadSubtract
+    NumpadSubtract
     NumpadMultiply
     NumpadDivide
     NumpadEqual
