@@ -4,6 +4,7 @@ const
   windowClassName = "WINDY0"
   defaultScreenDpi = 96
   wheelDelta = 120
+  multiClickRadius = 4
   decoratedWindowStyle = WS_OVERLAPPEDWINDOW
   undecoratedWindowStyle = WS_POPUP
 
@@ -48,6 +49,8 @@ type
     mousePos: IVec2
     buttonPressed, buttonDown, buttonReleased, buttonToggle: set[Button]
     exitFullscreenInfo: ExitFullscreenInfo
+    initialClickPos: IVec2
+    prevClickTimes: array[3, float64]
 
     hWnd: HWND
     hdc: HDC
@@ -78,7 +81,6 @@ var
 var
   initialized: bool
   doubleClickInterval: float64
-  prevClickTimes: array[3, float64]
   windows: seq[Window]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
@@ -216,6 +218,235 @@ proc makeContextCurrent(hdc: HDC, hglrc: HGLRC) =
   if wglMakeCurrent(hdc, hglrc) == 0:
     raise newException(WindyError, "Error activating OpenGL rendering context")
 
+proc monitorInfo(window: Window): MONITORINFO =
+  result.cbSize = sizeof(MONITORINFO).DWORD
+  discard GetMonitorInfoW(
+    MonitorFromWindow(window.hWnd, MONITOR_DEFAULTTONEAREST),
+    result.addr
+  )
+
+proc title*(window: Window): string =
+  window.title
+
+proc closed*(window: Window): bool =
+  window.closed
+
+proc visible*(window: Window): bool =
+  IsWindowVisible(window.hWnd) != 0
+
+proc decorated*(window: Window): bool =
+  let style = getWindowStyle(window.hWnd)
+  (style and WS_BORDER) != 0
+
+proc resizable*(window: Window): bool =
+  let style = getWindowStyle(window.hWnd)
+  (style and WS_THICKFRAME) != 0
+
+proc fullscreen*(window: Window): bool =
+  window.exitFullscreenInfo != nil
+
+proc size*(window: Window): IVec2 =
+  var rect: RECT
+  discard GetClientRect(window.hWnd, rect.addr)
+  ivec2(rect.right, rect.bottom)
+
+proc pos*(window: Window): IVec2 =
+  var pos: POINT
+  discard ClientToScreen(window.hWnd, pos.addr)
+  ivec2(pos.x, pos.y)
+
+proc minimized*(window: Window): bool =
+  IsIconic(window.hWnd) != 0
+
+proc maximized*(window: Window): bool =
+  IsZoomed(window.hWnd) != 0
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.size
+
+proc contentScale*(window: Window): float32 =
+  let dpi = GetDpiForWindow(window.hWnd)
+  result = dpi.float32 / defaultScreenDpi
+
+proc focused*(window: Window): bool =
+  window.hWnd == GetActiveWindow()
+
+proc mousePos*(window: Window): IVec2 =
+  window.mousePos
+
+proc mousePrevPos*(window: Window): IVec2 =
+  window.perFrame.mousePrevPos
+
+proc mouseDelta*(window: Window): IVec2 =
+  window.perFrame.mouseDelta
+
+proc scrollDelta*(window: Window): Vec2 =
+  window.perFrame.scrollDelta
+
+proc `title=`*(window: Window, title: string) =
+  window.title = title
+  var wideTitle = title.wstr()
+  discard SetWindowTextW(window.hWnd, cast[ptr WCHAR](wideTitle[0].addr))
+
+proc `visible=`*(window: Window, visible: bool) =
+  if visible:
+    discard ShowWindow(window.hWnd, SW_SHOW)
+  else:
+    discard ShowWindow(window.hWnd, SW_HIDE)
+
+proc `decorated=`*(window: Window, decorated: bool) =
+  if window.fullscreen:
+    return
+
+  var style: LONG
+  if decorated:
+    style = decoratedWindowStyle
+  else:
+    style = undecoratedWindowStyle
+
+  if window.visible:
+    style = style or WS_VISIBLE
+
+  updateWindowStyle(window.hWnd, style)
+
+proc `resizable=`*(window: Window, resizable: bool) =
+  if window.fullscreen:
+    return
+  if not window.decorated:
+    return
+
+  var style = decoratedWindowStyle.LONG
+  if resizable:
+    style = style or (WS_MAXIMIZEBOX or WS_THICKFRAME)
+  else:
+    style = style and not (WS_MAXIMIZEBOX or WS_THICKFRAME)
+
+  if window.visible:
+    style = style or WS_VISIBLE
+
+  updateWindowStyle(window.hWnd, style)
+
+proc `fullscreen=`*(window: Window, fullscreen: bool) =
+  if window.fullscreen == fullscreen:
+    return
+
+  if fullscreen:
+    # Save some window info for restoring when exiting fullscreen
+    window.exitFullscreenInfo = ExitFullscreenInfo()
+    window.exitFullscreenInfo.maximized = window.maximized
+    if window.maximized:
+      discard SendMessageW(window.hWnd, WM_SYSCOMMAND, SC_RESTORE, 0)
+    window.exitFullscreenInfo.style = getWindowStyle(window.hWnd)
+    discard GetWindowRect(window.hWnd, window.exitFullscreenInfo.rect.addr)
+
+    var style = undecoratedWindowStyle
+
+    if window.visible:
+      style = style or WS_VISIBLE
+
+    discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
+
+    let mi = window.monitorInfo
+    discard SetWindowPos(
+      window.hWnd,
+      HWND_TOPMOST,
+      mi.rcMonitor.left,
+      mi.rcMonitor.top,
+      mi.rcMonitor.right - mi.rcMonitor.left,
+      mi.rcMonitor.bottom - mi.rcMonitor.top,
+      SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED
+    )
+  else:
+    var style = window.exitFullscreenInfo.style
+
+    if window.visible:
+      style = style or WS_VISIBLE
+    else:
+      style = style and (not WS_VISIBLE)
+
+    discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
+
+    let
+      maximized = window.exitFullscreenInfo.maximized
+      rect = window.exitFullscreenInfo.rect
+
+    # Make sure window.fullscreen returns false in the resize callbacks
+    # that get triggered after this.
+    window.exitFullscreenInfo = nil
+
+    discard SetWindowPos(
+      window.hWnd,
+      HWND_TOP,
+      rect.left,
+      rect.top,
+      rect.right - rect.left,
+      rect.bottom - rect.top,
+      SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED
+    )
+
+    if maximized:
+      discard SendMessageW(window.hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0)
+
+proc `size=`*(window: Window, size: IVec2) =
+  if window.fullscreen:
+    return
+
+  var rect = RECT(top: 0, left: 0, right: size.x, bottom: size.y)
+  discard AdjustWindowRectExForDpi(
+    rect.addr,
+    getWindowStyle(window.hWnd),
+    0,
+    WS_EX_APPWINDOW,
+    GetDpiForWindow(window.hWnd)
+  )
+  discard SetWindowPos(
+    window.hWnd,
+    HWND_TOP,
+    0,
+    0,
+    rect.right - rect.left,
+    rect.bottom - rect.top,
+    SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOMOVE
+  )
+
+proc `pos=`*(window: Window, pos: IVec2) =
+  if window.fullscreen:
+    return
+
+  var rect = RECT(top: pos.x, left: pos.y, bottom: pos.x, right: pos.y)
+  discard AdjustWindowRectExForDpi(
+    rect.addr,
+    getWindowStyle(window.hWnd),
+    0,
+    WS_EX_APPWINDOW,
+    GetDpiForWindow(window.hWnd)
+  )
+  discard SetWindowPos(
+    window.hWnd,
+    HWND_TOP,
+    rect.left,
+    rect.top,
+    0,
+    0,
+    SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOSIZE
+  )
+
+proc `minimized=`*(window: Window, minimized: bool) =
+  var cmd: int32
+  if minimized:
+    cmd = SW_MINIMIZE
+  else:
+    cmd = SW_RESTORE
+  discard ShowWindow(window.hWnd, cmd)
+
+proc `maximized=`*(window: Window, maximized: bool) =
+  var cmd: int32
+  if maximized:
+    cmd = SW_MAXIMIZE
+  else:
+    cmd = SW_RESTORE
+  discard ShowWindow(window.hWnd, cmd)
+
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")
   if opengl == 0:
@@ -328,21 +559,26 @@ proc handleButtonPress(window: Window, button: Button) =
     let
       clickTime = epochTime()
       clickIntervals = [
-        clickTime - prevClickTimes[0],
-        clickTime - prevClickTimes[1],
-        clickTime - prevClickTimes[2]
+        clickTime - window.prevClickTimes[0],
+        clickTime - window.prevClickTimes[1],
+        clickTime - window.prevClickTimes[2]
       ]
 
-    if clickIntervals[0] <= doubleClickInterval:
-      window.handleButtonPress(DoubleClick)
-      if clickIntervals[1] <= 2 * doubleClickInterval:
-        window.handleButtonPress(TripleClick)
-        if clickIntervals[2] <= 3 * doubleClickInterval:
-          window.handleButtonPress(QuadrupleClick)
+    let distance = (window.mousePos - window.initialClickPos).vec2.length
+    if distance < multiClickRadius * window.contentScale:
+      if clickIntervals[0] <= doubleClickInterval:
+        window.handleButtonPress(DoubleClick)
+        if clickIntervals[1] <= 2 * doubleClickInterval:
+          window.handleButtonPress(TripleClick)
+          if clickIntervals[2] <= 3 * doubleClickInterval:
+            window.handleButtonPress(QuadrupleClick)
 
-    prevClickTimes[2] = prevClickTimes[1]
-    prevClickTimes[1] = prevClickTimes[0]
-    prevClickTimes[0] = clickTime
+      window.prevClickTimes[2] = window.prevClickTimes[1]
+      window.prevClickTimes[1] = window.prevClickTimes[0]
+    else:
+      window.initialClickPos = window.mousePos
+
+    window.prevClickTimes[0] = clickTime
 
 proc handleButtonRelease(window: Window, button: Button) =
   if button == MouseLeft:
@@ -539,233 +775,6 @@ proc swapBuffers*(window: Window) =
 proc close*(window: Window) =
   destroy window
   window.closed = true
-
-proc title*(window: Window): string =
-  window.title
-
-proc closed*(window: Window): bool =
-  window.closed
-
-proc visible*(window: Window): bool =
-  IsWindowVisible(window.hWnd) != 0
-
-proc decorated*(window: Window): bool =
-  let style = getWindowStyle(window.hWnd)
-  (style and WS_BORDER) != 0
-
-proc resizable*(window: Window): bool =
-  let style = getWindowStyle(window.hWnd)
-  (style and WS_THICKFRAME) != 0
-
-proc fullscreen*(window: Window): bool =
-  window.exitFullscreenInfo != nil
-
-proc size*(window: Window): IVec2 =
-  var rect: RECT
-  discard GetClientRect(window.hWnd, rect.addr)
-  ivec2(rect.right, rect.bottom)
-
-proc pos*(window: Window): IVec2 =
-  var pos: POINT
-  discard ClientToScreen(window.hWnd, pos.addr)
-  ivec2(pos.x, pos.y)
-
-proc minimized*(window: Window): bool =
-  IsIconic(window.hWnd) != 0
-
-proc maximized*(window: Window): bool =
-  IsZoomed(window.hWnd) != 0
-
-proc framebufferSize*(window: Window): IVec2 =
-  window.size
-
-proc contentScale*(window: Window): float32 =
-  let dpi = GetDpiForWindow(window.hWnd)
-  result = dpi.float32 / defaultScreenDpi
-
-proc focused*(window: Window): bool =
-  window.hWnd == GetActiveWindow()
-
-proc mousePos*(window: Window): IVec2 =
-  window.mousePos
-
-proc mousePrevPos*(window: Window): IVec2 =
-  window.perFrame.mousePrevPos
-
-proc mouseDelta*(window: Window): IVec2 =
-  window.perFrame.mouseDelta
-
-proc scrollDelta*(window: Window): Vec2 =
-  window.perFrame.scrollDelta
-
-proc `title=`*(window: Window, title: string) =
-  window.title = title
-  var wideTitle = title.wstr()
-  discard SetWindowTextW(window.hWnd, cast[ptr WCHAR](wideTitle[0].addr))
-
-proc `visible=`*(window: Window, visible: bool) =
-  if visible:
-    discard ShowWindow(window.hWnd, SW_SHOW)
-  else:
-    discard ShowWindow(window.hWnd, SW_HIDE)
-
-proc `decorated=`*(window: Window, decorated: bool) =
-  if window.fullscreen:
-    return
-
-  var style: LONG
-  if decorated:
-    style = decoratedWindowStyle
-  else:
-    style = undecoratedWindowStyle
-
-  if window.visible:
-    style = style or WS_VISIBLE
-
-  updateWindowStyle(window.hWnd, style)
-
-proc `resizable=`*(window: Window, resizable: bool) =
-  if window.fullscreen:
-    return
-  if not window.decorated:
-    return
-
-  var style = decoratedWindowStyle.LONG
-  if resizable:
-    style = style or (WS_MAXIMIZEBOX or WS_THICKFRAME)
-  else:
-    style = style and not (WS_MAXIMIZEBOX or WS_THICKFRAME)
-
-  if window.visible:
-    style = style or WS_VISIBLE
-
-  updateWindowStyle(window.hWnd, style)
-
-proc `fullscreen=`*(window: Window, fullscreen: bool) =
-  if window.fullscreen == fullscreen:
-    return
-
-  if fullscreen:
-    # Save some window info for restoring when exiting fullscreen
-    window.exitFullscreenInfo = ExitFullscreenInfo()
-    window.exitFullscreenInfo.maximized = window.maximized
-    if window.maximized:
-      discard SendMessageW(window.hWnd, WM_SYSCOMMAND, SC_RESTORE, 0)
-    window.exitFullscreenInfo.style = getWindowStyle(window.hWnd)
-    discard GetWindowRect(window.hWnd, window.exitFullscreenInfo.rect.addr)
-
-    var style = undecoratedWindowStyle
-
-    if window.visible:
-      style = style or WS_VISIBLE
-
-    discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
-
-    var mi: MONITORINFO
-    mi.cbSize = sizeof(MONITORINFO).DWORD
-    discard GetMonitorInfoW(
-      MonitorFromWindow(window.hWnd, MONITOR_DEFAULTTONEAREST),
-      mi.addr
-    )
-    discard SetWindowPos(
-      window.hWnd,
-      HWND_TOPMOST,
-      mi.rcMonitor.left,
-      mi.rcMonitor.top,
-      mi.rcMonitor.right - mi.rcMonitor.left,
-      mi.rcMonitor.bottom - mi.rcMonitor.top,
-      SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED
-    )
-  else:
-    var style = window.exitFullscreenInfo.style
-
-    if window.visible:
-      style = style or WS_VISIBLE
-    else:
-      style = style and (not WS_VISIBLE)
-
-    discard SetWindowLongW(window.hWnd, GWL_STYLE, style)
-
-    let
-      maximized = window.exitFullscreenInfo.maximized
-      rect = window.exitFullscreenInfo.rect
-
-    # Make sure window.fullscreen returns false in the resize callbacks
-    # that get triggered after this.
-    window.exitFullscreenInfo = nil
-
-    discard SetWindowPos(
-      window.hWnd,
-      HWND_TOP,
-      rect.left,
-      rect.top,
-      rect.right - rect.left,
-      rect.bottom - rect.top,
-      SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED
-    )
-
-    if maximized:
-      discard SendMessageW(window.hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0)
-
-proc `size=`*(window: Window, size: IVec2) =
-  if window.fullscreen:
-    return
-
-  var rect = RECT(top: 0, left: 0, right: size.x, bottom: size.y)
-  discard AdjustWindowRectExForDpi(
-    rect.addr,
-    getWindowStyle(window.hWnd),
-    0,
-    WS_EX_APPWINDOW,
-    GetDpiForWindow(window.hWnd)
-  )
-  discard SetWindowPos(
-    window.hWnd,
-    HWND_TOP,
-    0,
-    0,
-    rect.right - rect.left,
-    rect.bottom - rect.top,
-    SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOMOVE
-  )
-
-proc `pos=`*(window: Window, pos: IVec2) =
-  if window.fullscreen:
-    return
-
-  var rect = RECT(top: pos.x, left: pos.y, bottom: pos.x, right: pos.y)
-  discard AdjustWindowRectExForDpi(
-    rect.addr,
-    getWindowStyle(window.hWnd),
-    0,
-    WS_EX_APPWINDOW,
-    GetDpiForWindow(window.hWnd)
-  )
-  discard SetWindowPos(
-    window.hWnd,
-    HWND_TOP,
-    rect.left,
-    rect.top,
-    0,
-    0,
-    SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOSIZE
-  )
-
-proc `minimized=`*(window: Window, minimized: bool) =
-  var cmd: int32
-  if minimized:
-    cmd = SW_MINIMIZE
-  else:
-    cmd = SW_RESTORE
-  discard ShowWindow(window.hWnd, cmd)
-
-proc `maximized=`*(window: Window, maximized: bool) =
-  var cmd: int32
-  if maximized:
-    cmd = SW_MAXIMIZE
-  else:
-    cmd = SW_RESTORE
-  discard ShowWindow(window.hWnd, cmd)
 
 proc newWindow*(
   title: string,
