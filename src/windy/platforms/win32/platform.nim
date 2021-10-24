@@ -328,6 +328,12 @@ proc handleButtonRelease(window: Window, button: Button) =
   if window.onButtonRelease != nil:
     window.onButtonRelease(button)
 
+proc handleRune(window: Window, rune: Rune) =
+  if rune.uint32 < 32 or (rune.uint32 > 126 and rune.uint32 < 160):
+      return
+  if window.onRune != nil:
+    window.onRune(rune)
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -449,9 +455,7 @@ proc wndProc(
     if uMsg == WM_UNICHAR and wParam == UNICODE_NOCHAR:
       return TRUE
     let codepoint = wParam.uint32
-    if codepoint >= 32 and not (codepoint > 126 and codepoint < 160):
-      if window.onRune != nil:
-        window.onRune(Rune(codepoint))
+    window.handleRune(Rune(codepoint))
     return 0
   else:
     discard
