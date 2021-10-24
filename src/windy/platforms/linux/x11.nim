@@ -1,4 +1,4 @@
-import unicode, os, sets, sequtils, strformat
+import unicode, os, sets, sequtils, strformat, times
 import vmath
 import ../../common, ../../internal
 import x11/[x, xlib, xevent, glx, keysym]
@@ -22,6 +22,8 @@ type
 
     perFrame: PerFrame
     buttonPressed, buttonDown, buttonReleased: set[Button]
+    lastClickTime: times.Time
+    clickSeqLen: int
 
     prevSize, prevPos: IVec2
 
@@ -34,6 +36,8 @@ type
     closed: bool
     `"_visible"`: bool
     `"_decorated"`: bool
+    
+    `"_focused"`: bool
 
   WmForDecoratedKind {.pure.} = enum
     unsupported
@@ -47,6 +51,7 @@ type
 var
   quitRequested*: bool
   onQuitRequest*: Callback
+  doubleClickTime*: Duration = initDuration(milliseconds = 200)
   
   initialized: bool
   windows: seq[Window]
@@ -188,7 +193,7 @@ proc keysymToButton(sym: KeySym): Button =
   of xk_minus:        KeyMinus
   of xk_comma:        KeyComma
   of xk_period:       KeyPeriod
-  of xk_apostrophe:   KeyApostraphe
+  of xk_apostrophe:   KeyApostrophe
   of xk_backslash:    KeyBackslash
   of xk_grave:        KeyBacktick
   of xk_space:        KeySpace
@@ -355,11 +360,7 @@ proc `minimized=`*(window: Window, v: bool) =
 
 
 proc focused*(window: Window): bool =
-  var
-    focusWindow: XWindow
-    revertTo: RevertTo
-  display.XGetInputFocus(focusWindow.addr, revertTo.addr)
-  focusWindow == window.handle
+  return window.`"_focused"`
 
 proc focus*(window: Window) =
   display.XSetInputFocus(window.handle, rtNone)
@@ -558,7 +559,6 @@ proc pollEvents(window: Window) =
     else:
       window.buttonDown.excl button
       window.buttonReleased.incl button
-      window.buttonClicking.excl button
       pushEvent onButtonRelease, button
   
   while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
@@ -569,6 +569,9 @@ proc pollEvents(window: Window) =
       return
 
     of xeFocusIn:
+      if window.`"_focused"`: return # was duplicated
+      window.`"_focused"` = true
+
       if window.ic != nil: XSetICFocus window.ic
       
       # press currently pressed keys
@@ -579,6 +582,9 @@ proc pollEvents(window: Window) =
       pushEvent onFocusChange
     
     of xeFocusOut:
+      if not window.`"_focused"`: return # was duplicated
+      window.`"_focused"` = false
+
       if window.ic != nil: XUnsetICFocus window.ic
       
       # release currently pressed keys
@@ -605,15 +611,31 @@ proc pollEvents(window: Window) =
       window.mousePos = ev.motion.pos
       window.perFrame.mouseDelta = window.mousePos - window.perFrame.mousePrevPos
       window.buttonClicking = {}
+      window.clickSeqLen = 0
       pushEvent onMouseMove
     
     of xeButtonPress, xeButtonRelease:
       template pushScrollEvent(delta: Vec2) =
         window.perFrame.scrollDelta = delta
         pushEvent onScroll
+      
+      let
+        now = getTime()
+        isDblclk = now - window.lastClickTime <= doubleClickTime
+      window.lastClickTime = now
 
       case ev.button.button
-      of 1: pushButtonEvent MouseLeft
+      of 1:
+        pushButtonEvent MouseLeft
+
+        if ev.kind == xeButtonRelease and MouseLeft in window.buttonClicking and isDblclk:
+          inc window.clickSeqLen
+          case window.clickSeqLen:
+          of 1: discard
+          of 2: pushButtonEvent DoubleClick
+          of 3: pushButtonEvent TripleClick
+          else: pushButtonEvent QuadrupleClick
+
       of 2: pushButtonEvent MouseMiddle
       of 3: pushButtonEvent MouseRight
       of 8: pushButtonEvent MouseBackward
@@ -624,7 +646,10 @@ proc pollEvents(window: Window) =
       of 6: pushScrollEvent vec2(0,  1) # scroll left?
       of 7: pushScrollEvent vec2(0, -1) # scroll right?
       else: discard
-    
+
+      if not isDblclk:
+        window.clickSeqLen = 0
+  
     of xeKeyPress, xeKeyRelease:
       var key = ButtonUnknown
       var i = 0
