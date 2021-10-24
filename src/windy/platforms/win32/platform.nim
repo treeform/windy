@@ -1,4 +1,4 @@
-import ../../common, ../../internal, bitty, unicode, utils, vmath, windefs
+import ../../common, ../../internal, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -46,15 +46,12 @@ type
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
-    buttonPressed, buttonDown, buttonReleased, buttonToggle: BitArray
+    buttonPressed*, buttonDown*, buttonReleased*, buttonToggle*: set[Button]
     exitFullscreenInfo: ExitFullscreenInfo
 
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
-
-  ButtonView* = object
-    states: BitArray
 
   ExitFullscreenInfo = ref object
     maximized: bool
@@ -316,15 +313,18 @@ proc loadLibraries() =
   )
 
 proc handleButtonPress(window: Window, button: Button) =
-  window.buttonDown[button.ord] = true
-  window.buttonPressed[button.ord] = true
-  window.buttonToggle[button.ord] = not window.buttonToggle[button.ord]
+  window.buttonDown.incl button
+  window.buttonPressed.incl button
+  if button in window.buttonToggle:
+    window.buttonToggle.excl button
+  else:
+    window.buttonToggle.incl button
   if window.onButtonPress != nil:
     window.onButtonPress(button)
 
 proc handleButtonRelease(window: Window, button: Button) =
-  window.buttonDown[button.ord] = false
-  window.buttonReleased[button.ord] = true
+  window.buttonDown.excl button
+  window.buttonReleased.incl button
   if window.onButtonRelease != nil:
     window.onButtonRelease(button)
 
@@ -471,8 +471,8 @@ proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.perFrame = PerFrame()
-    window.buttonPressed.clear()
-    window.buttonReleased.clear()
+    window.buttonPressed = {}
+    window.buttonReleased = {}
 
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
@@ -490,10 +490,10 @@ proc pollEvents*() =
   if activeWindow != nil:
     # When both shift keys are down the first one released does not trigger a
     # key up event so we fake it here.
-    if activeWindow.buttonDown[KeyLeftShift.ord]:
+    if KeyLeftShift in activeWindow.buttonDown:
       if (GetKeyState(VK_LSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyLeftShift)
-    if activeWindow.buttonDown[KeyRightShift.ord]:
+    if KeyRightShift in activeWindow.buttonDown:
       if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyRightShift)
 
@@ -565,21 +565,6 @@ proc mouseDelta*(window: Window): IVec2 =
 
 proc scrollDelta*(window: Window): Vec2 =
   window.perFrame.scrollDelta
-
-proc buttonDown*(window: Window): ButtonView =
-  ButtonView(states: window.buttonDown)
-
-proc buttonPressed*(window: Window): ButtonView =
-  ButtonView(states: window.buttonPressed)
-
-proc buttonReleased*(window: Window): ButtonView =
-  ButtonView(states: window.buttonReleased)
-
-proc buttonToggle*(window: Window): ButtonView =
-  ButtonView(states: window.buttonToggle)
-
-proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  buttonView.states[button.ord]
 
 proc `title=`*(window: Window, title: string) =
   window.title = title
@@ -772,10 +757,6 @@ proc newWindow*(
     title,
     size
   )
-  result.buttonDown = newBitArray(Button.high.ord + 1)
-  result.buttonPressed = newBitArray(Button.high.ord + 1)
-  result.buttonReleased = newBitArray(Button.high.ord + 1)
-  result.buttonToggle = newBitArray(Button.high.ord + 1)
 
   try:
     result.hdc = getDC(result.hWnd)

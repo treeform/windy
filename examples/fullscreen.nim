@@ -16,7 +16,7 @@ proc display() =
 
 window.onButtonPress = proc(button: Button) =
   if button == MouseLeft:
-    window.fullscreen = window.buttonToggle[MouseLeft]
+    window.fullscreen = MouseLeft in window.buttonToggle
 
 while not window.closeRequested:
   display()
