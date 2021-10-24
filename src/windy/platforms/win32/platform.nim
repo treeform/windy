@@ -76,9 +76,6 @@ var
   AdjustWindowRectExForDpi: AdjustWindowRectExForDpi
 
 var
-  quitRequested*: bool
-  onQuitRequest*: Callback
-
   initialized: bool
   doubleClickInterval: float64
   prevClickTimes: array[3, float64]
@@ -517,9 +514,6 @@ proc pollEvents*() =
     if msg.message == WM_QUIT:
       for window in windows:
         discard wndProc(window.hwnd, WM_CLOSE, 0, 0)
-      quitRequested = true
-      if onQuitRequest != nil:
-        onQuitRequest()
     else:
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
