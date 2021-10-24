@@ -18,9 +18,6 @@ window.onButtonPress = proc(button: Button) =
   if button == MouseLeft:
     window.fullscreen = window.buttonToggle[MouseLeft]
 
-window.onCloseRequest = proc() =
-  window.close()
-
-while not window.closed:
+while not window.closeRequested:
   display()
   pollEvents()

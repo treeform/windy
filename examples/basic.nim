@@ -14,9 +14,6 @@ proc display() =
   bxy.endFrame()
   window.swapBuffers()
 
-window.onCloseRequest = proc() =
-  window.close()
-
-while not window.closed:
+while not window.closeRequested:
   display()
   pollEvents()

@@ -7,6 +7,7 @@ type
   XWindow = x.Window
 
   Window* = ref object
+    closeRequested*: bool
     onCloseRequest*: Callback
     onMove*: Callback
     onResize*: Callback
@@ -563,8 +564,10 @@ proc pollEvents(window: Window) =
     case ev.kind
     
     of xeClientMessage:
-      pushEvent onCloseRequest
-      return
+      if ev.client.data.l[0] == "WM_DELETE_WINDOW".atom.clong:
+        window.closeRequested = true
+        pushEvent onCloseRequest
+        return # end polling events immediently
 
     of xeFocusIn:
       if window.`"_focused"`: return # was duplicated
