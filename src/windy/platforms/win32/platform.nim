@@ -81,7 +81,7 @@ var
 
   initialized: bool
   doubleClickInterval: float64
-  prevClickTime: float64
+  prevClickTimes: array[3, float64]
   windows: seq[Window]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
@@ -329,14 +329,30 @@ proc handleButtonPress(window: Window, button: Button) =
 
   if button == MouseLeft:
     let
-      clickTime = cpuTime()
-      intervalSinceLastClick = clickTime - prevClickTime
-    if intervalSinceLastClick <= doubleClickInterval:
+      clickTime = epochTime()
+      clickIntervals = [
+        clickTime - prevClickTimes[0],
+        clickTime - prevClickTimes[1],
+        clickTime - prevClickTimes[2]
+      ]
+
+    if clickIntervals[0] <= doubleClickInterval:
       window.handleButtonPress(DoubleClick)
-    prevClickTime = clickTime
+      if clickIntervals[1] <= 2 * doubleClickInterval:
+        window.handleButtonPress(TripleClick)
+        if clickIntervals[2] <= 3 * doubleClickInterval:
+          window.handleButtonPress(QuadrupleClick)
+
+    prevClickTimes[2] = prevClickTimes[1]
+    prevClickTimes[1] = prevClickTimes[0]
+    prevClickTimes[0] = clickTime
 
 proc handleButtonRelease(window: Window, button: Button) =
   if button == MouseLeft:
+    if QuadrupleClick in window.buttonDown:
+      window.handleButtonRelease(QuadrupleClick)
+    if TripleClick in window.buttonDown:
+      window.handleButtonRelease(TripleClick)
     if DoubleClick in window.buttonDown:
       window.handleButtonRelease(DoubleClick)
 

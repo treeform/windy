@@ -16,6 +16,8 @@ type
     MouseRight
     MouseMiddle
     DoubleClick
+    TripleClick
+    QuadrupleClick
     Key0
     Key1
     Key2
