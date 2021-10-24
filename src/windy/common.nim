@@ -17,6 +17,9 @@ type
     MouseMiddle
     MouseBackward
     MouseForward
+    DoubleClick
+    TripleClick
+    QuadrupleClick
     Key0
     Key1
     Key2
@@ -63,7 +66,7 @@ type
     KeyBackslash    # \
     KeyCapsLock
     KeySemicolon    # :
-    KeyApostraphe   # '
+    KeyApostrophe   # '
     KeyEnter
     KeyLeftShift
     KeyComma        # ,

@@ -555,6 +555,8 @@ proc SendMessageW*(
   lParam: LPARAM
 ): LRESULT {.importc, stdcall, dynlib: "User32".}
 
+proc GetDoubleClickTime*(): UINT {.importc, stdcall, dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
