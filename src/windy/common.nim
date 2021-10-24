@@ -15,6 +15,7 @@ type
     MouseLeft
     MouseRight
     MouseMiddle
+    DoubleClick
     Key0
     Key1
     Key2

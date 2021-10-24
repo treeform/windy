@@ -1,4 +1,4 @@
-import ../../common, ../../internal, unicode, utils, vmath, windefs
+import ../../common, ../../internal, times, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -80,6 +80,8 @@ var
   onQuitRequest*: Callback
 
   initialized: bool
+  doubleClickInterval: float64
+  prevClickTime: float64
   windows: seq[Window]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
@@ -325,7 +327,19 @@ proc handleButtonPress(window: Window, button: Button) =
   if window.onButtonPress != nil:
     window.onButtonPress(button)
 
+  if button == MouseLeft:
+    let
+      clickTime = cpuTime()
+      intervalSinceLastClick = clickTime - prevClickTime
+    if intervalSinceLastClick <= doubleClickInterval:
+      window.handleButtonPress(DoubleClick)
+    prevClickTime = clickTime
+
 proc handleButtonRelease(window: Window, button: Button) =
+  if button == MouseLeft:
+    if DoubleClick in window.buttonDown:
+      window.handleButtonRelease(DoubleClick)
+
   window.buttonDown.excl button
   window.buttonReleased.incl button
   if window.onButtonRelease != nil:
@@ -472,6 +486,7 @@ proc init*() =
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
   registerWindowClass(windowClassName, wndProc)
+  doubleClickInterval = GetDoubleClickTime().float64 / 1000
   initialized = true
 
 proc pollEvents*() =
