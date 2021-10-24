@@ -7,7 +7,6 @@ srcDir = "src"
 
 requires "nim >= 1.4.8"
 requires "vmath >= 1.1.0"
-requires "bitty >= 0.1.2"
 
 task bindings, "Generate bindings":
 
