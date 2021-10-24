@@ -101,7 +101,7 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
 
   var wc: WNDCLASSEXW
   wc.cbSize = sizeof(WNDCLASSEXW).UINT
-  wc.style = CS_HREDRAW or CS_VREDRAW or CS_DBLCLKS
+  wc.style = CS_HREDRAW or CS_VREDRAW
   wc.lpfnWndProc = wndProc
   wc.hInstance = GetModuleHandleW(nil)
   wc.hCursor = LoadCursorW(0, IDC_ARROW)

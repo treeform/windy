@@ -61,7 +61,7 @@ type
     KeyBackslash
     KeyCapsLock
     KeySemicolon
-    KeyApostraphe
+    KeyApostrophe
     KeyEnter
     KeyLeftShift
     KeyComma
@@ -116,7 +116,7 @@ type
     NumpadDecimal
     NumpadEnter
     NumpadAdd
-    NumbadSubtract
+    NumpadSubtract
     NumpadMultiply
     NumpadDivide
     NumpadEqual
