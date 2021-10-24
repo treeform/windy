@@ -7,6 +7,6 @@ when defined(windows):
 elif defined(macosx):
   import windy/platforms/macos/platform
 elif defined(linux):
-  import windy/platforms/x11/platform
+  import windy/platforms/linux/platform
 
 export platform

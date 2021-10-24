@@ -1,6 +1,4 @@
-import x, xlib
-
-{.pragma: libx11, cdecl, dynlib: libX11, importc.}
+import x, xlib, vmath
 
 type
   IfEventProc* = proc (d: Display, event: ptr XEvent, p: pointer): bool {.cdecl.}
@@ -51,8 +49,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     state*: cuint
     keycode*: cuint
     same_screen*: cint
@@ -66,8 +64,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     state*: cuint
     button*: cuint
     same_screen*: cint
@@ -81,8 +79,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     state*: cuint
     is_hint*: cchar
     same_screen*: cint
@@ -96,8 +94,8 @@ type
     root*: Window
     subwindow*: Window
     time*: Time
-    x*, y*: cint
-    x_root*, y_root*: cint
+    pos*: IVec2
+    rootPos*: IVec2
     mode*: cint
     detail*: cint
     same_screen*: bool
@@ -127,8 +125,8 @@ type
     send_event*: bool
     display*: Display
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     count*: cint
 
   XGraphicsExposeEvent* = object
@@ -137,8 +135,8 @@ type
     send_event*: bool
     display*: Display
     drawable*: Drawable
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     count*: cint
     major_code*: cint
     minor_code*: cint
@@ -167,8 +165,8 @@ type
     display*: Display
     parent*: Window
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     border_width*: cint
     override_redirect*: bool
 
@@ -214,7 +212,7 @@ type
     event*: Window
     window*: Window
     parent*: Window
-    x*, y*: cint
+    pos*: IVec2
     override_redirect*: bool
 
   XConfigureEvent* = object
@@ -224,8 +222,8 @@ type
     display*: Display
     event*: Window
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     border_width*: cint
     above*: Window
     override_redirect*: bool
@@ -237,7 +235,7 @@ type
     display*: Display
     event*: Window
     window*: Window
-    x*, y*: cint
+    pos*: IVec2
 
   XResizeRequestEvent* = object
     kind*: XEventKind
@@ -245,7 +243,7 @@ type
     send_event*: bool
     display*: Display
     window*: Window
-    width*, height*: cint
+    size*: IVec2
 
   XConfigureRequestEvent* = object
     kind*: XEventKind
@@ -254,8 +252,8 @@ type
     display*: Display
     parent*: Window
     window*: Window
-    x*, y*: cint
-    width*, height*: cint
+    pos*: IVec2
+    size*: IVec2
     border_width*: cint
     above*: Window
     detail*: cint
@@ -392,45 +390,53 @@ type
 
   XEvent* {.union.} = object
     kind*: XEventKind
-    xany*: XAnyEvent
-    xkey*: XKeyEvent
-    xbutton*: XButtonEvent
-    xmotion*: XMotionEvent
-    xcrossing*: XCrossingEvent
-    xfocus*: XFocusChangeEvent
-    xexpose*: XExposeEvent
-    xgraphicsexpose*: XGraphicsExposeEvent
-    xnoexpose*: XNoExposeEvent
-    xvisibility*: XVisibilityEvent
-    xcreatewindow*: XCreateWindowEvent
-    xdestroywindow*: XDestroyWindowEvent
-    xunmap*: XUnmapEvent
-    xmap*: XMapEvent
-    xmaprequest*: XMapRequestEvent
-    xreparent*: XReparentEvent
-    xconfigure*: XConfigureEvent
-    xgravity*: XGravityEvent
-    xresizerequest*: XResizeRequestEvent
-    xconfigurerequest*: XConfigureRequestEvent
-    xcirculate*: XCirculateEvent
-    xcirculaterequest*: XCirculateRequestEvent
-    xproperty*: XPropertyEvent
-    xselectionclear*: XSelectionClearEvent
-    xselectionrequest*: XSelectionRequestEvent
-    xselection*: XSelectionEvent
-    xcolormap*: XColormapEvent
-    xclient*: XClientMessageEvent
-    xmapping*: XMappingEvent
-    xerror*: XErrorEvent
-    xkeymap*: XKeymapEvent
+    any*: XAnyEvent
+    key*: XKeyEvent
+    button*: XButtonEvent
+    motion*: XMotionEvent
+    crossing*: XCrossingEvent
+    focus*: XFocusChangeEvent
+    expose*: XExposeEvent
+    graphicsexpose*: XGraphicsExposeEvent
+    noexpose*: XNoExposeEvent
+    visibility*: XVisibilityEvent
+    createwindow*: XCreateWindowEvent
+    destroywindow*: XDestroyWindowEvent
+    unmap*: XUnmapEvent
+    map*: XMapEvent
+    maprequest*: XMapRequestEvent
+    reparent*: XReparentEvent
+    configure*: XConfigureEvent
+    gravity*: XGravityEvent
+    resizerequest*: XResizeRequestEvent
+    configurerequest*: XConfigureRequestEvent
+    circulate*: XCirculateEvent
+    circulaterequest*: XCirculateRequestEvent
+    property*: XPropertyEvent
+    selectionclear*: XSelectionClearEvent
+    selectionrequest*: XSelectionRequestEvent
+    selection*: XSelectionEvent
+    colormap*: XColormapEvent
+    client*: XClientMessageEvent
+    mapping*: XMappingEvent
+    error*: XErrorEvent
+    keymap*: XKeymapEvent
     xgeneric*: XGenericEvent
-    xcookie*: XGenericEventCookie
+    cookie*: XGenericEventCookie
     pad: array[0..23, clong]
 
 
-proc XCheckIfEvent*(d: Display, e: ptr XEvent, cb: IfEventProc, userData: pointer): bool {.libx11.}
-proc XSendEvent*(d: Display, window: Window, propogate: cint, mask: clong, e: ptr XEvent) {.libx11.}
+using d: Display
 
-proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint {.libx11.}
+{.push, cdecl, dynlib: libX11, importc.}
 
-proc XSetErrorHandler*(handler: ErrorHandleProc) {.libx11.}
+proc XCheckIfEvent*(d; e: ptr XEvent, cb: IfEventProc, userData: pointer): bool
+proc XSendEvent*(d; window: Window, propogate: bool, mask: clong, e: ptr XEvent)
+
+proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint, ks: ptr KeySym, status: ptr cint): cint
+
+proc XSetErrorHandler*(handler: ErrorHandleProc)
+
+proc XLookupKeysym*(e: ptr XKeyEvent, i: cint): KeySym
+
+{.pop.}

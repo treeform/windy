@@ -13,4 +13,4 @@ You would use windy to:
 Supported OS:
 * Windows via win32 API.
 * MacOS via Cocoa API.
-* Linux vs X11.
+* Linux via X11 protocol.
