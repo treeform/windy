@@ -46,12 +46,15 @@ type
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
-    buttonPressed*, buttonDown*, buttonReleased*, buttonToggle*: set[Button]
+    buttonPressed, buttonDown, buttonReleased, buttonToggle: set[Button]
     exitFullscreenInfo: ExitFullscreenInfo
 
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+
+  ButtonView* = object
+    states: set[Button]
 
   ExitFullscreenInfo = ref object
     maximized: bool
@@ -850,3 +853,18 @@ proc newWindow*(
   except WindyError as e:
     destroy result
     raise e
+
+proc buttonDown*(window: Window): ButtonView =
+  ButtonView(states: window.buttonDown)
+
+proc buttonPressed*(window: Window): ButtonView =
+  ButtonView(states: window.buttonPressed)
+
+proc buttonReleased*(window: Window): ButtonView =
+  ButtonView(states: window.buttonReleased)
+
+proc buttonToggle*(window: Window): ButtonView =
+  ButtonView(states: window.buttonToggle)
+
+proc `[]`*(buttonView: ButtonView, button: Button): bool =
+  button in buttonView.states
