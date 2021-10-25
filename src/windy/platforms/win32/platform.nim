@@ -82,6 +82,7 @@ var
 
 var
   initialized: bool
+  helperWindow: HWND
   platformDoubleClickInterval: float64
   windows: seq[Window]
 
@@ -547,6 +548,22 @@ proc loadLibraries() =
     GetProcAddress(user32, "AdjustWindowRectExForDpi")
   )
 
+proc createHelperWindow(): HWND =
+  let helperWindowClassName = "WindyHelper"
+
+  proc helperWndProc(
+    hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM
+  ): LRESULT {.stdcall.} =
+    DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+  registerWindowClass(helperWindowClassName, helperWndProc)
+
+  result = createWindow(
+      helperWindowClassName,
+      helperWindowClassName,
+      ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
+    )
+
 proc handleButtonPress(window: Window, button: Button) =
   window.buttonDown.incl button
   window.buttonPressed.incl button
@@ -758,6 +775,7 @@ proc init*() =
   loadLibraries()
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
+  helperWindow = createHelperWindow()
   registerWindowClass(windowClassName, wndProc)
   platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
   initialized = true
@@ -926,3 +944,52 @@ proc buttonToggle*(window: Window): ButtonView =
 
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
   button in buttonView.states
+
+proc getClipboardString*(): string =
+  if not initialized:
+    init()
+
+  if IsClipboardFormatAvailable(CF_UNICODETEXT) == FALSE:
+    return ""
+
+  if OpenClipboard(helperWindow) == 0:
+    return ""
+
+  let dataHandle = GetClipboardData(CF_UNICODETEXT)
+  if dataHandle != 0:
+    let p = cast[ptr WCHAR](GlobalLock(dataHandle))
+    if p != nil:
+      result = $p
+      discard GlobalUnlock(dataHandle)
+
+  discard CloseClipboard()
+
+proc setClipboardString*(value: string) =
+  if not initialized:
+    init()
+
+  var wideValue = value.wstr()
+
+  let dataHandle = GlobalAlloc(
+    GMEM_MOVEABLE,
+    wideValue.len + 2 # Include uint16 null terminator
+  )
+  if dataHandle == 0:
+    return
+
+  let p = GlobalLock(dataHandle)
+  if p == nil:
+    discard GlobalFree(dataHandle)
+    return
+
+  copyMem(p, wideValue[0].addr, wideValue.len)
+
+  discard GlobalUnlock(dataHandle)
+
+  if OpenClipboard(helperWindow) == 0:
+    discard GlobalFree(dataHandle)
+    return
+
+  discard EmptyClipboard()
+  discard SetClipboardData(CF_UNICODETEXT, dataHandle)
+  discard CloseClipboard()

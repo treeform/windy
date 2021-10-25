@@ -9,7 +9,7 @@ proc wstr*(str: string): string =
     nil,
     0
   )
-  result = newString(wlen * 2 + 1)
+  result.setLen(wlen * 2 + 1)
   discard MultiByteToWideChar(
     CP_UTF8,
     0,
@@ -17,6 +17,29 @@ proc wstr*(str: string): string =
     str.len.int32,
     cast[ptr WCHAR](result[0].addr),
     wlen
+  )
+
+proc `$`*(p: ptr WCHAR): string =
+  let len = WideCharToMultiByte(
+    CP_UTF8,
+    0,
+    p,
+    -1,
+    nil,
+    0,
+    nil,
+    nil
+  )
+  result.setLen(len)
+  discard WideCharToMultiByte(
+    CP_UTF8,
+    0,
+    p,
+    -1,
+    result[0].addr,
+    len,
+    nil,
+    nil
   )
 
 proc checkHRESULT*(hresult: HRESULT) =
