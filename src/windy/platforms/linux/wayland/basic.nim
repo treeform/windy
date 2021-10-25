@@ -1,67 +1,62 @@
-import os, posix, nativesockets, asyncnet, asyncdispatch
+import os, posix, nativesockets, asyncnet, asyncdispatch, tables
 import ../../../common
 
 type
+  Id* = distinct uint32
+
   Proxy* = ref object of RootObj
     display: Display
-    version: int
     id: Id
 
   Display* = ref object of Proxy
+    onError*: proc(objId: Id, code: DisplayErrorCode, message: string): Future[void]
+    onDeleteId*: proc(id: Id): Future[void]
+
     socket: AsyncSocket
+    ids: Table[uint32, Proxy]
     lastId: Id
+  
+  DisplayErrorCode* {.pure.} = enum
+    InvalidObject
+    InvalidMethod
+    NoMemory
+    Implementation
 
-  Registry* = ref object of Proxy
 
-  Id = distinct uint32
-
+proc `//>`[T: SomeInteger](a, b: T): T =
+  ## div roundup
+  (a + b - 1) div b
 
 proc asSeq[A](x: A, B: type = uint8): seq[B] =
   if x.len == 0: return
-  result = newSeq[B]((A.sizeof + B.sizeof - 1) div B.sizeof)
+  result = newSeq[B](A.sizeof //> B.sizeof)
   copyMem(result[0].addr, x.unsafeaddr, A.sizeof)
 
-proc asSeq(s: string, T: type = uint8): seq[T] =
+proc asSeq(s: string, T: type): seq[T] =
   if s.len == 0: return
-  result = newSeq[T]((s.len + T.sizeof - 1) div T.sizeof)
+  result = newSeq[T](s.len //> T.sizeof)
   copyMem(result[0].addr, s[0].unsafeaddr, s.len)
 
-proc asSeq[A](x: seq[A], B: type = uint8): seq[B] =
+proc asSeq[A](x: openarray[A], B: type): seq[B] =
   if x.len == 0: return
-  result = newSeq[B]((x.len * A.sizeof + B.sizeof - 1) div B.sizeof)
+  result = newSeq[B]((x.len * A.sizeof) //> B.sizeof)
   copyMem(result[0].addr, x[0].unsafeaddr, x.len * A.sizeof)
 
-
-proc openLocalSocket: SocketHandle =
-  const
-    localDomain = posix.AF_UNIX
-    stream = posix.SOCK_STREAM
-    closeex = posix.SOCK_CLOEXEC
-    einval = 22
-
-  result = createNativeSocket(localDomain, stream or closeex, 0)
-  if result != osInvalidSocket: return
-
-  var errno {.importc.}: cint
-  if errno == einval: raise WindyError.newException("Failed to create socket")
-
-  result = createNativeSocket(localDomain, stream, 0)
-  if result == osInvalidSocket: raise WindyError.newException("Failed to create socket")
-
-  let flags = fcntl(result.cint, F_GETFD)
-  if flags == -1: 
-    close result
-    raise WindyError.newException("Failed to create socket")
-  
-  if fcntl(result.cint, F_SETFD, flags or FD_CLOEXEC) == -1: 
-    close result
-    raise WindyError.newException("Failed to create socket")
+proc asString[T](x: openarray[T]): string =
+  cast[string](x.asSeq(char))
 
 
 proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   new result, (proc(d: Display) = close d.socket)
   
   result.display = result
+  result.id = Id 1
+  result.lastId = Id 1
+  result.ids[1] = result
+
+  let d = result
+  result.onDeleteId = proc(id: Id) {.async.} =
+    d.ids.del id.uint32
   
   var name =
     if name != "": $name
@@ -72,7 +67,9 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
     if runtimeDir == "": raise WindyError.newException("XDG_RUNTIME_DIR not set in the environment")
     name = runtimeDir / name
 
-  let sock = openLocalSocket()
+  let sock = createNativeSocket(posix.AF_UNIX, posix.SOCK_STREAM or posix.SOCK_CLOEXEC, 0)
+  if sock == osInvalidSocket: raise WindyError.newException("Failed to create socket")
+
   var a = "\1\0" & name
   
   if sock.connect(cast[ptr SockAddr](a[0].addr), uint32 name.len + 2) < 0:
@@ -83,39 +80,89 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   result.socket = newAsyncSocket(sock.AsyncFD, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
 
 
-template sock: AsyncSocket = this.display.socket
-
-proc newId(d: Display): Id =
+proc new(d: Display, t: type): t =
   inc d.lastId
-  d.lastId
+  new result
+  result.display = d
+  result.id = d.lastId
+  d.ids[d.lastId.uint32] = result
+
+proc extern(d: Display, t: type, id: Id): t =
+  new result
+  let id = Id id.uint32 or 0xff000000
+  result.display = d
+  result.id = id
+  d.ids[id.uint32] = result
+
+proc destroy*(d: Display, x: Proxy) =
+  d.ids.del x.id.uint32
 
 
 proc serialize[T](x: T): seq[uint32] =
-  when x is uint32|int32|Id:
+  when x is uint32|int32|Id|enum|float32:
     result.add cast[uint32](x)
+
   elif x is string:
     let x = x & '\0'
-    result.add x.len
+    result.add x.len.uint32
     result.add x.asSeq(uint32)
+
   elif x is seq:
     type T = typeof(x[0])
-    result.add x.len * T.sizeof
+    result.add (x.len * T.sizeof).uint32
     result.add x.asSeq(uint32)
+
   elif x is tuple|object:
     for x in x.fields:
       result.add x.serialize
-  elif x is ref|ptr:
-    {.error: "cannot serialize non-value object".}
-  else:
-    result.add x.asSeq(uint32)
+
+  else: {.error.}
 
 
-proc marshal[T](this: Proxy, op: int, data: T) {.async.} =
+proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
+  when result is uint32|int32|Id|enum|float32:
+    result = cast[T](x[i]); i += 1
+
+  elif result is string:
+    let len = x[i]; i += 1
+    let lenAligned = len //> uint32.sizeof.uint32
+    result = x[i ..< i + lenAligned].asString; i += lenAligned
+    result.setLen len - 1
+
+  elif result is seq:
+    type T = typeof(x[0])
+    let len = x[i]; i += 1
+    let lenAligned = (len * T.sizeof) //> uint32.sizeof.uint32
+    result = x[i ..< i + lenAligned].asSeq(T); i += lenAligned
+
+  elif result is tuple|object:
+    for v in result.fields:
+      v = x.deserialize(typeof(v), i)
+
+  else: {.error.}
+
+proc deserialize(x: seq[uint32], T: type): T =
+  var i: uint32
+  deserialize(x, T, i)
+
+
+proc marshal[T](x: Proxy, op: int, data: T) {.async.} =
   var d = data.serialize
-  d = @[this.id.uint32, (d.len.uint32 shl 16) or (op.uint32 and 0x0000ffff)] & data.serialize
-  await sock.send(d[0].addr, d.len * uint32.sizeof)
+  d.insert ((d.len.uint32 * uint32.sizeof.uint32 + 8) shl 16) or (op.uint32 and 0x0000ffff)
+  d.insert x.id.uint32
+  await x.display.socket.send(d[0].addr, d.len * uint32.sizeof)
+
+method unmarshal(x: Proxy, op: int, data: seq[uint32]) {.base, async.} = discard
 
 
-proc registry*(d: Display): Future[Registry] {.async.} =
-  result = Registry(display: d, id: d.newId)
-  await d.marshal(1, result.id)
+proc listen*(d: Display) {.async.} =
+  ## runs endless listen loop
+  while true:
+    let head = d.socket.recv(2 * uint32.sizeof).await.asSeq(uint32)
+    let id = head[0]
+    let op = head[1] and 0xffff
+    let len = int (head[1] shr 16)
+    assert len >= 8
+    let data = d.socket.recv(len - 8).await.asSeq(uint32)
+    if not d.ids.hasKey id: continue # event for destroyed object
+    await d.ids[id].unmarshal(op.int, data)
