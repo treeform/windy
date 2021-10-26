@@ -9,8 +9,8 @@ type
     id: Id
 
   Display* = ref object of Proxy
-    onError*: proc(objId: Id, code: DisplayErrorCode, message: string)
-    onDeleteId*: proc(id: Id)
+    error*: proc(objId: Id, code: DisplayErrorCode, message: string)
+    deleteId*: proc(id: Id)
 
     socket: Socket
     ids: Table[uint32, Proxy]
@@ -55,7 +55,7 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   result.ids[1] = result
 
   let d = result
-  result.onDeleteId = proc(id: Id) =
+  result.deleteId = proc(id: Id) =
     d.ids.del id.uint32
   
   var name =
@@ -101,6 +101,12 @@ proc serialize[T](x: T): seq[uint32] =
   when x is uint32|int32|Id|enum|float32:
     result.add cast[uint32](x)
 
+  elif x is int:
+    result.add cast[uint32](x.int32)
+  
+  elif x is float:
+    result.add cast[uint32](x.float32)
+
   elif x is string:
     let x = x & '\0'
     result.add x.len.uint32
@@ -121,6 +127,12 @@ proc serialize[T](x: T): seq[uint32] =
 proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
   when result is uint32|int32|Id|enum|float32:
     result = cast[T](x[i]); i += 1
+
+  elif result is int:
+    result = cast[int32](x[i]).int; i += 1
+
+  elif result is float:
+    result = cast[float32](x[i]).float; i += 1
 
   elif result is string:
     let len = x[i]; i += 1
@@ -155,6 +167,7 @@ method unmarshal(x: Proxy, op: int, data: seq[uint32]) {.base, locks: "unknown".
 
 
 proc pollNextEvent*(d: Display): bool =
+  result = true
   try:
     let head = d.socket.recv(2 * uint32.sizeof, 10).asSeq(uint32)
     let id = head[0]
@@ -166,9 +179,9 @@ proc pollNextEvent*(d: Display): bool =
 
     if not d.ids.hasKey id: return # event for destroyed object
     d.ids[id].unmarshal(op.int, data)
-    true
+    
   except TimeoutError:
-    false
+    return false
 
 proc pollEvents*(d: Display) =
   while d.pollNextEvent: discard
