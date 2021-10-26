@@ -41,6 +41,7 @@ proc `$`*(p: ptr WCHAR): string =
     nil,
     nil
   )
+  result.setLen(len - 1)
 
 proc checkHRESULT*(hresult: HRESULT) =
   if hresult != S_OK:
