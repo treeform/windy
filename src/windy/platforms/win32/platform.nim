@@ -595,7 +595,7 @@ proc handleButtonPress(window: Window, button: Button) =
       ]
       tripleClickInterval = tripleClickIntervals[0] + tripleClickIntervals[1]
 
-    if tripleClickInterval < 1.5 * platformDoubleClickInterval and clickIsClose:
+    if tripleClickInterval < 2 * platformDoubleClickInterval and clickIsClose:
       window.handleButtonPress(TripleClick)
       window.tripleClickTimes = [0.float64, 0]
     else:
@@ -613,7 +613,7 @@ proc handleButtonPress(window: Window, button: Button) =
         quadruplelickIntervals[1] +
         quadruplelickIntervals[2]
 
-    if quadruplelickInterval < 2 * platformDoubleClickInterval and clickIsClose:
+    if quadruplelickInterval < 3 * platformDoubleClickInterval and clickIsClose:
       window.handleButtonPress(QuadrupleClick)
       window.quadrupleClickTimes = [0.float64, 0, 0]
     else:
