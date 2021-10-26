@@ -55,5 +55,4 @@ when isMainModule:
   reg.onGlobal = proc(name: Id, iface: string, version: uint32) =
     echo (id: name.uint32, iface: iface, version: version)
   
-  while true:
-    pollNextEvent display
+  display.pollEvents

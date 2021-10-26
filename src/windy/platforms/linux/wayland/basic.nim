@@ -154,14 +154,21 @@ proc marshal[T](x: Proxy, op: int, data: T) =
 method unmarshal(x: Proxy, op: int, data: seq[uint32]) {.base, locks: "unknown".} = discard
 
 
-proc pollNextEvent*(d: Display) =
-  let head = d.socket.recv(2 * uint32.sizeof).asSeq(uint32)
-  let id = head[0]
-  let op = head[1] and 0xffff
-  let len = int (head[1] shr 16)
-  assert len >= 8
+proc pollNextEvent*(d: Display): bool =
+  try:
+    let head = d.socket.recv(2 * uint32.sizeof, 10).asSeq(uint32)
+    let id = head[0]
+    let op = head[1] and 0xffff
+    let len = int (head[1] shr 16)
+    assert len >= 8
 
-  let data = d.socket.recv(len - 8).asSeq(uint32)
+    let data = d.socket.recv(len - 8).asSeq(uint32)
 
-  if not d.ids.hasKey id: return # event for destroyed object
-  d.ids[id].unmarshal(op.int, data)
+    if not d.ids.hasKey id: return # event for destroyed object
+    d.ids[id].unmarshal(op.int, data)
+    true
+  except TimeoutError:
+    false
+
+proc pollEvents*(d: Display) =
+  while d.pollNextEvent: discard
