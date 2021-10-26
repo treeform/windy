@@ -49,10 +49,10 @@ type
     mousePos: IVec2
     buttonPressed, buttonDown, buttonReleased, buttonToggle: set[Button]
     exitFullscreenInfo: ExitFullscreenInfo
-    doubleClickPos: IVec2
     doubleClickTime: float64
     tripleClickTimes: array[2, float64]
     quadrupleClickTimes: array[3, float64]
+    multiClickPositions: array[3, IVec2]
 
     hWnd: HWND
     hdc: HDC
@@ -577,16 +577,18 @@ proc handleButtonPress(window: Window, button: Button) =
   if button == MouseLeft:
     let
       clickTime = epochTime()
-      doubleClickInterval = clickTime - window.doubleClickTime
-      clickDistance = (window.mousePos - window.doubleClickPos).vec2.length
-      clickIsClose = clickDistance <= multiClickRadius * window.contentScale
+      scaledMultiClickRadius = multiClickRadius * window.contentScale
 
-    if doubleClickInterval <= platformDoubleClickInterval and clickIsClose:
+    let
+      doubleClickInterval = clickTime - window.doubleClickTime
+      doubleClickDistance =
+        (window.mousePos - window.multiClickPositions[0]).vec2.length
+    if doubleClickInterval <= platformDoubleClickInterval and
+      doubleClickDistance <= scaledMultiClickRadius:
       window.handleButtonPress(DoubleClick)
       window.doubleClickTime = 0
     else:
       window.doubleClickTime = clickTime
-      window.doubleClickPos = window.mousePos
 
     let
       tripleClickIntervals = [
@@ -594,8 +596,11 @@ proc handleButtonPress(window: Window, button: Button) =
         clickTime - window.tripleClickTimes[1]
       ]
       tripleClickInterval = tripleClickIntervals[0] + tripleClickIntervals[1]
+      tripleClickDistance =
+        (window.mousePos - window.multiClickPositions[1]).vec2.length
 
-    if tripleClickInterval < 2 * platformDoubleClickInterval and clickIsClose:
+    if tripleClickInterval < 2 * platformDoubleClickInterval and
+      tripleClickDistance <= scaledMultiClickRadius:
       window.handleButtonPress(TripleClick)
       window.tripleClickTimes = [0.float64, 0]
     else:
@@ -603,23 +608,30 @@ proc handleButtonPress(window: Window, button: Button) =
       window.tripleClickTimes[0] = clickTime
 
     let
-      quadruplelickIntervals = [
+      quadrupleClickIntervals = [
         clickTime - window.quadrupleClickTimes[0],
         clickTime - window.quadrupleClickTimes[1],
         clickTime - window.quadrupleClickTimes[2]
       ]
-      quadruplelickInterval =
-        quadruplelickIntervals[0] +
-        quadruplelickIntervals[1] +
-        quadruplelickIntervals[2]
+      quadrupleClickInterval =
+        quadrupleClickIntervals[0] +
+        quadrupleClickIntervals[1] +
+        quadrupleClickIntervals[2]
+      quadrupleClickDistance =
+        (window.mousePos - window.multiClickPositions[2]).vec2.length
 
-    if quadruplelickInterval < 3 * platformDoubleClickInterval and clickIsClose:
+    if quadrupleClickInterval < 3 * platformDoubleClickInterval and
+      quadrupleClickDistance <= multiClickRadius:
       window.handleButtonPress(QuadrupleClick)
       window.quadrupleClickTimes = [0.float64, 0, 0]
     else:
       window.quadrupleClickTimes[2] = window.quadrupleClickTimes[1]
       window.quadrupleClickTimes[1] = window.quadrupleClickTimes[0]
       window.quadrupleClickTimes[0] = clickTime
+
+    window.multiClickPositions[2] = window.multiClickPositions[1]
+    window.multiClickPositions[1] = window.multiClickPositions[0]
+    window.multiClickPositions[0] = window.mousePos
 
 proc handleButtonRelease(window: Window, button: Button) =
   if button == MouseLeft:
