@@ -267,5 +267,9 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_UNICHAR"
   of WM_SYSCOMMAND:
     "WM_SYSCOMMAND"
+  of WM_XBUTTONDOWN:
+    "WM_XBUTTONDOWN"
+  of WM_XBUTTONUP:
+    "WM_XBUTTONUP"
   else:
     "WM " & $wm & " " & $toHex(wm)

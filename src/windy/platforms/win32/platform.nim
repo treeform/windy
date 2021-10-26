@@ -742,14 +742,19 @@ proc wndProc(
     if window.onScroll != nil:
       window.onScroll()
     return 0
-  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN,
-    WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
+  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN, WM_XBUTTONDOWN,
+    WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP, WM_XBUTTONUP:
     let button =
       case uMsg:
       of WM_LBUTTONDOWN, WM_LBUTTONUP:
         MouseLeft
       of WM_RBUTTONDOWN, WM_RBUTTONUP:
         MouseRight
+      of WM_XBUTTONDOWN, WM_XBUTTONUP:
+        if HIWORD(wParam) == XBUTTON1:
+          MouseButton4
+        else:
+          MouseButton5
       else:
         MouseMiddle
     if uMsg in {WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
