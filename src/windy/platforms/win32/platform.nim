@@ -31,7 +31,6 @@ const
 
 type
   Window* = ref object
-    closeRequested*: bool
     onCloseRequest*: Callback
     onMove*: Callback
     onResize*: Callback
@@ -43,7 +42,7 @@ type
     onRune*: RuneCallback
 
     title: string
-    closed: bool
+    closeRequested, closed: bool
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
@@ -286,6 +285,9 @@ proc mouseDelta*(window: Window): IVec2 =
 proc scrollDelta*(window: Window): Vec2 =
   window.perFrame.scrollDelta
 
+proc closeRequested*(window: Window): bool =
+  window.closeRequested
+
 proc `title=`*(window: Window, title: string) =
   window.title = title
   var wideTitle = title.wstr()
@@ -449,6 +451,12 @@ proc `maximized=`*(window: Window, maximized: bool) =
   else:
     cmd = SW_RESTORE
   discard ShowWindow(window.hWnd, cmd)
+
+proc `closeRequested=`*(window: Window, closeRequested: bool) =
+  window.closeRequested = closeRequested
+  if closeRequested:
+    if window.onCloseRequest != nil:
+      window.onCloseRequest()
 
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")
