@@ -11,11 +11,13 @@ type
   BYTE* = uint8
   SHORT* = int16
   BOOL* = int32
+  LPBOOL* = ptr BOOL
   LONG* = int32
   WORD* = uint16
   ATOM* = WORD
   DWORD* = int32
   LPCSTR* = cstring
+  LPSTR* = cstring
   WCHAR* = uint16
   LPCCH* = cstring
   LPCWSTR* = ptr WCHAR
@@ -32,6 +34,7 @@ type
   HCURSOR* = HICON
   HBRUSH* = HANDLE
   HMODULE* = HINSTANCE
+  HGLOBAL* = HANDLE
   LPVOID* = pointer
   UINT* = uint32
   WPARAM* = UINT_PTR
@@ -333,6 +336,8 @@ const
   VK_LSHIFT* = 0xA0
   VK_RSHIFT* = 0xA1
   VK_PROCESSKEY* = 0xE5
+  CF_UNICODETEXT* = 13
+  GMEM_MOVEABLE* = 0x2
 
 proc GetLastError*(): DWORD {.importc, stdcall, dynlib: "Kernel32".}
 
@@ -343,6 +348,17 @@ proc MultiByteToWideChar*(
   cbMultiByte: int32,
   lpWideCharStr: LPWSTR,
   cchWideChar: int32
+): int32 {.importc, stdcall, dynlib: "Kernel32".}
+
+proc WideCharToMultiByte*(
+  codePage: UINT,
+  dwFlags: DWORD,
+  lpWideCharStr: LPWSTR,
+  ccWideChar: int32,
+  lpMultiByteStr: LPSTR,
+  cbMultiByte: int32,
+  lpDefaultChar: LPCCH,
+  lpUsedDefaultChar: LPBOOL
 ): int32 {.importc, stdcall, dynlib: "Kernel32".}
 
 proc LoadLibraryA*(
@@ -367,6 +383,23 @@ proc GetCurrentProcess*(): HANDLE {.importc, stdcall, dynlib: "Kernel32".}
 proc GetProcessId*(
   hProcess: HANDLE
 ): DWORD {.importc, stdcall, dynlib: "Kernel32".}
+
+proc GlobalLock*(
+  hMem: HGLOBAL
+): LPVOID {.importc, stdcall, dynlib: "Kernel32".}
+
+proc GlobalUnlock*(
+  hMem: HGLOBAL
+): BOOL {.importc, stdcall, dynlib: "Kernel32".}
+
+proc GlobalAlloc*(
+  uFlags: UINT,
+  dwBytes: UINT_PTR
+): HGLOBAL {.importc, stdcall, dynlib: "Kernel32".}
+
+proc GlobalFree*(
+  hMem: HGLOBAL
+): HGLOBAL{.importc, stdcall, dynlib: "Kernel32".}
 
 proc LoadCursorW*(
   hInstance: HINSTANCE,
@@ -556,6 +589,27 @@ proc SendMessageW*(
 ): LRESULT {.importc, stdcall, dynlib: "User32".}
 
 proc GetDoubleClickTime*(): UINT {.importc, stdcall, dynlib: "User32".}
+
+proc OpenClipboard*(
+  hWndNewOwner: HWND
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc CloseClipboard*(): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc EmptyClipboard*(): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc SetClipboardData*(
+  uFormat: UINT,
+  hMem: HANDLE
+): HANDLE {.importc, stdcall, dynlib: "User32".}
+
+proc GetClipboardData*(
+  uFormat: UINT
+): HANDLE {.importc, stdcall, dynlib: "User32".}
+
+proc IsClipboardFormatAvailable*(
+  format: UINT
+): BOOL {.importc, stdcall, dynlib: "User32".}
 
 proc ChoosePixelFormat*(
   hdc: HDC,
