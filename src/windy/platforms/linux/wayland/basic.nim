@@ -9,18 +9,12 @@ type
     id: Id
 
   Display* = ref object of Proxy
-    error*: proc(objId: Id, code: DisplayErrorCode, message: string)
+    error*: proc(objId: Id, code: int, message: string)
     deleteId*: proc(id: Id)
 
     socket: Socket
     ids: Table[uint32, Proxy]
     lastId: Id
-  
-  DisplayErrorCode* {.pure.} = enum
-    InvalidObject
-    InvalidMethod
-    NoMemory
-    Implementation
 
 
 proc `//>`[T: SomeInteger](a, b: T): T =
@@ -93,12 +87,12 @@ proc extern(d: Display, t: type, id: Id): t =
   result.id = id
   d.ids[id.uint32] = result
 
-proc destroy*(d: Display, x: Proxy) =
-  d.ids.del x.id.uint32
+proc destroy*(x: Proxy) =
+  x.display.ids.del x.id.uint32
 
 
 proc serialize[T](x: T): seq[uint32] =
-  when x is uint32|int32|Id|enum|float32:
+  when x is uint32|int32|Id|enum|float32|SocketHandle:
     result.add cast[uint32](x)
 
   elif x is int:
@@ -120,12 +114,23 @@ proc serialize[T](x: T): seq[uint32] =
   elif x is tuple|object:
     for x in x.fields:
       result.add x.serialize
+  
+  elif x is array:
+    for x in x:
+      result.add x.serialize
 
-  else: {.error.}
+  elif x is set:
+    when T.sizeof > uint.sizeof: {.error: "too large set".}
+    result.add cast[uint32](x)
+
+  elif T.sizeof == uint32.sizeof:
+    result.add cast[uint32](x)
+  
+  else: {.error: "unserializable type " & $T.}
 
 
 proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
-  when result is uint32|int32|Id|enum|float32:
+  when result is uint32|int32|Id|enum|float32|SocketHandle:
     result = cast[T](x[i]); i += 1
 
   elif result is int:
@@ -149,15 +154,26 @@ proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
   elif result is tuple|object:
     for v in result.fields:
       v = x.deserialize(typeof(v), i)
+    
+  elif result is array:
+    for v in result.mitems:
+      v = x.deserialize(typeof(v), i)
 
-  else: {.error.}
+  elif result is set:
+    when T.sizeof > uint.sizeof: {.error: "too large set".}
+    result = cast[T](x[i]); i += 1
+  
+  elif T.sizeof == uint32.sizeof:
+    result = cast[T](x[i]); i += 1
+
+  else:  {.error: "undeserializable type " & $T.}
 
 proc deserialize(x: seq[uint32], T: type): T =
   var i: uint32
   deserialize(x, T, i)
 
 
-proc marshal[T](x: Proxy, op: int, data: T) =
+proc marshal[T](x: Proxy, op: int, data: T = ()) =
   var d = data.serialize
   d.insert ((d.len.uint32 * uint32.sizeof.uint32 + 8) shl 16) or (op.uint32 and 0x0000ffff)
   d.insert x.id.uint32
