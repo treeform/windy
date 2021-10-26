@@ -1,6 +1,15 @@
 include basic
 import macros, strformat, sequtils, vmath
 
+proc unshl(x: int): int =
+  var x = x
+  while (x and 1) == 0:
+    inc result
+    x = x shr 1
+
+proc toBitfield(x: enum): int = 1 shl x.int
+proc fromBitfield(x: int, T: type): T = x.unshl.T
+
 macro protocol(body) =
   proc injectAllParams(x: NimNode): NimNode =
     result = nnkFormalParams.newTree(
@@ -10,6 +19,25 @@ macro protocol(body) =
   
   proc separateParams(x: NimNode): tuple[p, t: seq[NimNode]] =
     (x[1..^1].mapit(it[0..^3]).concat, x[1..^1].mapit(it[^2].repeat(it.len - 2)).concat)
+  
+  proc applyBitfield(p, t: seq[NimNode], reverse = false): tuple[p, t: seq[NimNode]] =
+    zip(p, t).mapit(
+      if it[1].kind == nnkCommand and it[1][0] == ident"bitField":
+        if reverse: (newCall(ident"fromBitfield", it[0], it[1][1]), ident"int")
+        else: (newCall(ident"toBitfield", it[0]), it[1][1])
+      else: it
+    ).unzip
+  
+  proc prepareArgs(x: NimNode, reverse = false): tuple[p, t, pc: seq[NimNode]] =
+    let (p, t) = x.separateParams
+    let (pc, t2) = applyBitfield(p, t, reverse)
+    (p, t2, pc)
+  
+  proc prepareParams(x: NimNode): NimNode =
+    let (p, t) = x.separateParams
+    let (_, t2) = applyBitfield(p, t)
+    nnkFormalParams.newTree(@[x[0]] & zip(p, t2).mapit(newIdentDefs(it[0], it[1])))
+
 
   result = newStmtList()
   var types: seq[seq[NimNode]]
@@ -28,7 +56,7 @@ macro protocol(body) =
         types[^1].add nnkIdentDefs.newTree( # field declaration
           nnkPostfix.newTree(ident"*", a.name),
           nnkProcTy.newTree(
-            p,
+            p.prepareParams,
             newEmptyNode()
           ),
           newEmptyNode()
@@ -54,7 +82,7 @@ macro protocol(body) =
                 newEmptyNode(),
                 newEmptyNode(),
                 newEmptyNode(),
-                p.injectAllParams,
+                p.prepareParams.injectAllParams,
                 newEmptyNode(),
                 newEmptyNode(),
                 nnkStmtList.newTree(
@@ -69,50 +97,44 @@ macro protocol(body) =
           nnkIfStmt.newTree(nnkElifBranch.newTree(
             nnkInfix.newTree(ident"!=", nnkDotExpr.newTree(ident"this", a.name), newNilLit()),
             block:
-              let (args, types) = p.separateParams
+              let (args, types, argvals) = p.prepareArgs(true)
               newStmtList(
                 (if args.len > 0: @[nnkLetSection.newTree(nnkVarTuple.newTree(
                   args &
                   @[newEmptyNode()] &
-                  @[nnkCall.newTree(
-                    nnkDotExpr.newTree(ident"data", ident"deserialize"),
+                  @[nnkCall.newTree(ident"deserialize",
+                    nnkDotExpr.newTree(ident"this", ident"display"),
+                    ident"data",
                     nnkTupleConstr.newTree(types)
                   )]
                 ))] else: newSeq[NimNode]()) &
                 @[nnkCall.newTree(
                   @[nnkDotExpr.newTree(ident"this", a.name)] &
-                  args
+                  argvals
                 )]
               )
           ))
         )
-      else:
-        let extern =
-          if p[0].kind == nnkCommand and p[0][0].kind == nnkCall and p[0][0][0] == ident"extern":
-            p[0][0][1]
-          else: nil
-        if extern != nil:
-          p[0] = p[0][1]
-        let (args, _) = p.separateParams
+      else: # marshaling
+        let (_, _, argvals) = p.prepareArgs
         p.insert 1, newIdentDefs(ident"this", t)
         let name = a.name
         a.name = nnkPostfix.newTree(ident"*", a.name)
-        a.params = p
+        a.params = p.prepareParams
         a.body = nnkCall.newTree(
           @[nnkDotExpr.newTree(ident"this", ident"marshal"), newLit i] &
           @[nnkTupleConstr.newTree(
-            if p[0].kind == nnkEmpty: args
-            else: @[nnkDotExpr.newTree(ident"result", ident"id")] & args
+            if p[0].kind == nnkEmpty: argvals
+            else: @[nnkDotExpr.newTree(ident"result", ident"id")] & argvals
           )]
         )
         if p[0].kind != nnkEmpty:
           a.body = newStmtList(
             nnkAsgn.newTree(
               ident"result",
-              newCall(if extern == nil: ident"new" else: ident"extern",
+              newCall(ident"new",
                 @[nnkDotExpr.newTree(ident"this", ident"display")] &
-                @[p[0]] &
-                (if extern != nil: @[extern] else: @[])
+                @[p[0]]
               )
             ),
             a.body
@@ -225,6 +247,7 @@ type
     uyvy = 0x59565955
   
   DndAction* {.pure.} = enum
+    none
     copy
     move
     ask
@@ -287,202 +310,205 @@ type
 
 
 
-expandMacros:
-  protocol:
-    Display:
-      proc sync: Callback
-      proc registry: Registry
+protocol:
+  Display:
+    proc sync: Callback
+    proc registry: Registry
 
-      proc error(objId: Id, code: int, message: string): event
-      proc deleteId(id: Id): event
-
-
-    Registry:
-      proc bindInterface[T](iface: string): T
-      
-      proc global(name: Id, iface: string, version: int): event
-      proc globalRemove(name: Id): event
+    proc error(objId: Id, code: int, message: string): event
+    proc deleteId(id: Id): event
 
 
-    Callback:
-      proc done(cbData: uint32): event
+  Registry:
+    # proc bindInterface*(T: type, name: int, iface: string, version: int): T
 
-    
-    Compositor:
-      proc newSurface: Surface
-      proc newRegion: Region
+    proc global(name: int, iface: string, version: int): event
+    proc globalRemove(name: int): event
 
 
-    ShmPool:
-      proc newBuffer(offset: int, size: IVec2, stride: int, format: ShmFormat): Buffer
-      proc destroy
-      proc resize(size: int)
-    
-
-    Shm:
-      proc newPool(fd: FileDescriptor, size: int): ShmPool
-
-      proc format(format: ShmFormat): event
-    
-
-    Buffer:
-      proc destroy
-
-      proc release: event
+  Callback:
+    proc done(cbData: uint32): event
 
 
-    DataOffer:
-      proc accept(serial: int, mime: string)
-      proc receive(mime: string, fd: FileDescriptor)
-      proc destroy
-      proc finish
-      proc setActions(actions: set[DndAction], prefered: bitField DndAction|none)
-
-      proc offer(mime: string): event
-      proc sourceActions(actions: set[DndAction]): event
-      proc action(action: bitField DndAction): event
-    
-
-    DataSource:
-      proc offer(mime: string)
-      proc destroy
-      proc `actions=`(actions: set[DndAction])
-
-      proc target(mime: string): event
-      proc send(mime: string, fd: FileDescriptor): event
-      proc cancelled: event
-      proc dndDropPerformed: event
-      proc dndFinished: event
-      proc action(action: bitField DndAction): event
+  Compositor:
+    proc newSurface: Surface
+    proc newRegion: Region
 
 
-    DataDevice:
-      proc startDrag(origin, icon: Surface, serial: int): DataSource
-      proc sellect(serial: int): DataSource
-      proc destroy
-    
-      proc offer(offer: DataOffer): event
-      proc enter(serial: int, surface: Surface, pos: Vec2, offer: DataOffer): event
-      proc leave: event
-      proc motion(time: int, pos: Vec2): event
-      proc drop: event
-      proc sellected(offer: DataOffer): event
-    
-
-    DataDeviceManager:
-      proc newDataSource: DataSource
-      proc dataDevice(seat: Seat): DataDevice
-
-    
-    Shell:
-      proc shellSurface(surface: Surface): ShellSurface
-    
-
-    ShellSurface:
-      proc pong(serial: int)
-      proc move(seat: Seat, serial: int)
-      proc resize(seat: Seat, serial: int, edges: set[Edge])
-      proc setToplevel
-      proc setTransient(parent: Surface, pos: IVec2, flags: set[TransientFlag])
-      proc setFullscreen(m: FullscreenMethod, framerate: int, output: Output)
-      proc setPopup(seat: Seat, serial: int, parent: Surface, pos: IVec2, flags: set[TransientFlag])
-      proc setMaximized(output: Output)
-      proc setTitle(title: string)
-      proc setClass(class: string)
-
-      proc ping(serial: int): event
-      proc configure(edges: set[Edge], size: IVec2): event
-      proc popupDone: event
+  ShmPool:
+    proc newBuffer(offset: int, size: IVec2, stride: int, format: ShmFormat): Buffer
+    proc destroy
+    proc resize(size: int)
 
 
-    Surface:
-      proc destroy
-      proc attach(buffer: Buffer, pos: IVec2)
-      proc damage(pos: IVec2, size: IVec2)
-      proc frame: Callback
-      proc setOpaqueRegion(region: Region)
-      proc setInputRegion(region: Region)
-      proc commit
-      proc setBufferTransform(transform: Transform)
-      proc setBufferScale(scale: int)
-      proc damageBuffer(pos: IVec2, size: IVec2)
+  Shm:
+    proc newPool(fd: FileDescriptor, size: int): ShmPool
 
-      proc enter(output: Output): event
-      proc leave(output: Output): event
+    proc format(format: ShmFormat): event
 
 
-    Seat:
-      proc cursor: Cursor
-      proc keyboard: Keyboard
-      proc touch: Touch
-      proc destroy
+  Buffer:
+    proc destroy
 
-      proc capabilities(capabilities: set[Capability]): event
-      proc name(name: string): event
-    
-
-    Cursor:
-      proc set(serial: int, surface: Surface, hotspot: IVec2)
-      proc destroy
-
-      proc enter(serial: int, surface: Surface, pos: IVec2): event
-      proc leave(serial: int, surface: Surface): event
-      proc motion(time: int, pos: IVec2): event
-      proc button(serial: int, time: int, button: int, pressed: bool): event
-      proc scroll(time: int, axis: Axis, value: float): event
-      proc frame: event
-      proc axisSource(source: AxisSource): event
-      proc scrollStop(time: int, axis: Axis): event
-      proc scrollDiscrete(axis: Axis, value: int): event
+    proc release: event
 
 
-    Keyboard:
-      proc destroy
+  DataOffer:
+    proc accept(serial: int, mime: string)
+    proc receive(mime: string, fd: FileDescriptor)
+    proc destroy
+    proc finish
+    proc setActions(actions: set[DndAction.copy..DndAction.ask], prefered: bitField DndAction)
 
-      proc keymap(format: KeyboardFormat, fd: FileDescriptor, size: int): event
-      proc enter(serial: int, surface: Surface, keys: seq[uint]): event
-      proc leave(serial: int, surface: Surface): event
-      proc key(serial: int, time: int, key: uint, pressed: bool): event
-      proc modifiers(serial: int, depressed, latched, locked: int, group: int): event
-      proc repeatInfo(rate: int, delay: int): event
-
-    
-    Touch:
-      proc destroy
-
-      proc down(serial: int, time: int, surface: Surface, id: int, pos: Vec2): event
-      proc up(serial: int, time: int, id: int): event
-      proc motion(time: int, id: int, pos: Vec2): event
-      proc frame: event
-      proc cancel: event
-      proc shape(id: int, major, minor: float): event
-      proc orientation(id: int, orientation: float): event
-    
-
-    Output:
-      proc destroy
-
-      proc geometry(pos: IVec2, sizeInMillimeters: IVec2, subpixel: Subpixel, make: string, model: string, transform: Transform): event
-      proc mode(flags: set[ModeFlag], size: IVec2, refresh: int): event
-      proc done: event
-      proc scale(factor: int): event
+    proc offer(mime: string): event
+    proc sourceActions(actions: set[DndAction]): event
+    proc action(action: bitField DndAction): event
 
 
-    Region:
-      proc destroy
-      proc add(pos: IVec2, size: IVec2)
-      proc substract(pos: IVec2, size: IVec2)
-    
-    
-    Subcompositor:
-      proc destroy
-      proc subsurface(surface: Surface, parent: Surface): Subsurface
+  DataSource:
+    proc offer(mime: string)
+    proc destroy
+    proc `actions=`(actions: set[DndAction])
 
-    
-    Subsurface:
-      proc destroy
-      proc `pos=`(pos: IVec2)
-      proc placeAbove(sibling: Surface)
-      proc placeBelow(sibling: Surface)
-      proc setSync
-      proc setDesync
+    proc target(mime: string): event
+    proc send(mime: string, fd: FileDescriptor): event
+    proc cancelled: event
+    proc dndDropPerformed: event
+    proc dndFinished: event
+    proc action(action: bitField DndAction): event
+
+
+  DataDevice:
+    proc startDrag(origin, icon: Surface, serial: int): DataSource
+    proc sellect(serial: int): DataSource
+    proc destroy
+
+    proc offer(offer: DataOffer): event
+    proc enter(serial: int, surface: Surface, pos: Vec2, offer: DataOffer): event
+    proc leave: event
+    proc motion(time: int, pos: Vec2): event
+    proc drop: event
+    proc sellected(offer: DataOffer): event
+
+
+  DataDeviceManager:
+    proc newDataSource: DataSource
+    proc dataDevice(seat: Seat): DataDevice
+
+
+  Shell:
+    proc shellSurface(surface: Surface): ShellSurface
+
+
+  ShellSurface:
+    proc pong(serial: int)
+    proc move(seat: Seat, serial: int)
+    proc resize(seat: Seat, serial: int, edges: set[Edge])
+    proc setToplevel
+    proc setTransient(parent: Surface, pos: IVec2, flags: set[TransientFlag])
+    proc setFullscreen(m: FullscreenMethod, framerate: int, output: Output)
+    proc setPopup(seat: Seat, serial: int, parent: Surface, pos: IVec2, flags: set[TransientFlag])
+    proc setMaximized(output: Output)
+    proc setTitle(title: string)
+    proc setClass(class: string)
+
+    proc ping(serial: int): event
+    proc configure(edges: set[Edge], size: IVec2): event
+    proc popupDone: event
+
+
+  Surface:
+    proc destroy
+    proc attach(buffer: Buffer, pos: IVec2)
+    proc damage(pos: IVec2, size: IVec2)
+    proc frame: Callback
+    proc setOpaqueRegion(region: Region)
+    proc setInputRegion(region: Region)
+    proc commit
+    proc setBufferTransform(transform: Transform)
+    proc setBufferScale(scale: int)
+    proc damageBuffer(pos: IVec2, size: IVec2)
+
+    proc enter(output: Output): event
+    proc leave(output: Output): event
+
+
+  Seat:
+    proc cursor: Cursor
+    proc keyboard: Keyboard
+    proc touch: Touch
+    proc destroy
+
+    proc capabilities(capabilities: set[Capability]): event
+    proc name(name: string): event
+
+
+  Cursor:
+    proc setCursor(serial: int, surface: Surface, hotspot: IVec2)
+    proc destroy
+
+    proc enter(serial: int, surface: Surface, pos: IVec2): event
+    proc leave(serial: int, surface: Surface): event
+    proc motion(time: int, pos: IVec2): event
+    proc button(serial: int, time: int, button: int, pressed: bool): event
+    proc scroll(time: int, axis: Axis, value: float): event
+    proc frame: event
+    proc axisSource(source: AxisSource): event
+    proc scrollStop(time: int, axis: Axis): event
+    proc scrollDiscrete(axis: Axis, value: int): event
+
+
+  Keyboard:
+    proc destroy
+
+    proc keymap(format: KeyboardFormat, fd: FileDescriptor, size: int): event
+    proc enter(serial: int, surface: Surface, keys: seq[uint32]): event
+    proc leave(serial: int, surface: Surface): event
+    proc key(serial: int, time: int, key: uint32, pressed: bool): event
+    proc modifiers(serial: int, depressed, latched, locked: int, group: int): event
+    proc repeatInfo(rate: int, delay: int): event
+
+
+  Touch:
+    proc destroy
+
+    proc down(serial: int, time: int, surface: Surface, id: int, pos: Vec2): event
+    proc up(serial: int, time: int, id: int): event
+    proc motion(time: int, id: int, pos: Vec2): event
+    proc frame: event
+    proc cancel: event
+    proc shape(id: int, major, minor: float): event
+    proc orientation(id: int, orientation: float): event
+
+
+  Output:
+    proc destroy
+
+    proc geometry(pos: IVec2, sizeInMillimeters: IVec2, subpixel: Subpixel, make: string, model: string, transform: Transform): event
+    proc mode(flags: set[ModeFlag], size: IVec2, refresh: int): event
+    proc done: event
+    proc scale(factor: int): event
+
+
+  Region:
+    proc destroy
+    proc add(pos: IVec2, size: IVec2)
+    proc substract(pos: IVec2, size: IVec2)
+
+
+  Subcompositor:
+    proc destroy
+    proc subsurface(surface: Surface, parent: Surface): Subsurface
+
+
+  Subsurface:
+    proc destroy
+    proc `pos=`(pos: IVec2)
+    proc placeAbove(sibling: Surface)
+    proc placeBelow(sibling: Surface)
+    proc setSync
+    proc setDesync
+
+proc bindInterface*(this: Registry, T: type, name: int, iface: string, version: int): T =
+  result = this.display.new(T)
+  this.marshal(0, (name, iface, version, result.id))

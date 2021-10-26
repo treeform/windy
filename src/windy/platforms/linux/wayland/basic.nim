@@ -3,6 +3,7 @@ import ../../../common
 
 type
   Id* = distinct uint32
+  FileDescriptor* = distinct int32
 
   Proxy* = ref object of RootObj
     display: Display
@@ -80,19 +81,12 @@ proc new(d: Display, t: type): t =
   result.id = d.lastId
   d.ids[d.lastId.uint32] = result
 
-proc extern(d: Display, t: type, id: Id): t =
-  new result
-  let id = Id id.uint32 or 0xff000000
-  result.display = d
-  result.id = id
-  d.ids[id.uint32] = result
-
 proc destroy*(x: Proxy) =
   x.display.ids.del x.id.uint32
 
 
 proc serialize[T](x: T): seq[uint32] =
-  when x is uint32|int32|Id|enum|float32|SocketHandle:
+  when x is uint32|int32|Id|enum|float32|FileDescriptor:
     result.add cast[uint32](x)
 
   elif x is int:
@@ -100,6 +94,9 @@ proc serialize[T](x: T): seq[uint32] =
   
   elif x is float:
     result.add cast[uint32](x.float32)
+  
+  elif x is bool:
+    result.add x.uint32
 
   elif x is string:
     let x = x & '\0'
@@ -122,6 +119,9 @@ proc serialize[T](x: T): seq[uint32] =
   elif x is set:
     when T.sizeof > uint.sizeof: {.error: "too large set".}
     result.add cast[uint32](x)
+  
+  elif x is Proxy:
+    result.add x.id.uint32
 
   elif T.sizeof == uint32.sizeof:
     result.add cast[uint32](x)
@@ -129,8 +129,8 @@ proc serialize[T](x: T): seq[uint32] =
   else: {.error: "unserializable type " & $T.}
 
 
-proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
-  when result is uint32|int32|Id|enum|float32|SocketHandle:
+proc deserialize(display: Display, x: seq[uint32], T: type, i: var uint32): T =
+  when result is uint32|int32|Id|enum|float32|FileDescriptor:
     result = cast[T](x[i]); i += 1
 
   elif result is int:
@@ -139,6 +139,9 @@ proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
   elif result is float:
     result = cast[float32](x[i]).float; i += 1
 
+  elif result is bool:
+    result = x[i].bool; i += 1
+
   elif result is string:
     let len = x[i]; i += 1
     let lenAligned = len //> uint32.sizeof.uint32
@@ -146,18 +149,18 @@ proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
     result.setLen len - 1
 
   elif result is seq:
-    type T = typeof(x[0])
+    type T = typeof(result[0])
     let len = x[i]; i += 1
-    let lenAligned = (len * T.sizeof) //> uint32.sizeof.uint32
+    let lenAligned = (len * T.sizeof.uint32) //> uint32.sizeof.uint32
     result = x[i ..< i + lenAligned].asSeq(T); i += lenAligned
 
   elif result is tuple|object:
     for v in result.fields:
-      v = x.deserialize(typeof(v), i)
+      v = deserialize(display, x, typeof(v), i)
     
   elif result is array:
     for v in result.mitems:
-      v = x.deserialize(typeof(v), i)
+      v = deserialize(display, x, typeof(v), i)
 
   elif result is set:
     when T.sizeof > uint.sizeof: {.error: "too large set".}
@@ -166,11 +169,15 @@ proc deserialize(x: seq[uint32], T: type, i: var uint32): T =
   elif T.sizeof == uint32.sizeof:
     result = cast[T](x[i]); i += 1
 
+  elif result is Proxy:
+    result.display = display
+    result.id = x[i].Id; i += 1
+
   else:  {.error: "undeserializable type " & $T.}
 
-proc deserialize(x: seq[uint32], T: type): T =
+proc deserialize(display: Display, x: seq[uint32], T: type): T =
   var i: uint32
-  deserialize(x, T, i)
+  deserialize(display, x, T, i)
 
 
 proc marshal[T](x: Proxy, op: int, data: T = ()) =
