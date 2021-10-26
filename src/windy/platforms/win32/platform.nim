@@ -559,10 +559,10 @@ proc createHelperWindow(): HWND =
   registerWindowClass(helperWindowClassName, helperWndProc)
 
   result = createWindow(
-      helperWindowClassName,
-      helperWindowClassName,
-      ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
-    )
+    helperWindowClassName,
+    helperWindowClassName,
+    ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
+  )
 
 proc handleButtonPress(window: Window, button: Button) =
   window.buttonDown.incl button
