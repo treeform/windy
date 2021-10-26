@@ -1,4 +1,4 @@
-import os, posix, nativesockets, asyncnet, asyncdispatch, tables
+import os, posix, nativesockets, net, tables
 import ../../../common
 
 type
@@ -9,10 +9,10 @@ type
     id: Id
 
   Display* = ref object of Proxy
-    onError*: proc(objId: Id, code: DisplayErrorCode, message: string): Future[void]
-    onDeleteId*: proc(id: Id): Future[void]
+    onError*: proc(objId: Id, code: DisplayErrorCode, message: string)
+    onDeleteId*: proc(id: Id)
 
-    socket: AsyncSocket
+    socket: Socket
     ids: Table[uint32, Proxy]
     lastId: Id
   
@@ -55,7 +55,7 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   result.ids[1] = result
 
   let d = result
-  result.onDeleteId = proc(id: Id) {.async.} =
+  result.onDeleteId = proc(id: Id) =
     d.ids.del id.uint32
   
   var name =
@@ -76,8 +76,7 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
     close sock
     raise WindyError.newException("Failed to connect to wayland server")
   
-  register sock.AsyncFD
-  result.socket = newAsyncSocket(sock.AsyncFD, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
+  result.socket = newSocket(sock, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
 
 
 proc new(d: Display, t: type): t =
@@ -146,23 +145,23 @@ proc deserialize(x: seq[uint32], T: type): T =
   deserialize(x, T, i)
 
 
-proc marshal[T](x: Proxy, op: int, data: T) {.async.} =
+proc marshal[T](x: Proxy, op: int, data: T) =
   var d = data.serialize
   d.insert ((d.len.uint32 * uint32.sizeof.uint32 + 8) shl 16) or (op.uint32 and 0x0000ffff)
   d.insert x.id.uint32
-  await x.display.socket.send(d[0].addr, d.len * uint32.sizeof)
+  assert x.display.socket.send(d[0].addr, d.len * uint32.sizeof) == d.len * uint32.sizeof
 
-method unmarshal(x: Proxy, op: int, data: seq[uint32]) {.base, async.} = discard
+method unmarshal(x: Proxy, op: int, data: seq[uint32]) {.base, locks: "unknown".} = discard
 
 
-proc listen*(d: Display) {.async.} =
-  ## runs endless listen loop
-  while true:
-    let head = d.socket.recv(2 * uint32.sizeof).await.asSeq(uint32)
-    let id = head[0]
-    let op = head[1] and 0xffff
-    let len = int (head[1] shr 16)
-    assert len >= 8
-    let data = d.socket.recv(len - 8).await.asSeq(uint32)
-    if not d.ids.hasKey id: continue # event for destroyed object
-    await d.ids[id].unmarshal(op.int, data)
+proc pollNextEvent*(d: Display) =
+  let head = d.socket.recv(2 * uint32.sizeof).asSeq(uint32)
+  let id = head[0]
+  let op = head[1] and 0xffff
+  let len = int (head[1] shr 16)
+  assert len >= 8
+
+  let data = d.socket.recv(len - 8).asSeq(uint32)
+
+  if not d.ids.hasKey id: return # event for destroyed object
+  d.ids[id].unmarshal(op.int, data)
