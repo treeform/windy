@@ -30,18 +30,19 @@ proc `$`*(p: ptr WCHAR): string =
     nil,
     nil
   )
-  result.setLen(len)
-  discard WideCharToMultiByte(
-    CP_UTF8,
-    0,
-    p,
-    -1,
-    result[0].addr,
-    len,
-    nil,
-    nil
-  )
-  result.setLen(len - 1)
+  if len > 0:
+    result.setLen(len)
+    discard WideCharToMultiByte(
+      CP_UTF8,
+      0,
+      p,
+      -1,
+      result[0].addr,
+      len,
+      nil,
+      nil
+    )
+    result.setLen(len - 1)
 
 proc checkHRESULT*(hresult: HRESULT) =
   if hresult != S_OK:
@@ -271,5 +272,11 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_XBUTTONDOWN"
   of WM_XBUTTONUP:
     "WM_XBUTTONUP"
+  of WM_IME_STARTCOMPOSITION:
+    "WM_IME_STARTCOMPOSITION"
+  of WM_IME_ENDCOMPOSITION:
+    "WM_IME_ENDCOMPOSITION"
+  of WM_IME_COMPOSITION:
+    "WM_IME_COMPOSITION"
   else:
     "WM " & $wm & " " & $toHex(wm)
