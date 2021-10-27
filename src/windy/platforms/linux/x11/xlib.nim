@@ -229,6 +229,15 @@ proc XCreateWindow*(
 ): Window
 proc XDestroyWindow*(d; window: Window)
 
+proc XCreateSimpleWindow*(
+  d;
+  root: Window,
+  x, y: cint,
+  w, h: cuint,
+  borderW: cuint,
+  border, background: culong
+): Window
+
 proc XMapWindow*(d; window: Window)
 proc XUnmapWindow*(d; window: Window)
 
@@ -300,5 +309,9 @@ proc XSetInputFocus*(d; window: Window, revertTo: RevertTo, time: int32 = Curren
 
 proc XQueryKeymap*(d; res: var array[32, char])
 proc XKeycodeToKeysym*(d; code: KeyCode, i: cint): KeySym
+
+proc XGetSelectionOwner*(d; kind: Atom): Window
+proc XSetSelectionOwner*(d; kind: Atom, window: Window, time: int32 = CurrentTime)
+proc XConvertSelection*(d; kind: Atom, to: Atom, resultProperty: Atom, window: Window, time: int32 = CurrentTime)
 
 {.pop.}
