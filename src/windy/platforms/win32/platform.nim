@@ -1039,7 +1039,7 @@ proc newWindow*(
 
     result.makeContextCurrent()
 
-    if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
+    if wglSwapIntervalEXT(if vsync: 1 else: 0) == 0:
       raise newException(WindyError, "Error setting swap interval")
 
     windows.add(result)

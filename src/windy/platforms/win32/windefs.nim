@@ -215,7 +215,8 @@ const
   WS_TILED* = WS_OVERLAPPED
   WS_ICONIC* = WS_MINIMIZE
   WS_SIZEBOX* = WS_THICKFRAME
-  WS_OVERLAPPEDWINDOW* = WS_OVERLAPPED or WS_CAPTION or WS_SYSMENU or WS_THICKFRAME or WS_MINIMIZEBOX or WS_MAXIMIZEBOX
+  WS_OVERLAPPEDWINDOW* = WS_OVERLAPPED or WS_CAPTION or WS_SYSMENU or
+      WS_THICKFRAME or WS_MINIMIZEBOX or WS_MAXIMIZEBOX
   WS_TILEDWINDOW* = WS_OVERLAPPEDWINDOW
   WS_POPUPWINDOW* = WS_POPUP or WS_BORDER or WS_SYSMENU
   WS_CHILDWINDOW* = WS_CHILD
@@ -313,9 +314,9 @@ const
   PFD_TYPE_RGBA* = 0
   DPI_AWARENESS_CONTEXT_UNAWARE* = -1
   DPI_AWARENESS_CONTEXT_SYSTEM_AWARE* = -2
-  DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE* = -3
-  DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2* = -4
-  DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED* = -5
+  DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE * = -3
+  DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 * = -4
+  DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED * = -5
   SWP_NOSIZE* = 0x0001
   SWP_NOMOVE* = 0x0002
   SWP_NOZORDER* = 0x0004
@@ -388,7 +389,9 @@ const
   IACE_DEFAULT* = 0x0010
   IACE_IGNORENOCONTEXT* = 0x0020
 
-proc GetLastError*(): DWORD {.importc, stdcall, dynlib: "Kernel32".}
+{.push importc, stdcall.}
+
+proc GetLastError*(): DWORD {.dynlib: "Kernel32".}
 
 proc MultiByteToWideChar*(
   codePage: UINT,
@@ -397,7 +400,7 @@ proc MultiByteToWideChar*(
   cbMultiByte: int32,
   lpWideCharStr: LPWSTR,
   cchWideChar: int32
-): int32 {.importc, stdcall, dynlib: "Kernel32".}
+): int32 {.dynlib: "Kernel32".}
 
 proc WideCharToMultiByte*(
   codePage: UINT,
@@ -408,54 +411,54 @@ proc WideCharToMultiByte*(
   cbMultiByte: int32,
   lpDefaultChar: LPCCH,
   lpUsedDefaultChar: LPBOOL
-): int32 {.importc, stdcall, dynlib: "Kernel32".}
+): int32 {.dynlib: "Kernel32".}
 
 proc LoadLibraryA*(
   lpLibFileName: LPCSTR
-): HMODULE {.importc, stdcall, dynlib: "Kernel32".}
+): HMODULE {.dynlib: "Kernel32".}
 
 proc FreeLibrary*(
   hLibModule: HMODULE
-): BOOL {.importc, stdcall, dynlib: "Kernel32".}
+): BOOL {.dynlib: "Kernel32".}
 
 proc GetProcAddress*(
   hModule: HMODULE,
   lpProcName: LPCSTR
-): FARPROC {.importc, stdcall, dynlib: "Kernel32".}
+): FARPROC {.dynlib: "Kernel32".}
 
 proc GetModuleHandleW*(
   lpModuleName: LPCWSTR
-): HMODULE {.importc, stdcall, dynlib: "Kernel32".}
+): HMODULE {.dynlib: "Kernel32".}
 
-proc GetCurrentProcess*(): HANDLE {.importc, stdcall, dynlib: "Kernel32".}
+proc GetCurrentProcess*(): HANDLE {.dynlib: "Kernel32".}
 
 proc GetProcessId*(
   hProcess: HANDLE
-): DWORD {.importc, stdcall, dynlib: "Kernel32".}
+): DWORD {.dynlib: "Kernel32".}
 
 proc GlobalLock*(
   hMem: HGLOBAL
-): LPVOID {.importc, stdcall, dynlib: "Kernel32".}
+): LPVOID {.dynlib: "Kernel32".}
 
 proc GlobalUnlock*(
   hMem: HGLOBAL
-): BOOL {.importc, stdcall, dynlib: "Kernel32".}
+): BOOL {.dynlib: "Kernel32".}
 
 proc GlobalAlloc*(
   uFlags: UINT,
   dwBytes: UINT_PTR
-): HGLOBAL {.importc, stdcall, dynlib: "Kernel32".}
+): HGLOBAL {.dynlib: "Kernel32".}
 
 proc GlobalFree*(
   hMem: HGLOBAL
-): HGLOBAL {.importc, stdcall, dynlib: "Kernel32".}
+): HGLOBAL {.dynlib: "Kernel32".}
 
-proc GetUserDefaultUILanguage*(): LANGID {.importc, stdcall, dynlib: "Kernel32".}
+proc GetUserDefaultUILanguage*(): LANGID {.dynlib: "Kernel32".}
 
 proc LoadCursorW*(
   hInstance: HINSTANCE,
   lpCursorName: LPCWSTR
-): HCURSOR {.importc, stdcall, dynlib: "User32".}
+): HCURSOR {.dynlib: "User32".}
 
 proc LoadImageW*(
   hInstance: HINSTANCE,
@@ -464,17 +467,17 @@ proc LoadImageW*(
   cx: int32,
   cy: int32,
   fuLoad: UINT
-): HANDLE {.importc, stdcall, dynlib: "User32".}
+): HANDLE {.dynlib: "User32".}
 
 proc GetClassInfoExW*(
   hInstance: HINSTANCE,
   lpszClass: LPCWSTR,
   lpwcx: LPWNDCLASSEXW
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc RegisterClassExW*(
   P1: ptr WNDCLASSEXW
-): ATOM {.importc, stdcall, dynlib: "User32".}
+): ATOM {.dynlib: "User32".}
 
 proc CreateWindowExW*(
   dwExStyle: DWORD,
@@ -489,21 +492,21 @@ proc CreateWindowExW*(
   hMenu: HMENU,
   hInstance: HINSTANCE,
   lpParam: LPVOID
-): HWND {.importc, stdcall, dynlib: "User32".}
+): HWND {.dynlib: "User32".}
 
 proc DefWindowProcW*(
   hWnd: HWND,
   uMsg: UINT,
   wParam: WPARAM,
   lParam: LPARAM
-): LRESULT {.importc, stdcall, dynlib: "User32".}
+): LRESULT {.dynlib: "User32".}
 
 proc ShowWindow*(
   hWnd: HWND,
   nCmdShow: int32
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
-proc IsWindowVisible*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+proc IsWindowVisible*(hWnd: HWND): BOOL {.dynlib: "User32".}
 
 proc PeekMessageW*(
   lpMsg: LPMSG,
@@ -511,46 +514,46 @@ proc PeekMessageW*(
   wMsgFilterMin: UINT,
   wMsgFilterMax: UINT,
   wRemoveMsg: UINT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc TranslateMessage*(
   lpMsg: LPMSG
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc DispatchMessageW*(
   lpMsg: LPMSG
-): LRESULT {.importc, stdcall, dynlib: "User32".}
+): LRESULT {.dynlib: "User32".}
 
-proc GetActiveWindow*(): HWND {.importc, stdcall, dynlib: "User32".}
+proc GetActiveWindow*(): HWND {.dynlib: "User32".}
 
-proc DestroyWindow*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+proc DestroyWindow*(hWnd: HWND): BOOL {.dynlib: "User32".}
 
-proc GetDC*(hWnd: HWND): HDC {.importc, stdcall, dynlib: "User32".}
+proc GetDC*(hWnd: HWND): HDC {.dynlib: "User32".}
 
 proc ReleaseDC*(
   hWnd: HWND,
   hdc: HDC
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc MonitorFromWindow*(
   hWnd: HWND,
   dwFlags: DWORD
-): HMONITOR {.importc, stdcall, dynlib: "User32".}
+): HMONITOR {.dynlib: "User32".}
 
 proc GetMonitorInfoW*(
   hMonitor: HMONITOR,
   lpmi: LPMONITORINFO
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc GetWindowPlacement*(
   hWnd: HWND,
   lpwndpl: ptr WINDOWPLACEMENT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc SetWindowPlacement*(
   hWnd: HWND,
   lpwndpl: ptr WINDOWPLACEMENT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc SetWindowPos*(
   hWnd: HWND,
@@ -560,179 +563,181 @@ proc SetWindowPos*(
   cx: int32,
   cy: int32,
   uFlags: UINT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc GetWindowLongW*(
   hWnd: HWND,
   index: int32
-): LONG {.importc, stdcall, dynlib: "User32".}
+): LONG {.dynlib: "User32".}
 
 proc SetWindowLongW*(
   hWnd: HWND,
   index: int32,
   dwNewLong: LONG
-): LONG {.importc, stdcall, dynlib: "User32".}
+): LONG {.dynlib: "User32".}
 
 proc GetWindowRect*(
   hWnd: HWND,
   lpRect: LPRECT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc GetClientRect*(
   hWnd: HWND,
   lpRect: LPRECT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc ClientToScreen*(
   hWnd: HWND,
   lpPoint: LPPOINT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc ScreenToClient*(
   hWnd: HWND,
   lpPoint: LPPOINT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc SetPropW*(
   hWnd: HWND,
   lpString: LPCWSTR,
   hData: HANDLE
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc GetPropW*(
   hWnd: HWND,
   lpString: LPCWSTR
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc RemovePropW*(
   hWnd: HWND,
   lpString: LPCWSTR
-): HANDLE {.importc, stdcall, dynlib: "User32".}
+): HANDLE {.dynlib: "User32".}
 
-proc IsIconic*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+proc IsIconic*(hWnd: HWND): BOOL {.dynlib: "User32".}
 
-proc IsZoomed*(hWnd: HWND): BOOL {.importc, stdcall, dynlib: "User32".}
+proc IsZoomed*(hWnd: HWND): BOOL {.dynlib: "User32".}
 
 proc GetCursorPos*(
   lpPoint: LPPOINT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc TrackMouseEvent*(
   lpEventTrack: LPTRACKMOUSEEVENTSTRUCT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
-proc SetCapture*(hWnd: HWND): HWND {.importc, stdcall, dynlib: "User32".}
+proc SetCapture*(hWnd: HWND): HWND {.dynlib: "User32".}
 
-proc ReleaseCapture*(): BOOL {.importc, stdcall, dynlib: "User32".}
+proc ReleaseCapture*(): BOOL {.dynlib: "User32".}
 
-proc GetKeyState*(nVirtKey: int32): SHORT {.importc, stdcall, dynlib: "User32".}
+proc GetKeyState*(nVirtKey: int32): SHORT {.dynlib: "User32".}
 
 proc SetWindowTextW*(
   hWnd: HWND,
   lpString: LPWSTR
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc SendMessageW*(
   hWnd: HWND,
   uMsg: UINT,
   wParam: WPARAM,
   lParam: LPARAM
-): LRESULT {.importc, stdcall, dynlib: "User32".}
+): LRESULT {.dynlib: "User32".}
 
-proc GetDoubleClickTime*(): UINT {.importc, stdcall, dynlib: "User32".}
+proc GetDoubleClickTime*(): UINT {.dynlib: "User32".}
 
 proc OpenClipboard*(
   hWndNewOwner: HWND
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
-proc CloseClipboard*(): BOOL {.importc, stdcall, dynlib: "User32".}
+proc CloseClipboard*(): BOOL {.dynlib: "User32".}
 
-proc EmptyClipboard*(): BOOL {.importc, stdcall, dynlib: "User32".}
+proc EmptyClipboard*(): BOOL {.dynlib: "User32".}
 
 proc SetClipboardData*(
   uFormat: UINT,
   hMem: HANDLE
-): HANDLE {.importc, stdcall, dynlib: "User32".}
+): HANDLE {.dynlib: "User32".}
 
 proc GetClipboardData*(
   uFormat: UINT
-): HANDLE {.importc, stdcall, dynlib: "User32".}
+): HANDLE {.dynlib: "User32".}
 
 proc IsClipboardFormatAvailable*(
   format: UINT
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc CreateCaret*(
   hWnd: HWND,
   hBitamp: HBITMAP,
   nWidth: int32,
   nHeight: int32
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
-proc DestroyCaret*(): BOOL {.importc, stdcall, dynlib: "User32".}
+proc DestroyCaret*(): BOOL {.dynlib: "User32".}
 
 proc SetCaretPos*(
   x: int32,
   y: int32
-): BOOL {.importc, stdcall, dynlib: "User32".}
+): BOOL {.dynlib: "User32".}
 
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
-): int32 {.importc, stdcall, dynlib: "Gdi32".}
+): int32 {.dynlib: "Gdi32".}
 
 proc SetPixelFormat*(
   hdc: HDC,
   format: int32,
   ppfd: ptr PIXELFORMATDESCRIPTOR
-): BOOL {.importc, stdcall, dynlib: "Gdi32".}
+): BOOL {.dynlib: "Gdi32".}
 
-proc GetPixelFormat*(hdc: HDC): int32 {.importc, stdcall, dynlib: "Gdi32".}
+proc GetPixelFormat*(hdc: HDC): int32 {.dynlib: "Gdi32".}
 
 proc DescribePixelFormat*(
   hdc: HDC,
   iPixelFormat: int32,
   nBytes: UINT,
   ppfd: ptr PIXELFORMATDESCRIPTOR
-): int32 {.importc, stdcall, dynlib: "Gdi32".}
+): int32 {.dynlib: "Gdi32".}
 
-proc SwapBuffers*(hdc: HDC): BOOL {.importc, stdcall, dynlib: "Gdi32".}
+proc SwapBuffers*(hdc: HDC): BOOL {.dynlib: "Gdi32".}
 
 proc ImmGetContext*(
   hWnd: HWND
-): HIMC {.importc, stdcall, dynlib: "imm32".}
+): HIMC {.dynlib: "imm32".}
 
 proc ImmReleaseContext*(
   hWnd: HWND,
   hIMC: HIMC
-): BOOL {.importc, stdcall, dynlib: "imm32".}
+): BOOL {.dynlib: "imm32".}
 
 proc ImmSetCompositionWindow*(
   hIMC: HIMC,
   lpCompForm: LPCOMPOSITIONFORM
-): BOOL {.importc, stdcall, dynlib: "imm32".}
+): BOOL {.dynlib: "imm32".}
 
 proc ImmSetCandidateWindow*(
   hIMC: HIMC,
   lpCandidate: LPCANDIDATEFORM
-): BOOL {.importc, stdcall, dynlib: "imm32".}
+): BOOL {.dynlib: "imm32".}
 
 proc ImmGetCompositionStringW*(
   hIMC: HIMC,
   gcsValue: DWORD,
   lpBuf: LPVOID,
   dwBufLen: DWORD
-): LONG {.importc, stdcall, dynlib: "imm32".}
+): LONG {.dynlib: "imm32".}
 
 proc ImmNotifyIME*(
   hIMC: HIMC,
   dwAction: DWORD,
   dwIndex: DWORD,
   dwValue: DWORD
-): BOOL {.importc, stdcall, dynlib: "imm32".}
+): BOOL {.dynlib: "imm32".}
 
 proc ImmAssociateContextEx*(
   hWnd: HWND,
   hIMC: HIMC,
   dwFlags: DWORD
-): BOOL {.importc, stdcall, dynlib: "imm32".}
+): BOOL {.dynlib: "imm32".}
+
+{.pop.}

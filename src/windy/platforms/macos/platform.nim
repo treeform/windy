@@ -1,9 +1,9 @@
+import ../../common, vmath
+
 {.
   passL: "-framework Cocoa",
   compile: "macos.m",
 .}
-
-import ../../common, vmath
 
 type PlatformWindow* = ref object
   windowPtr: pointer
