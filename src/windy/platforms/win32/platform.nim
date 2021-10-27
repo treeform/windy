@@ -43,6 +43,7 @@ type
     onImeChange*: Callback
 
     title: string
+    runeInputEnabled: bool
     closeRequested, closed: bool
     perFrame: PerFrame
     trackMouseEventRegistered: bool
@@ -299,6 +300,9 @@ proc imeCursorIndex*(window: Window): int =
 proc imeCompositionString*(window: Window): string =
   window.imeCompositionString
 
+proc runeInputEnabled*(window: Window): bool =
+  window.runeInputEnabled
+
 proc `title=`*(window: Window, title: string) =
   window.title = title
   var wideTitle = title.wstr()
@@ -468,6 +472,13 @@ proc `closeRequested=`*(window: Window, closeRequested: bool) =
   if closeRequested:
     if window.onCloseRequest != nil:
       window.onCloseRequest()
+
+proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
+  window.runeInputEnabled = runeInputEnabled
+  if runeInputEnabled:
+    discard ImmAssociateContextEx(window.hWnd, 0, IACE_DEFAULT)
+  else:
+    discard ImmAssociateContextEx(window.hWnd, 0, 0)
 
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")
@@ -667,8 +678,10 @@ proc handleButtonRelease(window: Window, button: Button) =
     window.onButtonRelease(button)
 
 proc handleRune(window: Window, rune: Rune) =
+  if not window.runeInputEnabled:
+    return
   if rune.uint32 < 32 or (rune.uint32 > 126 and rune.uint32 < 160):
-      return
+    return
   if window.onRune != nil:
     window.onRune(rune)
 
@@ -917,10 +930,13 @@ proc close*(window: Window) =
 
 proc closeIme*(window: Window) =
   let hIMC = ImmGetContext(window.hWnd)
-  discard ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0)
-  discard ImmReleaseContext(window.hWnd, hIMC)
-  window.imeCursorIndex = 0
-  window.imeCompositionString = ""
+  if hIMC != 0:
+    discard ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0)
+    discard ImmReleaseContext(window.hWnd, hIMC)
+    window.imeCursorIndex = 0
+    window.imeCompositionString = ""
+    if window.onImeChange != nil:
+      window.onImeChange()
 
 proc newWindow*(
   title: string,
@@ -939,6 +955,7 @@ proc newWindow*(
 
   result = Window()
   result.title = title
+  result.runeInputEnabled = true
   result.hWnd = createWindow(
     windowClassName,
     title,
