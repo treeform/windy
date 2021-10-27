@@ -7,7 +7,6 @@ type
   XWindow = x.Window
 
   Window* = ref object
-    closeRequested*: bool
     onCloseRequest*: Callback
     onMove*: Callback
     onResize*: Callback
@@ -17,6 +16,7 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onImeChange*: Callback
 
     mousePos: IVec2
     buttonClicking, buttonToggle: set[Button]
@@ -24,6 +24,7 @@ type
     perFrame: PerFrame
     buttonPressed, buttonDown, buttonReleased: set[Button]
     lastClickTime: times.Time
+    lastClickPosition: IVec2
     clickSeqLen: int
 
     prevSize, prevPos: IVec2
@@ -34,7 +35,7 @@ type
     ic: XIC
     im: XIM
 
-    closed: bool
+    closeRequested, closed: bool
     `"_visible"`: bool
     `"_decorated"`: bool
     
@@ -52,7 +53,8 @@ type
 var
   quitRequested*: bool
   onQuitRequest*: Callback
-  doubleClickTime*: Duration = initDuration(milliseconds = 200)
+  multiClickTime*: Duration = initDuration(milliseconds = 200)
+  multiClickRadius*: float = 4
   
   initialized: bool
   windows: seq[Window]
@@ -611,8 +613,9 @@ proc pollEvents(window: Window) =
       window.perFrame.mousePrevPos = window.mousePos
       window.mousePos = ev.motion.pos
       window.perFrame.mouseDelta = window.mousePos - window.perFrame.mousePrevPos
-      window.buttonClicking = {}
-      window.clickSeqLen = 0
+      if (window.mousePos - window.lastClickPosition).vec2.length > multiClickRadius:
+        window.buttonClicking = {}
+        window.clickSeqLen = 0
       pushEvent onMouseMove
     
     of xeButtonPress, xeButtonRelease:
@@ -622,8 +625,9 @@ proc pollEvents(window: Window) =
       
       let
         now = getTime()
-        isDblclk = now - window.lastClickTime <= doubleClickTime
+        isDblclk = now - window.lastClickTime <= multiClickTime
       window.lastClickTime = now
+      window.lastClickPosition = window.mousePos
 
       case ev.button.button
       of 1:
@@ -631,16 +635,14 @@ proc pollEvents(window: Window) =
 
         if ev.kind == xeButtonRelease and MouseLeft in window.buttonClicking and isDblclk:
           inc window.clickSeqLen
-          case window.clickSeqLen:
-          of 1: discard
-          of 2: pushButtonEvent DoubleClick
-          of 3: pushButtonEvent TripleClick
-          else: pushButtonEvent QuadrupleClick
+          if window.clickSeqLen >= 2: pushButtonEvent DoubleClick
+          if window.clickSeqLen >= 3: pushButtonEvent TripleClick
+          if window.clickSeqLen >= 4: pushButtonEvent QuadrupleClick
 
       of 2: pushButtonEvent MouseMiddle
       of 3: pushButtonEvent MouseRight
-      of 8: pushButtonEvent MouseBackward
-      of 9: pushButtonEvent MouseForward
+      of 8: pushButtonEvent MouseButton4
+      of 9: pushButtonEvent MouseButton5
       
       of 4: pushScrollEvent vec2(1,  0) # scroll up
       of 5: pushScrollEvent vec2(-1, 0) # scroll down
@@ -698,7 +700,16 @@ proc buttonToggle*(window: Window): ButtonView =
   ButtonView window.buttonToggle
 
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  (set[Button])(buttonView).contains button
+  button in (set[Button])(buttonView)
+
+proc closeRequested*(window: Window): bool =
+  window.closeRequested
+
+proc `closeRequested=`*(window: Window, v: bool) =
+  window.closeRequested = v
+  if v:
+    if window.onCloseRequest != nil:
+      window.onCloseRequest()
 
 proc pollEvents* =
   let ws = windows
