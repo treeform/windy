@@ -881,7 +881,7 @@ proc wndProc(
 
 proc init*() =
   if initialized:
-    raise newException(WindyError, "Windy is already initialized")
+    return
   loadLibraries()
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
@@ -950,8 +950,7 @@ proc newWindow*(
   stencilBits = 8
 ): Window =
   ## Creates a new window. Intitializes Windy if needed.
-  if not initialized:
-    init()
+  init()
 
   result = Window()
   result.title = title
@@ -1067,8 +1066,7 @@ proc `[]`*(buttonView: ButtonView, button: Button): bool =
   button in buttonView.states
 
 proc getClipboardString*(): string =
-  if not initialized:
-    init()
+  init()
 
   if IsClipboardFormatAvailable(CF_UNICODETEXT) == FALSE:
     return ""
@@ -1086,8 +1084,7 @@ proc getClipboardString*(): string =
   discard CloseClipboard()
 
 proc setClipboardString*(value: string) =
-  if not initialized:
-    init()
+  init()
 
   var wideValue = value.wstr()
 
