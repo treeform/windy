@@ -312,7 +312,7 @@ type
 
 protocol:
   Display:
-    proc sync: Callback
+    proc syncRequest: Callback
     proc registry: Registry
 
     proc error(objId: Id, code: int, message: string): event
@@ -508,6 +508,18 @@ protocol:
     proc placeBelow(sibling: Surface)
     proc setSync
     proc setDesync
+
+
+proc sync*(this: Display) =
+  if not this.ids.hasKey 2:
+    this.ids[2] = Callback(display: this, id: Id 2)
+  
+  var done: bool
+  this.ids[2].Callback.onDone:
+    done = true
+  this.marshal(0, Id 2)
+  while not done: this.pollNextEvent
+
 
 proc bindInterface*(this: Registry, T: type, name: int, iface: string, version: int): T =
   result = this.display.new(T)
