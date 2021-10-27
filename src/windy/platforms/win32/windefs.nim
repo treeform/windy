@@ -13,6 +13,8 @@ type
   BOOL* = int32
   LPBOOL* = ptr BOOL
   LONG* = int32
+  USHORT* = uint16
+  LANGID* = USHORT
   WORD* = uint16
   ATOM* = WORD
   DWORD* = int32
@@ -35,6 +37,8 @@ type
   HBRUSH* = HANDLE
   HMODULE* = HINSTANCE
   HGLOBAL* = HANDLE
+  HIMC* = HANDLE
+  HBITMAP* = HANDLE
   LPVOID* = pointer
   UINT* = uint32
   WPARAM* = UINT_PTR
@@ -126,6 +130,17 @@ type
     rcWork*: RECT
     dwFlags*: DWORD
   LPMONITORINFO* = ptr MONITORINFO
+  COMPOSITIONFORM* {.pure.} = object
+    dwStyle*: DWORD
+    ptCurrentPos*: POINT
+    rcArea*: RECT
+  LPCOMPOSITIONFORM* = ptr COMPOSITIONFORM
+  CANDIDATEFORM* {.pure.} = object
+    dwIndex*: DWORD
+    dwStyle*: DWORD
+    ptCurrentPos*: POINT
+    rcArea*: RECT
+  LPCANDIDATEFORM* = ptr CANDIDATEFORM
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -236,6 +251,10 @@ const
   WM_SYSKEYUP* = 0x0105
   WM_SYSCHAR* = 0x0106
   WM_UNICHAR* = 0x0109
+  WM_IME_STARTCOMPOSITION* = 0x010D
+  WM_IME_ENDCOMPOSITION* = 0x010E
+  WM_IME_COMPOSITION* = 0x010F
+  WM_QUERYUISTATE* = 0x0129
   WM_SYSCOMMAND* = 0x0112
   WM_MOUSEMOVE* = 0x0200
   WM_LBUTTONDOWN* = 0x0201
@@ -248,6 +267,8 @@ const
   WM_MBUTTONUP* = 0x0208
   WM_MBUTTONDBLCLK* = 0x0209
   WM_MOUSEWHEEL* = 0x020A
+  WM_XBUTTONDOWN* = 0x020B
+  WM_XBUTTONUP* = 0x020C
   WM_MOUSEHWHEEL* = 0x020E
   WM_IME_SETCONTEXT* = 0x0281
   WM_IME_NOTIFY* = 0x0282
@@ -338,6 +359,31 @@ const
   VK_PROCESSKEY* = 0xE5
   CF_UNICODETEXT* = 13
   GMEM_MOVEABLE* = 0x2
+  XBUTTON1* = 0x0001
+  XBUTTON2* = 0x0002
+  CFS_DEFAULT* = 0x0000
+  CFS_RECT* = 0x0001
+  CFS_POINT* = 0x0002
+  CFS_FORCE_POSITION* = 0x0020
+  CFS_CANDIDATEPOS* = 0x0040
+  CFS_EXCLUDE* = 0x0080
+  GCS_COMPREADSTR* = 0x0001
+  GCS_COMPREADATTR* = 0x0002
+  GCS_COMPREADCLAUSE* = 0x0004
+  GCS_COMPSTR* = 0x0008
+  GCS_COMPATTR* = 0x0010
+  GCS_COMPCLAUSE* = 0x0020
+  GCS_CURSORPOS* = 0x0080
+  GCS_DELTASTART* = 0x0100
+  GCS_RESULTREADSTR* = 0x0200
+  GCS_RESULTREADCLAUSE* = 0x0400
+  GCS_RESULTSTR* = 0x0800
+  GCS_RESULTCLAUSE* = 0x1000
+  CPS_COMPLETE* = 0x0001
+  CPS_CONVERT* = 0x0002
+  CPS_REVERT* = 0x0003
+  CPS_CANCEL* = 0x0004
+  NI_COMPOSITIONSTR* = 0x0015
 
 proc GetLastError*(): DWORD {.importc, stdcall, dynlib: "Kernel32".}
 
@@ -399,7 +445,9 @@ proc GlobalAlloc*(
 
 proc GlobalFree*(
   hMem: HGLOBAL
-): HGLOBAL{.importc, stdcall, dynlib: "Kernel32".}
+): HGLOBAL {.importc, stdcall, dynlib: "Kernel32".}
+
+proc GetUserDefaultUILanguage*(): LANGID {.importc, stdcall, dynlib: "Kernel32".}
 
 proc LoadCursorW*(
   hInstance: HINSTANCE,
@@ -611,6 +659,20 @@ proc IsClipboardFormatAvailable*(
   format: UINT
 ): BOOL {.importc, stdcall, dynlib: "User32".}
 
+proc CreateCaret*(
+  hWnd: HWND,
+  hBitamp: HBITMAP,
+  nWidth: int32,
+  nHeight: int32
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc DestroyCaret*(): BOOL {.importc, stdcall, dynlib: "User32".}
+
+proc SetCaretPos*(
+  x: int32,
+  y: int32
+): BOOL {.importc, stdcall, dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
@@ -632,3 +694,27 @@ proc DescribePixelFormat*(
 ): int32 {.importc, stdcall, dynlib: "Gdi32".}
 
 proc SwapBuffers*(hdc: HDC): BOOL {.importc, stdcall, dynlib: "Gdi32".}
+
+proc ImmGetContext*(
+  hWnd: HWND
+): HIMC {.importc, stdcall, dynlib: "imm32".}
+
+proc ImmReleaseContext*(
+  hWnd: HWND, hIMC: HIMC
+): BOOL {.importc, stdcall, dynlib: "imm32".}
+
+proc ImmSetCompositionWindow*(
+  hIMC: HIMC, lpCompForm: LPCOMPOSITIONFORM
+): BOOL {.importc, stdcall, dynlib: "imm32".}
+
+proc ImmSetCandidateWindow*(
+  hIMC: HIMC, lpCandidate: LPCANDIDATEFORM
+): BOOL {.importc, stdcall, dynlib: "imm32".}
+
+proc ImmGetCompositionStringW*(
+  hIMC: HIMC, gcsValue: DWORD, lpBuf: LPVOID, dwBufLen: DWORD
+): LONG {.importc, stdcall, dynlib: "imm32".}
+
+proc ImmNotifyIME*(
+  hIMC: HIMC, dwAction: DWORD, dwIndex: DWORD, dwValue: DWORD
+): BOOL {.importc, stdcall, dynlib: "imm32".}

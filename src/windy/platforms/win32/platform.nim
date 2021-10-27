@@ -31,7 +31,6 @@ const
 
 type
   Window* = ref object
-    closeRequested*: bool
     onCloseRequest*: Callback
     onMove*: Callback
     onResize*: Callback
@@ -43,7 +42,7 @@ type
     onRune*: RuneCallback
 
     title: string
-    closed: bool
+    closeRequested, closed: bool
     perFrame: PerFrame
     trackMouseEventRegistered: bool
     mousePos: IVec2
@@ -53,6 +52,10 @@ type
     tripleClickTimes: array[2, float64]
     quadrupleClickTimes: array[3, float64]
     multiClickPositions: array[3, IVec2]
+
+    imePos*: IVec2
+    imeCursorIndex: int
+    imeCompositionString: string
 
     hWnd: HWND
     hdc: HDC
@@ -286,6 +289,15 @@ proc mouseDelta*(window: Window): IVec2 =
 proc scrollDelta*(window: Window): Vec2 =
   window.perFrame.scrollDelta
 
+proc closeRequested*(window: Window): bool =
+  window.closeRequested
+
+proc imeCursorIndex*(window: Window): int =
+  window.imeCursorIndex
+
+proc imeCompositionString*(window: Window): string =
+  window.imeCompositionString
+
 proc `title=`*(window: Window, title: string) =
   window.title = title
   var wideTitle = title.wstr()
@@ -449,6 +461,12 @@ proc `maximized=`*(window: Window, maximized: bool) =
   else:
     cmd = SW_RESTORE
   discard ShowWindow(window.hWnd, cmd)
+
+proc `closeRequested=`*(window: Window, closeRequested: bool) =
+  window.closeRequested = closeRequested
+  if closeRequested:
+    if window.onCloseRequest != nil:
+      window.onCloseRequest()
 
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")
@@ -734,14 +752,19 @@ proc wndProc(
     if window.onScroll != nil:
       window.onScroll()
     return 0
-  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN,
-    WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP:
+  of WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN, WM_XBUTTONDOWN,
+    WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP, WM_XBUTTONUP:
     let button =
       case uMsg:
       of WM_LBUTTONDOWN, WM_LBUTTONUP:
         MouseLeft
       of WM_RBUTTONDOWN, WM_RBUTTONUP:
         MouseRight
+      of WM_XBUTTONDOWN, WM_XBUTTONUP:
+        if HIWORD(wParam) == XBUTTON1:
+          MouseButton4
+        else:
+          MouseButton5
       else:
         MouseMiddle
     if uMsg in {WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
@@ -776,6 +799,62 @@ proc wndProc(
     let codepoint = wParam.uint32
     window.handleRune(Rune(codepoint))
     return 0
+  of WM_IME_STARTCOMPOSITION:
+    let hIMC = ImmGetContext(window.hWnd)
+
+    var compositionPos: COMPOSITIONFORM
+    compositionPos.dwStyle = CFS_POINT
+    compositionPos.ptCurrentPos = POINT(x: window.imePos.x, y: window.imePos.y)
+    discard ImmSetCompositionWindow(hIMC, compositionPos.addr)
+
+    var candidatePos: CANDIDATEFORM
+    candidatePos.dwIndex = 0
+    candidatePos.dwStyle = CFS_CANDIDATEPOS
+    candidatePos.ptCurrentPos = POINT(x: window.imePos.x, y: window.imePos.y)
+    discard ImmSetCandidateWindow(hIMC, candidatePos.addr)
+
+    var exclude: CANDIDATEFORM
+    exclude.dwIndex = 0
+    exclude.dwStyle = CFS_EXCLUDE
+    exclude.ptCurrentPos = POINT(x: window.imePos.x, y: window.imePos.y)
+    exclude.rcArea = RECT(
+      left: window.imePos.x,
+      top: window.imePos.y,
+      right: window.imePos.x + 1,
+      bottom: window.imePos.x + 1
+    )
+    discard ImmSetCandidateWindow(hIMC, exclude.addr)
+
+    discard ImmReleaseContext(window.hWnd, hIMC)
+    return 0
+  of WM_IME_COMPOSITION:
+    let hIMC = ImmGetContext(window.hWnd)
+
+    if (lParam and GCS_CURSORPOS) != 0:
+      window.imeCursorIndex = ImmGetCompositionStringW(
+        hIMC, GCS_CURSORPOS, nil, 0
+      )
+
+    if (lParam and GCS_COMPSTR) != 0:
+      let len = ImmGetCompositionStringW(
+        hIMC, GCS_COMPSTR, nil, 0
+      )
+      if len > 0:
+        var buf = newString(len + 1) # Include 1 extra byte for WCHAR null terminator
+        discard ImmGetCompositionStringW(
+          hIMC, GCS_COMPSTR, buf[0].addr, len
+        )
+        window.imeCompositionString = $cast[ptr WCHAR](buf[0].addr)
+      else:
+        window.imeCompositionString = ""
+
+    if (lParam and GCS_RESULTSTR) != 0:
+      # The input runes will come in through WM_CHAR events
+      window.imeCursorIndex = 0
+      window.imeCompositionString = ""
+
+    discard ImmReleaseContext(window.hWnd, hIMC)
+    # Do not return 0 here
   else:
     discard
 
@@ -829,6 +908,13 @@ proc swapBuffers*(window: Window) =
 proc close*(window: Window) =
   destroy window
   window.closed = true
+
+proc closeIme*(window: Window) =
+  let hIMC = ImmGetContext(window.hWnd)
+  discard ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0)
+  discard ImmReleaseContext(window.hWnd, hIMC)
+  window.imeCursorIndex = 0
+  window.imeCompositionString = ""
 
 proc newWindow*(
   title: string,
