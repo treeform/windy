@@ -155,7 +155,7 @@ macro protocol(body) =
         `unms`
   
   result.insert 0, nnkTypeSection.newTree( # type declaration
-    types[1..^1].mapit( # do not redefine Display
+    types.filterit($it[0] notin ["Display", "Callback"]).mapit( # do not redefine Display and Callback
       nnkTypeDef.newTree(
         nnkPostfix.newTree(ident"*", it[0]),
         newEmptyNode(),
@@ -511,9 +511,6 @@ protocol:
 
 
 proc sync*(this: Display) =
-  if not this.ids.hasKey 2:
-    this.ids[2] = Callback(display: this, id: Id 2)
-  
   var done: bool
   this.ids[2].Callback.onDone:
     done = true
