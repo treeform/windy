@@ -53,7 +53,7 @@ type
 var
   quitRequested*: bool
   onQuitRequest*: Callback
-  multiClickTime*: Duration = initDuration(milliseconds = 200)
+  multiClickInterval*: Duration = initDuration(milliseconds = 200)
   multiClickRadius*: float = 4
   
   initialized: bool
@@ -62,6 +62,8 @@ var
   display: Display
   decoratedAtom: Atom
   wmForDecoratedKind: WmForDecoratedKind
+  clipboardWindow: XWindow
+  clipboardContent: string
 
 
 proc atom[name: static string](): Atom =
@@ -459,6 +461,7 @@ proc newWindow*(
   
   transparent = false, # note that transparency CANNOT be changed after window was created
 ): Window =
+  ## Creates a new window. Intitializes Windy if needed.
   init()
   new result
   result.`"_decorated"` = true
@@ -625,7 +628,7 @@ proc pollEvents(window: Window) =
       
       let
         now = getTime()
-        isDblclk = now - window.lastClickTime <= multiClickTime
+        isDblclk = now - window.lastClickTime <= multiClickInterval
       window.lastClickTime = now
       window.lastClickPosition = window.mousePos
 
@@ -711,6 +714,82 @@ proc `closeRequested=`*(window: Window, v: bool) =
     if window.onCloseRequest != nil:
       window.onCloseRequest()
 
+
+proc initClipboard =
+  if clipboardWindow != 0: return
+  clipboardWindow = display.XCreateSimpleWindow(display.defaultRootWindow, 0, 0, 1, 1, 0, 0, 0)
+
+proc processClipboardEvents: bool =
+  var ev: XEvent
+  
+  proc checkEvent(d: Display, event: ptr XEvent, userData: pointer): bool {.cdecl.} =
+    event.any.window == cast[Window](userData).handle
+
+  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](clipboardWindow)):
+    case ev.kind
+    of xeSelection:
+      template e: untyped = ev.selection
+      
+      if e.property == 0 or e.selection != atom"CLIPBOARD":
+        continue
+      
+      clipboardContent = clipboardWindow.property(atom"windy_clipboardTargetProperty").data
+      clipboardWindow.delProperty(atom"windy_clipboardTargetProperty")
+
+      return true
+    
+    of xeSelectionRequest:
+      template e: untyped = ev.selectionRequest
+
+      var resp = XSelectionEvent(
+        kind: xeSelection,
+        requestor: e.requestor,
+        selection: e.selection,
+        property: e.property,
+        target: e.target,
+        time: e.time
+      )
+
+      if e.selection == atom"CLIPBOARD":
+        if e.target == atom"TARGETS":
+          # request requests that we can handle
+          e.requestor.setProperty(e.property, xaAtom, 32, @[atom"TARGETS", atom"TEXT", xaString, atom"UTF8_STRING"].asString)
+          e.requestor.send(XEvent(selection: resp), propagate=true)
+          continue
+
+        elif e.target in {xaString, atom"TEXT", atom"UTF8_STRING"}:
+          # request clipboard data
+          e.requestor.setProperty(e.property, xaAtom, 8, clipboardContent)
+          e.requestor.send(XEvent(selection: resp), propagate=true)
+          continue
+      
+      # we can't handle this request
+      resp.property = 0
+      e.requestor.send(XEvent(selection: resp), propagate=true)
+
+    else: discard
+
+
+proc getClipboardString*: string =
+  initClipboard()
+  if display.XGetSelectionOwner(atom"CLIPBOARD") == 0:
+    return ""
+  
+  if display.XGetSelectionOwner(atom"CLIPBOARD") == clipboardWindow:
+    return clipboardContent
+  
+  display.XConvertSelection(atom"CLIPBOARD", atom"UTF8_STRING", atom"windy_clipboardTargetProperty", clipboardWindow)
+  
+  while not processClipboardEvents(): discard
+  result = clipboardContent
+  clipboardContent = ""
+
+proc setClipboardString*(s: string) =
+  initClipboard()
+  clipboardContent = s
+  display.XSetSelectionOwner(atom"CLIPBOARD", clipboardWindow)
+
+
 proc pollEvents* =
   let ws = windows
   windows = @[]
@@ -721,5 +800,7 @@ proc pollEvents* =
     else:
       windows.add window
 
+  if clipboardWindow != 0:
+    discard processClipboardEvents()
   for window in windows:
     pollEvents window
