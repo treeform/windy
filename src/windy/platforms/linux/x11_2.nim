@@ -141,6 +141,11 @@ proc newWindow*(
   stencilBits = 8
 ): Window =
   discard
+  # @levovix0, you noted in the x11 file that window constructor can't set
+  # opengl version, msaa and stencilBits and args mustn't set depthBits directly
+
+  # I am curious why this is, and if we can work to make those parameters work?
+  # If Discord would be easier, you can add me as guzba#7261
 
 proc buttonDown*(window: Window): ButtonView =
   discard
