@@ -15,8 +15,8 @@ type
     MouseLeft
     MouseRight
     MouseMiddle
-    MouseBackward
-    MouseForward
+    MouseButton4
+    MouseButton5
     DoubleClick
     TripleClick
     QuadrupleClick

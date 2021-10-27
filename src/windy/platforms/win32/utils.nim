@@ -9,7 +9,7 @@ proc wstr*(str: string): string =
     nil,
     0
   )
-  result = newString(wlen * 2 + 1)
+  result.setLen(wlen * 2 + 1)
   discard MultiByteToWideChar(
     CP_UTF8,
     0,
@@ -18,6 +18,31 @@ proc wstr*(str: string): string =
     cast[ptr WCHAR](result[0].addr),
     wlen
   )
+
+proc `$`*(p: ptr WCHAR): string =
+  let len = WideCharToMultiByte(
+    CP_UTF8,
+    0,
+    p,
+    -1,
+    nil,
+    0,
+    nil,
+    nil
+  )
+  if len > 0:
+    result.setLen(len)
+    discard WideCharToMultiByte(
+      CP_UTF8,
+      0,
+      p,
+      -1,
+      result[0].addr,
+      len,
+      nil,
+      nil
+    )
+    result.setLen(len - 1)
 
 proc checkHRESULT*(hresult: HRESULT) =
   if hresult != S_OK:
@@ -243,5 +268,15 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_UNICHAR"
   of WM_SYSCOMMAND:
     "WM_SYSCOMMAND"
+  of WM_XBUTTONDOWN:
+    "WM_XBUTTONDOWN"
+  of WM_XBUTTONUP:
+    "WM_XBUTTONUP"
+  of WM_IME_STARTCOMPOSITION:
+    "WM_IME_STARTCOMPOSITION"
+  of WM_IME_ENDCOMPOSITION:
+    "WM_IME_ENDCOMPOSITION"
+  of WM_IME_COMPOSITION:
+    "WM_IME_COMPOSITION"
   else:
     "WM " & $wm & " " & $toHex(wm)
