@@ -40,6 +40,7 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onImeChange*: Callback
 
     title: string
     closeRequested, closed: bool
@@ -852,6 +853,11 @@ proc wndProc(
       # The input runes will come in through WM_CHAR events
       window.imeCursorIndex = 0
       window.imeCompositionString = ""
+
+    if (lParam and (GCS_CURSORPOS or GCS_COMPSTR or GCS_RESULTSTR)) != 0:
+      # If we received a message that updates IME state, trigger the callback
+      if window.onImeChange != nil:
+        window.onImeChange()
 
     discard ImmReleaseContext(window.hWnd, hIMC)
     # Do not return 0 here
