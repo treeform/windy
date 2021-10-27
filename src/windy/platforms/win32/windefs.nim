@@ -384,6 +384,9 @@ const
   CPS_REVERT* = 0x0003
   CPS_CANCEL* = 0x0004
   NI_COMPOSITIONSTR* = 0x0015
+  IACE_CHILDREN* = 0x0001
+  IACE_DEFAULT* = 0x0010
+  IACE_IGNORENOCONTEXT* = 0x0020
 
 proc GetLastError*(): DWORD {.importc, stdcall, dynlib: "Kernel32".}
 
@@ -700,21 +703,36 @@ proc ImmGetContext*(
 ): HIMC {.importc, stdcall, dynlib: "imm32".}
 
 proc ImmReleaseContext*(
-  hWnd: HWND, hIMC: HIMC
+  hWnd: HWND,
+  hIMC: HIMC
 ): BOOL {.importc, stdcall, dynlib: "imm32".}
 
 proc ImmSetCompositionWindow*(
-  hIMC: HIMC, lpCompForm: LPCOMPOSITIONFORM
+  hIMC: HIMC,
+  lpCompForm: LPCOMPOSITIONFORM
 ): BOOL {.importc, stdcall, dynlib: "imm32".}
 
 proc ImmSetCandidateWindow*(
-  hIMC: HIMC, lpCandidate: LPCANDIDATEFORM
+  hIMC: HIMC,
+  lpCandidate: LPCANDIDATEFORM
 ): BOOL {.importc, stdcall, dynlib: "imm32".}
 
 proc ImmGetCompositionStringW*(
-  hIMC: HIMC, gcsValue: DWORD, lpBuf: LPVOID, dwBufLen: DWORD
+  hIMC: HIMC,
+  gcsValue: DWORD,
+  lpBuf: LPVOID,
+  dwBufLen: DWORD
 ): LONG {.importc, stdcall, dynlib: "imm32".}
 
 proc ImmNotifyIME*(
-  hIMC: HIMC, dwAction: DWORD, dwIndex: DWORD, dwValue: DWORD
+  hIMC: HIMC,
+  dwAction: DWORD,
+  dwIndex: DWORD,
+  dwValue: DWORD
+): BOOL {.importc, stdcall, dynlib: "imm32".}
+
+proc ImmAssociateContextEx*(
+  hWnd: HWND,
+  hIMC: HIMC,
+  dwFlags: DWORD
 ): BOOL {.importc, stdcall, dynlib: "imm32".}
