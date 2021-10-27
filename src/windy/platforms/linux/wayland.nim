@@ -13,4 +13,4 @@ reg.onGlobal:
   of "wl_compositor":
     compositor = reg.bindInterface(Compositor, name, iface, version)
 
-display.pollEvents
+sync display

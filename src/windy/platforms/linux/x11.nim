@@ -36,9 +36,9 @@ type
     im: XIM
 
     closeRequested, closed: bool
+    runeInputEnabled: bool
     `"_visible"`: bool
     `"_decorated"`: bool
-    
     `"_focused"`: bool
 
   WmForDecoratedKind {.pure.} = enum
@@ -445,6 +445,13 @@ proc contentScale*(window: Window): float32 =
   (s.size.vec2 * pixelsPerMillimeter / s.msize.vec2 / defaultScreenDpi).x
 
 
+proc runeInputEnabled*(window: Window): bool =
+  window.runeInputEnabled
+
+proc `runeInputEnabled=`*(window: Window, v: bool) =
+  window.runeInputEnabled = v
+
+
 proc newWindow*(
   title: string,
   size: IVec2,
@@ -465,6 +472,7 @@ proc newWindow*(
   init()
   new result
   result.`"_decorated"` = true
+  result.runeInputEnabled = true
   
   let root = display.defaultRootWindow
   
@@ -666,7 +674,7 @@ proc pollEvents(window: Window) =
         pushButtonEvent key, ev.kind == xeKeyPress
 
       # handle text input
-      if ev.kind == xeKeyPress and window.ic != nil and (ev.key.state and ControlMask) == 0:
+      if window.runeInputEnabled and ev.kind == xeKeyPress and window.ic != nil and (ev.key.state and ControlMask) == 0:
         var
           status: cint
           s = newString(16)
