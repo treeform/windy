@@ -118,10 +118,10 @@ type
     Numpad7
     Numpad8
     Numpad9
-    NumpadDecimal  # .
+    NumpadDecimal   # .
     NumpadEnter
-    NumpadAdd      # +
-    NumpadSubtract # -
-    NumpadMultiply # *
-    NumpadDivide   # /
-    NumpadEqual    # =
+    NumpadAdd       # +
+    NumpadSubtract  # -
+    NumpadMultiply  # *
+    NumpadDivide    # /
+    NumpadEqual     # =

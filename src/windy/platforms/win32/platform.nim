@@ -63,8 +63,7 @@ type
     hdc: HDC
     hglrc: HGLRC
 
-  ButtonView* = object
-    states: set[Button]
+  ButtonView* = distinct set[Button]
 
   ExitFullscreenInfo = ref object
     maximized: bool
@@ -881,7 +880,7 @@ proc wndProc(
 
 proc init*() =
   if initialized:
-    raise newException(WindyError, "Windy is already initialized")
+    return
   loadLibraries()
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
@@ -950,8 +949,7 @@ proc newWindow*(
   stencilBits = 8
 ): Window =
   ## Creates a new window. Intitializes Windy if needed.
-  if not initialized:
-    init()
+  init()
 
   result = Window()
   result.title = title
@@ -1040,7 +1038,7 @@ proc newWindow*(
 
     result.makeContextCurrent()
 
-    if wglSwapIntervalEXT(if vsync: 1 else : 0) == 0:
+    if wglSwapIntervalEXT(if vsync: 1 else: 0) == 0:
       raise newException(WindyError, "Error setting swap interval")
 
     windows.add(result)
@@ -1052,23 +1050,22 @@ proc newWindow*(
     raise e
 
 proc buttonDown*(window: Window): ButtonView =
-  ButtonView(states: window.buttonDown)
+  ButtonView window.buttonDown
 
 proc buttonPressed*(window: Window): ButtonView =
-  ButtonView(states: window.buttonPressed)
+  ButtonView window.buttonPressed
 
 proc buttonReleased*(window: Window): ButtonView =
-  ButtonView(states: window.buttonReleased)
+  ButtonView window.buttonReleased
 
 proc buttonToggle*(window: Window): ButtonView =
-  ButtonView(states: window.buttonToggle)
+  ButtonView window.buttonToggle
 
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  button in buttonView.states
+  button in (set[Button])buttonView
 
 proc getClipboardString*(): string =
-  if not initialized:
-    init()
+  init()
 
   if IsClipboardFormatAvailable(CF_UNICODETEXT) == FALSE:
     return ""
@@ -1086,8 +1083,7 @@ proc getClipboardString*(): string =
   discard CloseClipboard()
 
 proc setClipboardString*(value: string) =
-  if not initialized:
-    init()
+  init()
 
   var wideValue = value.wstr()
 
