@@ -63,8 +63,7 @@ type
     hdc: HDC
     hglrc: HGLRC
 
-  ButtonView* = object
-    states: set[Button]
+  ButtonView* = distinct set[Button]
 
   ExitFullscreenInfo = ref object
     maximized: bool
@@ -1051,19 +1050,19 @@ proc newWindow*(
     raise e
 
 proc buttonDown*(window: Window): ButtonView =
-  ButtonView(states: window.buttonDown)
+  ButtonView window.buttonDown
 
 proc buttonPressed*(window: Window): ButtonView =
-  ButtonView(states: window.buttonPressed)
+  ButtonView window.buttonPressed
 
 proc buttonReleased*(window: Window): ButtonView =
-  ButtonView(states: window.buttonReleased)
+  ButtonView window.buttonReleased
 
 proc buttonToggle*(window: Window): ButtonView =
-  ButtonView(states: window.buttonToggle)
+  ButtonView window.buttonToggle
 
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  button in buttonView.states
+  button in (set[Button])buttonView
 
 proc getClipboardString*(): string =
   init()
