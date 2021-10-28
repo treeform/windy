@@ -1,5 +1,5 @@
 include basic
-import macros, strformat, sequtils, vmath
+import macros, strformat, sequtils, vmath, options
 
 proc unshl(x: int): int =
   var x = x
@@ -7,8 +7,13 @@ proc unshl(x: int): int =
     inc result
     x = x shr 1
 
-proc toBitfield(x: enum): int = 1 shl x.int
-proc fromBitfield(x: int, T: type): T = x.unshl.T
+proc toBitfield(x: Option[enum]): int =
+  if x.isNone: 0
+  else: 1 shl x.get.int
+proc fromBitfield(x: int, t: type[Option]): t =
+  type T = t.T
+  if x == 0: none T
+  else: some x.unshl.T
 
 macro protocol(body) =
   proc injectAllParams(x: NimNode): NimNode =
@@ -247,7 +252,6 @@ type
     uyvy = 0x59565955
   
   DndAction* {.pure.} = enum
-    none
     copy
     move
     ask
@@ -358,11 +362,11 @@ protocol:
     proc receive(mime: string, fd: FileDescriptor)
     proc destroy
     proc finish
-    proc setActions(actions: set[DndAction.copy..DndAction.ask], prefered: bitField DndAction)
+    proc setActions(actions: set[DndAction], prefered: bitField Option[DndAction])
 
     proc offer(mime: string): event
     proc sourceActions(actions: set[DndAction]): event
-    proc action(action: bitField DndAction): event
+    proc action(action: bitField Option[DndAction]): event
 
 
   DataSource:
@@ -375,7 +379,7 @@ protocol:
     proc cancelled: event
     proc dndDropPerformed: event
     proc dndFinished: event
-    proc action(action: bitField DndAction): event
+    proc action(action: bitField Option[DndAction]): event
 
 
   DataDevice:

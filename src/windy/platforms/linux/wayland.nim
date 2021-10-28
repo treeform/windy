@@ -8,7 +8,7 @@ let reg = display.registry
 var compositor: Compositor
 
 reg.onGlobal:
-  echo (id: name.uint32, iface: iface, version: version)
+  echo (name: name, iface: iface, version: version)
   case iface
   of "wl_compositor":
     compositor = reg.bindInterface(Compositor, name, iface, version)
