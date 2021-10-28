@@ -15,10 +15,6 @@ type
 
     socket: Socket
     ids: Table[uint32, Proxy]
-    lastId: Id
-  
-  Callback* = ref object of Proxy
-    done: proc(cbData: uint32)
 
 
 proc `//>`[T: SomeInteger](a, b: T): T =
@@ -44,12 +40,48 @@ proc asString[T](x: openarray[T]): string =
   cast[string](x.asSeq(char))
 
 
+proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
+  new result, (proc(d: Display) = close d.socket)
+  
+  result.display = result
+  result.id = Id 1
+  result.ids[1] = result
+
+  let d = result
+  result.deleteId = proc(id: Id) =
+    d.ids.del id.uint32
+  
+  var name =
+    if name != "": $name
+    else: "wayland-0"
+  
+  if not name.isAbsolute:
+    var runtimeDir = getEnv("XDG_RUNTIME_DIR")
+    if runtimeDir == "": raise WindyError.newException("XDG_RUNTIME_DIR not set in the environment")
+    name = runtimeDir / name
+
+  let sock = createNativeSocket(posix.AF_UNIX, posix.SOCK_STREAM or posix.SOCK_CLOEXEC, 0)
+  if sock == osInvalidSocket: raise WindyError.newException("Failed to create socket")
+
+  var a = "\1\0" & name
+  
+  if sock.connect(cast[ptr SockAddr](a[0].addr), uint32 name.len + 2) < 0:
+    close sock
+    raise WindyError.newException("Failed to connect to wayland server")
+  
+  result.socket = newSocket(sock, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
+
+
 proc new(d: Display, t: type): t =
-  inc d.lastId
+  proc findHole: uint32 =
+    for k in 2 ..< (2 + d.ids.len.uint32):
+      if not d.ids.hasKey k: return k
+
+  let id = findHole()
   new result
   result.display = d
-  result.id = d.lastId
-  d.ids[d.lastId.uint32] = result
+  result.id = Id id
+  d.ids[id] = result
 
 proc destroy*(x: Proxy) =
   x.display.ids.del x.id.uint32
@@ -170,42 +202,3 @@ proc pollNextEvent(d: Display) =
 
   if not d.ids.hasKey id: return # event for destroyed object
   d.ids[id].unmarshal(op.int, data)
-
-
-proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
-  new result, (proc(d: Display) = close d.socket)
-  
-  result.display = result
-  result.id = Id 1
-  result.lastId = Id 1
-  result.ids[1] = result
-
-  let d = result
-  result.deleteId = proc(id: Id) =
-    if id.uint32 == 2: return # re-use Callback reserved for syncing
-    d.ids.del id.uint32
-  
-  var name =
-    if name != "": $name
-    else: "wayland-0"
-  
-  if not name.isAbsolute:
-    var runtimeDir = getEnv("XDG_RUNTIME_DIR")
-    if runtimeDir == "": raise WindyError.newException("XDG_RUNTIME_DIR not set in the environment")
-    name = runtimeDir / name
-
-  let sock = createNativeSocket(posix.AF_UNIX, posix.SOCK_STREAM or posix.SOCK_CLOEXEC, 0)
-  if sock == osInvalidSocket: raise WindyError.newException("Failed to create socket")
-
-  var a = "\1\0" & name
-  
-  if sock.connect(cast[ptr SockAddr](a[0].addr), uint32 name.len + 2) < 0:
-    close sock
-    raise WindyError.newException("Failed to connect to wayland server")
-  
-  result.socket = newSocket(sock, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
-
-  # reserve Callback for syncing
-  discard result.new(Callback)
-  result.marshal(0, Id 2)
-  result.pollNextEvent
