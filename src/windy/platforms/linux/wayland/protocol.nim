@@ -54,6 +54,9 @@ macro protocol(body) =
     var i = 0
 
     for a in x[1]:
+      if a.kind == nnkCommand and a[0] == ident"iface":
+        continue #TODO: auto iface require
+
       let p = a.params
 
       if p[0] == ident"event":
@@ -256,21 +259,6 @@ type
     move
     ask
   
-  Edge* {.pure.} = enum
-    top
-    bottom
-    left
-    right
-
-  TransientFlag* {.pure.} = enum
-    inactive
-  
-  FullscreenMethod* {.pure.} = enum
-    default
-    scale
-    driver
-    fill
-  
   Transform* {.pure.} = enum
     normal
     rotated90
@@ -311,6 +299,41 @@ type
   ModeFlag* {.pure.} = enum
     current
     prefered
+  
+  Anchor* {.pure.} = enum
+    none
+    top
+    bottom
+    left
+    right
+    topLeft
+    bottomLeft
+    topRight
+    bottomRight
+  
+  ConstraintAllignment* {.pure.} = enum
+    slideX
+    slideY
+    flipX
+    flipY
+    resizeX
+    resizeY
+
+  Edge* {.pure.} = enum
+    top
+    bottom
+    left
+    right
+  
+  ShellSurfaceState* {.pure.} = enum
+    maximized = 1
+    fullscreen
+    resizing
+    activated
+    tiledLeft
+    tiledRight
+    tiledTop
+    tiledBottom
 
 
 
@@ -335,6 +358,8 @@ protocol:
 
 
   Compositor:
+    iface "wl_compositor"
+
     proc newSurface: Surface
     proc newRegion: Region
 
@@ -346,6 +371,8 @@ protocol:
 
 
   Shm:
+    iface "wl_shm"
+
     proc newPool(fd: FileDescriptor, size: int): ShmPool
 
     proc format(format: ShmFormat): event
@@ -396,29 +423,10 @@ protocol:
 
 
   DataDeviceManager:
+    iface "wl_data_device_manager"
+
     proc newDataSource: DataSource
     proc dataDevice(seat: Seat): DataDevice
-
-
-  Shell:
-    proc shellSurface(surface: Surface): ShellSurface
-
-
-  ShellSurface:
-    proc pong(serial: int)
-    proc move(seat: Seat, serial: int)
-    proc resize(seat: Seat, serial: int, edges: set[Edge])
-    proc setToplevel
-    proc setTransient(parent: Surface, pos: IVec2, flags: set[TransientFlag])
-    proc setFullscreen(m: FullscreenMethod, framerate: int, output: Output)
-    proc setPopup(seat: Seat, serial: int, parent: Surface, pos: IVec2, flags: set[TransientFlag])
-    proc setMaximized(output: Output)
-    proc setTitle(title: string)
-    proc setClass(class: string)
-
-    proc ping(serial: int): event
-    proc configure(edges: set[Edge], size: IVec2): event
-    proc popupDone: event
 
 
   Surface:
@@ -438,6 +446,8 @@ protocol:
 
 
   Seat:
+    iface "wl_seat"
+
     proc cursor: Cursor
     proc keyboard: Keyboard
     proc touch: Touch
@@ -486,6 +496,8 @@ protocol:
 
 
   Output:
+    iface "wl_output"
+
     proc destroy
 
     proc geometry(pos: IVec2, sizeInMillimeters: IVec2, subpixel: Subpixel, make: string, model: string, transform: Transform): event
@@ -501,17 +513,84 @@ protocol:
 
 
   Subcompositor:
+    iface "wl_subcompositor"
+
     proc destroy
     proc subsurface(surface: Surface, parent: Surface): Subsurface
 
 
   Subsurface:
     proc destroy
-    proc `pos=`(pos: IVec2)
+    proc `pos=`(v: IVec2)
     proc placeAbove(sibling: Surface)
     proc placeBelow(sibling: Surface)
     proc setSync
     proc setDesync
+  
+
+  XdgWmBase:
+    iface "xdg_wm_base"
+
+    proc destroy
+    proc newPositioner: Positioner
+    proc shellSurface(surface: Surface): ShellSurface
+    proc pong(serial: int)
+
+    proc ping(serial: int): event
+  
+
+  Positioner:
+    proc destroy
+    proc `size=`(v: IVec2)
+    proc setAnchorRect(pos: IVec2, size: IVec2)
+    proc `anchor=`(v: Anchor)
+    proc `gravity=`(v: int)
+    proc `constraintAllignment=`(v: set[ConstraintAllignment])
+    proc `offset=`(v: IVec2)
+    proc setRelative
+    proc `parentSize=`(v: IVec2)
+    proc setParentConfigure(serial: int)
+
+
+  ShellSurface:
+    proc destroy
+    proc toplevel: Toplevel
+    proc popup(parent: ShellSurface, positioner: Positioner): Popup
+    proc setGeometry(pos: IVec2, size: IVec2)
+    proc ackConfigure(serial: int)
+
+    proc configure(serial: int): event
+  
+
+  Toplevel:
+    proc destroy
+    proc `parent=`(v: Toplevel)
+    proc `title=`(v: string)
+    proc `appId=`(v: string)
+    proc showWindowMenu(seat: Seat, serial: int, pos: IVec2)
+    proc move(seat: Seat, serial: int)
+    proc resize(seat: Seat, serial: int, edges: set[Edge])
+    proc `maxSize=`(v: IVec2)
+    proc `minSize=`(v: IVec2)
+    proc maximize
+    proc unmaximize
+    proc fullscreen
+    proc unfullscreen
+    proc minimize
+
+    proc configure(size: IVec2, states: seq[ShellSurfaceState]): event
+    proc close: event
+  
+
+  Popup:
+    proc destroy
+    proc grub(seat: Seat, serial: int)
+    proc reposition(positioner: Positioner, token: int)
+
+    proc configure(pos: IVec2, size: IVec2): event
+    proc done: event
+    proc repositioned(token: int): event
+
 
 
 proc sync*(this: Display) =
