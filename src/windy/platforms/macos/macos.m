@@ -17,8 +17,6 @@ static void postEmptyEvent(void) {
 }
 
 static void createMenuBar(void) {
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
     id menubar = [NSMenu new];
     id appMenuItem = [NSMenuItem new];
     [menubar addItem:appMenuItem];
@@ -59,9 +57,6 @@ static int convertY(int y) {
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
-    // Post an empty event then stop the NSApp run from innerInit()
-    postEmptyEvent();
-    [NSApp stop:nil];
 }
 
 @end
@@ -125,71 +120,6 @@ static int convertY(int y) {
 
 WindyApplicationDelegate* appDelegate;
 
-void innerInit() {
-    [NSApplication sharedApplication];
-
-    appDelegate = [[WindyApplicationDelegate alloc] init];
-    [NSApp setDelegate:appDelegate];
-
-    [NSApp run]; // We will break out of this in applicationDidFinishLaunching
-}
-
-void innerNewPlatformWindow(
-    char* title,
-    int width,
-    int height,
-    bool vsync,
-    int openglMajorVersion,
-    int openglMinorVersion,
-    int msaa,
-    int depthBits,
-    int stencilBits,
-    WindyWindow** windowRet
-) {
-    NSRect contentRect = NSMakeRect(0, 0, width, height);
-
-    WindyWindow* window = [[WindyWindow alloc] initWithContentRect:contentRect
-                                                         styleMask:decoratedWindowMask
-                                                           backing:NSBackingStoreBuffered
-                                                             defer:NO];
-
-    WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
-                                                                        vsync:vsync
-                                                           openglMajorVersion:openglMajorVersion
-                                                           openglMinorVersion:openglMinorVersion
-                                                                         msaa:msaa
-                                                                    depthBits:depthBits
-                                                                  stencilBits:stencilBits];
-
-    [window setContentView:view];
-    [window setTitle:[NSString stringWithUTF8String:title]];
-    [window setDelegate:window];
-
-    *windowRet = window;
-}
-
-void innerMakeContextCurrent(WindyWindow* window) {
-    [[[window contentView] openGLContext] makeCurrentContext];
-}
-
-void innerSwapBuffers(WindyWindow* window) {
-    [[[window contentView] openGLContext] flushBuffer];
-}
-
-void innerPollEvents() {
-    while (true) {
-        NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
-                                            untilDate:[NSDate distantPast]
-                                               inMode:NSDefaultRunLoopMode
-                                              dequeue:YES];
-        if (event == nil) {
-            break;
-        }
-
-        [NSApp sendEvent:event];
-    }
-}
-
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
 }
@@ -212,6 +142,13 @@ void innerGetPos(WindyWindow* window, int* x, int* y) {
     NSRect contentRect = [window contentRectForFrameRect:[window frame]];
     *x = contentRect.origin.x;
     *y = convertY(contentRect.origin.y + contentRect.size.height - 1);
+}
+
+void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+    *width = backingRect.size.width;
+    *height = backingRect.size.height;
 }
 
 void innerSetVisible(WindyWindow* window, bool visible) {
@@ -252,9 +189,75 @@ void innerSetPos(WindyWindow* window, int x, int y) {
     [window setFrameOrigin:rect.origin];
 }
 
-void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
-    NSRect contentRect = [[window contentView] frame];
-    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
-    *width = backingRect.size.width;
-    *height = backingRect.size.height;
+void innerInit() {
+    [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp setPresentationOptions:NSApplicationPresentationDefault];
+    [NSApp activateIgnoringOtherApps:YES];
+
+    appDelegate = [[WindyApplicationDelegate alloc] init];
+    [NSApp setDelegate:appDelegate];
+
+    [NSApp finishLaunching];
+}
+
+void innerPollEvents() {
+    while (true) {
+        NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
+                                            untilDate:[NSDate distantPast]
+                                               inMode:NSDefaultRunLoopMode
+                                              dequeue:YES];
+        if (event == nil) {
+            break;
+        }
+
+        [NSApp sendEvent:event];
+    }
+}
+
+void innerMakeContextCurrent(WindyWindow* window) {
+    [[[window contentView] openGLContext] makeCurrentContext];
+}
+
+void innerSwapBuffers(WindyWindow* window) {
+    [[[window contentView] openGLContext] flushBuffer];
+}
+
+void innerNewWindow(
+    char* title,
+    int width,
+    int height,
+    bool visible,
+    bool vsync,
+    int openglMajorVersion,
+    int openglMinorVersion,
+    int msaa,
+    int depthBits,
+    int stencilBits,
+    WindyWindow** windowRet
+) {
+    NSRect contentRect = NSMakeRect(0, 0, width, height);
+
+    WindyWindow* window = [[WindyWindow alloc] initWithContentRect:contentRect
+                                                         styleMask:decoratedWindowMask
+                                                           backing:NSBackingStoreBuffered
+                                                             defer:NO];
+
+    WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
+                                                                        vsync:vsync
+                                                           openglMajorVersion:openglMajorVersion
+                                                           openglMinorVersion:openglMinorVersion
+                                                                         msaa:msaa
+                                                                    depthBits:depthBits
+                                                                  stencilBits:stencilBits];
+
+    [window setContentView:view];
+    [window setTitle:[NSString stringWithUTF8String:title]];
+    [window setDelegate:window];
+
+    innerSetVisible(window, visible);
+
+    innerPollEvents();
+
+    *windowRet = window;
 }

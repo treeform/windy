@@ -63,8 +63,6 @@ type
     hdc: HDC
     hglrc: HGLRC
 
-  ButtonView* = distinct set[Button]
-
   ExitFullscreenInfo = ref object
     maximized: bool
     style: LONG
@@ -948,7 +946,6 @@ proc newWindow*(
   depthBits = 24,
   stencilBits = 8
 ): Window =
-  ## Creates a new window. Intitializes Windy if needed.
   init()
 
   result = Window()
@@ -1060,9 +1057,6 @@ proc buttonReleased*(window: Window): ButtonView =
 
 proc buttonToggle*(window: Window): ButtonView =
   ButtonView window.buttonToggle
-
-proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  button in (set[Button])buttonView
 
 proc getClipboardString*(): string =
   init()
