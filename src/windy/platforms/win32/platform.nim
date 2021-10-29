@@ -41,21 +41,11 @@ type
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
     onImeChange*: Callback
+    imePos*: IVec2
 
     state: State
-
-    title: string
-    runeInputEnabled: bool
     trackMouseEventRegistered: bool
     exitFullscreenInfo: ExitFullscreenInfo
-    doubleClickTime: float64
-    tripleClickTimes: array[2, float64]
-    quadrupleClickTimes: array[3, float64]
-    multiClickPositions: array[3, IVec2]
-
-    imePos*: IVec2
-    imeCursorIndex: int
-    imeCompositionString: string
 
     hWnd: HWND
     hdc: HDC
@@ -166,6 +156,12 @@ proc destroy(window: Window) =
   window.onMove = nil
   window.onResize = nil
   window.onFocusChange = nil
+  window.onMouseMove = nil
+  window.onScroll = nil
+  window.onButtonPress = nil
+  window.onButtonRelease = nil
+  window.onRune = nil
+  window.onImeChange = nil
 
   if window.hglrc != 0:
     discard wglMakeCurrent(window.hdc, 0)
@@ -228,8 +224,48 @@ proc monitorInfo(window: Window): MONITORINFO =
     result.addr
   )
 
+proc visible*(window: Window): bool =
+  IsWindowVisible(window.hWnd) != 0
+
+proc decorated*(window: Window): bool =
+  let style = getWindowStyle(window.hWnd)
+  (style and WS_BORDER) != 0
+
+proc resizable*(window: Window): bool =
+  let style = getWindowStyle(window.hWnd)
+  (style and WS_THICKFRAME) != 0
+
+proc fullscreen*(window: Window): bool =
+  window.exitFullscreenInfo != nil
+
+proc size*(window: Window): IVec2 =
+  var rect: RECT
+  discard GetClientRect(window.hWnd, rect.addr)
+  ivec2(rect.right, rect.bottom)
+
+proc pos*(window: Window): IVec2 =
+  var pos: POINT
+  discard ClientToScreen(window.hWnd, pos.addr)
+  ivec2(pos.x, pos.y)
+
+proc minimized*(window: Window): bool =
+  IsIconic(window.hWnd) != 0
+
+proc maximized*(window: Window): bool =
+  IsZoomed(window.hWnd) != 0
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.size
+
+proc contentScale*(window: Window): float32 =
+  let dpi = GetDpiForWindow(window.hWnd)
+  result = dpi.float32 / defaultScreenDpi
+
+proc focused*(window: Window): bool =
+  window.hWnd == GetActiveWindow()
+
 proc `title=`*(window: Window, title: string) =
-  window.title = title
+  window.state.title = title
   var wideTitle = title.wstr()
   discard SetWindowTextW(window.hWnd, cast[ptr WCHAR](wideTitle[0].addr))
 
@@ -399,7 +435,7 @@ proc `closeRequested=`*(window: Window, closeRequested: bool) =
       window.onCloseRequest()
 
 proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
-  window.runeInputEnabled = runeInputEnabled
+  window.state.runeInputEnabled = runeInputEnabled
   if runeInputEnabled:
     discard ImmAssociateContextEx(window.hWnd, 0, IACE_DEFAULT)
   else:
@@ -532,78 +568,79 @@ proc handleButtonPress(window: Window, button: Button) =
   if button == MouseLeft:
     let
       clickTime = epochTime()
+      mousePos = window.state.mousePos
       scaledMultiClickRadius = multiClickRadius * window.contentScale
 
     let
-      doubleClickInterval = clickTime - window.doubleClickTime
+      doubleClickInterval = clickTime - window.state.doubleClickTime
       doubleClickDistance =
-        (window.mousePos - window.multiClickPositions[0]).vec2.length
+        (mousePos - window.state.multiClickPositions[0]).vec2.length
     if doubleClickInterval <= platformDoubleClickInterval and
       doubleClickDistance <= scaledMultiClickRadius:
       window.handleButtonPress(DoubleClick)
-      window.doubleClickTime = 0
+      window.state.doubleClickTime = 0
     else:
-      window.doubleClickTime = clickTime
+      window.state.doubleClickTime = clickTime
 
     let
       tripleClickIntervals = [
-        clickTime - window.tripleClickTimes[0],
-        clickTime - window.tripleClickTimes[1]
+        clickTime - window.state.tripleClickTimes[0],
+        clickTime - window.state.tripleClickTimes[1]
       ]
       tripleClickInterval = tripleClickIntervals[0] + tripleClickIntervals[1]
       tripleClickDistance =
-        (window.mousePos - window.multiClickPositions[1]).vec2.length
+        (mousePos - window.state.multiClickPositions[1]).vec2.length
 
     if tripleClickInterval < 2 * platformDoubleClickInterval and
       tripleClickDistance <= scaledMultiClickRadius:
       window.handleButtonPress(TripleClick)
-      window.tripleClickTimes = [0.float64, 0]
+      window.state.tripleClickTimes = [0.float64, 0]
     else:
-      window.tripleClickTimes[1] = window.tripleClickTimes[0]
-      window.tripleClickTimes[0] = clickTime
+      window.state.tripleClickTimes[1] = window.state.tripleClickTimes[0]
+      window.state.tripleClickTimes[0] = clickTime
 
     let
       quadrupleClickIntervals = [
-        clickTime - window.quadrupleClickTimes[0],
-        clickTime - window.quadrupleClickTimes[1],
-        clickTime - window.quadrupleClickTimes[2]
+        clickTime - window.state.quadrupleClickTimes[0],
+        clickTime - window.state.quadrupleClickTimes[1],
+        clickTime - window.state.quadrupleClickTimes[2]
       ]
       quadrupleClickInterval =
         quadrupleClickIntervals[0] +
         quadrupleClickIntervals[1] +
         quadrupleClickIntervals[2]
       quadrupleClickDistance =
-        (window.mousePos - window.multiClickPositions[2]).vec2.length
+        (mousePos - window.state.multiClickPositions[2]).vec2.length
 
     if quadrupleClickInterval < 3 * platformDoubleClickInterval and
       quadrupleClickDistance <= multiClickRadius:
       window.handleButtonPress(QuadrupleClick)
-      window.quadrupleClickTimes = [0.float64, 0, 0]
+      window.state.quadrupleClickTimes = [0.float64, 0, 0]
     else:
-      window.quadrupleClickTimes[2] = window.quadrupleClickTimes[1]
-      window.quadrupleClickTimes[1] = window.quadrupleClickTimes[0]
-      window.quadrupleClickTimes[0] = clickTime
+      window.state.quadrupleClickTimes[2] = window.state.quadrupleClickTimes[1]
+      window.state.quadrupleClickTimes[1] = window.state.quadrupleClickTimes[0]
+      window.state.quadrupleClickTimes[0] = clickTime
 
-    window.multiClickPositions[2] = window.multiClickPositions[1]
-    window.multiClickPositions[1] = window.multiClickPositions[0]
-    window.multiClickPositions[0] = window.mousePos
+    window.state.multiClickPositions[2] = window.state.multiClickPositions[1]
+    window.state.multiClickPositions[1] = window.state.multiClickPositions[0]
+    window.state.multiClickPositions[0] = mousePos
 
 proc handleButtonRelease(window: Window, button: Button) =
   if button == MouseLeft:
-    if QuadrupleClick in window.buttonDown:
+    if QuadrupleClick in window.state.buttonDown:
       window.handleButtonRelease(QuadrupleClick)
-    if TripleClick in window.buttonDown:
+    if TripleClick in window.state.buttonDown:
       window.handleButtonRelease(TripleClick)
-    if DoubleClick in window.buttonDown:
+    if DoubleClick in window.state.buttonDown:
       window.handleButtonRelease(DoubleClick)
 
-  window.buttonDown.excl button
-  window.buttonReleased.incl button
+  window.state.buttonDown.excl button
+  window.state.buttonReleased.incl button
   if window.onButtonRelease != nil:
     window.onButtonRelease(button)
 
 proc handleRune(window: Window, rune: Rune) =
-  if not window.runeInputEnabled:
+  if not window.state.runeInputEnabled:
     return
   if rune.uint32 < 32 or (rune.uint32 > 126 and rune.uint32 < 160):
     return
@@ -631,8 +668,6 @@ proc wndProc(
   case uMsg:
   of WM_CLOSE:
     window.closeRequested = true
-    if window.onCloseRequest != nil:
-      window.onCloseRequest()
     return 0
   of WM_MOVE:
     if window.onMove != nil:
@@ -660,12 +695,13 @@ proc wndProc(
     )
     return 0
   of WM_MOUSEMOVE:
-    window.state.perFrame.mousePrevPos = window.mousePos
+    window.state.perFrame.mousePrevPos = window.state.mousePos
     var pos: POINT
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
     window.state.mousePos = ivec2(pos.x, pos.y)
-    window.state.perFrame.mouseDelta = window.mousePos - window.state.perFrame.mousePrevPos
+    window.state.perFrame.mouseDelta =
+      window.state.mousePos - window.state.perFrame.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
     if not window.trackMouseEventRegistered:
@@ -770,7 +806,7 @@ proc wndProc(
     let hIMC = ImmGetContext(window.hWnd)
 
     if (lParam and GCS_CURSORPOS) != 0:
-      window.imeCursorIndex = ImmGetCompositionStringW(
+      window.state.imeCursorIndex = ImmGetCompositionStringW(
         hIMC, GCS_CURSORPOS, nil, 0
       )
 
@@ -783,14 +819,14 @@ proc wndProc(
         discard ImmGetCompositionStringW(
           hIMC, GCS_COMPSTR, buf[0].addr, len
         )
-        window.imeCompositionString = $cast[ptr WCHAR](buf[0].addr)
+        window.state.imeCompositionString = $cast[ptr WCHAR](buf[0].addr)
       else:
-        window.imeCompositionString = ""
+        window.state.imeCompositionString = ""
 
     if (lParam and GCS_RESULTSTR) != 0:
       # The input runes will come in through WM_CHAR events
-      window.imeCursorIndex = 0
-      window.imeCompositionString = ""
+      window.state.imeCursorIndex = 0
+      window.state.imeCompositionString = ""
 
     if (lParam and (GCS_CURSORPOS or GCS_COMPSTR or GCS_RESULTSTR)) != 0:
       # If we received a message that updates IME state, trigger the callback
@@ -835,10 +871,10 @@ proc pollEvents*() =
   if activeWindow != nil:
     # When both shift keys are down the first one released does not trigger a
     # key up event so we fake it here.
-    if KeyLeftShift in activeWindow.buttonDown:
+    if KeyLeftShift in activeWindow.state.buttonDown:
       if (GetKeyState(VK_LSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyLeftShift)
-    if KeyRightShift in activeWindow.buttonDown:
+    if KeyRightShift in activeWindow.state.buttonDown:
       if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyRightShift)
 
@@ -858,8 +894,8 @@ proc closeIme*(window: Window) =
   if hIMC != 0:
     discard ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0)
     discard ImmReleaseContext(window.hWnd, hIMC)
-    window.imeCursorIndex = 0
-    window.imeCompositionString = ""
+    window.state.imeCursorIndex = 0
+    window.state.imeCompositionString = ""
     if window.onImeChange != nil:
       window.onImeChange()
 
@@ -974,50 +1010,7 @@ proc newWindow*(
     raise e
 
 proc title*(window: Window): string =
-  window.title
-
-proc closed*(window: Window): bool =
-  window.closed
-
-proc visible*(window: Window): bool =
-  IsWindowVisible(window.hWnd) != 0
-
-proc decorated*(window: Window): bool =
-  let style = getWindowStyle(window.hWnd)
-  (style and WS_BORDER) != 0
-
-proc resizable*(window: Window): bool =
-  let style = getWindowStyle(window.hWnd)
-  (style and WS_THICKFRAME) != 0
-
-proc fullscreen*(window: Window): bool =
-  window.exitFullscreenInfo != nil
-
-proc size*(window: Window): IVec2 =
-  var rect: RECT
-  discard GetClientRect(window.hWnd, rect.addr)
-  ivec2(rect.right, rect.bottom)
-
-proc pos*(window: Window): IVec2 =
-  var pos: POINT
-  discard ClientToScreen(window.hWnd, pos.addr)
-  ivec2(pos.x, pos.y)
-
-proc minimized*(window: Window): bool =
-  IsIconic(window.hWnd) != 0
-
-proc maximized*(window: Window): bool =
-  IsZoomed(window.hWnd) != 0
-
-proc framebufferSize*(window: Window): IVec2 =
-  window.size
-
-proc contentScale*(window: Window): float32 =
-  let dpi = GetDpiForWindow(window.hWnd)
-  result = dpi.float32 / defaultScreenDpi
-
-proc focused*(window: Window): bool =
-  window.hWnd == GetActiveWindow()
+  window.state.title
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
@@ -1031,29 +1024,32 @@ proc mouseDelta*(window: Window): IVec2 =
 proc scrollDelta*(window: Window): Vec2 =
   window.state.perFrame.scrollDelta
 
+proc runeInputEnabled*(window: Window): bool =
+  window.state.runeInputEnabled
+
+proc imeCursorIndex*(window: Window): int =
+  window.state.imeCursorIndex
+
+proc imeCompositionString*(window: Window): string =
+  window.state.imeCompositionString
+
 proc closeRequested*(window: Window): bool =
   window.state.closeRequested
 
-proc imeCursorIndex*(window: Window): int =
-  window.imeCursorIndex
-
-proc imeCompositionString*(window: Window): string =
-  window.imeCompositionString
-
-proc runeInputEnabled*(window: Window): bool =
-  window.runeInputEnabled
+proc closed*(window: Window): bool =
+  window.state.closed
 
 proc buttonDown*(window: Window): ButtonView =
-  ButtonView window.state.buttonDown
+  window.state.buttonDown.ButtonView
 
 proc buttonPressed*(window: Window): ButtonView =
-  ButtonView window.state.buttonPressed
+  window.state.buttonPressed.ButtonView
 
 proc buttonReleased*(window: Window): ButtonView =
-  ButtonView window.state.buttonReleased
+  window.state.buttonReleased.ButtonView
 
 proc buttonToggle*(window: Window): ButtonView =
-  ButtonView window.state.buttonToggle
+  window.state.buttonToggle.ButtonView
 
 proc getClipboardString*(): string =
   init()
