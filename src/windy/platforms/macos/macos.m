@@ -1,20 +1,13 @@
+// errors
+// memory
+// callbacks
+
 #import <Cocoa/Cocoa.h>
 
 NSInteger const decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask;
 NSInteger const undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
 
-static void postEmptyEvent(void) {
-    NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined
-                                        location:NSMakePoint(0, 0)
-                                   modifierFlags:0
-                                       timestamp:0
-                                    windowNumber:0
-                                         context:nil
-                                         subtype:0
-                                           data1:0
-                                           data2:0];
-    [NSApp postEvent:event atStart:YES];
-}
+typedef void (*Handler)(void* windowPtr);
 
 static void createMenuBar(void) {
     id menubar = [NSMenu new];
@@ -64,61 +57,12 @@ static int convertY(int y) {
 @interface WindyWindow : NSWindow <NSWindowDelegate>
 @end
 
-@implementation WindyWindow
-
-- (void)windowDidResize:(NSNotification*)notification {
-}
-
-- (void)windowDidMove:(NSNotification*)notification {
-}
-
-- (BOOL)windowShouldClose:(id)sender {
-    return YES;
-}
-
-@end
-
 @interface WindyContentView : NSOpenGLView
 @end
 
-@implementation WindyContentView
-
-- (id) initWithFrameAndConfig:(NSRect)frame
-                        vsync:(bool)vsync
-           openglMajorVersion:(int)openglMajorVersion
-           openglMinorVersion:(int)openglMinorVersion
-                         msaa:(int)msaa
-                    depthBits:(int)depthBits
-                  stencilBits:(int)stencilBits {
-    NSOpenGLPixelFormatAttribute attribs[] = {
-        NSOpenGLPFAMultisample,
-        NSOpenGLPFASampleBuffers, msaa > 0 ? 1 : 0,
-        NSOpenGLPFASamples, msaa,
-        NSOpenGLPFAAccelerated,
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFAColorSize, 32,
-        NSOpenGLPFAAlphaSize, 8,
-        NSOpenGLPFADepthSize, depthBits,
-        NSOpenGLPFAStencilSize, stencilBits,
-        NSOpenGLPFAOpenGLProfile, pickOpenGLProfile(openglMajorVersion),
-        0
-    };
-
-    NSOpenGLPixelFormat* pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
-
-    self = [super initWithFrame:frame pixelFormat:pf];
-
-    [[self openGLContext] makeCurrentContext];
-
-    GLint swapInterval = vsync ? 1 : 0;
-    [[self openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
-
-    return self;
-}
-
-@end
-
 WindyApplicationDelegate* appDelegate;
+
+Handler onMove, onResize, onCloseRequested;
 
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
@@ -189,7 +133,15 @@ void innerSetPos(WindyWindow* window, int x, int y) {
     [window setFrameOrigin:rect.origin];
 }
 
-void innerInit() {
+void innerInit(
+    Handler handleMove,
+    Handler handleResize,
+    Handler handleCloseRequested
+) {
+    onMove = handleMove;
+    onResize = handleResize;
+    onCloseRequested = handleCloseRequested;
+
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp setPresentationOptions:NSApplicationPresentationDefault];
@@ -215,6 +167,60 @@ void innerPollEvents() {
     }
 }
 
+@implementation WindyWindow
+
+- (void)windowDidResize:(NSNotification*)notification {
+    onResize(self);
+}
+
+- (void)windowDidMove:(NSNotification*)notification {
+    onMove(self);
+}
+
+- (BOOL)windowShouldClose:(id)sender {
+    onCloseRequested(self);
+    return NO;
+}
+
+@end
+
+@implementation WindyContentView
+
+- (id) initWithFrameAndConfig:(NSRect)frame
+                        vsync:(bool)vsync
+           openglMajorVersion:(int)openglMajorVersion
+           openglMinorVersion:(int)openglMinorVersion
+                         msaa:(int)msaa
+                    depthBits:(int)depthBits
+                  stencilBits:(int)stencilBits {
+    NSOpenGLPixelFormatAttribute attribs[] = {
+        NSOpenGLPFAMultisample,
+        NSOpenGLPFASampleBuffers, msaa > 0 ? 1 : 0,
+        NSOpenGLPFASamples, msaa,
+        NSOpenGLPFAAccelerated,
+        NSOpenGLPFADoubleBuffer,
+        NSOpenGLPFAColorSize, 32,
+        NSOpenGLPFAAlphaSize, 8,
+        NSOpenGLPFADepthSize, depthBits,
+        NSOpenGLPFAStencilSize, stencilBits,
+        NSOpenGLPFAOpenGLProfile, pickOpenGLProfile(openglMajorVersion),
+        0
+    };
+
+    NSOpenGLPixelFormat* pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
+
+    self = [super initWithFrame:frame pixelFormat:pf];
+
+    [[self openGLContext] makeCurrentContext];
+
+    GLint swapInterval = vsync ? 1 : 0;
+    [[self openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+
+    return self;
+}
+
+@end
+
 void innerMakeContextCurrent(WindyWindow* window) {
     [[[window contentView] openGLContext] makeCurrentContext];
 }
@@ -227,7 +233,6 @@ void innerNewWindow(
     char* title,
     int width,
     int height,
-    bool visible,
     bool vsync,
     int openglMajorVersion,
     int openglMinorVersion,
@@ -254,8 +259,6 @@ void innerNewWindow(
     [window setContentView:view];
     [window setTitle:[NSString stringWithUTF8String:title]];
     [window setDelegate:window];
-
-    innerSetVisible(window, visible);
 
     innerPollEvents();
 

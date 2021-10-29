@@ -42,13 +42,11 @@ type
     onRune*: RuneCallback
     onImeChange*: Callback
 
+    state: State
+
     title: string
     runeInputEnabled: bool
-    closeRequested, closed: bool
-    perFrame: PerFrame
     trackMouseEventRegistered: bool
-    mousePos: IVec2
-    buttonPressed, buttonDown, buttonReleased, buttonToggle: set[Button]
     exitFullscreenInfo: ExitFullscreenInfo
     doubleClickTime: float64
     tripleClickTimes: array[2, float64]
@@ -230,76 +228,6 @@ proc monitorInfo(window: Window): MONITORINFO =
     result.addr
   )
 
-proc title*(window: Window): string =
-  window.title
-
-proc closed*(window: Window): bool =
-  window.closed
-
-proc visible*(window: Window): bool =
-  IsWindowVisible(window.hWnd) != 0
-
-proc decorated*(window: Window): bool =
-  let style = getWindowStyle(window.hWnd)
-  (style and WS_BORDER) != 0
-
-proc resizable*(window: Window): bool =
-  let style = getWindowStyle(window.hWnd)
-  (style and WS_THICKFRAME) != 0
-
-proc fullscreen*(window: Window): bool =
-  window.exitFullscreenInfo != nil
-
-proc size*(window: Window): IVec2 =
-  var rect: RECT
-  discard GetClientRect(window.hWnd, rect.addr)
-  ivec2(rect.right, rect.bottom)
-
-proc pos*(window: Window): IVec2 =
-  var pos: POINT
-  discard ClientToScreen(window.hWnd, pos.addr)
-  ivec2(pos.x, pos.y)
-
-proc minimized*(window: Window): bool =
-  IsIconic(window.hWnd) != 0
-
-proc maximized*(window: Window): bool =
-  IsZoomed(window.hWnd) != 0
-
-proc framebufferSize*(window: Window): IVec2 =
-  window.size
-
-proc contentScale*(window: Window): float32 =
-  let dpi = GetDpiForWindow(window.hWnd)
-  result = dpi.float32 / defaultScreenDpi
-
-proc focused*(window: Window): bool =
-  window.hWnd == GetActiveWindow()
-
-proc mousePos*(window: Window): IVec2 =
-  window.mousePos
-
-proc mousePrevPos*(window: Window): IVec2 =
-  window.perFrame.mousePrevPos
-
-proc mouseDelta*(window: Window): IVec2 =
-  window.perFrame.mouseDelta
-
-proc scrollDelta*(window: Window): Vec2 =
-  window.perFrame.scrollDelta
-
-proc closeRequested*(window: Window): bool =
-  window.closeRequested
-
-proc imeCursorIndex*(window: Window): int =
-  window.imeCursorIndex
-
-proc imeCompositionString*(window: Window): string =
-  window.imeCompositionString
-
-proc runeInputEnabled*(window: Window): bool =
-  window.runeInputEnabled
-
 proc `title=`*(window: Window, title: string) =
   window.title = title
   var wideTitle = title.wstr()
@@ -465,7 +393,7 @@ proc `maximized=`*(window: Window, maximized: bool) =
   discard ShowWindow(window.hWnd, cmd)
 
 proc `closeRequested=`*(window: Window, closeRequested: bool) =
-  window.closeRequested = closeRequested
+  window.state.closeRequested = closeRequested
   if closeRequested:
     if window.onCloseRequest != nil:
       window.onCloseRequest()
@@ -592,12 +520,12 @@ proc createHelperWindow(): HWND =
   )
 
 proc handleButtonPress(window: Window, button: Button) =
-  window.buttonDown.incl button
-  window.buttonPressed.incl button
-  if button in window.buttonToggle:
-    window.buttonToggle.excl button
+  window.state.buttonDown.incl button
+  window.state.buttonPressed.incl button
+  if button in window.state.buttonToggle:
+    window.state.buttonToggle.excl button
   else:
-    window.buttonToggle.incl button
+    window.state.buttonToggle.incl button
   if window.onButtonPress != nil:
     window.onButtonPress(button)
 
@@ -732,12 +660,12 @@ proc wndProc(
     )
     return 0
   of WM_MOUSEMOVE:
-    window.perFrame.mousePrevPos = window.mousePos
+    window.state.perFrame.mousePrevPos = window.mousePos
     var pos: POINT
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
-    window.mousePos = ivec2(pos.x, pos.y)
-    window.perFrame.mouseDelta = window.mousePos - window.perFrame.mousePrevPos
+    window.state.mousePos = ivec2(pos.x, pos.y)
+    window.state.perFrame.mouseDelta = window.mousePos - window.state.perFrame.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
     if not window.trackMouseEventRegistered:
@@ -753,13 +681,13 @@ proc wndProc(
     return 0
   of WM_MOUSEWHEEL:
     let hiword = HIWORD(wParam)
-    window.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
+    window.state.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
     if window.onScroll != nil:
       window.onScroll()
     return 0
   of WM_MOUSEHWHEEL:
     let hiword = HIWORD(wParam)
-    window.perFrame.scrollDelta = vec2(hiword.float32 / wheelDelta, 0)
+    window.state.perFrame.scrollDelta = vec2(hiword.float32 / wheelDelta, 0)
     if window.onScroll != nil:
       window.onScroll()
     return 0
@@ -890,9 +818,9 @@ proc init*() =
 proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
-    window.perFrame = PerFrame()
-    window.buttonPressed = {}
-    window.buttonReleased = {}
+    window.state.perFrame = PerFrame()
+    window.state.buttonPressed = {}
+    window.state.buttonReleased = {}
 
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
@@ -923,7 +851,7 @@ proc swapBuffers*(window: Window) =
 
 proc close*(window: Window) =
   destroy window
-  window.closed = true
+  window.state.closed = true
 
 proc closeIme*(window: Window) =
   let hIMC = ImmGetContext(window.hWnd)
@@ -1040,23 +968,92 @@ proc newWindow*(
 
     windows.add(result)
 
-    if visible:
-      result.visible = true
+    result.visible = visible
   except WindyError as e:
     destroy result
     raise e
 
+proc title*(window: Window): string =
+  window.title
+
+proc closed*(window: Window): bool =
+  window.closed
+
+proc visible*(window: Window): bool =
+  IsWindowVisible(window.hWnd) != 0
+
+proc decorated*(window: Window): bool =
+  let style = getWindowStyle(window.hWnd)
+  (style and WS_BORDER) != 0
+
+proc resizable*(window: Window): bool =
+  let style = getWindowStyle(window.hWnd)
+  (style and WS_THICKFRAME) != 0
+
+proc fullscreen*(window: Window): bool =
+  window.exitFullscreenInfo != nil
+
+proc size*(window: Window): IVec2 =
+  var rect: RECT
+  discard GetClientRect(window.hWnd, rect.addr)
+  ivec2(rect.right, rect.bottom)
+
+proc pos*(window: Window): IVec2 =
+  var pos: POINT
+  discard ClientToScreen(window.hWnd, pos.addr)
+  ivec2(pos.x, pos.y)
+
+proc minimized*(window: Window): bool =
+  IsIconic(window.hWnd) != 0
+
+proc maximized*(window: Window): bool =
+  IsZoomed(window.hWnd) != 0
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.size
+
+proc contentScale*(window: Window): float32 =
+  let dpi = GetDpiForWindow(window.hWnd)
+  result = dpi.float32 / defaultScreenDpi
+
+proc focused*(window: Window): bool =
+  window.hWnd == GetActiveWindow()
+
+proc mousePos*(window: Window): IVec2 =
+  window.state.mousePos
+
+proc mousePrevPos*(window: Window): IVec2 =
+  window.state.perFrame.mousePrevPos
+
+proc mouseDelta*(window: Window): IVec2 =
+  window.state.perFrame.mouseDelta
+
+proc scrollDelta*(window: Window): Vec2 =
+  window.state.perFrame.scrollDelta
+
+proc closeRequested*(window: Window): bool =
+  window.state.closeRequested
+
+proc imeCursorIndex*(window: Window): int =
+  window.imeCursorIndex
+
+proc imeCompositionString*(window: Window): string =
+  window.imeCompositionString
+
+proc runeInputEnabled*(window: Window): bool =
+  window.runeInputEnabled
+
 proc buttonDown*(window: Window): ButtonView =
-  ButtonView window.buttonDown
+  ButtonView window.state.buttonDown
 
 proc buttonPressed*(window: Window): ButtonView =
-  ButtonView window.buttonPressed
+  ButtonView window.state.buttonPressed
 
 proc buttonReleased*(window: Window): ButtonView =
-  ButtonView window.buttonReleased
+  ButtonView window.state.buttonReleased
 
 proc buttonToggle*(window: Window): ButtonView =
-  ButtonView window.buttonToggle
+  ButtonView window.state.buttonToggle
 
 proc getClipboardString*(): string =
   init()

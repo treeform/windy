@@ -1,28 +1,46 @@
-import ../../common, vmath
+import ../../common, ../../internal, vmath
 
 {.
   passL: "-framework Cocoa",
   compile: "macos.m",
 .}
 
-type Window* = ref object
-  onCloseRequest*: Callback
-  onMove*: Callback
-  onResize*: Callback
-  onFocusChange*: Callback
-  onMouseMove*: Callback
-  onScroll*: Callback
-  onButtonPress*: ButtonCallback
-  onButtonRelease*: ButtonCallback
-  onRune*: RuneCallback
-  onImeChange*: Callback
+type
+  Window* = ref object
+    onCloseRequest*: Callback
+    onMove*: Callback
+    onResize*: Callback
+    onFocusChange*: Callback
+    onMouseMove*: Callback
+    onScroll*: Callback
+    onButtonPress*: ButtonCallback
+    onButtonRelease*: ButtonCallback
+    onRune*: RuneCallback
+    onImeChange*: Callback
 
-  closeRequested, closed: bool
+    state: State
 
-  windowPtr: pointer
+    windowPtr: pointer
+
+  InnerHandler* = proc(windowPtr: pointer) {.cdecl.}
 
 var
   initialized: bool
+  windows: seq[Window]
+
+proc indexForPointer(windows: seq[Window], windowPtr: pointer): int =
+  ## Returns the window for this pointer, else -1
+  for i, window in windows:
+    if window.windowPtr == windowPtr:
+      return i
+  -1
+
+proc forPointer(windows: seq[Window], windowPtr: pointer): Window =
+  ## Returns the window for this pointer, else nil
+  let index = windows.indexForPointer(windowPtr)
+  if index == -1:
+    return nil
+  windows[index]
 
 proc innerGetVisible(windowPtr: pointer): bool {.importc.}
 
@@ -46,7 +64,9 @@ proc innerSetSize(windowPtr: pointer, width, height: int32) {.importc.}
 
 proc innerSetPos(windowPtr: pointer, x, y: int32) {.importc.}
 
-proc innerInit() {.importc.}
+proc innerInit(
+  handleMove, handleResize, handleCloseRequested: InnerHandler
+) {.importc.}
 
 proc innerPollEvents() {.importc.}
 
@@ -58,7 +78,6 @@ proc innerNewWindow(
   title: cstring,
   width: int32,
   height: int32,
-  visible: bool,
   vsync: bool,
   openglMajorVersion: int32,
   openglMinorVersion: int32,
@@ -67,7 +86,6 @@ proc innerNewWindow(
   stencilBits: int32,
   windowRet: ptr pointer
 ) {.importc.}
-
 
 proc title*(window: Window): string =
   discard
@@ -112,16 +130,16 @@ proc mousePos*(window: Window): IVec2 =
   discard
 
 proc mousePrevPos*(window: Window): IVec2 =
-  discard
+  window.state.perFrame.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
-  discard
+  window.state.perFrame.mouseDelta
 
 proc scrollDelta*(window: Window): Vec2 =
-  discard
+  window.state.perFrame.scrollDelta
 
 proc closeRequested*(window: Window): bool =
-  window.closeRequested
+  window.state.closeRequested
 
 proc imeCursorIndex*(window: Window): int =
   discard
@@ -160,17 +178,38 @@ proc `maximized=`*(window: Window, maximized: bool) =
   discard
 
 proc `closeRequested=`*(window: Window, closeRequested: bool) =
-  discard
+  window.state.closeRequested = closeRequested
+  if closeRequested:
+    if window.onCloseRequest != nil:
+      window.onCloseRequest()
 
 proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   discard
 
+proc handleMove(windowPtr: pointer) {.cdecl.} =
+  echo "handleMove"
+
+proc handleResize(windowPtr: pointer) {.cdecl.} =
+  echo "handleResize"
+
+proc handleCloseRequested(windowPtr: pointer) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  window.state.closeRequested = true
+
 proc init*() =
   if not initialized:
-    innerInit()
+    innerInit(
+      handleMove,
+      handleResize,
+      handleCloseRequested
+    )
     initialized = true
 
 proc pollEvents*() =
+  # Clear all per-frame data
+  for window in windows:
+    window.state.perFrame = PerFrame()
+
   innerPollEvents()
 
 proc makeContextCurrent*(window: Window) =
@@ -203,7 +242,6 @@ proc newWindow*(
     title,
     size.x,
     size.y,
-    visible,
     vsync,
     openglMajorVersion.int32,
     openglMinorVersion.int32,
@@ -212,6 +250,10 @@ proc newWindow*(
     stencilBits.int32,
     result.windowPtr.addr
   )
+
+  windows.add(result)
+
+  result.visible = visible
 
 proc buttonDown*(window: Window): ButtonView =
   discard
