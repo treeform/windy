@@ -24,6 +24,7 @@ type
 
   InnerHandler* = proc(windowPtr: pointer) {.cdecl.}
   InnerMouseHandler* = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
+  InnerScrollHandler* = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
 
 var
   initialized: bool
@@ -81,7 +82,8 @@ proc innerSetMaximized(windowPtr: pointer, maximized: bool) {.importc.}
 
 proc innerInit(
   handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler,
-  handleMouseMove: InnerMouseHandler
+  handleMouseMove: InnerMouseHandler,
+  handleScroll: InnerScrollHandler
 ) {.importc.}
 
 proc innerPollEvents() {.importc.}
@@ -216,6 +218,15 @@ proc handleMouseMove(windowPtr: pointer, x, y: int32) {.cdecl.} =
   if window.onMouseMove != nil:
     window.onMouseMove()
 
+proc handleScroll(windowPtr: pointer, x, y: float32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  window.state.perFrame.scrollDelta = vec2(x, y)
+  if window.onScroll != nil:
+    window.onScroll()
+
 proc init*() =
   if not initialized:
     innerInit(
@@ -223,7 +234,8 @@ proc init*() =
       handleResize,
       handleCloseRequested,
       handleFocusChange,
-      handleMouseMove
+      handleMouseMove,
+      handleScroll
     )
     initialized = true
 

@@ -9,6 +9,7 @@ NSInteger const undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizabl
 
 typedef void (*Handler)(void* windowPtr);
 typedef void (*MouseHandler)(void* windowPtr, int x, int y);
+typedef void (*ScrollHandler)(void* windowPtr, float x, float y);
 
 static void createMenuBar(void) {
     id menubar = [NSMenu new];
@@ -68,6 +69,7 @@ WindyApplicationDelegate* appDelegate;
 
 Handler onMove, onResize, onCloseRequested, onFocusChange;
 MouseHandler onMouseMove;
+ScrollHandler onScroll;
 
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
@@ -183,13 +185,15 @@ void innerInit(
     Handler handleResize,
     Handler handleCloseRequested,
     Handler handleFocusChange,
-    MouseHandler handleMouseMove
+    MouseHandler handleMouseMove,
+    ScrollHandler handleScroll
 ) {
     onMove = handleMove;
     onResize = handleResize;
     onCloseRequested = handleCloseRequested;
     onFocusChange = handleFocusChange;
     onMouseMove = handleMouseMove;
+    onScroll = handleScroll;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -321,6 +325,20 @@ void innerPollEvents() {
 
 - (void)mouseDragged:(NSEvent*)event {
     [self mouseMoved:event];
+}
+
+- (void)scrollWheel:(NSEvent*)event {
+    double deltaX = [event scrollingDeltaX];
+    double deltaY = [event scrollingDeltaY];
+
+    if ([event hasPreciseScrollingDeltas]){
+        deltaX *= 0.1;
+        deltaY *= 0.1;
+    }
+
+    if (fabs(deltaX) > 0.0 || fabs(deltaY) > 0.0) {
+        onScroll(self.window, deltaX, deltaY);
+    }
 }
 
 @end
