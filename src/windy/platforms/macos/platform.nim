@@ -54,6 +54,16 @@ proc innerGetPos(windowPtr: pointer, x, y: ptr int32) {.importc.}
 
 proc innerGetFramebufferSize(windowPtr: pointer, x, y: ptr int32) {.importc.}
 
+proc innerGetContentScale(windowPtr: pointer, scale: ptr float32) {.importc.}
+
+proc innerGetFocused(windowPtr: pointer): bool {.importc.}
+
+proc innerGetMinimized(windowPtr: pointer): bool {.importc.}
+
+proc innerGetMaximized(windowPtr: pointer): bool {.importc.}
+
+proc innerSetTitle(windowPtr: pointer, title: cstring) {.importc.}
+
 proc innerSetVisible(windowPtr: pointer, visible: bool) {.importc.}
 
 proc innerSetDecorated(windowPtr: pointer, decorated: bool) {.importc.}
@@ -64,9 +74,11 @@ proc innerSetSize(windowPtr: pointer, width, height: int32) {.importc.}
 
 proc innerSetPos(windowPtr: pointer, x, y: int32) {.importc.}
 
-proc innerInit(
-  handleMove, handleResize, handleCloseRequested: InnerHandler
-) {.importc.}
+proc innerSetMinimized(windowPtr: pointer, minimized: bool) {.importc.}
+
+proc innerSetMaximized(windowPtr: pointer, maximized: bool) {.importc.}
+
+proc innerInit(handleMove, handleResize, handleCloseRequested: InnerHandler) {.importc.}
 
 proc innerPollEvents() {.importc.}
 
@@ -87,12 +99,6 @@ proc innerNewWindow(
   windowRet: ptr pointer
 ) {.importc.}
 
-proc title*(window: Window): string =
-  discard
-
-proc closed*(window: Window): bool =
-  discard
-
 proc visible*(window: Window): bool =
   innerGetVisible(window.windowPtr)
 
@@ -112,46 +118,22 @@ proc pos*(window: Window): IVec2 =
   innerGetPos(window.windowPtr, result.x.addr, result.y.addr)
 
 proc minimized*(window: Window): bool =
-  discard
+  innerGetMinimized(window.windowPtr)
 
 proc maximized*(window: Window): bool =
-  discard
+  innerGetMaximized(window.windowPtr)
 
 proc framebufferSize*(window: Window): IVec2 =
   innerGetFramebufferSize(window.windowPtr, result.x.addr, result.y.addr)
 
 proc contentScale*(window: Window): float32 =
-  discard
+  innerGetContentScale(window.windowPtr, result.addr)
 
 proc focused*(window: Window): bool =
-  discard
-
-proc mousePos*(window: Window): IVec2 =
-  discard
-
-proc mousePrevPos*(window: Window): IVec2 =
-  window.state.perFrame.mousePrevPos
-
-proc mouseDelta*(window: Window): IVec2 =
-  window.state.perFrame.mouseDelta
-
-proc scrollDelta*(window: Window): Vec2 =
-  window.state.perFrame.scrollDelta
-
-proc closeRequested*(window: Window): bool =
-  window.state.closeRequested
-
-proc imeCursorIndex*(window: Window): int =
-  discard
-
-proc imeCompositionString*(window: Window): string =
-  discard
-
-proc runeInputEnabled*(window: Window): bool =
-  discard
+  innerGetFocused(window.windowPtr)
 
 proc `title=`*(window: Window, title: string) =
-  discard
+  innerSetTitle(window.windowPtr, title.cstring)
 
 proc `visible=`*(window: Window, visible: bool) =
   innerSetVisible(window.windowPtr, visible)
@@ -172,10 +154,10 @@ proc `pos=`*(window: Window, pos: IVec2) =
   innerSetPos(window.windowPtr, pos.x, pos.y)
 
 proc `minimized=`*(window: Window, minimized: bool) =
-  discard
+  innerSetMinimized(window.windowPtr, minimized);
 
 proc `maximized=`*(window: Window, maximized: bool) =
-  discard
+  innerSetMaximized(window.windowPtr, maximized);
 
 proc `closeRequested=`*(window: Window, closeRequested: bool) =
   window.state.closeRequested = closeRequested
@@ -187,14 +169,27 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   discard
 
 proc handleMove(windowPtr: pointer) {.cdecl.} =
-  echo "handleMove"
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  if window.onMove != nil:
+    window.onMove()
 
 proc handleResize(windowPtr: pointer) {.cdecl.} =
-  echo "handleResize"
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  if window.onResize != nil:
+    window.onResize()
 
 proc handleCloseRequested(windowPtr: pointer) {.cdecl.} =
   let window = windows.forPointer(windowPtr)
-  window.state.closeRequested = true
+  if window == nil:
+    return
+
+  window.closeRequested = true
 
 proc init*() =
   if not initialized:
@@ -209,6 +204,8 @@ proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
+    window.state.buttonPressed = {}
+    window.state.buttonReleased = {}
 
   innerPollEvents()
 
@@ -238,8 +235,11 @@ proc newWindow*(
   init()
 
   result = Window()
+  result.title = title
+  result.runeInputEnabled = true
+
   innerNewWindow(
-    title,
+    title.cstring,
     size.x,
     size.y,
     vsync,
@@ -255,17 +255,47 @@ proc newWindow*(
 
   result.visible = visible
 
+proc title*(window: Window): string =
+  window.state.title
+
+proc mousePos*(window: Window): IVec2 =
+  window.state.mousePos
+
+proc mousePrevPos*(window: Window): IVec2 =
+  window.state.perFrame.mousePrevPos
+
+proc mouseDelta*(window: Window): IVec2 =
+  window.state.perFrame.mouseDelta
+
+proc scrollDelta*(window: Window): Vec2 =
+  window.state.perFrame.scrollDelta
+
+proc imeCursorIndex*(window: Window): int =
+  window.state.imeCursorIndex
+
+proc imeCompositionString*(window: Window): string =
+  window.state.imeCompositionString
+
+proc runeInputEnabled*(window: Window): bool =
+  window.state.runeInputEnabled
+
+proc closeRequested*(window: Window): bool =
+  window.state.closeRequested
+
+proc closed*(window: Window): bool =
+  window.state.closed
+
 proc buttonDown*(window: Window): ButtonView =
-  discard
+  window.state.buttonDown.ButtonView
 
 proc buttonPressed*(window: Window): ButtonView =
-  discard
+  window.state.buttonPressed.ButtonView
 
 proc buttonReleased*(window: Window): ButtonView =
-  discard
+  window.state.buttonReleased.ButtonView
 
 proc buttonToggle*(window: Window): ButtonView =
-  discard
+  window.state.buttonToggle.ButtonView
 
 proc getClipboardString*(): string =
   init()

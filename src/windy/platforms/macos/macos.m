@@ -95,6 +95,30 @@ void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
     *height = backingRect.size.height;
 }
 
+void innerGetContentScale(WindyWindow* window, float* scale) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+    *scale = backingRect.size.width / contentRect.size.width;
+}
+
+bool innerGetFocused(WindyWindow* window) {
+    return [window isKeyWindow];
+}
+
+bool innerGetMinimized(WindyWindow* window) {
+    return [window isMiniaturized];
+}
+
+bool innerGetMaximized(WindyWindow* window) {
+    return [window isZoomed];
+}
+
+void innerSetTitle(WindyWindow* window, char* title) {
+    NSString* nsTitle = [NSString stringWithUTF8String:title];
+    [window setTitle:nsTitle];
+    [window setMiniwindowTitle:nsTitle];
+}
+
 void innerSetVisible(WindyWindow* window, bool visible) {
     if (visible) {
         [window orderFront:nil];
@@ -131,6 +155,22 @@ void innerSetPos(WindyWindow* window, int x, int y) {
     NSRect contentRect = [[window contentView] frame];
     NSRect rect = NSMakeRect(x, convertY(y + contentRect.size.height - 1), 0, 0);
     [window setFrameOrigin:rect.origin];
+}
+
+void innerSetMinimized(WindyWindow* window, bool minimized) {
+    if (minimized && !innerGetMinimized(window)) {
+        [window miniaturize:nil];
+    } else if (!minimized && innerGetMinimized(window)) {
+        [window deminiaturize:nil];
+    }
+}
+
+void innerSetMaximized(WindyWindow* window, bool maximized) {
+    if (maximized && !innerGetMinimized(window)) {
+        [window zoom:nil];
+    } else if (!maximized && innerGetMaximized(window)) {
+        [window zoom:nil];
+    }
 }
 
 void innerInit(
@@ -211,12 +251,21 @@ void innerPollEvents() {
 
     self = [super initWithFrame:frame pixelFormat:pf];
 
+    self.wantsBestResolutionOpenGLSurface = YES;
+
     [[self openGLContext] makeCurrentContext];
 
     GLint swapInterval = vsync ? 1 : 0;
     [[self openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 
     return self;
+}
+
+- (void)viewDidChangeBackingProperties
+{
+    [super viewDidChangeBackingProperties];
+
+    onResize(self.window);
 }
 
 @end
