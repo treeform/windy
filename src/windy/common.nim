@@ -125,3 +125,8 @@ type
     NumpadMultiply  # *
     NumpadDivide    # /
     NumpadEqual     # =
+
+  ButtonView* = distinct set[Button]
+
+proc `[]`*(buttonView: ButtonView, button: Button): bool =
+  button in (set[Button])buttonView

@@ -1,24 +1,17 @@
+// errors
+// memory
+// 1270 not 1280
+
 #import <Cocoa/Cocoa.h>
 
 NSInteger const decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask;
 NSInteger const undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
 
-static void postEmptyEvent(void) {
-    NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined
-                                        location:NSMakePoint(0, 0)
-                                   modifierFlags:0
-                                       timestamp:0
-                                    windowNumber:0
-                                         context:nil
-                                         subtype:0
-                                           data1:0
-                                           data2:0];
-    [NSApp postEvent:event atStart:YES];
-}
+typedef void (*Handler)(void* windowPtr);
+typedef void (*MouseHandler)(void* windowPtr, int x, int y);
+typedef void (*ScrollHandler)(void* windowPtr, float x, float y);
 
 static void createMenuBar(void) {
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
     id menubar = [NSMenu new];
     id appMenuItem = [NSMenuItem new];
     [menubar addItem:appMenuItem];
@@ -59,9 +52,6 @@ static int convertY(int y) {
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
-    // Post an empty event then stop the NSApp run from innerInit()
-    postEmptyEvent();
-    [NSApp stop:nil];
 }
 
 @end
@@ -69,126 +59,17 @@ static int convertY(int y) {
 @interface WindyWindow : NSWindow <NSWindowDelegate>
 @end
 
-@implementation WindyWindow
-
-- (void)windowDidResize:(NSNotification*)notification {
-}
-
-- (void)windowDidMove:(NSNotification*)notification {
-}
-
-- (BOOL)windowShouldClose:(id)sender {
-    return YES;
-}
-
-@end
-
 @interface WindyContentView : NSOpenGLView
-@end
-
-@implementation WindyContentView
-
-- (id) initWithFrameAndConfig:(NSRect)frame
-                        vsync:(bool)vsync
-           openglMajorVersion:(int)openglMajorVersion
-           openglMinorVersion:(int)openglMinorVersion
-                         msaa:(int)msaa
-                    depthBits:(int)depthBits
-                  stencilBits:(int)stencilBits {
-    NSOpenGLPixelFormatAttribute attribs[] = {
-        NSOpenGLPFAMultisample,
-        NSOpenGLPFASampleBuffers, msaa > 0 ? 1 : 0,
-        NSOpenGLPFASamples, msaa,
-        NSOpenGLPFAAccelerated,
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFAColorSize, 32,
-        NSOpenGLPFAAlphaSize, 8,
-        NSOpenGLPFADepthSize, depthBits,
-        NSOpenGLPFAStencilSize, stencilBits,
-        NSOpenGLPFAOpenGLProfile, pickOpenGLProfile(openglMajorVersion),
-        0
-    };
-
-    NSOpenGLPixelFormat* pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
-
-    self = [super initWithFrame:frame pixelFormat:pf];
-
-    [[self openGLContext] makeCurrentContext];
-
-    GLint swapInterval = vsync ? 1 : 0;
-    [[self openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
-
-    return self;
+{
+    NSTrackingArea* trackingArea;
 }
-
 @end
 
 WindyApplicationDelegate* appDelegate;
 
-void innerInit() {
-    [NSApplication sharedApplication];
-
-    appDelegate = [[WindyApplicationDelegate alloc] init];
-    [NSApp setDelegate:appDelegate];
-
-    [NSApp run]; // We will break out of this in applicationDidFinishLaunching
-}
-
-void innerNewPlatformWindow(
-    char* title,
-    int width,
-    int height,
-    bool vsync,
-    int openglMajorVersion,
-    int openglMinorVersion,
-    int msaa,
-    int depthBits,
-    int stencilBits,
-    WindyWindow** windowRet
-) {
-    NSRect contentRect = NSMakeRect(0, 0, width, height);
-
-    WindyWindow* window = [[WindyWindow alloc] initWithContentRect:contentRect
-                                                         styleMask:decoratedWindowMask
-                                                           backing:NSBackingStoreBuffered
-                                                             defer:NO];
-
-    WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
-                                                                        vsync:vsync
-                                                           openglMajorVersion:openglMajorVersion
-                                                           openglMinorVersion:openglMinorVersion
-                                                                         msaa:msaa
-                                                                    depthBits:depthBits
-                                                                  stencilBits:stencilBits];
-
-    [window setContentView:view];
-    [window setTitle:[NSString stringWithUTF8String:title]];
-    [window setDelegate:window];
-
-    *windowRet = window;
-}
-
-void innerMakeContextCurrent(WindyWindow* window) {
-    [[[window contentView] openGLContext] makeCurrentContext];
-}
-
-void innerSwapBuffers(WindyWindow* window) {
-    [[[window contentView] openGLContext] flushBuffer];
-}
-
-void innerPollEvents() {
-    while (true) {
-        NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
-                                            untilDate:[NSDate distantPast]
-                                               inMode:NSDefaultRunLoopMode
-                                              dequeue:YES];
-        if (event == nil) {
-            break;
-        }
-
-        [NSApp sendEvent:event];
-    }
-}
+Handler onMove, onResize, onCloseRequested, onFocusChange;
+MouseHandler onMouseMove;
+ScrollHandler onScroll;
 
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
@@ -212,6 +93,37 @@ void innerGetPos(WindyWindow* window, int* x, int* y) {
     NSRect contentRect = [window contentRectForFrameRect:[window frame]];
     *x = contentRect.origin.x;
     *y = convertY(contentRect.origin.y + contentRect.size.height - 1);
+}
+
+void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+    *width = backingRect.size.width;
+    *height = backingRect.size.height;
+}
+
+void innerGetContentScale(WindyWindow* window, float* scale) {
+    NSRect contentRect = [[window contentView] frame];
+    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+    *scale = backingRect.size.width / contentRect.size.width;
+}
+
+bool innerGetFocused(WindyWindow* window) {
+    return [window isKeyWindow];
+}
+
+bool innerGetMinimized(WindyWindow* window) {
+    return [window isMiniaturized];
+}
+
+bool innerGetMaximized(WindyWindow* window) {
+    return [window isZoomed];
+}
+
+void innerSetTitle(WindyWindow* window, char* title) {
+    NSString* nsTitle = [NSString stringWithUTF8String:title];
+    [window setTitle:nsTitle];
+    [window setMiniwindowTitle:nsTitle];
 }
 
 void innerSetVisible(WindyWindow* window, bool visible) {
@@ -252,9 +164,225 @@ void innerSetPos(WindyWindow* window, int x, int y) {
     [window setFrameOrigin:rect.origin];
 }
 
-void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
-    NSRect contentRect = [[window contentView] frame];
-    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
-    *width = backingRect.size.width;
-    *height = backingRect.size.height;
+void innerSetMinimized(WindyWindow* window, bool minimized) {
+    if (minimized && !innerGetMinimized(window)) {
+        [window miniaturize:nil];
+    } else if (!minimized && innerGetMinimized(window)) {
+        [window deminiaturize:nil];
+    }
+}
+
+void innerSetMaximized(WindyWindow* window, bool maximized) {
+    if (maximized && !innerGetMinimized(window)) {
+        [window zoom:nil];
+    } else if (!maximized && innerGetMaximized(window)) {
+        [window zoom:nil];
+    }
+}
+
+void innerInit(
+    Handler handleMove,
+    Handler handleResize,
+    Handler handleCloseRequested,
+    Handler handleFocusChange,
+    MouseHandler handleMouseMove,
+    ScrollHandler handleScroll
+) {
+    onMove = handleMove;
+    onResize = handleResize;
+    onCloseRequested = handleCloseRequested;
+    onFocusChange = handleFocusChange;
+    onMouseMove = handleMouseMove;
+    onScroll = handleScroll;
+
+    [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp setPresentationOptions:NSApplicationPresentationDefault];
+    [NSApp activateIgnoringOtherApps:YES];
+
+    appDelegate = [[WindyApplicationDelegate alloc] init];
+    [NSApp setDelegate:appDelegate];
+
+    [NSApp finishLaunching];
+}
+
+void innerPollEvents() {
+    while (true) {
+        NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
+                                            untilDate:[NSDate distantPast]
+                                               inMode:NSDefaultRunLoopMode
+                                              dequeue:YES];
+        if (event == nil) {
+            break;
+        }
+
+        [NSApp sendEvent:event];
+    }
+}
+
+@implementation WindyWindow
+
+- (void)windowDidResize:(NSNotification*)notification {
+    onResize(self);
+}
+
+- (void)windowDidMove:(NSNotification*)notification {
+    onMove(self);
+}
+
+- (BOOL)windowShouldClose:(id)sender {
+    onCloseRequested(self);
+    return NO;
+}
+
+- (void)windowDidBecomeKey:(NSNotification*)notification {
+    onFocusChange(self);
+}
+
+- (void)windowDidResignKey:(NSNotification*)notification {
+    onFocusChange(self);
+}
+
+@end
+
+@implementation WindyContentView
+
+- (id) initWithFrameAndConfig:(NSRect)frame
+                        vsync:(bool)vsync
+           openglMajorVersion:(int)openglMajorVersion
+           openglMinorVersion:(int)openglMinorVersion
+                         msaa:(int)msaa
+                    depthBits:(int)depthBits
+                  stencilBits:(int)stencilBits {
+    NSOpenGLPixelFormatAttribute attribs[] = {
+        NSOpenGLPFAMultisample,
+        NSOpenGLPFASampleBuffers, msaa > 0 ? 1 : 0,
+        NSOpenGLPFASamples, msaa,
+        NSOpenGLPFAAccelerated,
+        NSOpenGLPFADoubleBuffer,
+        NSOpenGLPFAColorSize, 32,
+        NSOpenGLPFAAlphaSize, 8,
+        NSOpenGLPFADepthSize, depthBits,
+        NSOpenGLPFAStencilSize, stencilBits,
+        NSOpenGLPFAOpenGLProfile, pickOpenGLProfile(openglMajorVersion),
+        0
+    };
+
+    NSOpenGLPixelFormat* pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
+
+    self = [super initWithFrame:frame pixelFormat:pf];
+
+    self.wantsBestResolutionOpenGLSurface = YES;
+
+    [[self openGLContext] makeCurrentContext];
+
+    GLint swapInterval = vsync ? 1 : 0;
+    [[self openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+
+    return self;
+}
+
+- (void)viewDidChangeBackingProperties
+{
+    [super viewDidChangeBackingProperties];
+
+    onResize(self.window);
+}
+
+- (void)updateTrackingAreas {
+    if (trackingArea != nil) {
+        [self removeTrackingArea:trackingArea];
+        [trackingArea release];
+    }
+
+    NSTrackingAreaOptions options = NSTrackingMouseEnteredAndExited |
+                                    NSTrackingMouseMoved |
+                                    // NSTrackingEnabledDuringMouseDrag |
+                                    NSTrackingActiveInKeyWindow |
+                                    NSTrackingCursorUpdate |
+                                    NSTrackingInVisibleRect |
+                                    NSTrackingAssumeInside;
+
+    trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+                                                options:options
+                                                  owner:self
+                                               userInfo:nil];
+
+    [self addTrackingArea:trackingArea];
+    [super updateTrackingAreas];
+}
+
+- (BOOL)acceptsFirstMouse:(NSEvent*)event {
+    return YES;
+}
+
+- (void)mouseMoved:(NSEvent*)event {
+    NSRect contentRect = [self frame];
+    NSPoint pos = [event locationInWindow];
+
+    onMouseMove(self.window, round(pos.x), round(contentRect.size.height - pos.y));
+}
+
+- (void)mouseDragged:(NSEvent*)event {
+    [self mouseMoved:event];
+}
+
+- (void)scrollWheel:(NSEvent*)event {
+    double deltaX = [event scrollingDeltaX];
+    double deltaY = [event scrollingDeltaY];
+
+    if ([event hasPreciseScrollingDeltas]){
+        deltaX *= 0.1;
+        deltaY *= 0.1;
+    }
+
+    if (fabs(deltaX) > 0.0 || fabs(deltaY) > 0.0) {
+        onScroll(self.window, deltaX, deltaY);
+    }
+}
+
+@end
+
+void innerMakeContextCurrent(WindyWindow* window) {
+    [[[window contentView] openGLContext] makeCurrentContext];
+}
+
+void innerSwapBuffers(WindyWindow* window) {
+    [[[window contentView] openGLContext] flushBuffer];
+}
+
+void innerNewWindow(
+    char* title,
+    int width,
+    int height,
+    bool vsync,
+    int openglMajorVersion,
+    int openglMinorVersion,
+    int msaa,
+    int depthBits,
+    int stencilBits,
+    WindyWindow** windowRet
+) {
+    NSRect contentRect = NSMakeRect(0, 0, width, height);
+
+    WindyWindow* window = [[WindyWindow alloc] initWithContentRect:contentRect
+                                                         styleMask:decoratedWindowMask
+                                                           backing:NSBackingStoreBuffered
+                                                             defer:NO];
+
+    WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
+                                                                        vsync:vsync
+                                                           openglMajorVersion:openglMajorVersion
+                                                           openglMinorVersion:openglMinorVersion
+                                                                         msaa:msaa
+                                                                    depthBits:depthBits
+                                                                  stencilBits:stencilBits];
+
+    [window setContentView:view];
+    [window setTitle:[NSString stringWithUTF8String:title]];
+    [window setDelegate:window];
+
+    innerPollEvents();
+
+    *windowRet = window;
 }
