@@ -22,9 +22,9 @@ type
 
     windowPtr: pointer
 
-  InnerHandler* = proc(windowPtr: pointer) {.cdecl.}
-  InnerMouseHandler* = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
-  InnerScrollHandler* = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
+  InnerHandler = proc(windowPtr: pointer) {.cdecl.}
+  InnerMouseHandler = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
+  InnerScrollHandler = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
 
 var
   initialized: bool
