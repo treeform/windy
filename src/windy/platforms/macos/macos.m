@@ -1,5 +1,6 @@
 // errors
 // memory
+// 1270 not 1280
 
 #import <Cocoa/Cocoa.h>
 
@@ -7,6 +8,7 @@ NSInteger const decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask 
 NSInteger const undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
 
 typedef void (*Handler)(void* windowPtr);
+typedef void (*MouseHandler)(void* windowPtr, int x, int y);
 
 static void createMenuBar(void) {
     id menubar = [NSMenu new];
@@ -57,11 +59,15 @@ static int convertY(int y) {
 @end
 
 @interface WindyContentView : NSOpenGLView
+{
+    NSTrackingArea* trackingArea;
+}
 @end
 
 WindyApplicationDelegate* appDelegate;
 
 Handler onMove, onResize, onCloseRequested, onFocusChange;
+MouseHandler onMouseMove;
 
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
@@ -176,12 +182,14 @@ void innerInit(
     Handler handleMove,
     Handler handleResize,
     Handler handleCloseRequested,
-    Handler handleFocusChange
+    Handler handleFocusChange,
+    MouseHandler handleMouseMove
 ) {
     onMove = handleMove;
     onResize = handleResize;
     onCloseRequested = handleCloseRequested;
     onFocusChange = handleFocusChange;
+    onMouseMove = handleMouseMove;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -275,6 +283,44 @@ void innerPollEvents() {
     [super viewDidChangeBackingProperties];
 
     onResize(self.window);
+}
+
+- (void)updateTrackingAreas {
+    if (trackingArea != nil) {
+        [self removeTrackingArea:trackingArea];
+        [trackingArea release];
+    }
+
+    NSTrackingAreaOptions options = NSTrackingMouseEnteredAndExited |
+                                    NSTrackingMouseMoved |
+                                    // NSTrackingEnabledDuringMouseDrag |
+                                    NSTrackingActiveInKeyWindow |
+                                    NSTrackingCursorUpdate |
+                                    NSTrackingInVisibleRect |
+                                    NSTrackingAssumeInside;
+
+    trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+                                                options:options
+                                                  owner:self
+                                               userInfo:nil];
+
+    [self addTrackingArea:trackingArea];
+    [super updateTrackingAreas];
+}
+
+- (BOOL)acceptsFirstMouse:(NSEvent*)event {
+    return YES;
+}
+
+- (void)mouseMoved:(NSEvent*)event {
+    NSRect contentRect = [self frame];
+    NSPoint pos = [event locationInWindow];
+
+    onMouseMove(self.window, round(pos.x), round(contentRect.size.height - pos.y));
+}
+
+- (void)mouseDragged:(NSEvent*)event {
+    [self mouseMoved:event];
 }
 
 @end

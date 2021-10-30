@@ -23,6 +23,7 @@ type
     windowPtr: pointer
 
   InnerHandler* = proc(windowPtr: pointer) {.cdecl.}
+  InnerMouseHandler* = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
 
 var
   initialized: bool
@@ -78,7 +79,10 @@ proc innerSetMinimized(windowPtr: pointer, minimized: bool) {.importc.}
 
 proc innerSetMaximized(windowPtr: pointer, maximized: bool) {.importc.}
 
-proc innerInit(handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler) {.importc.}
+proc innerInit(
+  handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler,
+  handleMouseMove: InnerMouseHandler
+) {.importc.}
 
 proc innerPollEvents() {.importc.}
 
@@ -199,13 +203,27 @@ proc handleFocusChange(windowPtr: pointer) {.cdecl.} =
   if window.onFocusChange != nil:
     window.onFocusChange()
 
+proc handleMouseMove(windowPtr: pointer, x, y: int32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  window.state.perFrame.mousePrevPos = window.state.mousePos
+  window.state.mousePos = ivec2(x, y)
+  window.state.perFrame.mouseDelta =
+    window.state.mousePos - window.state.perFrame.mousePrevPos
+
+  if window.onMouseMove != nil:
+    window.onMouseMove()
+
 proc init*() =
   if not initialized:
     innerInit(
       handleMove,
       handleResize,
       handleCloseRequested,
-      handleFocusChange
+      handleFocusChange,
+      handleMouseMove
     )
     initialized = true
 
