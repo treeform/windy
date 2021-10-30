@@ -1,6 +1,5 @@
 // errors
 // memory
-// callbacks
 
 #import <Cocoa/Cocoa.h>
 
@@ -62,7 +61,7 @@ static int convertY(int y) {
 
 WindyApplicationDelegate* appDelegate;
 
-Handler onMove, onResize, onCloseRequested;
+Handler onMove, onResize, onCloseRequested, onFocusChange;
 
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
@@ -176,11 +175,13 @@ void innerSetMaximized(WindyWindow* window, bool maximized) {
 void innerInit(
     Handler handleMove,
     Handler handleResize,
-    Handler handleCloseRequested
+    Handler handleCloseRequested,
+    Handler handleFocusChange
 ) {
     onMove = handleMove;
     onResize = handleResize;
     onCloseRequested = handleCloseRequested;
+    onFocusChange = handleFocusChange;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -220,6 +221,14 @@ void innerPollEvents() {
 - (BOOL)windowShouldClose:(id)sender {
     onCloseRequested(self);
     return NO;
+}
+
+- (void)windowDidBecomeKey:(NSNotification*)notification {
+    onFocusChange(self);
+}
+
+- (void)windowDidResignKey:(NSNotification*)notification {
+    onFocusChange(self);
 }
 
 @end

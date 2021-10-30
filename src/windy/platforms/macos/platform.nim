@@ -78,7 +78,7 @@ proc innerSetMinimized(windowPtr: pointer, minimized: bool) {.importc.}
 
 proc innerSetMaximized(windowPtr: pointer, maximized: bool) {.importc.}
 
-proc innerInit(handleMove, handleResize, handleCloseRequested: InnerHandler) {.importc.}
+proc innerInit(handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler) {.importc.}
 
 proc innerPollEvents() {.importc.}
 
@@ -191,12 +191,21 @@ proc handleCloseRequested(windowPtr: pointer) {.cdecl.} =
 
   window.closeRequested = true
 
+proc handleFocusChange(windowPtr: pointer) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  if window.onFocusChange != nil:
+    window.onFocusChange()
+
 proc init*() =
   if not initialized:
     innerInit(
       handleMove,
       handleResize,
-      handleCloseRequested
+      handleCloseRequested,
+      handleFocusChange
     )
     initialized = true
 
