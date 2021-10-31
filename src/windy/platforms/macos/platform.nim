@@ -261,8 +261,6 @@ proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
-    window.state.buttonPressed = {}
-    window.state.buttonReleased = {}
 
   innerPollEvents()
 
@@ -346,10 +344,10 @@ proc buttonDown*(window: Window): ButtonView =
   window.state.buttonDown.ButtonView
 
 proc buttonPressed*(window: Window): ButtonView =
-  window.state.buttonPressed.ButtonView
+  window.state.perFrame.buttonPressed.ButtonView
 
 proc buttonReleased*(window: Window): ButtonView =
-  window.state.buttonReleased.ButtonView
+  window.state.perFrame.buttonReleased.ButtonView
 
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView

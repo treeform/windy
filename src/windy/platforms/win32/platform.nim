@@ -557,7 +557,7 @@ proc createHelperWindow(): HWND =
 
 proc handleButtonPress(window: Window, button: Button) =
   window.state.buttonDown.incl button
-  window.state.buttonPressed.incl button
+  window.state.perFrame.buttonPressed.incl button
   if button in window.state.buttonToggle:
     window.state.buttonToggle.excl button
   else:
@@ -635,7 +635,7 @@ proc handleButtonRelease(window: Window, button: Button) =
       window.handleButtonRelease(DoubleClick)
 
   window.state.buttonDown.excl button
-  window.state.buttonReleased.incl button
+  window.state.perFrame.buttonReleased.incl button
   if window.onButtonRelease != nil:
     window.onButtonRelease(button)
 
@@ -855,8 +855,6 @@ proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
-    window.state.buttonPressed = {}
-    window.state.buttonReleased = {}
 
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
@@ -1042,10 +1040,10 @@ proc buttonDown*(window: Window): ButtonView =
   window.state.buttonDown.ButtonView
 
 proc buttonPressed*(window: Window): ButtonView =
-  window.state.buttonPressed.ButtonView
+  window.state.perFrame.buttonPressed.ButtonView
 
 proc buttonReleased*(window: Window): ButtonView =
-  window.state.buttonReleased.ButtonView
+  window.state.perFrame.buttonReleased.ButtonView
 
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView

@@ -5,7 +5,7 @@ type
     title*: string
     closeRequested*, closed*: bool
     mousePos*: IVec2
-    buttonPressed*, buttonDown*, buttonReleased*, buttonToggle*: set[Button]
+    buttonDown*, buttonToggle*: set[Button]
     perFrame*: PerFrame
 
     doubleClickTime*: float64
@@ -21,3 +21,4 @@ type
     mousePrevPos*: IVec2
     mouseDelta*: IVec2
     scrollDelta*: Vec2
+    buttonPressed*, buttonReleased*: set[Button]
