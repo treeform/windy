@@ -914,7 +914,6 @@ proc newWindow*(
 
   result = Window()
   result.title = title
-  result.runeInputEnabled = true
   result.hWnd = createWindow(
     windowClassName,
     title,
