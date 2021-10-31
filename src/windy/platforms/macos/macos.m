@@ -391,9 +391,23 @@ void innerPollEvents() {
 }
 
 - (void)otherMouseDown:(NSEvent*)event {
+    if (event.buttonNumber == 2) {
+        onKeyDown(self.window, keyCodeMouseMiddle);
+    } else if (event.buttonNumber == 3) {
+        onKeyDown(self.window, keyCodeMouse4);
+    } else if (event.buttonNumber == 4) {
+        onKeyDown(self.window, keyCodeMouse5);
+    }
 }
 
 - (void)otherMouseUp:(NSEvent*)event {
+    if (event.buttonNumber == 2) {
+        onKeyUp(self.window, keyCodeMouseMiddle);
+    } else if (event.buttonNumber == 3) {
+        onKeyUp(self.window, keyCodeMouse4);
+    } else if (event.buttonNumber == 4) {
+        onKeyUp(self.window, keyCodeMouse5);
+    }
 }
 
 - (void)keyDown:(NSEvent*)event {
