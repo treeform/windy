@@ -1,4 +1,4 @@
-import ../../common, ../../internal, utils, vmath
+import ../../common, ../../internal, os, utils, vmath
 
 {.
   passL: "-framework Cocoa",
@@ -27,9 +27,7 @@ type
   InnerScrollHandler = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
   InnerKeyHandler = proc(windowPtr: pointer, keyCode: int32) {.cdecl.}
 
-var
-  initialized: bool
-  windows: seq[Window]
+var windows: seq[Window]
 
 proc indexForPointer(windows: seq[Window], windowPtr: pointer): int =
   ## Returns the window for this pointer, else -1
@@ -44,6 +42,8 @@ proc forPointer(windows: seq[Window], windowPtr: pointer): Window =
   if index == -1:
     return nil
   windows[index]
+
+proc innerGetDoubleClickInterval(): float {.importc.}
 
 proc innerGetVisible(windowPtr: pointer): bool {.importc.}
 
@@ -176,6 +176,12 @@ proc `closeRequested=`*(window: Window, closeRequested: bool) =
 proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   discard
 
+proc handleButtonPress(window: Window, button: Button) =
+  buttonPressTemplate()
+
+proc handleButtonRelease(window: Window, button: Button) =
+  buttonReleaseTemplate()
+
 proc handleMove(windowPtr: pointer) {.cdecl.} =
   let window = windows.forPointer(windowPtr)
   if window == nil:
@@ -255,6 +261,7 @@ proc init*() =
       handleKeyDown,
       handleKeyUp
     )
+    platformDoubleClickInterval = innerGetDoubleClickInterval()
     initialized = true
 
 proc pollEvents*() =

@@ -79,6 +79,10 @@ MouseHandler onMouseMove;
 ScrollHandler onScroll;
 KeyHandler onKeyDown, onKeyUp;
 
+float innerGetDoubleClickInterval() {
+    return [NSEvent doubleClickInterval];
+}
+
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
 }
