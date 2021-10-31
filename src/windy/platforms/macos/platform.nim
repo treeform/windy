@@ -1,4 +1,4 @@
-import ../../common, ../../internal, os, utils, vmath
+import ../../common, ../../internal, times, utils, vmath
 
 {.
   passL: "-framework Cocoa",
@@ -240,14 +240,14 @@ proc handleKeyDown(windowPtr: pointer, keyCode: int32) {.cdecl.} =
   if window == nil:
     return
 
-  echo keyCodeToButton[keyCode]
+  window.handleButtonPress(keyCodeToButton[keyCode])
 
 proc handleKeyUp(windowPtr: pointer, keyCode: int32) {.cdecl.} =
   let window = windows.forPointer(windowPtr)
   if window == nil:
     return
 
-  discard
+  window.handleButtonRelease(keyCodeToButton[keyCode])
 
 proc init*() =
   if not initialized:
