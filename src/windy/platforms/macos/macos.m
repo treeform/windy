@@ -327,6 +327,14 @@ void innerPollEvents() {
     [self mouseMoved:event];
 }
 
+- (void)rightMouseDragged:(NSEvent*)event {
+    [self mouseMoved:event];
+}
+
+- (void)otherMouseDragged:(NSEvent*)event {
+    [self mouseMoved:event];
+}
+
 - (void)scrollWheel:(NSEvent*)event {
     double deltaX = [event scrollingDeltaX];
     double deltaY = [event scrollingDeltaY];
