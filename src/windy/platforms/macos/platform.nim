@@ -1,4 +1,4 @@
-import ../../common, ../../internal, vmath
+import ../../common, ../../internal, utils, vmath
 
 {.
   passL: "-framework Cocoa",
@@ -25,6 +25,7 @@ type
   InnerHandler = proc(windowPtr: pointer) {.cdecl.}
   InnerMouseHandler = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
   InnerScrollHandler = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
+  InnerKeyHandler = proc(windowPtr: pointer, keyCode: int32) {.cdecl.}
 
 var
   initialized: bool
@@ -83,7 +84,8 @@ proc innerSetMaximized(windowPtr: pointer, maximized: bool) {.importc.}
 proc innerInit(
   handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler,
   handleMouseMove: InnerMouseHandler,
-  handleScroll: InnerScrollHandler
+  handleScroll: InnerScrollHandler,
+  handleKeyDown, handleKeyUp: InnerKeyHandler
 ) {.importc.}
 
 proc innerPollEvents() {.importc.}
@@ -227,6 +229,20 @@ proc handleScroll(windowPtr: pointer, x, y: float32) {.cdecl.} =
   if window.onScroll != nil:
     window.onScroll()
 
+proc handleKeyDown(windowPtr: pointer, keyCode: int32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  echo keyCodeToButton[keyCode]
+
+proc handleKeyUp(windowPtr: pointer, keyCode: int32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  discard
+
 proc init*() =
   if not initialized:
     innerInit(
@@ -235,7 +251,9 @@ proc init*() =
       handleCloseRequested,
       handleFocusChange,
       handleMouseMove,
-      handleScroll
+      handleScroll,
+      handleKeyDown,
+      handleKeyUp
     )
     initialized = true
 

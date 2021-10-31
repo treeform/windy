@@ -4,12 +4,19 @@
 
 #import <Cocoa/Cocoa.h>
 
-NSInteger const decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask;
-NSInteger const undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
+const NSInteger decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask;
+const NSInteger undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
+
+const int keyCodeMouseLeft = 0x1f0;
+const int keyCodeMouseRight = 0x1f1;
+const int keyCodeMouseMiddle = 0x1f2;
+const int keyCodeMouse4 = 0x1f3;
+const int keyCodeMouse5 = 0x1f4;
 
 typedef void (*Handler)(void* windowPtr);
 typedef void (*MouseHandler)(void* windowPtr, int x, int y);
 typedef void (*ScrollHandler)(void* windowPtr, float x, float y);
+typedef void (*KeyHandler)(void* windowPtr, int keyCode);
 
 static void createMenuBar(void) {
     id menubar = [NSMenu new];
@@ -70,6 +77,7 @@ WindyApplicationDelegate* appDelegate;
 Handler onMove, onResize, onCloseRequested, onFocusChange;
 MouseHandler onMouseMove;
 ScrollHandler onScroll;
+KeyHandler onKeyDown, onKeyUp;
 
 bool innerGetVisible(WindyWindow* window) {
     return window.isVisible;
@@ -186,7 +194,9 @@ void innerInit(
     Handler handleCloseRequested,
     Handler handleFocusChange,
     MouseHandler handleMouseMove,
-    ScrollHandler handleScroll
+    ScrollHandler handleScroll,
+    KeyHandler handleKeyDown,
+    KeyHandler handleKeyUp
 ) {
     onMove = handleMove;
     onResize = handleResize;
@@ -194,6 +204,8 @@ void innerInit(
     onFocusChange = handleFocusChange;
     onMouseMove = handleMouseMove;
     onScroll = handleScroll;
+    onKeyDown = handleKeyDown;
+    onKeyUp = handleKeyUp;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -282,6 +294,14 @@ void innerPollEvents() {
     return self;
 }
 
+- (BOOL)canBecomeKeyView {
+    return YES;
+}
+
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
 - (void)viewDidChangeBackingProperties
 {
     [super viewDidChangeBackingProperties];
@@ -297,7 +317,6 @@ void innerPollEvents() {
 
     NSTrackingAreaOptions options = NSTrackingMouseEnteredAndExited |
                                     NSTrackingMouseMoved |
-                                    // NSTrackingEnabledDuringMouseDrag |
                                     NSTrackingActiveInKeyWindow |
                                     NSTrackingCursorUpdate |
                                     NSTrackingInVisibleRect |
@@ -347,6 +366,39 @@ void innerPollEvents() {
     if (fabs(deltaX) > 0.0 || fabs(deltaY) > 0.0) {
         onScroll(self.window, deltaX, deltaY);
     }
+}
+
+- (void)mouseDown:(NSEvent*)event {
+    onKeyDown(self.window, keyCodeMouseLeft);
+}
+
+- (void)mouseUp:(NSEvent*)event {
+    onKeyUp(self.window, keyCodeMouseLeft);
+}
+
+- (void)rightMouseDown:(NSEvent*)event {
+    onKeyDown(self.window, keyCodeMouseRight);
+}
+
+- (void)rightMouseUp:(NSEvent*)event {
+    onKeyUp(self.window, keyCodeMouseRight);
+}
+
+- (void)otherMouseDown:(NSEvent*)event {
+}
+
+- (void)otherMouseUp:(NSEvent*)event {
+}
+
+- (void)keyDown:(NSEvent*)event {
+    onKeyDown(self.window, event.keyCode);
+}
+
+- (void)keyUp:(NSEvent*)event {
+    onKeyUp(self.window, event.keyCode);
+}
+
+- (void)flagsChanged:(NSEvent*)event {
 }
 
 @end
