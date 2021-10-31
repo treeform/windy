@@ -77,7 +77,7 @@ WindyApplicationDelegate* appDelegate;
 Handler onMove, onResize, onCloseRequested, onFocusChange;
 MouseHandler onMouseMove;
 ScrollHandler onScroll;
-KeyHandler onKeyDown, onKeyUp;
+KeyHandler onKeyDown, onKeyUp, onFlagsChanged;
 
 float innerGetDoubleClickInterval() {
     return [NSEvent doubleClickInterval];
@@ -200,7 +200,8 @@ void innerInit(
     MouseHandler handleMouseMove,
     ScrollHandler handleScroll,
     KeyHandler handleKeyDown,
-    KeyHandler handleKeyUp
+    KeyHandler handleKeyUp,
+    KeyHandler handleFlagsChanged
 ) {
     onMove = handleMove;
     onResize = handleResize;
@@ -210,6 +211,7 @@ void innerInit(
     onScroll = handleScroll;
     onKeyDown = handleKeyDown;
     onKeyUp = handleKeyUp;
+    onFlagsChanged = handleFlagsChanged;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -403,6 +405,7 @@ void innerPollEvents() {
 }
 
 - (void)flagsChanged:(NSEvent*)event {
+    onFlagsChanged(self.window, event.keyCode);
 }
 
 @end

@@ -85,7 +85,7 @@ proc innerInit(
   handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler,
   handleMouseMove: InnerMouseHandler,
   handleScroll: InnerScrollHandler,
-  handleKeyDown, handleKeyUp: InnerKeyHandler
+  handleKeyDown, handleKeyUp, handleFlagsChanged: InnerKeyHandler
 ) {.importc.}
 
 proc innerPollEvents() {.importc.}
@@ -249,6 +249,17 @@ proc handleKeyUp(windowPtr: pointer, keyCode: int32) {.cdecl.} =
 
   window.handleButtonRelease(keyCodeToButton[keyCode])
 
+proc handleFlagsChanged(windowPtr: pointer, keyCode: int32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  let button = keyCodeToButton[keyCode]
+  if button in window.state.buttonDown:
+    window.handleButtonRelease(button)
+  else:
+    window.handleButtonPress(button)
+
 proc init*() =
   if not initialized:
     innerInit(
@@ -259,7 +270,8 @@ proc init*() =
       handleMouseMove,
       handleScroll,
       handleKeyDown,
-      handleKeyUp
+      handleKeyUp,
+      handleFlagsChanged
     )
     platformDoubleClickInterval = innerGetDoubleClickInterval()
     initialized = true
