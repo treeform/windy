@@ -553,18 +553,13 @@ proc createHelperWindow(): HWND =
   )
 
 proc handleButtonPress(window: Window, button: Button) =
-  buttonPressTemplate()
+  handleButtonPressTemplate()
 
 proc handleButtonRelease(window: Window, button: Button) =
-  buttonReleaseTemplate()
+  handleButtonReleaseTemplate()
 
 proc handleRune(window: Window, rune: Rune) =
-  if not window.state.runeInputEnabled:
-    return
-  if rune.uint32 < 32 or (rune.uint32 > 126 and rune.uint32 < 160):
-    return
-  if window.onRune != nil:
-    window.onRune(rune)
+  handleRuneTemplate()
 
 proc wndProc(
   hWnd: HWND,

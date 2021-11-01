@@ -30,7 +30,7 @@ var
   initialized*: bool
   platformDoubleClickInterval*: float64
 
-template buttonPressTemplate*() =
+template handleButtonPressTemplate*() =
   window.state.buttonDown.incl button
   window.state.perFrame.buttonPressed.incl button
   if button in window.state.buttonToggle:
@@ -100,7 +100,7 @@ template buttonPressTemplate*() =
     window.state.multiClickPositions[1] = window.state.multiClickPositions[0]
     window.state.multiClickPositions[0] = mousePos
 
-template buttonReleaseTemplate*() =
+template handleButtonReleaseTemplate*() =
   if button == MouseLeft:
     if QuadrupleClick in window.state.buttonDown:
       window.handleButtonRelease(QuadrupleClick)
@@ -113,3 +113,11 @@ template buttonReleaseTemplate*() =
   window.state.perFrame.buttonReleased.incl button
   if window.onButtonRelease != nil:
     window.onButtonRelease(button)
+
+template handleRuneTemplate*() =
+  if not window.state.runeInputEnabled:
+    return
+  if rune.uint32 < 32 or (rune.uint32 > 126 and rune.uint32 < 160):
+    return
+  if window.onRune != nil:
+    window.onRune(rune)

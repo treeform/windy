@@ -1,4 +1,4 @@
-import ../../common, ../../internal, times, utils, vmath
+import ../../common, ../../internal, times, unicode, utils, vmath
 
 {.
   passL: "-framework Cocoa",
@@ -26,6 +26,7 @@ type
   InnerMouseHandler = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
   InnerScrollHandler = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
   InnerKeyHandler = proc(windowPtr: pointer, keyCode: int32) {.cdecl.}
+  InnerRuneHandler = proc(windowPtr: pointer, rune: uint32) {.cdecl.}
 
 var windows: seq[Window]
 
@@ -85,7 +86,8 @@ proc innerInit(
   handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler,
   handleMouseMove: InnerMouseHandler,
   handleScroll: InnerScrollHandler,
-  handleKeyDown, handleKeyUp, handleFlagsChanged: InnerKeyHandler
+  handleKeyDown, handleKeyUp, handleFlagsChanged: InnerKeyHandler,
+  handleRune: InnerRuneHandler
 ) {.importc.}
 
 proc innerPollEvents() {.importc.}
@@ -174,13 +176,16 @@ proc `closeRequested=`*(window: Window, closeRequested: bool) =
       window.onCloseRequest()
 
 proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
-  discard
+  window.state.runeInputEnabled = runeInputEnabled
 
 proc handleButtonPress(window: Window, button: Button) =
-  buttonPressTemplate()
+  handleButtonPressTemplate()
 
 proc handleButtonRelease(window: Window, button: Button) =
-  buttonReleaseTemplate()
+  handleButtonReleaseTemplate()
+
+proc handleRune(window: Window, rune: Rune) =
+  handleRuneTemplate()
 
 proc handleMove(windowPtr: pointer) {.cdecl.} =
   let window = windows.forPointer(windowPtr)
@@ -260,6 +265,13 @@ proc handleFlagsChanged(windowPtr: pointer, keyCode: int32) {.cdecl.} =
   else:
     window.handleButtonPress(button)
 
+proc handleRune(windowPtr: pointer, rune: uint32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  window.handleRune(Rune(rune))
+
 proc init*() =
   if not initialized:
     innerInit(
@@ -271,7 +283,8 @@ proc init*() =
       handleScroll,
       handleKeyDown,
       handleKeyUp,
-      handleFlagsChanged
+      handleFlagsChanged,
+      handleRune
     )
     platformDoubleClickInterval = innerGetDoubleClickInterval()
     initialized = true
@@ -310,7 +323,6 @@ proc newWindow*(
 
   result = Window()
   result.title = title
-  result.runeInputEnabled = true
 
   innerNewWindow(
     title.cstring,

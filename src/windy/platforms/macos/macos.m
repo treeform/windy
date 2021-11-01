@@ -4,21 +4,24 @@
 
 #import <Cocoa/Cocoa.h>
 
-const NSInteger decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask;
-const NSInteger undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
+static const NSInteger decoratedWindowMask = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask;
+static const NSInteger undecoratedWindowMask = NSBorderlessWindowMask | NSMiniaturizableWindowMask;
 
-const int keyCodeMouseLeft = 0x1f0;
-const int keyCodeMouseRight = 0x1f1;
-const int keyCodeMouseMiddle = 0x1f2;
-const int keyCodeMouse4 = 0x1f3;
-const int keyCodeMouse5 = 0x1f4;
+static const NSRange kEmptyRange = { NSNotFound, 0 };
+
+static const int keyCodeMouseLeft = 0x1f0;
+static const int keyCodeMouseRight = 0x1f1;
+static const int keyCodeMouseMiddle = 0x1f2;
+static const int keyCodeMouse4 = 0x1f3;
+static const int keyCodeMouse5 = 0x1f4;
 
 typedef void (*Handler)(void* windowPtr);
 typedef void (*MouseHandler)(void* windowPtr, int x, int y);
 typedef void (*ScrollHandler)(void* windowPtr, float x, float y);
 typedef void (*KeyHandler)(void* windowPtr, int keyCode);
+typedef void (*RuneHandler)(void* windowPtr, unsigned int rune);
 
-static void createMenuBar(void) {
+void createMenuBar(void) {
     id menubar = [NSMenu new];
     id appMenuItem = [NSMenuItem new];
     [menubar addItem:appMenuItem];
@@ -33,7 +36,7 @@ static void createMenuBar(void) {
     [appMenuItem setSubmenu:appMenu];
 }
 
-static int pickOpenGLProfile(int majorVersion) {
+int pickOpenGLProfile(int majorVersion) {
     if (majorVersion == 4) {
         return NSOpenGLProfileVersion4_1Core;
     }
@@ -43,7 +46,7 @@ static int pickOpenGLProfile(int majorVersion) {
     return NSOpenGLProfileVersionLegacy;
 }
 
-static int convertY(int y) {
+int convertY(int y) {
     // Converts y from relative to the bottom of the screen to relative to the top of the screen.
     int screenHeight = (int)CGDisplayBounds(CGMainDisplayID()).size.height;
     return screenHeight - y - 1;
@@ -66,7 +69,7 @@ static int convertY(int y) {
 @interface WindyWindow : NSWindow <NSWindowDelegate>
 @end
 
-@interface WindyContentView : NSOpenGLView
+@interface WindyContentView : NSOpenGLView <NSTextInputClient>
 {
     NSTrackingArea* trackingArea;
 }
@@ -78,6 +81,7 @@ Handler onMove, onResize, onCloseRequested, onFocusChange;
 MouseHandler onMouseMove;
 ScrollHandler onScroll;
 KeyHandler onKeyDown, onKeyUp, onFlagsChanged;
+RuneHandler onRune;
 
 float innerGetDoubleClickInterval() {
     return [NSEvent doubleClickInterval];
@@ -201,7 +205,8 @@ void innerInit(
     ScrollHandler handleScroll,
     KeyHandler handleKeyDown,
     KeyHandler handleKeyUp,
-    KeyHandler handleFlagsChanged
+    KeyHandler handleFlagsChanged,
+    RuneHandler handleRune
 ) {
     onMove = handleMove;
     onResize = handleResize;
@@ -212,6 +217,7 @@ void innerInit(
     onKeyDown = handleKeyDown;
     onKeyUp = handleKeyUp;
     onFlagsChanged = handleFlagsChanged;
+    onRune = handleRune;
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -239,6 +245,10 @@ void innerPollEvents() {
 }
 
 @implementation WindyWindow
+
+- (BOOL)canBecomeKeyWindow {
+    return YES;
+}
 
 - (void)windowDidResize:(NSNotification*)notification {
     onResize(self);
@@ -308,6 +318,10 @@ void innerPollEvents() {
     return YES;
 }
 
+- (BOOL)acceptsFirstMouse:(NSEvent*)event {
+    return YES;
+}
+
 - (void)viewDidChangeBackingProperties
 {
     [super viewDidChangeBackingProperties];
@@ -335,10 +349,6 @@ void innerPollEvents() {
 
     [self addTrackingArea:trackingArea];
     [super updateTrackingAreas];
-}
-
-- (BOOL)acceptsFirstMouse:(NSEvent*)event {
-    return YES;
 }
 
 - (void)mouseMoved:(NSEvent*)event {
@@ -412,6 +422,7 @@ void innerPollEvents() {
 
 - (void)keyDown:(NSEvent*)event {
     onKeyDown(self.window, event.keyCode);
+    [self interpretKeyEvents:[NSArray arrayWithObject:event]];
 }
 
 - (void)keyUp:(NSEvent*)event {
@@ -420,6 +431,74 @@ void innerPollEvents() {
 
 - (void)flagsChanged:(NSEvent*)event {
     onFlagsChanged(self.window, event.keyCode);
+}
+
+- (BOOL)hasMarkedText {
+    return NO;
+}
+
+- (NSRange)markedRange {
+    return kEmptyRange;
+}
+
+- (NSRange)selectedRange {
+    return kEmptyRange;
+}
+
+- (void)setMarkedText:(id)string
+        selectedRange:(NSRange)selectedRange
+     replacementRange:(NSRange)replacementRange {
+}
+
+- (void)unmarkText {
+}
+
+- (NSArray*)validAttributesForMarkedText {
+    return [NSArray array];
+}
+
+- (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range
+                                               actualRange:(NSRangePointer)actualRange {
+    return nil;
+}
+
+- (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
+    NSString* characters;
+    if ([string isKindOfClass:[NSAttributedString class]]) {
+        characters = [string string];
+    } else {
+        characters = (NSString*) string;
+    }
+
+    NSRange range = NSMakeRange(0, [characters length]);
+    while (range.length) {
+        unsigned int codepoint = 0;
+        if ([characters getBytes:&codepoint
+                       maxLength:sizeof(codepoint)
+                      usedLength:NULL
+                        encoding:NSUTF32StringEncoding
+                         options:0
+                           range:range
+                  remainingRange:&range]) {
+            if (codepoint >= 0xf700 && codepoint <= 0xf7ff) {
+                continue;
+            }
+
+            onRune(self.window, codepoint);
+        }
+    }
+}
+
+- (NSUInteger)characterIndexForPoint:(NSPoint)point {
+    return 0;
+}
+
+- (NSRect)firstRectForCharacterRange:(NSRange)range
+                         actualRange:(NSRangePointer)actualRange {
+    return [self frame];
+}
+
+- (void)doCommandBySelector:(SEL)selector {
 }
 
 @end
@@ -459,9 +538,11 @@ void innerNewWindow(
                                                                     depthBits:depthBits
                                                                   stencilBits:stencilBits];
 
-    [window setContentView:view];
-    [window setTitle:[NSString stringWithUTF8String:title]];
     [window setDelegate:window];
+    [window setTitle:[NSString stringWithUTF8String:title]];
+    [window setContentView:view];
+    [window makeFirstResponder:view];
+    [window setRestorable:NO];
 
     innerPollEvents();
 
