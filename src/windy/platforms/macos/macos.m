@@ -1,6 +1,7 @@
 // errors
 // memory
 // 1270 not 1280
+// in pixels
 
 #import <Cocoa/Cocoa.h>
 
@@ -83,6 +84,8 @@ ScrollHandler onScroll;
 KeyHandler onKeyDown, onKeyUp, onFlagsChanged;
 RuneHandler onRune;
 
+char* clipboardString;
+
 double innerGetDoubleClickInterval() {
     return [NSEvent doubleClickInterval];
 }
@@ -137,9 +140,8 @@ bool innerGetMaximized(WindyWindow* window) {
 }
 
 void innerSetTitle(WindyWindow* window, char* title) {
-    NSString* nsTitle = [NSString stringWithUTF8String:title];
-    [window setTitle:nsTitle];
-    [window setMiniwindowTitle:nsTitle];
+    [window setTitle:@(title)];
+    [window setMiniwindowTitle:@(title)];
 }
 
 void innerSetVisible(WindyWindow* window, bool visible) {
@@ -511,7 +513,7 @@ void innerSwapBuffers(WindyWindow* window) {
     [[[window contentView] openGLContext] flushBuffer];
 }
 
-void innerNewWindow(
+WindyWindow* innerNewWindow(
     char* title,
     int width,
     int height,
@@ -520,8 +522,7 @@ void innerNewWindow(
     int openglMinorVersion,
     int msaa,
     int depthBits,
-    int stencilBits,
-    WindyWindow** windowRet
+    int stencilBits
 ) {
     NSRect contentRect = NSMakeRect(0, 0, width, height);
 
@@ -539,12 +540,44 @@ void innerNewWindow(
                                                                   stencilBits:stencilBits];
 
     [window setDelegate:window];
-    [window setTitle:[NSString stringWithUTF8String:title]];
+    [window setTitle:@(title)];
     [window setContentView:view];
     [window makeFirstResponder:view];
     [window setRestorable:NO];
 
     innerPollEvents();
 
-    *windowRet = window;
+    return window;
+}
+
+char* innerGetClipboardString() {
+    if (clipboardString) {
+        free(clipboardString);
+        clipboardString = nil;
+    }
+
+    @autoreleasepool {
+        NSPasteboard* pboard = [NSPasteboard generalPasteboard];
+        if (![[pboard types] containsObject:NSPasteboardTypeString]) {
+            return nil;
+        }
+        NSString* value = [pboard stringForType:NSPasteboardTypeString];
+        if (!value) {
+            return nil;
+        }
+
+        char* utf8 = [value UTF8String];
+        clipboardString = malloc(strlen(utf8) + 1);
+        strcpy(clipboardString, utf8);
+    }
+
+    return clipboardString;
+}
+
+void innerSetClipboardString(char* value) {
+    @autoreleasepool {
+        NSPasteboard* pboard = [NSPasteboard generalPasteboard];
+        [pboard clearContents];
+        [pboard setString:@(value) forType:NSPasteboardTypeString];
+    }
 }

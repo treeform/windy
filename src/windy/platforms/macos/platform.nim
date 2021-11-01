@@ -105,9 +105,12 @@ proc innerNewWindow(
   openglMinorVersion: int32,
   msaa: int32,
   depthBits: int32,
-  stencilBits: int32,
-  windowRet: ptr pointer
-) {.importc.}
+  stencilBits: int32
+): pointer {.importc.}
+
+proc innerGetClipboardString(): cstring {.importc.}
+
+proc innerSetClipboardString(value: cstring) {.importc.}
 
 proc visible*(window: Window): bool =
   innerGetVisible(window.windowPtr)
@@ -323,8 +326,7 @@ proc newWindow*(
 
   result = Window()
   result.title = title
-
-  innerNewWindow(
+  result.windowPtr = innerNewWindow(
     title.cstring,
     size.x,
     size.y,
@@ -333,9 +335,11 @@ proc newWindow*(
     openglMinorVersion.int32,
     msaa.int32,
     depthBits.int32,
-    stencilBits.int32,
-    result.windowPtr.addr
+    stencilBits.int32
   )
+
+  if result.windowPtr == nil:
+    raise newException(WindyError, "Creating window failed")
 
   windows.add(result)
 
@@ -385,6 +389,8 @@ proc buttonToggle*(window: Window): ButtonView =
 
 proc getClipboardString*(): string =
   init()
+  $innerGetClipboardString()
 
 proc setClipboardString*(value: string) =
   init()
+  innerSetClipboardString(value.cstring)

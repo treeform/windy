@@ -40,15 +40,15 @@ window.onButtonPress = proc(button: Button) =
   echo "onButtonPress ", button
   echo "down: ", window.buttonDown[button]
   echo "pressed: ", window.buttonPressed[button]
-  echo "released:", window.buttonReleased[button]
-  echo "toggle:", window.buttonToggle[button]
+  echo "released: ", window.buttonReleased[button]
+  echo "toggle: ", window.buttonToggle[button]
 
 window.onButtonRelease = proc(button: Button) =
   echo "onButtonRelease ", button
   echo "down: ", window.buttonDown[button]
   echo "pressed: ", window.buttonPressed[button]
-  echo "released:", window.buttonReleased[button]
-  echo "toggle:", window.buttonToggle[button]
+  echo "released: ", window.buttonReleased[button]
+  echo "toggle: ", window.buttonToggle[button]
 
 window.onRune = proc(rune: Rune) =
   echo "onRune ", rune
