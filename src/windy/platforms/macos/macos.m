@@ -83,7 +83,7 @@ ScrollHandler onScroll;
 KeyHandler onKeyDown, onKeyUp, onFlagsChanged;
 RuneHandler onRune;
 
-float innerGetDoubleClickInterval() {
+double innerGetDoubleClickInterval() {
     return [NSEvent doubleClickInterval];
 }
 

@@ -44,7 +44,7 @@ proc forPointer(windows: seq[Window], windowPtr: pointer): Window =
     return nil
   windows[index]
 
-proc innerGetDoubleClickInterval(): float {.importc.}
+proc innerGetDoubleClickInterval(): float64 {.importc.}
 
 proc innerGetVisible(windowPtr: pointer): bool {.importc.}
 
