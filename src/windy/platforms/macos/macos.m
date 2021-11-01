@@ -1,6 +1,7 @@
 // errors
 // memory
 // 1270 not 1280
+// in pixels
 
 #import <Cocoa/Cocoa.h>
 
@@ -82,6 +83,8 @@ MouseHandler onMouseMove;
 ScrollHandler onScroll;
 KeyHandler onKeyDown, onKeyUp, onFlagsChanged;
 RuneHandler onRune;
+
+char* clipboardString;
 
 double innerGetDoubleClickInterval() {
     return [NSEvent doubleClickInterval];
@@ -510,7 +513,7 @@ void innerSwapBuffers(WindyWindow* window) {
     [[[window contentView] openGLContext] flushBuffer];
 }
 
-void innerNewWindow(
+WindyWindow* innerNewWindow(
     char* title,
     int width,
     int height,
@@ -519,8 +522,7 @@ void innerNewWindow(
     int openglMinorVersion,
     int msaa,
     int depthBits,
-    int stencilBits,
-    WindyWindow** windowRet
+    int stencilBits
 ) {
     NSRect contentRect = NSMakeRect(0, 0, width, height);
 
@@ -545,23 +547,37 @@ void innerNewWindow(
 
     innerPollEvents();
 
-    *windowRet = window;
+    return window;
 }
 
 char* innerGetClipboardString() {
-    NSPasteboard* pboard = [NSPasteboard generalPasteboard];
-    if (![[pboard types] containsObject:NSPasteboardTypeString]) {
-        return nil;
+    if (clipboardString) {
+        free(clipboardString);
+        clipboardString = nil;
     }
-    NSString* value = [pboard stringForType:NSPasteboardTypeString];
-    if (!value) {
-        return nil;
+
+    @autoreleasepool {
+        NSPasteboard* pboard = [NSPasteboard generalPasteboard];
+        if (![[pboard types] containsObject:NSPasteboardTypeString]) {
+            return nil;
+        }
+        NSString* value = [pboard stringForType:NSPasteboardTypeString];
+        if (!value) {
+            return nil;
+        }
+
+        char* utf8 = [value UTF8String];
+        clipboardString = malloc(strlen(utf8) + 1);
+        strcpy(clipboardString, utf8);
     }
-    return [value UTF8String];
+
+    return clipboardString;
 }
 
 void innerSetClipboardString(char* value) {
-    NSPasteboard* pboard = [NSPasteboard generalPasteboard];
-    [pboard clearContents];
-    [pboard setString:@(value) forType:NSPasteboardTypeString];
+    @autoreleasepool {
+        NSPasteboard* pboard = [NSPasteboard generalPasteboard];
+        [pboard clearContents];
+        [pboard setString:@(value) forType:NSPasteboardTypeString];
+    }
 }
