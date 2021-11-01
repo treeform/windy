@@ -137,9 +137,8 @@ bool innerGetMaximized(WindyWindow* window) {
 }
 
 void innerSetTitle(WindyWindow* window, char* title) {
-    NSString* nsTitle = [NSString stringWithUTF8String:title];
-    [window setTitle:nsTitle];
-    [window setMiniwindowTitle:nsTitle];
+    [window setTitle:@(title)];
+    [window setMiniwindowTitle:@(title)];
 }
 
 void innerSetVisible(WindyWindow* window, bool visible) {
@@ -539,7 +538,7 @@ void innerNewWindow(
                                                                   stencilBits:stencilBits];
 
     [window setDelegate:window];
-    [window setTitle:[NSString stringWithUTF8String:title]];
+    [window setTitle:@(title)];
     [window setContentView:view];
     [window makeFirstResponder:view];
     [window setRestorable:NO];
@@ -547,4 +546,22 @@ void innerNewWindow(
     innerPollEvents();
 
     *windowRet = window;
+}
+
+char* innerGetClipboardString() {
+    NSPasteboard* pboard = [NSPasteboard generalPasteboard];
+    if (![[pboard types] containsObject:NSPasteboardTypeString]) {
+        return nil;
+    }
+    NSString* value = [pboard stringForType:NSPasteboardTypeString];
+    if (!value) {
+        return nil;
+    }
+    return [value UTF8String];
+}
+
+void innerSetClipboardString(char* value) {
+    NSPasteboard* pboard = [NSPasteboard generalPasteboard];
+    [pboard clearContents];
+    [pboard setString:@(value) forType:NSPasteboardTypeString];
 }

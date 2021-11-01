@@ -109,6 +109,10 @@ proc innerNewWindow(
   windowRet: ptr pointer
 ) {.importc.}
 
+proc innerGetClipboardString(): cstring {.importc.}
+
+proc innerSetClipboardString(value: cstring) {.importc.}
+
 proc visible*(window: Window): bool =
   innerGetVisible(window.windowPtr)
 
@@ -385,6 +389,8 @@ proc buttonToggle*(window: Window): ButtonView =
 
 proc getClipboardString*(): string =
   init()
+  $innerGetClipboardString()
 
 proc setClipboardString*(value: string) =
   init()
+  innerSetClipboardString(value.cstring)
