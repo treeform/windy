@@ -1,5 +1,4 @@
 // errors
-// memory
 // 1270 not 1280
 // in pixels
 
@@ -87,68 +86,94 @@ RuneHandler onRune;
 char* clipboardString;
 
 double innerGetDoubleClickInterval() {
-    return [NSEvent doubleClickInterval];
+    @autoreleasepool {
+        return [NSEvent doubleClickInterval];
+    }
 }
 
 bool innerGetVisible(WindyWindow* window) {
-    return window.isVisible;
+    @autoreleasepool {
+        return window.isVisible;
+    }
 }
 
 bool innerGetDecorated(WindyWindow* window) {
-    return (window.styleMask & NSTitledWindowMask) != 0;
+    @autoreleasepool {
+        return (window.styleMask & NSTitledWindowMask) != 0;
+    }
 }
 
 bool innerGetResizable(WindyWindow* window) {
-    return (window.styleMask & NSResizableWindowMask) != 0;
+    @autoreleasepool {
+        return (window.styleMask & NSResizableWindowMask) != 0;
+    }
 }
 
 void innerGetSize(WindyWindow* window, int* width, int* height) {
-    NSRect contentRect = [[window contentView] frame];
-    *width = contentRect.size.width;
-    *height = contentRect.size.height;
+    @autoreleasepool {
+        NSRect contentRect = [[window contentView] frame];
+        *width = contentRect.size.width;
+        *height = contentRect.size.height;
+    }
 }
 
 void innerGetPos(WindyWindow* window, int* x, int* y) {
-    NSRect contentRect = [window contentRectForFrameRect:[window frame]];
-    *x = contentRect.origin.x;
-    *y = convertY(contentRect.origin.y + contentRect.size.height - 1);
+    @autoreleasepool {
+        NSRect contentRect = [window contentRectForFrameRect:[window frame]];
+        *x = contentRect.origin.x;
+        *y = convertY(contentRect.origin.y + contentRect.size.height - 1);
+    }
 }
 
 void innerGetFramebufferSize(WindyWindow* window, int* width, int* height) {
-    NSRect contentRect = [[window contentView] frame];
-    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
-    *width = backingRect.size.width;
-    *height = backingRect.size.height;
+    @autoreleasepool {
+        NSRect contentRect = [[window contentView] frame];
+        NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+        *width = backingRect.size.width;
+        *height = backingRect.size.height;
+    }
 }
 
 void innerGetContentScale(WindyWindow* window, float* scale) {
-    NSRect contentRect = [[window contentView] frame];
-    NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
-    *scale = backingRect.size.width / contentRect.size.width;
+    @autoreleasepool {
+        NSRect contentRect = [[window contentView] frame];
+        NSRect backingRect = [[window contentView] convertRectToBacking:contentRect];
+        *scale = backingRect.size.width / contentRect.size.width;
+    }
 }
 
 bool innerGetFocused(WindyWindow* window) {
-    return [window isKeyWindow];
+    @autoreleasepool {
+        return [window isKeyWindow];
+    }
 }
 
 bool innerGetMinimized(WindyWindow* window) {
-    return [window isMiniaturized];
+    @autoreleasepool {
+        return [window isMiniaturized];
+    }
 }
 
 bool innerGetMaximized(WindyWindow* window) {
-    return [window isZoomed];
+    @autoreleasepool {
+        return [window isZoomed];
+    }
 }
 
 void innerSetTitle(WindyWindow* window, char* title) {
-    [window setTitle:@(title)];
-    [window setMiniwindowTitle:@(title)];
+    @autoreleasepool {
+        [window setTitle:@(title)];
+        [window setMiniwindowTitle:@(title)];
+    }
 }
 
 void innerSetVisible(WindyWindow* window, bool visible) {
-    if (visible) {
-        [window orderFront:nil];
-    } else {
-        [window orderOut:nil];
+    @autoreleasepool {
+        if (visible) {
+            [window orderFront:nil];
+        } else {
+            [window orderOut:nil];
+        }
     }
 }
 
@@ -161,40 +186,50 @@ void innerSetResizable(WindyWindow* window, bool resizable) {
         return;
     }
 
-    if (resizable) {
-        window.styleMask |= NSResizableWindowMask;
-    } else {
-        window.styleMask &= ~NSResizableWindowMask;
+    @autoreleasepool {
+        if (resizable) {
+            window.styleMask |= NSResizableWindowMask;
+        } else {
+            window.styleMask &= ~NSResizableWindowMask;
+        }
     }
 }
 
 void innerSetSize(WindyWindow* window, int width, int height) {
-    NSRect contentRect = [window contentRectForFrameRect:[window frame]];
-    contentRect.origin.y += contentRect.size.height - height;
-    contentRect.size = NSMakeSize(width, height);
-    [window setFrame:[window frameRectForContentRect:contentRect]
-                                             display:YES];
+    @autoreleasepool {
+        NSRect contentRect = [window contentRectForFrameRect:[window frame]];
+        contentRect.origin.y += contentRect.size.height - height;
+        contentRect.size = NSMakeSize(width, height);
+        [window setFrame:[window frameRectForContentRect:contentRect]
+                                                 display:YES];
+    }
 }
 
 void innerSetPos(WindyWindow* window, int x, int y) {
-    NSRect contentRect = [[window contentView] frame];
-    NSRect rect = NSMakeRect(x, convertY(y + contentRect.size.height - 1), 0, 0);
-    [window setFrameOrigin:rect.origin];
+    @autoreleasepool {
+        NSRect contentRect = [[window contentView] frame];
+        NSRect rect = NSMakeRect(x, convertY(y + contentRect.size.height - 1), 0, 0);
+        [window setFrameOrigin:rect.origin];
+    }
 }
 
 void innerSetMinimized(WindyWindow* window, bool minimized) {
-    if (minimized && !innerGetMinimized(window)) {
-        [window miniaturize:nil];
-    } else if (!minimized && innerGetMinimized(window)) {
-        [window deminiaturize:nil];
+    @autoreleasepool {
+        if (minimized && !innerGetMinimized(window)) {
+            [window miniaturize:nil];
+        } else if (!minimized && innerGetMinimized(window)) {
+            [window deminiaturize:nil];
+        }
     }
 }
 
 void innerSetMaximized(WindyWindow* window, bool maximized) {
-    if (maximized && !innerGetMinimized(window)) {
-        [window zoom:nil];
-    } else if (!maximized && innerGetMaximized(window)) {
-        [window zoom:nil];
+    @autoreleasepool {
+        if (maximized && !innerGetMinimized(window)) {
+            [window zoom:nil];
+        } else if (!maximized && innerGetMaximized(window)) {
+            [window zoom:nil];
+        }
     }
 }
 
@@ -221,28 +256,32 @@ void innerInit(
     onFlagsChanged = handleFlagsChanged;
     onRune = handleRune;
 
-    [NSApplication sharedApplication];
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [NSApp setPresentationOptions:NSApplicationPresentationDefault];
-    [NSApp activateIgnoringOtherApps:YES];
+    @autoreleasepool {
+        [NSApplication sharedApplication];
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+        [NSApp setPresentationOptions:NSApplicationPresentationDefault];
+        [NSApp activateIgnoringOtherApps:YES];
 
-    appDelegate = [[WindyApplicationDelegate alloc] init];
-    [NSApp setDelegate:appDelegate];
+        appDelegate = [[WindyApplicationDelegate alloc] init];
+        [NSApp setDelegate:appDelegate];
 
-    [NSApp finishLaunching];
+        [NSApp finishLaunching];
+    }
 }
 
 void innerPollEvents() {
-    while (true) {
-        NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
-                                            untilDate:[NSDate distantPast]
-                                               inMode:NSDefaultRunLoopMode
-                                              dequeue:YES];
-        if (event == nil) {
-            break;
-        }
+    @autoreleasepool {
+        while (true) {
+            NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
+                                                untilDate:[NSDate distantPast]
+                                                   inMode:NSDefaultRunLoopMode
+                                                  dequeue:YES];
+            if (event == nil) {
+                break;
+            }
 
-        [NSApp sendEvent:event];
+            [NSApp sendEvent:event];
+        }
     }
 }
 
@@ -506,11 +545,15 @@ void innerPollEvents() {
 @end
 
 void innerMakeContextCurrent(WindyWindow* window) {
-    [[[window contentView] openGLContext] makeCurrentContext];
+    @autoreleasepool {
+        [[[window contentView] openGLContext] makeCurrentContext];
+    }
 }
 
 void innerSwapBuffers(WindyWindow* window) {
-    [[[window contentView] openGLContext] flushBuffer];
+    @autoreleasepool {
+        [[[window contentView] openGLContext] flushBuffer];
+    }
 }
 
 WindyWindow* innerNewWindow(
@@ -524,26 +567,30 @@ WindyWindow* innerNewWindow(
     int depthBits,
     int stencilBits
 ) {
-    NSRect contentRect = NSMakeRect(0, 0, width, height);
+    WindyWindow* window;
 
-    WindyWindow* window = [[WindyWindow alloc] initWithContentRect:contentRect
-                                                         styleMask:decoratedWindowMask
-                                                           backing:NSBackingStoreBuffered
-                                                             defer:NO];
+    @autoreleasepool {
+        NSRect contentRect = NSMakeRect(0, 0, width, height);
 
-    WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
-                                                                        vsync:vsync
-                                                           openglMajorVersion:openglMajorVersion
-                                                           openglMinorVersion:openglMinorVersion
-                                                                         msaa:msaa
-                                                                    depthBits:depthBits
-                                                                  stencilBits:stencilBits];
+         window = [[WindyWindow alloc] initWithContentRect:contentRect
+                                                             styleMask:decoratedWindowMask
+                                                               backing:NSBackingStoreBuffered
+                                                                 defer:NO];
 
-    [window setDelegate:window];
-    [window setTitle:@(title)];
-    [window setContentView:view];
-    [window makeFirstResponder:view];
-    [window setRestorable:NO];
+        WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
+                                                                            vsync:vsync
+                                                               openglMajorVersion:openglMajorVersion
+                                                               openglMinorVersion:openglMinorVersion
+                                                                             msaa:msaa
+                                                                        depthBits:depthBits
+                                                                      stencilBits:stencilBits];
+
+        [window setDelegate:window];
+        [window setTitle:@(title)];
+        [window setContentView:view];
+        [window makeFirstResponder:view];
+        [window setRestorable:NO];
+    }
 
     innerPollEvents();
 
