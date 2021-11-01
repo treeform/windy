@@ -55,8 +55,7 @@ template LOWORD*(param: WPARAM | LPARAM): int16 =
   cast[int16](param and uint16.high)
 
 const scancodeToButton* = block:
-  var s = newSeq[Button]()
-  s.setLen(512)
+  var s = newSeq[Button](512)
   s[0x00b] = Key0
   s[0x002] = Key1
   s[0x003] = Key2

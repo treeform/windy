@@ -1,4 +1,4 @@
-import ../../common, ../../internal, vmath
+import ../../common, ../../internal, times, unicode, utils, vmath
 
 {.
   passL: "-framework Cocoa",
@@ -25,10 +25,10 @@ type
   InnerHandler = proc(windowPtr: pointer) {.cdecl.}
   InnerMouseHandler = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
   InnerScrollHandler = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
+  InnerKeyHandler = proc(windowPtr: pointer, keyCode: int32) {.cdecl.}
+  InnerRuneHandler = proc(windowPtr: pointer, rune: uint32) {.cdecl.}
 
-var
-  initialized: bool
-  windows: seq[Window]
+var windows: seq[Window]
 
 proc indexForPointer(windows: seq[Window], windowPtr: pointer): int =
   ## Returns the window for this pointer, else -1
@@ -43,6 +43,8 @@ proc forPointer(windows: seq[Window], windowPtr: pointer): Window =
   if index == -1:
     return nil
   windows[index]
+
+proc innerGetDoubleClickInterval(): float {.importc.}
 
 proc innerGetVisible(windowPtr: pointer): bool {.importc.}
 
@@ -83,7 +85,9 @@ proc innerSetMaximized(windowPtr: pointer, maximized: bool) {.importc.}
 proc innerInit(
   handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler,
   handleMouseMove: InnerMouseHandler,
-  handleScroll: InnerScrollHandler
+  handleScroll: InnerScrollHandler,
+  handleKeyDown, handleKeyUp, handleFlagsChanged: InnerKeyHandler,
+  handleRune: InnerRuneHandler
 ) {.importc.}
 
 proc innerPollEvents() {.importc.}
@@ -172,7 +176,16 @@ proc `closeRequested=`*(window: Window, closeRequested: bool) =
       window.onCloseRequest()
 
 proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
-  discard
+  window.state.runeInputEnabled = runeInputEnabled
+
+proc handleButtonPress(window: Window, button: Button) =
+  handleButtonPressTemplate()
+
+proc handleButtonRelease(window: Window, button: Button) =
+  handleButtonReleaseTemplate()
+
+proc handleRune(window: Window, rune: Rune) =
+  handleRuneTemplate()
 
 proc handleMove(windowPtr: pointer) {.cdecl.} =
   let window = windows.forPointer(windowPtr)
@@ -227,6 +240,38 @@ proc handleScroll(windowPtr: pointer, x, y: float32) {.cdecl.} =
   if window.onScroll != nil:
     window.onScroll()
 
+proc handleKeyDown(windowPtr: pointer, keyCode: int32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  window.handleButtonPress(keyCodeToButton[keyCode])
+
+proc handleKeyUp(windowPtr: pointer, keyCode: int32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  window.handleButtonRelease(keyCodeToButton[keyCode])
+
+proc handleFlagsChanged(windowPtr: pointer, keyCode: int32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  let button = keyCodeToButton[keyCode]
+  if button in window.state.buttonDown:
+    window.handleButtonRelease(button)
+  else:
+    window.handleButtonPress(button)
+
+proc handleRune(windowPtr: pointer, rune: uint32) {.cdecl.} =
+  let window = windows.forPointer(windowPtr)
+  if window == nil:
+    return
+
+  window.handleRune(Rune(rune))
+
 proc init*() =
   if not initialized:
     innerInit(
@@ -235,16 +280,19 @@ proc init*() =
       handleCloseRequested,
       handleFocusChange,
       handleMouseMove,
-      handleScroll
+      handleScroll,
+      handleKeyDown,
+      handleKeyUp,
+      handleFlagsChanged,
+      handleRune
     )
+    platformDoubleClickInterval = innerGetDoubleClickInterval()
     initialized = true
 
 proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
-    window.state.buttonPressed = {}
-    window.state.buttonReleased = {}
 
   innerPollEvents()
 
@@ -275,7 +323,6 @@ proc newWindow*(
 
   result = Window()
   result.title = title
-  result.runeInputEnabled = true
 
   innerNewWindow(
     title.cstring,
@@ -328,10 +375,10 @@ proc buttonDown*(window: Window): ButtonView =
   window.state.buttonDown.ButtonView
 
 proc buttonPressed*(window: Window): ButtonView =
-  window.state.buttonPressed.ButtonView
+  window.state.perFrame.buttonPressed.ButtonView
 
 proc buttonReleased*(window: Window): ButtonView =
-  window.state.buttonReleased.ButtonView
+  window.state.perFrame.buttonReleased.ButtonView
 
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
