@@ -556,6 +556,12 @@ void innerSwapBuffers(WindyWindow* window) {
     }
 }
 
+void innerClose(WindyWindow* window) {
+    @autoreleasepool {
+        [window close];
+    }
+}
+
 WindyWindow* innerNewWindow(
     char* title,
     int width,

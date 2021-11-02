@@ -96,6 +96,8 @@ proc innerMakeContextCurrent(windowPtr: pointer) {.importc.}
 
 proc innerSwapBuffers(windowPtr: pointer) {.importc.}
 
+proc innerClose(windowPtr: pointer) {.importc.}
+
 proc innerNewWindow(
   title: cstring,
   width: int32,
@@ -306,7 +308,25 @@ proc swapBuffers*(window: Window) =
   innerSwapBuffers(window.windowPtr)
 
 proc close*(window: Window) =
-  discard
+  window.onCloseRequest = nil
+  window.onMove = nil
+  window.onResize = nil
+  window.onFocusChange = nil
+  window.onMouseMove = nil
+  window.onScroll = nil
+  window.onButtonPress = nil
+  window.onButtonRelease = nil
+  window.onRune = nil
+  window.onImeChange = nil
+
+  if window.windowPtr != nil:
+    innerClose(window.windowPtr)
+    let index = windows.indexForPointer(window.windowPtr)
+    if index != -1:
+      windows.delete(index)
+    window.windowPtr = nil
+
+  window.state.closed = true
 
 proc closeIme*(window: Window) =
   discard
