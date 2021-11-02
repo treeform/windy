@@ -579,9 +579,9 @@ WindyWindow* innerNewWindow(
         NSRect contentRect = NSMakeRect(0, 0, width, height);
 
          window = [[WindyWindow alloc] initWithContentRect:contentRect
-                                                             styleMask:decoratedWindowMask
-                                                               backing:NSBackingStoreBuffered
-                                                                 defer:NO];
+                                                 styleMask:decoratedWindowMask
+                                                   backing:NSBackingStoreBuffered
+                                                     defer:NO];
 
         WindyContentView* view = [[WindyContentView alloc] initWithFrameAndConfig:contentRect
                                                                             vsync:vsync
