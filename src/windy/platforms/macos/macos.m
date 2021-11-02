@@ -1,6 +1,7 @@
 // errors
 // 1270 not 1280
 // in pixels
+// trigger leaks
 
 #import <Cocoa/Cocoa.h>
 
@@ -46,12 +47,6 @@ int pickOpenGLProfile(int majorVersion) {
     return NSOpenGLProfileVersionLegacy;
 }
 
-int convertY(int y) {
-    // Converts y from relative to the bottom of the screen to relative to the top of the screen.
-    int screenHeight = (int)CGDisplayBounds(CGMainDisplayID()).size.height;
-    return screenHeight - y - 1;
-}
-
 @interface WindyApplicationDelegate : NSObject <NSApplicationDelegate>
 @end
 
@@ -84,6 +79,17 @@ KeyHandler onKeyDown, onKeyUp, onFlagsChanged;
 RuneHandler onRune;
 
 char* clipboardString;
+
+int convertY(WindyWindow* window, int y) {
+    // Converts y from relative to the bottom of the screen to relative to the top of the screen.
+    NSScreen* screen = [window screen];
+    if (screen == nil) {
+        return 0;
+    }
+    int screenHeight = (int)[[window screen] frame].size.height;
+    // int screenHeight = (int)CGDisplayBounds(CGMainDisplayID()).size.height;
+    return screenHeight - y - 1;
+}
 
 double innerGetDoubleClickInterval() {
     @autoreleasepool {
@@ -121,7 +127,7 @@ void innerGetPos(WindyWindow* window, int* x, int* y) {
     @autoreleasepool {
         NSRect contentRect = [window contentRectForFrameRect:[window frame]];
         *x = contentRect.origin.x;
-        *y = convertY(contentRect.origin.y + contentRect.size.height - 1);
+        *y = convertY(window, contentRect.origin.y + contentRect.size.height - 1);
     }
 }
 
@@ -208,7 +214,7 @@ void innerSetSize(WindyWindow* window, int width, int height) {
 void innerSetPos(WindyWindow* window, int x, int y) {
     @autoreleasepool {
         NSRect contentRect = [[window contentView] frame];
-        NSRect rect = NSMakeRect(x, convertY(y + contentRect.size.height - 1), 0, 0);
+        NSRect rect = NSMakeRect(x, convertY(window, y + contentRect.size.height - 1), 0, 0);
         [window setFrameOrigin:rect.origin];
     }
 }
