@@ -42,11 +42,13 @@ proc `$`*(p: ptr WCHAR): string =
       nil,
       nil
     )
+    # The null terminator is included when -1 is used for the parameter length.
+    # Trim this null terminating character.
     result.setLen(len - 1)
 
 proc checkHRESULT*(hresult: HRESULT) =
   if hresult != S_OK:
-    raise newException(WindyError, "Unexpected hresult " & toHex(hresult))
+    raise newException(WindyError, "HRESULT: " & toHex(hresult))
 
 template HIWORD*(param: WPARAM | LPARAM): int16 =
   cast[int16]((param shr 16))
