@@ -201,7 +201,7 @@ proc updateWindowStyle(hWnd: HWND, style: LONG) =
 
   discard SetWindowLongW(hWnd, GWL_STYLE, style)
 
-  echo SetWindowPos(
+  discard SetWindowPos(
     hWnd,
     HWND_TOP,
     rect.left,
