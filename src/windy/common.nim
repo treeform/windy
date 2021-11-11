@@ -129,4 +129,7 @@ type
   ButtonView* = distinct set[Button]
 
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  button in (set[Button])buttonView
+  button in set[Button](buttonView)
+
+proc len*(buttonView: ButtonView): int =
+  set[Button](buttonView).len
