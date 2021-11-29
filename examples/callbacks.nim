@@ -1,17 +1,14 @@
-import boxy, opengl, os, windy
+import opengl, os, windy
 
 let window = newWindow("Windy Callbacks", ivec2(1280, 800))
+window.runeInputEnabled = true
 
 window.makeContextCurrent()
 loadExtensions()
 
-let bxy = newBoxy()
-
 proc display() =
-  bxy.beginFrame(window.size)
-  bxy.drawRect(rect(vec2(0, 0), window.size.vec2), color(1, 1, 1, 1))
-  bxy.drawRect(rect(vec2(100, 100), vec2(200, 200)), color(1, 0, 1, 1))
-  bxy.endFrame()
+  glClear(GL_COLOR_BUFFER_BIT)
+  # Your OpenGL display code here
   window.swapBuffers()
 
 window.onCloseRequest = proc() =
@@ -41,9 +38,17 @@ window.onScroll = proc() =
 
 window.onButtonPress = proc(button: Button) =
   echo "onButtonPress ", button
+  echo "down: ", window.buttonDown[button]
+  echo "pressed: ", window.buttonPressed[button]
+  echo "released: ", window.buttonReleased[button]
+  echo "toggle: ", window.buttonToggle[button]
 
 window.onButtonRelease = proc(button: Button) =
   echo "onButtonRelease ", button
+  echo "down: ", window.buttonDown[button]
+  echo "pressed: ", window.buttonPressed[button]
+  echo "released: ", window.buttonReleased[button]
+  echo "toggle: ", window.buttonToggle[button]
 
 window.onRune = proc(rune: Rune) =
   echo "onRune ", rune

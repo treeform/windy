@@ -13,8 +13,6 @@ type
     onRune*: RuneCallback
     onImeChange*: Callback
 
-  ButtonView* = distinct set[Button]
-
 proc title*(window: Window): string =
   discard
 
@@ -157,9 +155,6 @@ proc buttonReleased*(window: Window): ButtonView =
   discard
 
 proc buttonToggle*(window: Window): ButtonView =
-  discard
-
-proc `[]`*(buttonView: ButtonView, button: Button): bool =
   discard
 
 proc getClipboardString*(): string =

@@ -4,7 +4,7 @@ proc wstr*(str: string): string =
   let wlen = MultiByteToWideChar(
     CP_UTF8,
     0,
-    str[0].unsafeAddr,
+    str.cstring,
     str.len.int32,
     nil,
     0
@@ -13,7 +13,7 @@ proc wstr*(str: string): string =
   discard MultiByteToWideChar(
     CP_UTF8,
     0,
-    str[0].unsafeAddr,
+    str.cstring,
     str.len.int32,
     cast[ptr WCHAR](result[0].addr),
     wlen
@@ -42,11 +42,13 @@ proc `$`*(p: ptr WCHAR): string =
       nil,
       nil
     )
+    # The null terminator is included when -1 is used for the parameter length.
+    # Trim this null terminating character.
     result.setLen(len - 1)
 
 proc checkHRESULT*(hresult: HRESULT) =
   if hresult != S_OK:
-    raise newException(WindyError, "Unexpected hresult " & toHex(hresult))
+    raise newException(WindyError, "HRESULT: " & toHex(hresult))
 
 template HIWORD*(param: WPARAM | LPARAM): int16 =
   cast[int16]((param shr 16))
@@ -55,8 +57,7 @@ template LOWORD*(param: WPARAM | LPARAM): int16 =
   cast[int16](param and uint16.high)
 
 const scancodeToButton* = block:
-  var s = newSeq[Button]()
-  s.setLen(512)
+  var s = newSeq[Button](512)
   s[0x00b] = Key0
   s[0x002] = Key1
   s[0x003] = Key2
