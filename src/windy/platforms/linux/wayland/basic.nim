@@ -65,7 +65,7 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
 
   var a = "\1\0" & name
   
-  if sock.connect(cast[ptr SockAddr](a[0].addr), uint32 name.len + 2) < 0:
+  if sock.connect(cast[ptr SockAddr](a[0].addr), uint32 a.len) < 0:
     close sock
     raise WindyError.newException("Failed to connect to wayland server")
   
@@ -119,7 +119,7 @@ proc serialize[T](x: T): seq[uint32] =
       result.add x.serialize
 
   elif x is set:
-    when T.sizeof > uint.sizeof: {.error: "too large set".}
+    when T.sizeof > uint32.sizeof: {.error: "too large set".}
     result.add cast[uint32](x)
   
   elif x is Proxy:

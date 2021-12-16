@@ -1,5 +1,5 @@
 include basic
-import macros, strformat, sequtils, vmath, options
+import macros, strformat, sequtils, vmath, options, unicode
 
 proc unshl(x: int): int =
   var x = x
@@ -70,7 +70,7 @@ macro protocol(body) =
           newEmptyNode()
         )
         result.add nnkTemplateDef.newTree( # x.onEvent:... template
-          nnkPostfix.newTree(ident"*", ident &"on{a.name}"),
+          nnkPostfix.newTree(ident"*", ident &"on{($a.name).runeAt(0).toUpper}{($a.name).toRunes[1..^1]}"),
           newEmptyNode(),
           newEmptyNode(),
           nnkFormalParams.newTree(
@@ -126,8 +126,7 @@ macro protocol(body) =
       else: # marshaling
         let (_, _, argvals) = p.prepareArgs
         p.insert 1, newIdentDefs(ident"this", t)
-        let name = a.name
-        a.name = nnkPostfix.newTree(ident"*", a.name)
+        a[0] = nnkPostfix.newTree(ident"*", a[0])
         a.params = p.prepareParams
         a.body = nnkCall.newTree(
           @[nnkDotExpr.newTree(ident"this", ident"marshal"), newLit i] &
@@ -147,7 +146,7 @@ macro protocol(body) =
             ),
             a.body
           )
-        if $name == "destroy":
+        if $a.name == "destroy":
           a.body = newStmtList(
             a.body,
             newCall(ident"destroy", nnkDotExpr.newTree(ident"this", ident"Proxy"))

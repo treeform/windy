@@ -1,16 +1,55 @@
+import ../../common, ../../internal
 import wayland/protocol
 
-let display = connect()
-display.onError:
-  echo "Error for ", objId.uint32, ": ", code, ", ", message
+var
+  initialized: bool
 
-let reg = display.registry
-var compositor: Compositor
+  display: Display
+  registry: Registry
 
-reg.onGlobal:
-  echo (name: name, iface: iface, version: version)
-  case iface
-  of "wl_compositor":
-    compositor = reg.bindInterface(Compositor, name, iface, version)
+  compositor: Compositor
+  shm: Shm
+  shell: XdgWmBase
 
-sync display
+  shmFormats: seq[ShmFormat]
+
+
+proc init* =
+  if initialized: return
+
+  display = connect()
+  display.onError:
+    raise WindyError.newException("Wayland error for " & $objId.uint32 & ": " & $code & ", " & message)
+  
+  registry = display.registry
+
+  registry.onGlobal:
+    case iface
+    of "wl_compositor":
+      compositor = registry.bindInterface(Compositor, name, iface, version)
+    
+    of "wl_shm":
+      shm = registry.bindInterface(Shm, name, iface, version)
+
+      shm.onFormat:
+        shmFormats.add format
+    
+    of "xdg_wm_base":
+      shell = registry.bindInterface(XdgWmBase, name, iface, version)
+  
+      shell.onPing:
+        shell.pong(serial)
+
+  sync display
+
+  if compositor == nil or shm == nil or shell == nil:
+    raise WindyError.newException(
+      "Not enough Wayland interfaces, missing: " &
+      (if compositor == nil: "wl_compositor " else: "") &
+      (if shm == nil: "wl_shm " else: "") &
+      (if shell == nil: "xdg_wm_base " else: "")
+    )
+  
+  sync display
+
+  initialized = true

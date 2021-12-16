@@ -46,8 +46,6 @@ type
     motiv
     kwm
     other
-  
-  ButtonView* = distinct set[Button]
 
 
 var
@@ -145,10 +143,10 @@ proc invert[T](x: var set[T], v: T) =
   if x.contains v: x.excl v
   else: x.incl v
 
-proc send*(a: XWindow, e: XEvent, mask: clong = NoEventMask, propagate = false) =
+proc send(a: XWindow, e: XEvent, mask: clong = NoEventMask, propagate = false) =
   display.XSendEvent(a, propagate, mask, e.unsafeAddr)
 
-proc newClientMessage*[T](window: XWindow, messageKind: Atom, data: openarray[T], serial: int = 0, sendEvent: bool = false): XEvent =
+proc newClientMessage[T](window: XWindow, messageKind: Atom, data: openarray[T], serial: int = 0, sendEvent: bool = false): XEvent =
   result.kind = xeClientMessage
   result.client.messageType = messageKind
   if data.len * T.sizeof > XClientMessageData.sizeof:
@@ -284,7 +282,7 @@ proc keysymToButton(sym: KeySym): Button =
   of xk_9:            Key9
   else:               ButtonUnknown
 
-proc queryKeyboardState*(): set[0..255] =
+proc queryKeyboardState(): set[0..255] =
   var r: array[32, char]
   display.XQueryKeymap(r)
   result = cast[ptr set[0..255]](r.addr)[]
