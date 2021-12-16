@@ -318,7 +318,7 @@ proc `visible=`*(window: Window, v: bool) =
 
 
 proc size*(window: Window): IVec2 =
-  window.handle.geometry.size
+  window.prevSize
 
 proc `size=`*(window: Window, v: IVec2) =
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
