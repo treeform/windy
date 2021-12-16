@@ -456,15 +456,13 @@ proc newWindow*(
   visible = true,
   vsync = true,
 
-  # window constructor can't set opengl version, msaa and stencilBits
-  # args mustn't set depthBits directly
   openglMajorVersion = 4,
   openglMinorVersion = 1,
   msaa = msaaDisabled,
   depthBits = 24,
   stencilBits = 8,
   
-  transparent = false, # note that transparency CANNOT be changed after window was created
+  transparent = false,
 ): Window =
   ## Creates a new window. Intitializes Windy if needed.
   init()
@@ -473,13 +471,15 @@ proc newWindow*(
   result.runeInputEnabled = true
   
   let root = display.defaultRootWindow
-  
+
   var vi: XVisualInfo
   if transparent:
     display.XMatchVisualInfo(display.defaultScreen, 32, TrueColor, vi.addr)
   else:
-    var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
-    vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
+    display.XMatchVisualInfo(display.defaultScreen, 24, TrueColor, vi.addr)
+    # strangely, glx rerutns nil when -d:danger
+    # var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
+    # vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
 
   let cmap = display.XCreateColormap(root, vi.visual, AllocNone)
   var swa = XSetWindowAttributes(colormap: cmap)
@@ -521,7 +521,7 @@ proc newWindow*(
   result.ctx = display.glXCreateContext(vi.addr, nil, 1)
 
   if result.ctx == nil:
-    raise newException(WindyError, "Error creating OpenGL context")
+    raise WindyError.newException("Error creating OpenGL context")
 
   result.title = title
 
@@ -535,7 +535,7 @@ proc newWindow*(
     elif glXSwapIntervalSGI != nil:
       glXSwapIntervalSGI(1)
     else:
-      raise newException(WindyError, "VSync is not supported")
+      raise WindyError.newException("VSync is not supported")
 
   if visible:
     result.visible = true
@@ -707,9 +707,6 @@ proc buttonReleased*(window: Window): ButtonView =
 
 proc buttonToggle*(window: Window): ButtonView =
   ButtonView window.buttonToggle
-
-proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  button in (set[Button])(buttonView)
 
 proc closeRequested*(window: Window): bool =
   window.closeRequested
