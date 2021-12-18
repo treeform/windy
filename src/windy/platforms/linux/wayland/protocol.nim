@@ -363,18 +363,18 @@ protocol:
     proc newRegion: Region
 
 
-  ShmPool:
-    proc newBuffer(offset: int, size: IVec2, stride: int, format: ShmFormat): Buffer
-    proc destroy
-    proc resize(size: int)
-
-
   Shm:
     iface "wl_shm"
 
     proc newPool(fd: FileDescriptor, size: int): ShmPool
 
     proc format(format: ShmFormat): event
+
+
+  ShmPool:
+    proc newBuffer(offset: int, size: IVec2, stride: int, format: ShmFormat): Buffer
+    proc destroy
+    proc resize(size: int)
 
 
   Buffer:

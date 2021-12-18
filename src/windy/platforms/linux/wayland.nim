@@ -1,5 +1,6 @@
+import vmath
 import ../../common, ../../internal
-import wayland/protocol
+import wayland/[protocol, sharedBuffer]
 
 var
   initialized: bool
@@ -53,3 +54,26 @@ proc init* =
   sync display
 
   initialized = true
+
+when isMainModule:
+  init()
+  echo shmFormats
+  let srf = compositor.newSurface
+  let ssrf = shell.shellSurface(srf)
+  let tl = ssrf.toplevel
+
+  commit srf
+
+  ssrf.onConfigure:
+    ssrf.ackConfigure(serial)
+    commit srf
+
+  tl.onClose: quit()
+
+  sync display
+
+  let buf = shm.create(ivec2(128, 128), ShmFormat.xrgb8888)
+  attach srf, buf.buffer, ivec2(0, 0)
+  commit srf
+
+  while true: sync display
