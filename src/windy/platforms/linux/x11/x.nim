@@ -14,6 +14,7 @@ type
   Colormap* = XID
   GContext* = XID
   KeySym* = XID
+  XSyncCounter* = distinct XID
   
   KeyCode* = cuchar
 

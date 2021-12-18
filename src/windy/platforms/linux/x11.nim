@@ -34,6 +34,8 @@ type
     gc: GC
     ic: XIC
     im: XIM
+    xsyncConter: XSyncCounter
+    lastSync: XSyncValue
 
     closeRequested, closed: bool
     runeInputEnabled: bool
@@ -96,16 +98,6 @@ proc init =
       WmForDecoratedKind.unsupported
 
   initialized = true
-
-proc geometry(window: XWindow): tuple[root: XWindow; pos, size: IVec2; borderW: int, depth: int] =
-  var
-    root: XWindow
-    x, y: int32
-    w, h: uint32
-    borderW: uint32
-    depth: uint32
-  display.XGetGeometry(window, root.addr, x.addr, y.addr, w.addr, h.addr, borderW.addr, depth.addr)
-  (root, ivec2(x, y), ivec2(w.int32, h.int32), borderW.int, depth.int)
 
 proc property(window: XWindow, property: Atom): tuple[kind: Atom, data: string] =
   var
@@ -289,10 +281,11 @@ proc queryKeyboardState(): set[0..255] =
 
 
 proc destroy(window: Window) =
-  if window.ic != nil:   XDestroyIC(window.ic)
-  if window.im != nil:   XCloseIM(window.im)
-  if window.gc != nil:   display.XFreeGC(window.gc)
-  if window.handle != 0: display.XDestroyWindow(window.handle)
+  if window.ic != nil:            XDestroyIC(window.ic)
+  if window.im != nil:            XCloseIM(window.im)
+  if window.gc != nil:            display.XFreeGC(window.gc)
+  if window.handle != 0:          display.XDestroyWindow(window.handle)
+  if window.xsyncConter.int != 0: display.XSyncDestroyCounter(window.xsyncConter)
   wasMoved window[]
   window.closed = true
 
@@ -501,7 +494,7 @@ proc newWindow*(
     ButtonReleaseMask or StructureNotifyMask or EnterWindowMask or LeaveWindowMask or FocusChangeMask
   )
 
-  var wmProtocols = [atom"WM_DELETE_WINDOW"]
+  var wmProtocols = [atom"WM_DELETE_WINDOW", atom"_NET_WM_SYNC_REQUEST"]
   display.XSetWMProtocols(result.handle, wmProtocols[0].addr, cint wmProtocols.len)
 
   result.im = display.XOpenIM
@@ -540,6 +533,14 @@ proc newWindow*(
   if visible:
     result.visible = true
 
+  block xsync:
+    var vEv, vEr: cint
+    if display.XSyncQueryExtension(vEv.addr, vEr.addr):
+      var vMaj, vMin: cint
+      display.XSyncInitialize(vMaj.addr, vMin.addr)
+      result.xsyncConter = display.XSyncCreateCounter(XSyncValue())
+      result.handle.setProperty(atom"_NET_WM_SYNC_REQUEST_COUNTER", xaCardinal, 32, @[result.xsyncConter].asString)
+
   windows.add result
 
 
@@ -553,6 +554,9 @@ proc pollEvents(window: Window) =
   window.perFrame = PerFrame()
   window.buttonPressed = {}
   window.buttonReleased = {}
+
+  # signal that frame was drawn
+  display.XSyncSetCounter(window.xsyncConter, window.lastSync)
 
   var ev: XEvent
   
@@ -579,6 +583,9 @@ proc pollEvents(window: Window) =
         window.closeRequested = true
         pushEvent onCloseRequest
         return # end polling events immediently
+
+      elif ev.client.data.l[0] == "_NET_WM_SYNC_REQUEST".atom.clong:
+        window.lastSync = XSyncValue(lo: cast[uint32](ev.client.data.l[2]), hi: cast[int32](ev.client.data.l[3]))
 
     of xeFocusIn:
       if window.`"_focused"`: return # was duplicated

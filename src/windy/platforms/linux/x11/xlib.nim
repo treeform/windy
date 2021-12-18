@@ -4,6 +4,10 @@ const libX11* =
   when defined(macosx): "libX11.dylib"
   else: "libX11.so(|.6)"
 
+const libXExt* =
+  when defined(macosx): "libXext.dylib"
+  else: "libXext.so(|.6)"
+
 type
   Display* = ptr object
     ext_data*: ptr XExtData
@@ -173,6 +177,10 @@ type
     minAspect*, maxAspect*: IVec2
     baseSize*: IVec2
     winGravity*: cint
+  
+  XSyncValue* = object
+    hi*: int32
+    lo*: uint32
 
 const
   XIMPreeditArea* = 1 shl 0
@@ -313,5 +321,17 @@ proc XKeycodeToKeysym*(d; code: KeyCode, i: cint): KeySym
 proc XGetSelectionOwner*(d; kind: Atom): Window
 proc XSetSelectionOwner*(d; kind: Atom, window: Window, time: int32 = CurrentTime)
 proc XConvertSelection*(d; kind: Atom, to: Atom, resultProperty: Atom, window: Window, time: int32 = CurrentTime)
+
+{.pop.}
+
+{.push, cdecl, dynlib: libXExt, importc.}
+
+proc XSyncQueryExtension*(d; vEv, vEr: ptr cint): bool
+proc XSyncInitialize*(d; verMaj, verMin: ptr cint)
+
+proc XSyncCreateCounter*(d; v: XSyncValue): XSyncCounter
+proc XSyncDestroyCounter*(d; c: XSyncCounter)
+
+proc XSyncSetCounter*(d; c: XSyncCounter, v: XSyncValue)
 
 {.pop.}
