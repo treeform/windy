@@ -228,10 +228,10 @@ proc visible*(window: Window): bool =
 proc style*(window: Window): WindowStyle =
   let style = getWindowStyle(window.hWnd)
   if (style and WS_THICKFRAME) != 0:
-    return wsDecoratedResizable
+    return DecoratedResizable
   if (style and WS_BORDER) != 0:
-    return wsDecorated
-  wsUndecorated
+    return Decorated
+  Undecorated
 
 proc fullscreen*(window: Window): bool =
   window.exitFullscreenInfo != nil
@@ -280,11 +280,11 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
   var style: Long
 
   case windowStyle:
-  of wsDecoratedResizable:
+  of DecoratedResizable:
     style = decoratedWindowStyle or (WS_MAXIMIZEBOX or WS_THICKFRAME)
-  of wsDecorated:
+  of Decorated:
     style = decoratedWindowStyle and not (WS_MAXIMIZEBOX or WS_THICKFRAME)
-  of wsUndecorated:
+  of Undecorated:
     style = undecoratedWindowStyle
 
   if window.visible:

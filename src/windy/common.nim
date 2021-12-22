@@ -7,7 +7,7 @@ type
     msaaDisabled = 0, msaa2x = 2, msaa4x = 4, msaa8x = 8
 
   WindowStyle* = enum
-    wsDecoratedResizable, wsDecorated, wsUndecorated
+    DecoratedResizable, Decorated, Undecorated
 
   Callback* = proc()
   ButtonCallback* = proc(button: Button)
