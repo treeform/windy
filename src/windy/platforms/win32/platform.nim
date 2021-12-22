@@ -225,13 +225,13 @@ proc monitorInfo(window: Window): MONITORINFO =
 proc visible*(window: Window): bool =
   IsWindowVisible(window.hWnd) != 0
 
-proc decorated*(window: Window): bool =
+proc style*(window: Window): WindowStyle =
   let style = getWindowStyle(window.hWnd)
-  (style and WS_BORDER) != 0
-
-proc resizable*(window: Window): bool =
-  let style = getWindowStyle(window.hWnd)
-  (style and WS_THICKFRAME) != 0
+  if (style and WS_THICKFRAME) != 0:
+    return DecoratedResizable
+  if (style and WS_BORDER) != 0:
+    return Decorated
+  Undecorated
 
 proc fullscreen*(window: Window): bool =
   window.exitFullscreenInfo != nil
@@ -273,32 +273,19 @@ proc `visible=`*(window: Window, visible: bool) =
   else:
     discard ShowWindow(window.hWnd, SW_HIDE)
 
-proc `decorated=`*(window: Window, decorated: bool) =
+proc `style=`*(window: Window, windowStyle: WindowStyle) =
   if window.fullscreen:
     return
 
-  var style: LONG
-  if decorated:
-    style = decoratedWindowStyle
-  else:
+  var style: Long
+
+  case windowStyle:
+  of DecoratedResizable:
+    style = decoratedWindowStyle or (WS_MAXIMIZEBOX or WS_THICKFRAME)
+  of Decorated:
+    style = decoratedWindowStyle and not (WS_MAXIMIZEBOX or WS_THICKFRAME)
+  of Undecorated:
     style = undecoratedWindowStyle
-
-  if window.visible:
-    style = style or WS_VISIBLE
-
-  updateWindowStyle(window.hWnd, style)
-
-proc `resizable=`*(window: Window, resizable: bool) =
-  if window.fullscreen:
-    return
-  if not window.decorated:
-    return
-
-  var style = decoratedWindowStyle.LONG
-  if resizable:
-    style = style or (WS_MAXIMIZEBOX or WS_THICKFRAME)
-  else:
-    style = style and not (WS_MAXIMIZEBOX or WS_THICKFRAME)
 
   if window.visible:
     style = style or WS_VISIBLE
