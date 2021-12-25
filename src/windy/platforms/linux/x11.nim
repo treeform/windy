@@ -360,15 +360,48 @@ proc focus*(window: Window) =
   display.XSetInputFocus(window.handle, rtNone)
 
 
-proc decorated*(window: Window): bool =
-  window.`"_decorated"`
+proc fullscreen*(window: Window): bool =
+  atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
 
-proc `decorated=`*(window: Window, v: bool) =
-  window.`"_decorated"` = v
+proc `fullscreen=`*(window: Window, v: bool) =
+  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_FULLSCREEN"
 
-  let size = window.size # save current window size
 
-  if not v:
+proc style*(window: Window): WindowStyle =
+  if window.`"_decorated"`:
+    var hints: XSizeHints
+    display.XGetNormalHints(window.handle, hints.addr)
+    if (hints.flags and 0b110000) == 0b110000:
+      WindowStyle.Decorated
+    else: WindowStyle.DecoratedResizable
+  else: WindowStyle.Undecorated
+
+proc `style=`*(window: Window, v: WindowStyle) =
+  if window.fullscreen: return
+  
+  let currentStyle = window.style
+  if currentStyle == v: return
+
+  template addDecorations {.dirty.} =
+    window.`"_decorated"` = true
+    case wmForDecoratedKind
+    of WmForDecoratedKind.motiv, WmForDecoratedKind.kwm, WmForDecoratedKind.other:
+      window.handle.delProperty(decoratedAtom)
+    
+      display.XSetTransientForHint(window.handle, 0)
+      if window.visible:
+        # "reopen" window
+        display.XUnmapWindow(window.handle)
+        display.XMapWindow(window.handle)
+    
+      window.size = size # restore window size
+    else: discard
+  
+  case v
+  of WindowStyle.Undecorated:
+    window.`"_decorated"` = false
+    let size = window.size # save current window size
+
     case wmForDecoratedKind
     of WmForDecoratedKind.motiv:
       window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[1 shl 1, 0, 0, 0, 0].asString)
@@ -381,43 +414,30 @@ proc `decorated=`*(window: Window, v: bool) =
       # "reopen" window
       display.XUnmapWindow(window.handle)
       display.XMapWindow(window.handle)
-
-  else:
-    case wmForDecoratedKind
-    of WmForDecoratedKind.motiv, WmForDecoratedKind.kwm, WmForDecoratedKind.other:
-      window.handle.delProperty(decoratedAtom)
-    else: return
     
-    display.XSetTransientForHint(window.handle, 0)
-    if window.visible:
-      # "reopen" window
-      display.XUnmapWindow(window.handle)
-      display.XMapWindow(window.handle)
-
-  window.size = size # restore window size
-
-
-proc resizable*(window: Window): bool =
-  let size = window.size
-  var hints: XSizeHints
-  display.XGetNormalHints(window.handle, hints.addr)
-  hints.minSize == size and hints.maxSize == size
-
-proc `resizable=`*(window: Window, v: bool) =
-  let size = window.size
-  var hints = XSizeHints(
-    flags: (1 shl 4) or (1 shl 5),
-    minSize: size,
-    maxSize: size
-  )
-  display.XSetNormalHints(window.handle, hints.addr)
-
-
-proc fullscreen*(window: Window): bool =
-  atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
-
-proc `fullscreen=`*(window: Window, v: bool) =
-  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_FULLSCREEN"
+    window.size = size # restore window size
+  
+  of WindowStyle.Decorated:
+    let size = window.size
+      
+    if currentStyle == WindowStyle.Undecorated: addDecorations
+  
+    # make window unresizable
+    var hints = XSizeHints(
+      flags: 0b110000,
+      minSize: size,
+      maxSize: size
+    )
+    display.XSetNormalHints(window.handle, hints.addr)
+  
+  of WindowStyle.DecoratedResizable:
+    let size = window.size
+      
+    if currentStyle == WindowStyle.Undecorated: addDecorations
+  
+    # make window resizable
+    var hints = XSizeHints(flags: 0)
+    display.XSetNormalHints(window.handle, hints.addr)
 
 
 proc title*(window: Window): string =
