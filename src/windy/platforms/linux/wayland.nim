@@ -12,7 +12,7 @@ var
   shm: Shm
   shell: XdgWmBase
 
-  shmFormats: seq[ShmFormat]
+  pixelFormats: seq[PixelFormat]
 
 
 proc init* =
@@ -26,16 +26,16 @@ proc init* =
 
   registry.onGlobal:
     case iface
-    of "wl_compositor":
+    of Compositor.iface:
       compositor = registry.bindInterface(Compositor, name, iface, version)
     
-    of "wl_shm":
+    of Shm.iface:
       shm = registry.bindInterface(Shm, name, iface, version)
 
       shm.onFormat:
-        shmFormats.add format
+        pixelFormats.add format
     
-    of "xdg_wm_base":
+    of XdgWmBase.iface:
       shell = registry.bindInterface(XdgWmBase, name, iface, version)
   
       shell.onPing:
@@ -57,7 +57,6 @@ proc init* =
 
 when isMainModule:
   init()
-  echo shmFormats
   let srf = compositor.newSurface
   let ssrf = shell.shellSurface(srf)
   let tl = ssrf.toplevel
@@ -72,7 +71,7 @@ when isMainModule:
 
   sync display
 
-  let buf = shm.create(ivec2(128, 128), ShmFormat.xrgb8888)
+  let buf = shm.create(ivec2(128, 128), PixelFormat.xrgb8888)
   attach srf, buf.buffer, ivec2(0, 0)
   commit srf
 

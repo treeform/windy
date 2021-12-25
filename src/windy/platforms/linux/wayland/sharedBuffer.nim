@@ -18,7 +18,7 @@ proc fileDescriptor*(buffer: SharedBuffer): FileDescriptor =
 proc buffer*(buffer: SharedBuffer): Buffer =
   buffer.buffer
 
-proc create*(shm: Shm, size: IVec2, format: ShmFormat): SharedBuffer =
+proc create*(shm: Shm, size: IVec2, format: PixelFormat): SharedBuffer =
   new result, proc(buffer: SharedBuffer) =
     close buffer.file
   

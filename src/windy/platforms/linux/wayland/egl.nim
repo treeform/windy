@@ -13,25 +13,48 @@ type
     openglEs = 0x30A0
     openvg = 0x30A1
     opengl = 0x30A2
+  
+  EglError {.pure, size: 4.} = enum
+    badAccess = 0x3002
+    badAlloc = 0x3003
+    badAttribute = 0x3004
+    badConfig = 0x3005
+    badContext = 0x3006
+    badCurrentSurface = 0x3007
+    badDisplay = 0x3008
+    badMatch = 0x3009
+    badNativePixmap = 0x300A
+    badNativeWindow = 0x300B
+    badParameter = 0x300C
+    badSurface = 0x300D
 
 const
   eglExtensions = int32 0x3055
 
   eglSurfaceType = int32 0x3033
+  eglPBufferBit  = int32 0x0001
   eglWindowBit   = int32 0x0004
 
   eglRenderableType = int32 0x3040
   eglOpenglEs2Bit   = int32 0x0004
 
-  eglAlphaSize  = int32 0x3021
-  eglBlueSize   = int32 0x3022
-  eglGreenSize  = int32 0x3023
-  eglRedSize    = int32 0x3024
+  eglAlphaSize = int32 0x3021
+  eglBlueSize  = int32 0x3022
+  eglGreenSize = int32 0x3023
+  eglRedSize   = int32 0x3024
+
+  eglWidth  = int32 0x3057
+  eglHeight = int32 0x3056
+
+  eglOpenVGImage = uint32 0x3096
+
+  eglNone = int32 0x3038
 
 {.push, cdecl, dynlib: "libEGL.so(|.1)", importc.}
 
 using d: EglDisplay
 
+proc eglGetError(): EglError
 proc eglBindAPI(api: EglApi): bool
 proc eglGetDisplay(native: pointer = nil): EglDisplay
 
@@ -40,8 +63,8 @@ proc eglTerminate(d)
 
 proc eglQueryString(d; n: int32): cstring
 
-proc eglGetConfigs(d; retCfgs: ptr EglConfig, cfgSize: int32, retCfgCount: ptr int32): bool
-proc eglChooseConfig(d; attrs: ptr int32, retCfgs: ptr EglConfig, cfgSize: int32, retCfgCount: ptr int32): bool
+proc eglGetConfigs(d; retConfigs: ptr EglConfig, maxConfigs: int32, retCfgCount: ptr int32): bool
+proc eglChooseConfig(d; attrs: ptr int32, retConfigs: ptr EglConfig, maxConfigs: int32, retConfigCount: ptr int32): bool
 
 proc eglCreateContext(d; config: EglConfig, share: EglContext = nil, attrs: ptr int32 = nil): EglContext
 
@@ -54,7 +77,7 @@ proc eglCreatePbufferFromClientBuffer(d; kind: uint32, buffer: pointer, config: 
 
 when isMainModule:
   template expect(x) =
-    if not x: raise WindyError.newException(astToStr(x) & ": Error creating OpenGL ES context")
+    if not x: raise WindyError.newException(astToStr(x) & ": Error creating OpenGL context (" & $eglGetError() & ")")
 
   expect eglBindAPI(EglApi.openglEs)
   let d = eglGetDisplay()
@@ -68,25 +91,35 @@ when isMainModule:
     config: EglConfig
     configCount: int32
   var attrs = [
-    eglSurfaceType,    eglWindowBit,
+    eglSurfaceType,    eglPBufferBit,
     eglRenderableType, eglOpenglEs2Bit,
     eglRedSize,        8,
     eglGreenSize,      8,
     eglBlueSize,       8,
     # eglAlphaSize,      8,
-    0
+    eglNone
   ]
-  # expect d.eglChooseConfig(attrs[0].addr, config.addr, 1, configCount.addr)
-  expect d.eglGetConfigs(config.addr, 1, configCount.addr)
+  expect d.eglChooseConfig(attrs[0].addr, config.addr, 1, configCount.addr)
+  # expect d.eglGetConfigs(config.addr, 1, configCount.addr)
   expect configCount == 1
 
   let ctx = d.eglCreateContext(config)
+  expect ctx != nil
 
-  # var i = (alloc(8), 1, 1)
+  var buff = alloc(32*32*4*8)
 
-  echo d.eglCreateWindowSurface(config, nil).repr
-  # echo d.eglCreatePbufferSurface(config).repr
+  var winAttrs = [
+    eglWidth, 32,
+    eglHeight, 32,
+    eglNone
+  ]
 
+  # let win = d.eglCreateWindowSurface(config, i.addr)
+  # let win = d.eglCreatePbufferSurface(config, winAttrs[0].addr)
+  let win = d.eglCreatePbufferFromClientBuffer(0x308E, buff, config, winAttrs[0].addr)
+  expect win != nil
+
+  
 
   # while true: sync display
 

@@ -16,6 +16,37 @@ proc fromBitfield(x: int, t: type[Option]): t =
   else: some x.unshl.T
 
 macro protocol(body) =
+  ## transforms
+  ##   T:
+  ##     iface "wl_t"
+  ## 
+  ##     proc f(a: int): R
+  ##     proc e(a: int): event
+  ## 
+  ## to
+  ##   type
+  ##     T* = ref object of Proxy
+  ##       e*: proc (a: int)
+  ## 
+  ##   proc iface*(t: type T): string = "wl_t"
+  ##
+  ##   proc f*(this: T; a: int): R =
+  ##     result = new(this.display, R)
+  ##     marshal(this, 0, (result.id, a))
+  ##
+  ##   template onE*(x: T; body) =
+  ##     x.e = proc (a {.inject.}: int) =
+  ##       body
+  ##
+  ##   method unmarshal(this: T; op: int; data: seq[uint32]) {.locks: "unknown".} =
+  ##     case op
+  ##     of 0:
+  ##       if this.e != nil:
+  ##         let (a) = deserialize(this.display, data, (int,))
+  ##         this.e(a)
+  ##     else:
+  ##       discard
+
   proc injectAllParams(x: NimNode): NimNode =
     result = nnkFormalParams.newTree(
       @[x[0]] &
@@ -55,7 +86,10 @@ macro protocol(body) =
 
     for a in x[1]:
       if a.kind == nnkCommand and a[0] == ident"iface":
-        continue #TODO: auto iface require
+        let l = a[1]
+        result.add quote do:
+          proc iface*(t: typedesc[`t`]): string = `l`
+        continue
 
       let p = a.params
 
@@ -177,7 +211,7 @@ macro protocol(body) =
 
 
 type
-  ShmFormat* {.pure.} = enum
+  PixelFormat* {.pure.} = enum
     argb8888 = 0
     xrgb8888 = 1
     c8 = 0x20203843
@@ -264,9 +298,9 @@ type
     rotated180
     rotated270
     flipped
-    rotated90_and_flipped
-    rotated180_and_flipped
-    rotated270_and_flipped
+    flippedRotated90
+    flippedRotated180
+    flippedRotated270
   
   Capability* {.pure.} = enum
     cursor
@@ -333,7 +367,9 @@ type
     tiledRight
     tiledTop
     tiledBottom
-
+  
+  DrmCapability* {.pure.} = enum
+    prime = 1
 
 
 protocol:
@@ -368,11 +404,11 @@ protocol:
 
     proc newPool(fd: FileDescriptor, size: int): ShmPool
 
-    proc format(format: ShmFormat): event
+    proc format(format: PixelFormat): event
 
 
   ShmPool:
-    proc newBuffer(offset: int, size: IVec2, stride: int, format: ShmFormat): Buffer
+    proc newBuffer(offset: int, size: IVec2, stride: int, format: PixelFormat): Buffer
     proc destroy
     proc resize(size: int)
 
@@ -589,6 +625,20 @@ protocol:
     proc configure(pos: IVec2, size: IVec2): event
     proc done: event
     proc repositioned(token: int): event
+  
+
+  Drm:
+    iface "wl_drm"
+
+    proc init(id: int)
+    proc newBuffer(name: int, size: IVec2, stride: int, format: PixelFormat): Buffer
+    proc newPlanarBuffer(name: int, size: IVec2, format: PixelFormat, offsetsAndStrides: array[3, (int, int)]): Buffer
+    proc newPrimeBuffer(name: FileDescriptor, size: IVec2, format: PixelFormat, offsetsAndStrides: array[3, (int, int)]): Buffer
+
+    proc device(name: string): event
+    proc format(format: PixelFormat): event
+    proc inited: event
+    proc capabilities(capable: set[DrmCapability]): event
 
 
 
