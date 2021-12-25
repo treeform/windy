@@ -1,3 +1,5 @@
+## note: this file is included in protocol.nim, don't import it directly
+
 import os, posix, nativesockets, net, tables, sequtils
 import ../../../common
 

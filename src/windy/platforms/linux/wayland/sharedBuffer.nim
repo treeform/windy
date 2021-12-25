@@ -3,6 +3,7 @@ import vmath
 import protocol
 
 type SharedBuffer* = ref object
+  ## memmaped file that can be shared between processes
   shm: Shm
   buffer: Buffer
   file: MemFile
