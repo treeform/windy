@@ -1,19 +1,16 @@
-import strutils
 import vmath
 import ../../../common
-import protocol, sharedBuffer
 
 type
+  OpenglContext* = object
+    ctx: EglContext
+    srf: EglSurface
+
   EglDisplay = ptr object
   EglConfig = ptr object
   EglSurface = ptr object
   EglContext = ptr object
 
-  EglApi {.pure, size: 4.} = enum
-    openglEs = 0x30A0
-    openvg = 0x30A1
-    opengl = 0x30A2
-  
   EglError {.pure, size: 4.} = enum
     badAccess = 0x3002
     badAlloc = 0x3003
@@ -28,12 +25,10 @@ type
     badParameter = 0x300C
     badSurface = 0x300D
 
-const
-  eglExtensions = int32 0x3055
 
+const
   eglSurfaceType = int32 0x3033
   eglPBufferBit  = int32 0x0001
-  eglWindowBit   = int32 0x0004
 
   eglRenderableType = int32 0x3040
   eglOpenglEs2Bit   = int32 0x0004
@@ -46,47 +41,44 @@ const
   eglWidth  = int32 0x3057
   eglHeight = int32 0x3056
 
-  eglOpenVGImage = uint32 0x3096
-
   eglNone = int32 0x3038
+
 
 {.push, cdecl, dynlib: "libEGL.so(|.1)", importc.}
 
 using d: EglDisplay
 
 proc eglGetError(): EglError
-proc eglBindAPI(api: EglApi): bool
 proc eglGetDisplay(native: pointer = nil): EglDisplay
 
 proc eglInitialize(d; major: ptr int32 = nil, minor: ptr int32 = nil): bool
 proc eglTerminate(d)
 
-proc eglQueryString(d; n: int32): cstring
-
-proc eglGetConfigs(d; retConfigs: ptr EglConfig, maxConfigs: int32, retCfgCount: ptr int32): bool
 proc eglChooseConfig(d; attrs: ptr int32, retConfigs: ptr EglConfig, maxConfigs: int32, retConfigCount: ptr int32): bool
 
 proc eglCreateContext(d; config: EglConfig, share: EglContext = nil, attrs: ptr int32 = nil): EglContext
 
-proc eglCreateWindowSurface(d; config: EglConfig, win: pointer, attrs: ptr int32 = nil): EglSurface
 proc eglCreatePbufferSurface(d; config: EglConfig, attrs: ptr int32 = nil): EglSurface
-proc eglCreatePbufferFromClientBuffer(d; kind: uint32, buffer: pointer, config: EglConfig, attrs: ptr int32 = nil): EglSurface
+
+proc eglMakeCurrent(d; draw, read: EglSurface, ctx: EglContext): bool
 
 {.pop.}
 
 
-when isMainModule:
-  template expect(x) =
-    if not x: raise WindyError.newException(astToStr(x) & ": Error creating OpenGL context (" & $eglGetError() & ")")
+template expect(x) =
+  if not x: raise WindyError.newException("Error creating OpenGL context (" & $eglGetError() & ")")
 
-  expect eglBindAPI(EglApi.openglEs)
-  let d = eglGetDisplay()
+
+var d: EglDisplay
+
+proc initEgl* =
+  d = eglGetDisplay()
   expect d != nil
-
   expect d.eglInitialize
 
-  # echo d.eglQueryString(eglExtensions).`$`.split
 
+proc newOpenglContext*: OpenglContext =
+  ## creates opengl context (on new dummy surface)
   var
     config: EglConfig
     configCount: int32
@@ -96,31 +88,28 @@ when isMainModule:
     eglRedSize,        8,
     eglGreenSize,      8,
     eglBlueSize,       8,
-    # eglAlphaSize,      8,
+    eglAlphaSize,      8,
     eglNone
   ]
   expect d.eglChooseConfig(attrs[0].addr, config.addr, 1, configCount.addr)
-  # expect d.eglGetConfigs(config.addr, 1, configCount.addr)
   expect configCount == 1
 
-  let ctx = d.eglCreateContext(config)
-  expect ctx != nil
+  result.ctx = d.eglCreateContext(config)
+  expect result.ctx != nil
 
-  var buff = alloc(32*32*4*8)
-
-  var winAttrs = [
-    eglWidth, 32,
-    eglHeight, 32,
+  var attrs2 = [
+    eglWidth, 1,
+    eglHeight, 1,
     eglNone
   ]
+  result.srf = d.eglCreatePbufferSurface(config, attrs2[0].addr)
+  expect result.srf != nil
 
-  # let win = d.eglCreateWindowSurface(config, i.addr)
-  # let win = d.eglCreatePbufferSurface(config, winAttrs[0].addr)
-  let win = d.eglCreatePbufferFromClientBuffer(0x308E, buff, config, winAttrs[0].addr)
-  expect win != nil
 
-  
+proc makeCurrent*(context: OpenglContext) =
+  if not d.eglMakeCurrent(context.srf, context.srf, context.ctx):
+    raise WindyError.newException("Error creating OpenGL context (" & $eglGetError() & ")")
 
-  # while true: sync display
 
+proc terminateEgl* =
   d.eglTerminate

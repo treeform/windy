@@ -1,6 +1,6 @@
-import vmath
+import vmath, opengl
 import ../../common, ../../internal
-import wayland/[protocol, sharedBuffer]
+import wayland/[protocol, sharedBuffer, egl]
 
 var
   initialized: bool
@@ -53,6 +53,8 @@ proc init* =
   
   sync display
 
+  initEgl()
+
   initialized = true
 
 when isMainModule:
@@ -74,5 +76,12 @@ when isMainModule:
   let buf = shm.create(ivec2(128, 128), PixelFormat.xrgb8888)
   attach srf, buf.buffer, ivec2(0, 0)
   commit srf
+
+  makeCurrent newOpenglContext()
+
+  loadExtensions()
+
+  var fbo: uint32
+  glGenFramebuffers(1, fbo.addr)
 
   while true: sync display
