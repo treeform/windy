@@ -103,8 +103,12 @@ macro protocol(body) =
           ),
           newEmptyNode()
         )
+        
+        let onei = ident &"on{($a.name).runeAt(0).toUpper}{($a.name).toRunes[1..^1]}"
+        onei.copyLineInfo a.name
+
         result.add nnkTemplateDef.newTree( # x.onEvent:... template
-          nnkPostfix.newTree(ident"*", ident &"on{($a.name).runeAt(0).toUpper}{($a.name).toRunes[1..^1]}"),
+          nnkPostfix.newTree(ident"*", onei),
           newEmptyNode(),
           newEmptyNode(),
           nnkFormalParams.newTree(
@@ -638,7 +642,7 @@ protocol:
     proc device(name: string): event
     proc format(format: PixelFormat): event
     proc inited: event
-    proc capabilities(capable: set[DrmCapability]): event
+    proc capabilities(capabilities: set[DrmCapability]): event
 
 
 

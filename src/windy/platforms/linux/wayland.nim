@@ -1,4 +1,4 @@
-import vmath, opengl
+import vmath
 import ../../common, ../../internal
 import wayland/[protocol, sharedBuffer, egl]
 
@@ -79,9 +79,11 @@ when isMainModule:
 
   makeCurrent newOpenglContext()
 
-  loadExtensions()
-
-  var fbo: uint32
-  glGenFramebuffers(1, fbo.addr)
+  # how to draw on window?
+  # i tried:
+  #   creating context on window (incompatible native window (wl_window vs. protocol.Window))
+  #   eglCreateDRMImageMESA/eglExportDRMImageMESA/wl_drm.newBuffer (fails via BadAlloc)
+  # in this code works:
+  #   setting pixels manually on buf.dataAddr (no OpenGL)
 
   while true: sync display
