@@ -10,7 +10,7 @@ let bxy = newBoxy()
 proc display() =
   bxy.beginFrame(window.size)
   bxy.drawRect(rect(vec2(0, 0), window.size.vec2), color(1, 1, 1, 1))
-  bxy.drawRect(rect(vec2(100, 100), vec2(200, 200)), color(1, 0, 1, 1))
+  bxy.drawRect(rect((window.size.vec2 / 2) - vec2(100, 100), vec2(200, 200)), color(1, 0, 1, 1))
   bxy.endFrame()
   window.swapBuffers()
 

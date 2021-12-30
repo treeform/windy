@@ -34,6 +34,8 @@ type
     gc: GC
     ic: XIC
     im: XIM
+    xsyncConter: XSyncCounter
+    lastSync: XSyncValue
 
     closeRequested, closed: bool
     runeInputEnabled: bool
@@ -46,8 +48,6 @@ type
     motiv
     kwm
     other
-  
-  ButtonView* = distinct set[Button]
 
 
 var
@@ -99,16 +99,6 @@ proc init =
 
   initialized = true
 
-proc geometry(window: XWindow): tuple[root: XWindow; pos, size: IVec2; borderW: int, depth: int] =
-  var
-    root: XWindow
-    x, y: int32
-    w, h: uint32
-    borderW: uint32
-    depth: uint32
-  display.XGetGeometry(window, root.addr, x.addr, y.addr, w.addr, h.addr, borderW.addr, depth.addr)
-  (root, ivec2(x, y), ivec2(w.int32, h.int32), borderW.int, depth.int)
-
 proc property(window: XWindow, property: Atom): tuple[kind: Atom, data: string] =
   var
     kind: Atom
@@ -145,10 +135,10 @@ proc invert[T](x: var set[T], v: T) =
   if x.contains v: x.excl v
   else: x.incl v
 
-proc send*(a: XWindow, e: XEvent, mask: clong = NoEventMask, propagate = false) =
+proc send(a: XWindow, e: XEvent, mask: clong = NoEventMask, propagate = false) =
   display.XSendEvent(a, propagate, mask, e.unsafeAddr)
 
-proc newClientMessage*[T](window: XWindow, messageKind: Atom, data: openarray[T], serial: int = 0, sendEvent: bool = false): XEvent =
+proc newClientMessage[T](window: XWindow, messageKind: Atom, data: openarray[T], serial: int = 0, sendEvent: bool = false): XEvent =
   result.kind = xeClientMessage
   result.client.messageType = messageKind
   if data.len * T.sizeof > XClientMessageData.sizeof:
@@ -284,17 +274,18 @@ proc keysymToButton(sym: KeySym): Button =
   of xk_9:            Key9
   else:               ButtonUnknown
 
-proc queryKeyboardState*(): set[0..255] =
+proc queryKeyboardState(): set[0..255] =
   var r: array[32, char]
   display.XQueryKeymap(r)
   result = cast[ptr set[0..255]](r.addr)[]
 
 
 proc destroy(window: Window) =
-  if window.ic != nil:   XDestroyIC(window.ic)
-  if window.im != nil:   XCloseIM(window.im)
-  if window.gc != nil:   display.XFreeGC(window.gc)
-  if window.handle != 0: display.XDestroyWindow(window.handle)
+  if window.ic != nil:            XDestroyIC(window.ic)
+  if window.im != nil:            XCloseIM(window.im)
+  if window.gc != nil:            display.XFreeGC(window.gc)
+  if window.handle != 0:          display.XDestroyWindow(window.handle)
+  if window.xsyncConter.int != 0: display.XSyncDestroyCounter(window.xsyncConter)
   wasMoved window[]
   window.closed = true
 
@@ -320,7 +311,7 @@ proc `visible=`*(window: Window, v: bool) =
 
 
 proc size*(window: Window): IVec2 =
-  window.handle.geometry.size
+  window.prevSize
 
 proc `size=`*(window: Window, v: IVec2) =
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
@@ -369,15 +360,48 @@ proc focus*(window: Window) =
   display.XSetInputFocus(window.handle, rtNone)
 
 
-proc decorated*(window: Window): bool =
-  window.`"_decorated"`
+proc fullscreen*(window: Window): bool =
+  atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
 
-proc `decorated=`*(window: Window, v: bool) =
-  window.`"_decorated"` = v
+proc `fullscreen=`*(window: Window, v: bool) =
+  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_FULLSCREEN"
 
-  let size = window.size # save current window size
 
-  if not v:
+proc style*(window: Window): WindowStyle =
+  if window.`"_decorated"`:
+    var hints: XSizeHints
+    display.XGetNormalHints(window.handle, hints.addr)
+    if (hints.flags and 0b110000) == 0b110000:
+      WindowStyle.Decorated
+    else: WindowStyle.DecoratedResizable
+  else: WindowStyle.Undecorated
+
+proc `style=`*(window: Window, v: WindowStyle) =
+  if window.fullscreen: return
+  
+  let currentStyle = window.style
+  if currentStyle == v: return
+
+  template addDecorations {.dirty.} =
+    window.`"_decorated"` = true
+    case wmForDecoratedKind
+    of WmForDecoratedKind.motiv, WmForDecoratedKind.kwm, WmForDecoratedKind.other:
+      window.handle.delProperty(decoratedAtom)
+    
+      display.XSetTransientForHint(window.handle, 0)
+      if window.visible:
+        # "reopen" window
+        display.XUnmapWindow(window.handle)
+        display.XMapWindow(window.handle)
+    
+      window.size = size # restore window size
+    else: discard
+  
+  case v
+  of WindowStyle.Undecorated:
+    window.`"_decorated"` = false
+    let size = window.size # save current window size
+
     case wmForDecoratedKind
     of WmForDecoratedKind.motiv:
       window.handle.setProperty(decoratedAtom, decoratedAtom, 32, @[1 shl 1, 0, 0, 0, 0].asString)
@@ -390,43 +414,30 @@ proc `decorated=`*(window: Window, v: bool) =
       # "reopen" window
       display.XUnmapWindow(window.handle)
       display.XMapWindow(window.handle)
-
-  else:
-    case wmForDecoratedKind
-    of WmForDecoratedKind.motiv, WmForDecoratedKind.kwm, WmForDecoratedKind.other:
-      window.handle.delProperty(decoratedAtom)
-    else: return
     
-    display.XSetTransientForHint(window.handle, 0)
-    if window.visible:
-      # "reopen" window
-      display.XUnmapWindow(window.handle)
-      display.XMapWindow(window.handle)
-
-  window.size = size # restore window size
-
-
-proc resizable*(window: Window): bool =
-  let size = window.size
-  var hints: XSizeHints
-  display.XGetNormalHints(window.handle, hints.addr)
-  hints.minSize == size and hints.maxSize == size
-
-proc `resizable=`*(window: Window, v: bool) =
-  let size = window.size
-  var hints = XSizeHints(
-    flags: (1 shl 4) or (1 shl 5),
-    minSize: size,
-    maxSize: size
-  )
-  display.XSetNormalHints(window.handle, hints.addr)
-
-
-proc fullscreen*(window: Window): bool =
-  atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
-
-proc `fullscreen=`*(window: Window, v: bool) =
-  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_FULLSCREEN"
+    window.size = size # restore window size
+  
+  of WindowStyle.Decorated:
+    let size = window.size
+      
+    if currentStyle == WindowStyle.Undecorated: addDecorations
+  
+    # make window unresizable
+    var hints = XSizeHints(
+      flags: 0b110000,
+      minSize: size,
+      maxSize: size
+    )
+    display.XSetNormalHints(window.handle, hints.addr)
+  
+  of WindowStyle.DecoratedResizable:
+    let size = window.size
+      
+    if currentStyle == WindowStyle.Undecorated: addDecorations
+  
+    # make window resizable
+    var hints = XSizeHints(flags: 0)
+    display.XSetNormalHints(window.handle, hints.addr)
 
 
 proc title*(window: Window): string =
@@ -458,15 +469,13 @@ proc newWindow*(
   visible = true,
   vsync = true,
 
-  # window constructor can't set opengl version, msaa and stencilBits
-  # args mustn't set depthBits directly
   openglMajorVersion = 4,
   openglMinorVersion = 1,
   msaa = msaaDisabled,
   depthBits = 24,
   stencilBits = 8,
   
-  transparent = false, # note that transparency CANNOT be changed after window was created
+  transparent = false,
 ): Window =
   ## Creates a new window. Intitializes Windy if needed.
   init()
@@ -475,13 +484,15 @@ proc newWindow*(
   result.runeInputEnabled = true
   
   let root = display.defaultRootWindow
-  
+
   var vi: XVisualInfo
   if transparent:
     display.XMatchVisualInfo(display.defaultScreen, 32, TrueColor, vi.addr)
   else:
-    var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
-    vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
+    display.XMatchVisualInfo(display.defaultScreen, 24, TrueColor, vi.addr)
+    # strangely, glx rerutns nil when -d:danger
+    # var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
+    # vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
 
   let cmap = display.XCreateColormap(root, vi.visual, AllocNone)
   var swa = XSetWindowAttributes(colormap: cmap)
@@ -503,7 +514,7 @@ proc newWindow*(
     ButtonReleaseMask or StructureNotifyMask or EnterWindowMask or LeaveWindowMask or FocusChangeMask
   )
 
-  var wmProtocols = [atom"WM_DELETE_WINDOW"]
+  var wmProtocols = [atom"WM_DELETE_WINDOW", atom"_NET_WM_SYNC_REQUEST"]
   display.XSetWMProtocols(result.handle, wmProtocols[0].addr, cint wmProtocols.len)
 
   result.im = display.XOpenIM
@@ -523,7 +534,7 @@ proc newWindow*(
   result.ctx = display.glXCreateContext(vi.addr, nil, 1)
 
   if result.ctx == nil:
-    raise newException(WindyError, "Error creating OpenGL context")
+    raise WindyError.newException("Error creating OpenGL context")
 
   result.title = title
 
@@ -537,10 +548,18 @@ proc newWindow*(
     elif glXSwapIntervalSGI != nil:
       glXSwapIntervalSGI(1)
     else:
-      raise newException(WindyError, "VSync is not supported")
+      raise WindyError.newException("VSync is not supported")
 
   if visible:
     result.visible = true
+
+  block xsync:
+    var vEv, vEr: cint
+    if display.XSyncQueryExtension(vEv.addr, vEr.addr):
+      var vMaj, vMin: cint
+      display.XSyncInitialize(vMaj.addr, vMin.addr)
+      result.xsyncConter = display.XSyncCreateCounter(XSyncValue())
+      result.handle.setProperty(atom"_NET_WM_SYNC_REQUEST_COUNTER", xaCardinal, 32, @[result.xsyncConter].asString)
 
   windows.add result
 
@@ -555,6 +574,9 @@ proc pollEvents(window: Window) =
   window.perFrame = PerFrame()
   window.buttonPressed = {}
   window.buttonReleased = {}
+
+  # signal that frame was drawn
+  display.XSyncSetCounter(window.xsyncConter, window.lastSync)
 
   var ev: XEvent
   
@@ -581,6 +603,9 @@ proc pollEvents(window: Window) =
         window.closeRequested = true
         pushEvent onCloseRequest
         return # end polling events immediently
+
+      elif ev.client.data.l[0] == "_NET_WM_SYNC_REQUEST".atom.clong:
+        window.lastSync = XSyncValue(lo: cast[uint32](ev.client.data.l[2]), hi: cast[int32](ev.client.data.l[3]))
 
     of xeFocusIn:
       if window.`"_focused"`: return # was duplicated
@@ -709,9 +734,6 @@ proc buttonReleased*(window: Window): ButtonView =
 
 proc buttonToggle*(window: Window): ButtonView =
   ButtonView window.buttonToggle
-
-proc `[]`*(buttonView: ButtonView, button: Button): bool =
-  button in (set[Button])(buttonView)
 
 proc closeRequested*(window: Window): bool =
   window.closeRequested

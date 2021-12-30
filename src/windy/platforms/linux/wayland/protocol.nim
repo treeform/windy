@@ -1,5 +1,5 @@
 include basic
-import macros, strformat, sequtils, vmath
+import macros, strformat, sequtils, vmath, options, unicode
 
 proc unshl(x: int): int =
   var x = x
@@ -7,10 +7,46 @@ proc unshl(x: int): int =
     inc result
     x = x shr 1
 
-proc toBitfield(x: enum): int = 1 shl x.int
-proc fromBitfield(x: int, T: type): T = x.unshl.T
+proc toBitfield(x: Option[enum]): int =
+  if x.isNone: 0
+  else: 1 shl x.get.int
+proc fromBitfield(x: int, t: type[Option]): t =
+  type T = t.T
+  if x == 0: none T
+  else: some x.unshl.T
 
 macro protocol(body) =
+  ## transforms
+  ##   T:
+  ##     iface "wl_t"
+  ## 
+  ##     proc f(a: int): R
+  ##     proc e(a: int): event
+  ## 
+  ## to
+  ##   type
+  ##     T* = ref object of Proxy
+  ##       e*: proc (a: int)
+  ## 
+  ##   proc iface*(t: type T): string = "wl_t"
+  ##
+  ##   proc f*(this: T; a: int): R =
+  ##     result = new(this.display, R)
+  ##     marshal(this, 0, (result.id, a))
+  ##
+  ##   template onE*(x: T; body) =
+  ##     x.e = proc (a {.inject.}: int) =
+  ##       body
+  ##
+  ##   method unmarshal(this: T; op: int; data: seq[uint32]) {.locks: "unknown".} =
+  ##     case op
+  ##     of 0:
+  ##       if this.e != nil:
+  ##         let (a) = deserialize(this.display, data, (int,))
+  ##         this.e(a)
+  ##     else:
+  ##       discard
+
   proc injectAllParams(x: NimNode): NimNode =
     result = nnkFormalParams.newTree(
       @[x[0]] &
@@ -49,6 +85,12 @@ macro protocol(body) =
     var i = 0
 
     for a in x[1]:
+      if a.kind == nnkCommand and a[0] == ident"iface":
+        let l = a[1]
+        result.add quote do:
+          proc iface*(t: typedesc[`t`]): string = `l`
+        continue
+
       let p = a.params
 
       if p[0] == ident"event":
@@ -61,8 +103,12 @@ macro protocol(body) =
           ),
           newEmptyNode()
         )
+        
+        let onei = ident &"on{($a.name).runeAt(0).toUpper}{($a.name).toRunes[1..^1]}"
+        onei.copyLineInfo a.name
+
         result.add nnkTemplateDef.newTree( # x.onEvent:... template
-          nnkPostfix.newTree(ident"*", ident &"on{a.name}"),
+          nnkPostfix.newTree(ident"*", onei),
           newEmptyNode(),
           newEmptyNode(),
           nnkFormalParams.newTree(
@@ -118,8 +164,7 @@ macro protocol(body) =
       else: # marshaling
         let (_, _, argvals) = p.prepareArgs
         p.insert 1, newIdentDefs(ident"this", t)
-        let name = a.name
-        a.name = nnkPostfix.newTree(ident"*", a.name)
+        a[0] = nnkPostfix.newTree(ident"*", a[0])
         a.params = p.prepareParams
         a.body = nnkCall.newTree(
           @[nnkDotExpr.newTree(ident"this", ident"marshal"), newLit i] &
@@ -139,7 +184,7 @@ macro protocol(body) =
             ),
             a.body
           )
-        if $name == "destroy":
+        if $a.name == "destroy":
           a.body = newStmtList(
             a.body,
             newCall(ident"destroy", nnkDotExpr.newTree(ident"this", ident"Proxy"))
@@ -155,7 +200,7 @@ macro protocol(body) =
         `unms`
   
   result.insert 0, nnkTypeSection.newTree( # type declaration
-    types.filterit($it[0] notin ["Display", "Callback"]).mapit( # do not redefine Display and Callback
+    types.filterit($it[0] != "Display").mapit( # do not redefine Display
       nnkTypeDef.newTree(
         nnkPostfix.newTree(ident"*", it[0]),
         newEmptyNode(),
@@ -170,7 +215,7 @@ macro protocol(body) =
 
 
 type
-  ShmFormat* {.pure.} = enum
+  PixelFormat* {.pure.} = enum
     argb8888 = 0
     xrgb8888 = 1
     c8 = 0x20203843
@@ -247,25 +292,9 @@ type
     uyvy = 0x59565955
   
   DndAction* {.pure.} = enum
-    none
     copy
     move
     ask
-  
-  Edge* {.pure.} = enum
-    top
-    bottom
-    left
-    right
-
-  TransientFlag* {.pure.} = enum
-    inactive
-  
-  FullscreenMethod* {.pure.} = enum
-    default
-    scale
-    driver
-    fill
   
   Transform* {.pure.} = enum
     normal
@@ -273,9 +302,9 @@ type
     rotated180
     rotated270
     flipped
-    rotated90_and_flipped
-    rotated180_and_flipped
-    rotated270_and_flipped
+    flippedRotated90
+    flippedRotated180
+    flippedRotated270
   
   Capability* {.pure.} = enum
     cursor
@@ -307,7 +336,44 @@ type
   ModeFlag* {.pure.} = enum
     current
     prefered
+  
+  Anchor* {.pure.} = enum
+    none
+    top
+    bottom
+    left
+    right
+    topLeft
+    bottomLeft
+    topRight
+    bottomRight
+  
+  ConstraintAllignment* {.pure.} = enum
+    slideX
+    slideY
+    flipX
+    flipY
+    resizeX
+    resizeY
 
+  Edge* {.pure.} = enum
+    top
+    bottom
+    left
+    right
+  
+  ShellSurfaceState* {.pure.} = enum
+    maximized = 1
+    fullscreen
+    resizing
+    activated
+    tiledLeft
+    tiledRight
+    tiledTop
+    tiledBottom
+  
+  DrmCapability* {.pure.} = enum
+    prime = 1
 
 
 protocol:
@@ -331,20 +397,24 @@ protocol:
 
 
   Compositor:
+    iface "wl_compositor"
+
     proc newSurface: Surface
     proc newRegion: Region
 
 
-  ShmPool:
-    proc newBuffer(offset: int, size: IVec2, stride: int, format: ShmFormat): Buffer
-    proc destroy
-    proc resize(size: int)
-
-
   Shm:
+    iface "wl_shm"
+
     proc newPool(fd: FileDescriptor, size: int): ShmPool
 
-    proc format(format: ShmFormat): event
+    proc format(format: PixelFormat): event
+
+
+  ShmPool:
+    proc newBuffer(offset: int, size: IVec2, stride: int, format: PixelFormat): Buffer
+    proc destroy
+    proc resize(size: int)
 
 
   Buffer:
@@ -358,11 +428,11 @@ protocol:
     proc receive(mime: string, fd: FileDescriptor)
     proc destroy
     proc finish
-    proc setActions(actions: set[DndAction.copy..DndAction.ask], prefered: bitField DndAction)
+    proc setActions(actions: set[DndAction], prefered: bitField Option[DndAction])
 
     proc offer(mime: string): event
     proc sourceActions(actions: set[DndAction]): event
-    proc action(action: bitField DndAction): event
+    proc action(action: bitField Option[DndAction]): event
 
 
   DataSource:
@@ -375,7 +445,7 @@ protocol:
     proc cancelled: event
     proc dndDropPerformed: event
     proc dndFinished: event
-    proc action(action: bitField DndAction): event
+    proc action(action: bitField Option[DndAction]): event
 
 
   DataDevice:
@@ -392,29 +462,10 @@ protocol:
 
 
   DataDeviceManager:
+    iface "wl_data_device_manager"
+
     proc newDataSource: DataSource
     proc dataDevice(seat: Seat): DataDevice
-
-
-  Shell:
-    proc shellSurface(surface: Surface): ShellSurface
-
-
-  ShellSurface:
-    proc pong(serial: int)
-    proc move(seat: Seat, serial: int)
-    proc resize(seat: Seat, serial: int, edges: set[Edge])
-    proc setToplevel
-    proc setTransient(parent: Surface, pos: IVec2, flags: set[TransientFlag])
-    proc setFullscreen(m: FullscreenMethod, framerate: int, output: Output)
-    proc setPopup(seat: Seat, serial: int, parent: Surface, pos: IVec2, flags: set[TransientFlag])
-    proc setMaximized(output: Output)
-    proc setTitle(title: string)
-    proc setClass(class: string)
-
-    proc ping(serial: int): event
-    proc configure(edges: set[Edge], size: IVec2): event
-    proc popupDone: event
 
 
   Surface:
@@ -434,6 +485,8 @@ protocol:
 
 
   Seat:
+    iface "wl_seat"
+
     proc cursor: Cursor
     proc keyboard: Keyboard
     proc touch: Touch
@@ -482,6 +535,8 @@ protocol:
 
 
   Output:
+    iface "wl_output"
+
     proc destroy
 
     proc geometry(pos: IVec2, sizeInMillimeters: IVec2, subpixel: Subpixel, make: string, model: string, transform: Transform): event
@@ -497,24 +552,104 @@ protocol:
 
 
   Subcompositor:
+    iface "wl_subcompositor"
+
     proc destroy
     proc subsurface(surface: Surface, parent: Surface): Subsurface
 
 
   Subsurface:
     proc destroy
-    proc `pos=`(pos: IVec2)
+    proc `pos=`(v: IVec2)
     proc placeAbove(sibling: Surface)
     proc placeBelow(sibling: Surface)
     proc setSync
     proc setDesync
+  
+
+  XdgWmBase:
+    iface "xdg_wm_base"
+
+    proc destroy
+    proc newPositioner: Positioner
+    proc shellSurface(surface: Surface): ShellSurface
+    proc pong(serial: int)
+
+    proc ping(serial: int): event
+  
+
+  Positioner:
+    proc destroy
+    proc `size=`(v: IVec2)
+    proc setAnchorRect(pos: IVec2, size: IVec2)
+    proc `anchor=`(v: Anchor)
+    proc `gravity=`(v: int)
+    proc `constraintAllignment=`(v: set[ConstraintAllignment])
+    proc `offset=`(v: IVec2)
+    proc setRelative
+    proc `parentSize=`(v: IVec2)
+    proc setParentConfigure(serial: int)
+
+
+  ShellSurface:
+    proc destroy
+    proc toplevel: Toplevel
+    proc popup(parent: ShellSurface, positioner: Positioner): Popup
+    proc setGeometry(pos: IVec2, size: IVec2)
+    proc ackConfigure(serial: int)
+
+    proc configure(serial: int): event
+  
+
+  Toplevel:
+    proc destroy
+    proc `parent=`(v: Toplevel)
+    proc `title=`(v: string)
+    proc `appId=`(v: string)
+    proc showWindowMenu(seat: Seat, serial: int, pos: IVec2)
+    proc move(seat: Seat, serial: int)
+    proc resize(seat: Seat, serial: int, edges: set[Edge])
+    proc `maxSize=`(v: IVec2)
+    proc `minSize=`(v: IVec2)
+    proc maximize
+    proc unmaximize
+    proc fullscreen
+    proc unfullscreen
+    proc minimize
+
+    proc configure(size: IVec2, states: seq[ShellSurfaceState]): event
+    proc close: event
+  
+
+  Popup:
+    proc destroy
+    proc grub(seat: Seat, serial: int)
+    proc reposition(positioner: Positioner, token: int)
+
+    proc configure(pos: IVec2, size: IVec2): event
+    proc done: event
+    proc repositioned(token: int): event
+  
+
+  Drm:
+    iface "wl_drm"
+
+    proc init(id: int)
+    proc newBuffer(name: int, size: IVec2, stride: int, format: PixelFormat): Buffer
+    proc newPlanarBuffer(name: int, size: IVec2, format: PixelFormat, offsetsAndStrides: array[3, (int, int)]): Buffer
+    proc newPrimeBuffer(name: FileDescriptor, size: IVec2, format: PixelFormat, offsetsAndStrides: array[3, (int, int)]): Buffer
+
+    proc device(name: string): event
+    proc format(format: PixelFormat): event
+    proc inited: event
+    proc capabilities(capabilities: set[DrmCapability]): event
+
 
 
 proc sync*(this: Display) =
+  let cb = this.syncRequest
   var done: bool
-  this.ids[2].Callback.onDone:
-    done = true
-  this.marshal(0, Id 2)
+  cb.onDone: done = true
   while not done: this.pollNextEvent
 
 
