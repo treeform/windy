@@ -48,10 +48,6 @@ proc innerGetDoubleClickInterval(): float64 {.importc.}
 
 proc innerGetVisible(windowPtr: pointer): bool {.importc.}
 
-proc innerGetDecorated(windowPtr: pointer): bool {.importc.}
-
-proc innerGetResizable(windowPtr: pointer): bool {.importc.}
-
 proc innerGetSize(windowPtr: pointer, width, height: ptr int32) {.importc.}
 
 proc innerGetPos(windowPtr: pointer, x, y: ptr int32) {.importc.}
@@ -69,10 +65,6 @@ proc innerGetMaximized(windowPtr: pointer): bool {.importc.}
 proc innerSetTitle(windowPtr: pointer, title: cstring) {.importc.}
 
 proc innerSetVisible(windowPtr: pointer, visible: bool) {.importc.}
-
-proc innerSetDecorated(windowPtr: pointer, decorated: bool) {.importc.}
-
-proc innerSetResizable(windowPtr: pointer, resizable: bool) {.importc.}
 
 proc innerSetSize(windowPtr: pointer, width, height: int32) {.importc.}
 
@@ -117,11 +109,8 @@ proc innerSetClipboardString(value: cstring) {.importc.}
 proc visible*(window: Window): bool =
   innerGetVisible(window.windowPtr)
 
-proc decorated*(window: Window): bool =
-  innerGetDecorated(window.windowPtr)
-
-proc resizable*(window: Window): bool =
-  innerGetResizable(window.windowPtr)
+proc style*(window: Window): WindowStyle =
+  discard
 
 proc fullscreen*(window: Window): bool =
   discard
@@ -153,11 +142,8 @@ proc `title=`*(window: Window, title: string) =
 proc `visible=`*(window: Window, visible: bool) =
   innerSetVisible(window.windowPtr, visible)
 
-proc `decorated=`*(window: Window, decorated: bool) =
-  innerSetDecorated(window.windowPtr, decorated)
-
-proc `resizable=`*(window: Window, resizable: bool) =
-  innerSetResizable(window.windowPtr, resizable)
+proc `style=`*(window: Window, style: WindowStyle) =
+  discard
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
   discard
