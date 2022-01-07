@@ -834,3 +834,12 @@ proc pollEvents* =
     discard processClipboardEvents()
   for window in windows:
     pollEvents window
+
+proc closeIme*(window: Window) =
+  discard
+
+proc imeCursorIndex*(window: Window): int =
+  discard
+
+proc imeCompositionString*(window: Window): string =
+  discard
