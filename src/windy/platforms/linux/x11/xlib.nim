@@ -1,12 +1,16 @@
 import vmath, x
 
 const libX11* =
-  when defined(macosx): "libX11.dylib"
-  else: "libX11.so(|.6)"
+  when defined(macosx):
+    "libX11.dylib"
+  else:
+    "libX11.so(|.6)"
 
 const libXExt* =
-  when defined(macosx): "libXext.dylib"
-  else: "libXext.so(|.6)"
+  when defined(macosx):
+    "libXext.dylib"
+  else:
+    "libXext.so(|.6)"
 
 type
   Display* = ptr object

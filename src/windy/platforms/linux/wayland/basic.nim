@@ -1,8 +1,6 @@
 ## note: this file is included in protocol.nim, don't import it directly
 
-import os, posix, nativesockets, net, tables, sequtils
-import ../../../common
-
+import ../../../common, nativesockets, net, os, posix, sequtils, tables
 type
   Id* = distinct uint32
   FileDescriptor* = distinct int32
@@ -17,7 +15,6 @@ type
 
     socket: Socket
     ids: Table[uint32, Proxy]
-
 
 proc `//>`[T: SomeInteger](a, b: T): T =
   ## div roundup
@@ -40,7 +37,6 @@ proc asSeq[A](x: openarray[A], B: type): seq[B] =
 
 proc asString[T](x: openarray[T]): string =
   cast[string](x.asSeq(char))
-
 
 proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   new result, (proc(d: Display) = close d.socket)
@@ -73,7 +69,6 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   
   result.socket = newSocket(sock, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
 
-
 proc new(d: Display, t: type): t =
   proc findHole: uint32 =
     for k in 2 ..< (2 + d.ids.len.uint32):
@@ -87,7 +82,6 @@ proc new(d: Display, t: type): t =
 
 proc destroy*(x: Proxy) =
   x.display.ids.del x.id.uint32
-
 
 proc serialize[T](x: T): seq[uint32] =
   when x is uint32|int32|Id|enum|float32:
@@ -134,7 +128,6 @@ proc serialize[T](x: T): seq[uint32] =
   
   else: {.error: "unserializable type " & $T.}
 
-
 proc fileDescriptors[T](x: T): seq[FileDescriptor] =
   when x is FileDescriptor: result.add x
 
@@ -145,7 +138,6 @@ proc fileDescriptors[T](x: T): seq[FileDescriptor] =
   elif x is tuple|object:
     for x in x.fields:
       result.add fileDescriptors(x)
-
 
 proc deserialize(display: Display, x: seq[uint32], T: type, i: var uint32): T =
   when result is uint32|int32|Id|enum|float32:
@@ -200,7 +192,6 @@ proc deserialize(display: Display, x: seq[uint32], T: type): T =
   var i: uint32
   deserialize(display, x, T, i)
 
-
 proc marshal[T](x: Proxy, op: int, data: T = ()) =
   var d = data.serialize
   d.insert ((d.len.uint32 * uint32.sizeof.uint32 + 8) shl 16) or (op.uint32 and 0x0000ffff)
@@ -230,9 +221,7 @@ proc marshal[T](x: Proxy, op: int, data: T = ()) =
   let len = x.display.socket.getFd.sendmsg(msg.addr, 0x4000)
   assert len == d.len * uint32.sizeof
 
-
 method unmarshal(x: Proxy, op: int, data: seq[uint32]) {.base, locks: "unknown".} = discard
-
 
 proc pollNextEvent(d: Display) =
   let head = d.socket.recv(2 * uint32.sizeof).asSeq(uint32)

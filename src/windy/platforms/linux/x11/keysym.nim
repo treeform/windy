@@ -13,7 +13,8 @@ const
   xk_Sys_Req*: KeySym = 0x0000FF15
   xk_Escape*: KeySym = 0x0000FF1B
   xk_Delete*: KeySym = 0x0000FFFF                           # Delete, rubout \
-                              # International & multi-key character composition
+
+  # International & multi-key character composition
   xk_Multi_key*: KeySym = 0x0000FF20                        # Multi-key character compose
   xk_Codeinput*: KeySym = 0x0000FF37
   xk_SingleCandidate*: KeySym = 0x0000FF3C
@@ -39,8 +40,9 @@ const
   xk_Kanji_Bangou*: KeySym = 0x0000FF37                     # Codeinput
   xk_Zen_Koho*: KeySym = 0x0000FF3D                         # Multiple/All Candidate(s)
   xk_Mae_Koho*: KeySym = 0x0000FF3E                         # Previous Candidate \
-                              # = $FF31 thru = $FF3F are under xk_KOREAN
-                              # Cursor control & motion
+  # = $FF31 thru = $FF3F are under xk_KOREAN
+
+  # Cursor control & motion
   xk_Home*: KeySym = 0x0000FF50
   xk_Left*: KeySym = 0x0000FF51                             # Move left, left arrow
   xk_Up*: KeySym = 0x0000FF52                               # Move up, up arrow
@@ -66,7 +68,9 @@ const
   xk_Break*: KeySym = 0x0000FF6B
   xk_Mode_switch*: KeySym = 0x0000FF7E                      # Character set switch
   xk_script_switch*: KeySym = 0x0000FF7E                    # Alias for mode_switch
-  xk_Num_Lock*: KeySym = 0x0000FF7F # Keypad Functions, keypad numbers cleverly chosen to map to ascii
+
+  # Keypad Functions, keypad numbers cleverly chosen to map to ascii
+  xk_Num_Lock*: KeySym = 0x0000FF7F
   xk_KP_Space*: KeySym = 0x0000FF80                         # space
   xk_KP_Tab*: KeySym = 0x0000FF89
   xk_KP_Enter*: KeySym = 0x0000FF8D                         # enter
@@ -103,12 +107,12 @@ const
   xk_KP_6*: KeySym = 0x0000FFB6
   xk_KP_7*: KeySym = 0x0000FFB7
   xk_KP_8*: KeySym = 0x0000FFB8
-  xk_KP_9*: KeySym = 0x0000FFB9                             #*\
-                        # * Auxilliary Functions; note the duplicate definitions for left and right
-                        # * function keys;  Sun keyboards and a few other manufactures have such
-                        # * function key groups on the left and/or right sides of the keyboard.
-                        # * We've not found a keyboard with more than 35 function keys total.
-                        # *
+  xk_KP_9*: KeySym = 0x0000FFB9
+
+  # Auxilliary Functions; note the duplicate definitions for left and right
+  # function keys;  Sun keyboards and a few other manufactures have such
+  # function key groups on the left and/or right sides of the keyboard.
+  # We've not found a keyboard with more than 35 function keys total.
   xk_F1*: KeySym = 0x0000FFBE
   xk_F2*: KeySym = 0x0000FFBF
   xk_F3*: KeySym = 0x0000FFC0
@@ -168,28 +172,28 @@ const
   xk_F34*: KeySym = 0x0000FFDF
   xk_R14*: KeySym = 0x0000FFDF
   xk_F35*: KeySym = 0x0000FFE0
-  xk_R15*: KeySym = 0x0000FFE0                              # Modifiers
-  xk_Shift_L*: KeySym = 0x0000FFE1                          # Left shift
-  xk_Shift_R*: KeySym = 0x0000FFE2                          # Right shift
-  xk_Control_L*: KeySym = 0x0000FFE3                        # Left control
-  xk_Control_R*: KeySym = 0x0000FFE4                        # Right control
-  xk_Caps_Lock*: KeySym = 0x0000FFE5                        # Caps lock
-  xk_Shift_Lock*: KeySym = 0x0000FFE6                       # Shift lock
-  xk_Meta_L*: KeySym = 0x0000FFE7                           # Left meta
-  xk_Meta_R*: KeySym = 0x0000FFE8                           # Right meta
-  xk_Alt_L*: KeySym = 0x0000FFE9                            # Left alt
-  xk_Alt_R*: KeySym = 0x0000FFEA                            # Right alt
-  xk_Super_L*: KeySym = 0x0000FFEB                          # Left super
-  xk_Super_R*: KeySym = 0x0000FFEC                          # Right super
-  xk_Hyper_L*: KeySym = 0x0000FFED                          # Left hyper
-  xk_Hyper_R*: KeySym = 0x0000FFEE                          # Right hyper
+  xk_R15*: KeySym = 0x0000FFE0 # Modifiers
+  xk_Shift_L*: KeySym = 0x0000FFE1 # Left shift
+  xk_Shift_R*: KeySym = 0x0000FFE2 # Right shift
+  xk_Control_L*: KeySym = 0x0000FFE3 # Left control
+  xk_Control_R*: KeySym = 0x0000FFE4 # Right control
+  xk_Caps_Lock*: KeySym = 0x0000FFE5 # Caps lock
+  xk_Shift_Lock*: KeySym = 0x0000FFE6 # Shift lock
+  xk_Meta_L*: KeySym = 0x0000FFE7 # Left meta
+  xk_Meta_R*: KeySym = 0x0000FFE8 # Right meta
+  xk_Alt_L*: KeySym = 0x0000FFE9 # Left alt
+  xk_Alt_R*: KeySym = 0x0000FFEA # Right alt
+  xk_Super_L*: KeySym = 0x0000FFEB # Left super
+  xk_Super_R*: KeySym = 0x0000FFEC # Right super
+  xk_Hyper_L*: KeySym = 0x0000FFED # Left hyper
+  xk_Hyper_R*: KeySym = 0x0000FFEE # Right hyper
 
   xk_ISO_Lock*: KeySym = 0x0000FE01
   xk_ISO_Level2_Latch*: KeySym = 0x0000FE02
   xk_ISO_Level3_Shift*: KeySym = 0x0000FE03
   xk_ISO_Level3_Latch*: KeySym = 0x0000FE04
   xk_ISO_Level3_Lock*: KeySym = 0x0000FE05
-  xk_ISO_Group_Shift*: KeySym = 0x0000FF7E                  # Alias for mode_switch
+  xk_ISO_Group_Shift*: KeySym = 0x0000FF7E # Alias for mode_switch
   xk_ISO_Group_Latch*: KeySym = 0x0000FE06
   xk_ISO_Group_Lock*: KeySym = 0x0000FE07
   xk_ISO_Next_Group*: KeySym = 0x0000FE08
@@ -326,7 +330,7 @@ const
   xk_percent*: KeySym = 0x00000025
   xk_ampersand*: KeySym = 0x00000026
   xk_apostrophe*: KeySym = 0x00000027
-  xk_quoteright*: KeySym = 0x00000027                       # deprecated
+  xk_quoteright*: KeySym = 0x00000027 # deprecated
   xk_parenleft*: KeySym = 0x00000028
   xk_parenright*: KeySym = 0x00000029
   xk_asterisk*: KeySym = 0x0000002A
@@ -384,7 +388,7 @@ const
   xk_asciicircum*: KeySym = 0x0000005E
   xk_underscore*: KeySym = 0x0000005F
   xk_grave*: KeySym = 0x00000060
-  xk_quoteleft*: KeySym = 0x00000060                        # deprecated
+  xk_quoteleft*: KeySym = 0x00000060 # deprecated
   xk_a*: KeySym = 0x00000061
   xk_b*: KeySym = 0x00000062
   xk_c*: KeySym = 0x00000063
@@ -426,7 +430,7 @@ const
   xk_diaeresis*: KeySym = 0x000000A8
   xk_copyright*: KeySym = 0x000000A9
   xk_ordfeminine*: KeySym = 0x000000AA
-  xk_guillemotleft*: KeySym = 0x000000AB                    # left angle quotation mark
+  xk_guillemotleft*: KeySym = 0x000000AB # left angle quotation mark
   xk_notsign*: KeySym = 0x000000AC
   xk_hyphen*: KeySym = 0x000000AD
   xk_registered*: KeySym = 0x000000AE
@@ -442,7 +446,7 @@ const
   xk_cedilla*: KeySym = 0x000000B8
   xk_onesuperior*: KeySym = 0x000000B9
   xk_masculine*: KeySym = 0x000000BA
-  xk_guillemotright*: KeySym = 0x000000BB                   # right angle quotation mark
+  xk_guillemotright*: KeySym = 0x000000BB # right angle quotation mark
   xk_onequarter*: KeySym = 0x000000BC
   xk_onehalf*: KeySym = 0x000000BD
   xk_threequarters*: KeySym = 0x000000BE
@@ -596,7 +600,7 @@ const
   xk_scircumflex*: KeySym = 0x000002FE
 
   xk_kra*: KeySym = 0x000003A2
-  xk_kappa*: KeySym = 0x000003A2                            # deprecated
+  xk_kappa*: KeySym = 0x000003A2 # deprecated
   xkc_Rcedilla*: KeySym = 0x000003A3
   xkc_Itilde*: KeySym = 0x000003A5
   xkc_Lcedilla*: KeySym = 0x000003A6
@@ -665,7 +669,7 @@ const
   xk_kana_closingbracket*: KeySym = 0x000004A3
   xk_kana_comma*: KeySym = 0x000004A4
   xk_kana_conjunctive*: KeySym = 0x000004A5
-  xk_kana_middledot*: KeySym = 0x000004A5                   # deprecated
+  xk_kana_middledot*: KeySym = 0x000004A5 # deprecated
   xkc_kana_WO*: KeySym = 0x000004A6
   xk_kana_a*: KeySym = 0x000004A7
   xk_kana_i*: KeySym = 0x000004A8
@@ -676,7 +680,7 @@ const
   xk_kana_yu*: KeySym = 0x000004AD
   xk_kana_yo*: KeySym = 0x000004AE
   xk_kana_tsu*: KeySym = 0x000004AF
-  xk_kana_tu*: KeySym = 0x000004AF                          # deprecated
+  xk_kana_tu*: KeySym = 0x000004AF # deprecated
   xk_prolongedsound*: KeySym = 0x000004B0
   xkc_kana_A*: KeySym = 0x000004B1
   xkc_kana_I*: KeySym = 0x000004B2
@@ -695,9 +699,9 @@ const
   xkc_kana_SO*: KeySym = 0x000004BF
   xkc_kana_TA*: KeySym = 0x000004C0
   xkc_kana_CHI*: KeySym = 0x000004C1
-  xkc_kana_TI*: KeySym = 0x000004C1                         # deprecated
+  xkc_kana_TI*: KeySym = 0x000004C1 # deprecated
   xkc_kana_TSU*: KeySym = 0x000004C2
-  xkc_kana_TU*: KeySym = 0x000004C2                         # deprecated
+  xkc_kana_TU*: KeySym = 0x000004C2 # deprecated
   xkc_kana_TE*: KeySym = 0x000004C3
   xkc_kana_TO*: KeySym = 0x000004C4
   xkc_kana_NA*: KeySym = 0x000004C5
@@ -708,7 +712,7 @@ const
   xkc_kana_HA*: KeySym = 0x000004CA
   xkc_kana_HI*: KeySym = 0x000004CB
   xkc_kana_FU*: KeySym = 0x000004CC
-  xkc_kana_HU*: KeySym = 0x000004CC                         # deprecated
+  xkc_kana_HU*: KeySym = 0x000004CC # deprecated
   xkc_kana_HE*: KeySym = 0x000004CD
   xkc_kana_HO*: KeySym = 0x000004CE
   xkc_kana_MA*: KeySym = 0x000004CF
@@ -728,7 +732,7 @@ const
   xkc_kana_N*: KeySym = 0x000004DD
   xk_voicedsound*: KeySym = 0x000004DE
   xk_semivoicedsound*: KeySym = 0x000004DF
-  xk_kana_switch*: KeySym = 0x0000FF7E                      # Alias for mode_switch
+  xk_kana_switch*: KeySym = 0x0000FF7E # Alias for mode_switch
 
   xk_Farsi_0*: KeySym = 0x00000590
   xk_Farsi_1*: KeySym = 0x00000591
@@ -795,7 +799,7 @@ const
   xk_Arabic_meem*: KeySym = 0x000005E5
   xk_Arabic_noon*: KeySym = 0x000005E6
   xk_Arabic_ha*: KeySym = 0x000005E7
-  xk_Arabic_heh*: KeySym = 0x000005E7                       # deprecated
+  xk_Arabic_heh*: KeySym = 0x000005E7 # deprecated
   xk_Arabic_waw*: KeySym = 0x000005E8
   xk_Arabic_alefmaksura*: KeySym = 0x000005E9
   xk_Arabic_yeh*: KeySym = 0x000005EA
@@ -820,7 +824,7 @@ const
   xk_Arabic_farsi_yeh*: KeySym = xk_Farsi_yeh
   xk_Arabic_yeh_baree*: KeySym = 0x000005FD
   xk_Arabic_heh_goal*: KeySym = 0x000005FE
-  xk_Arabic_switch*: KeySym = 0x0000FF7E                    # Alias for mode_switch
+  xk_Arabic_switch*: KeySym = 0x0000FF7E # Alias for mode_switch
 
   xkc_Cyrillic_GHE_bar*: KeySym = 0x00000680
   xk_Cyrillic_ghe_bar*: KeySym = 0x00000690
@@ -856,47 +860,47 @@ const
   xk_Macedonia_gje*: KeySym = 0x000006A2
   xk_Cyrillic_io*: KeySym = 0x000006A3
   xk_Ukrainian_ie*: KeySym = 0x000006A4
-  xk_Ukranian_je*: KeySym = 0x000006A4                      # deprecated
+  xk_Ukranian_je*: KeySym = 0x000006A4 # deprecated
   xk_Macedonia_dse*: KeySym = 0x000006A5
   xk_Ukrainian_i*: KeySym = 0x000006A6
-  xk_Ukranian_i*: KeySym = 0x000006A6                       # deprecated
+  xk_Ukranian_i*: KeySym = 0x000006A6 # deprecated
   xk_Ukrainian_yi*: KeySym = 0x000006A7
-  xk_Ukranian_yi*: KeySym = 0x000006A7                      # deprecated
+  xk_Ukranian_yi*: KeySym = 0x000006A7 # deprecated
   xk_Cyrillic_je*: KeySym = 0x000006A8
-  xk_Serbian_je*: KeySym = 0x000006A8                       # deprecated
+  xk_Serbian_je*: KeySym = 0x000006A8 # deprecated
   xk_Cyrillic_lje*: KeySym = 0x000006A9
-  xk_Serbian_lje*: KeySym = 0x000006A9                      # deprecated
+  xk_Serbian_lje*: KeySym = 0x000006A9 # deprecated
   xk_Cyrillic_nje*: KeySym = 0x000006AA
-  xk_Serbian_nje*: KeySym = 0x000006AA                      # deprecated
+  xk_Serbian_nje*: KeySym = 0x000006AA # deprecated
   xk_Serbian_tshe*: KeySym = 0x000006AB
   xk_Macedonia_kje*: KeySym = 0x000006AC
   xk_Ukrainian_ghe_with_upturn*: KeySym = 0x000006AD
   xk_Byelorussian_shortu*: KeySym = 0x000006AE
   xk_Cyrillic_dzhe*: KeySym = 0x000006AF
-  xk_Serbian_dze*: KeySym = 0x000006AF                      # deprecated
+  xk_Serbian_dze*: KeySym = 0x000006AF # deprecated
   xk_numerosign*: KeySym = 0x000006B0
   xkc_Serbian_DJE*: KeySym = 0x000006B1
   xkc_Macedonia_GJE*: KeySym = 0x000006B2
   xkc_Cyrillic_IO*: KeySym = 0x000006B3
   xkc_Ukrainian_IE*: KeySym = 0x000006B4
-  xkc_Ukranian_JE*: KeySym = 0x000006B4                     # deprecated
+  xkc_Ukranian_JE*: KeySym = 0x000006B4 # deprecated
   xkc_Macedonia_DSE*: KeySym = 0x000006B5
   xkc_Ukrainian_I*: KeySym = 0x000006B6
-  xkc_Ukranian_I*: KeySym = 0x000006B6                      # deprecated
+  xkc_Ukranian_I*: KeySym = 0x000006B6 # deprecated
   xkc_Ukrainian_YI*: KeySym = 0x000006B7
-  xkc_Ukranian_YI*: KeySym = 0x000006B7                     # deprecated
+  xkc_Ukranian_YI*: KeySym = 0x000006B7 # deprecated
   xkc_Cyrillic_JE*: KeySym = 0x000006B8
-  xkc_Serbian_JE*: KeySym = 0x000006B8                      # deprecated
+  xkc_Serbian_JE*: KeySym = 0x000006B8 # deprecated
   xkc_Cyrillic_LJE*: KeySym = 0x000006B9
-  xkc_Serbian_LJE*: KeySym = 0x000006B9                     # deprecated
+  xkc_Serbian_LJE*: KeySym = 0x000006B9 # deprecated
   xkc_Cyrillic_NJE*: KeySym = 0x000006BA
-  xkc_Serbian_NJE*: KeySym = 0x000006BA                     # deprecated
+  xkc_Serbian_NJE*: KeySym = 0x000006BA # deprecated
   xkc_Serbian_TSHE*: KeySym = 0x000006BB
   xkc_Macedonia_KJE*: KeySym = 0x000006BC
   xkc_Ukrainian_GHE_WITH_UPTURN*: KeySym = 0x000006BD
   xkc_Byelorussian_SHORTU*: KeySym = 0x000006BE
   xkc_Cyrillic_DZHE*: KeySym = 0x000006BF
-  xkc_Serbian_DZE*: KeySym = 0x000006BF                     # deprecated
+  xkc_Serbian_DZE*: KeySym = 0x000006BF # deprecated
   xk_Cyrillic_yu*: KeySym = 0x000006C0
   xk_Cyrillic_a*: KeySym = 0x000006C1
   xk_Cyrillic_be*: KeySym = 0x000006C2
@@ -1036,7 +1040,7 @@ const
   xk_Greek_chi*: KeySym = 0x000007F7
   xk_Greek_psi*: KeySym = 0x000007F8
   xk_Greek_omega*: KeySym = 0x000007F9
-  xk_Greek_switch*: KeySym = 0x0000FF7E                     # Alias for mode_switch
+  xk_Greek_switch*: KeySym = 0x0000FF7E # Alias for mode_switch
 
   xk_leftradical*: KeySym = 0x000008A1
   xk_topleftradical*: KeySym = 0x000008A2
@@ -1219,19 +1223,19 @@ const
   xk_hebrew_doublelowline*: KeySym = 0x00000CDF
   xk_hebrew_aleph*: KeySym = 0x00000CE0
   xk_hebrew_bet*: KeySym = 0x00000CE1
-  xk_hebrew_beth*: KeySym = 0x00000CE1                      # deprecated
+  xk_hebrew_beth*: KeySym = 0x00000CE1 # deprecated
   xk_hebrew_gimel*: KeySym = 0x00000CE2
-  xk_hebrew_gimmel*: KeySym = 0x00000CE2                    # deprecated
+  xk_hebrew_gimmel*: KeySym = 0x00000CE2 # deprecated
   xk_hebrew_dalet*: KeySym = 0x00000CE3
-  xk_hebrew_daleth*: KeySym = 0x00000CE3                    # deprecated
+  xk_hebrew_daleth*: KeySym = 0x00000CE3 # deprecated
   xk_hebrew_he*: KeySym = 0x00000CE4
   xk_hebrew_waw*: KeySym = 0x00000CE5
   xk_hebrew_zain*: KeySym = 0x00000CE6
-  xk_hebrew_zayin*: KeySym = 0x00000CE6                     # deprecated
+  xk_hebrew_zayin*: KeySym = 0x00000CE6 # deprecated
   xk_hebrew_chet*: KeySym = 0x00000CE7
-  xk_hebrew_het*: KeySym = 0x00000CE7                       # deprecated
+  xk_hebrew_het*: KeySym = 0x00000CE7 # deprecated
   xk_hebrew_tet*: KeySym = 0x00000CE8
-  xk_hebrew_teth*: KeySym = 0x00000CE8                      # deprecated
+  xk_hebrew_teth*: KeySym = 0x00000CE8 # deprecated
   xk_hebrew_yod*: KeySym = 0x00000CE9
   xk_hebrew_finalkaph*: KeySym = 0x00000CEA
   xk_hebrew_kaph*: KeySym = 0x00000CEB
@@ -1241,21 +1245,21 @@ const
   xk_hebrew_finalnun*: KeySym = 0x00000CEF
   xk_hebrew_nun*: KeySym = 0x00000CF0
   xk_hebrew_samech*: KeySym = 0x00000CF1
-  xk_hebrew_samekh*: KeySym = 0x00000CF1                    # deprecated
+  xk_hebrew_samekh*: KeySym = 0x00000CF1 # deprecated
   xk_hebrew_ayin*: KeySym = 0x00000CF2
   xk_hebrew_finalpe*: KeySym = 0x00000CF3
   xk_hebrew_pe*: KeySym = 0x00000CF4
   xk_hebrew_finalzade*: KeySym = 0x00000CF5
-  xk_hebrew_finalzadi*: KeySym = 0x00000CF5                 # deprecated
+  xk_hebrew_finalzadi*: KeySym = 0x00000CF5 # deprecated
   xk_hebrew_zade*: KeySym = 0x00000CF6
-  xk_hebrew_zadi*: KeySym = 0x00000CF6                      # deprecated
+  xk_hebrew_zadi*: KeySym = 0x00000CF6 # deprecated
   xk_hebrew_qoph*: KeySym = 0x00000CF7
-  xk_hebrew_kuf*: KeySym = 0x00000CF7                       # deprecated
+  xk_hebrew_kuf*: KeySym = 0x00000CF7 # deprecated
   xk_hebrew_resh*: KeySym = 0x00000CF8
   xk_hebrew_shin*: KeySym = 0x00000CF9
   xk_hebrew_taw*: KeySym = 0x00000CFA
-  xk_hebrew_taf*: KeySym = 0x00000CFA                       # deprecated
-  xk_Hebrew_switch*: KeySym = 0x0000FF7E                    # Alias for mode_switch
+  xk_hebrew_taf*: KeySym = 0x00000CFA # deprecated
+  xk_Hebrew_switch*: KeySym = 0x0000FF7E # Alias for mode_switch
 
   xk_Thai_kokai*: KeySym = 0x00000DA1
   xk_Thai_khokhai*: KeySym = 0x00000DA2
@@ -1342,22 +1346,22 @@ const
   xk_Thai_lekpaet*: KeySym = 0x00000DF8
   xk_Thai_lekkao*: KeySym = 0x00000DF9
 
-  xk_Hangul*: KeySym = 0x0000FF31                           # Hangul start/stop(toggle)
-  xk_Hangul_Start*: KeySym = 0x0000FF32                     # Hangul start
-  xk_Hangul_End*: KeySym = 0x0000FF33                       # Hangul end, English start
-  xk_Hangul_Hanja*: KeySym = 0x0000FF34                     # Start Hangul->Hanja Conversion
-  xk_Hangul_Jamo*: KeySym = 0x0000FF35                      # Hangul Jamo mode
-  xk_Hangul_Romaja*: KeySym = 0x0000FF36                    # Hangul Romaja mode
-  xk_Hangul_Codeinput*: KeySym = 0x0000FF37                 # Hangul code input mode
-  xk_Hangul_Jeonja*: KeySym = 0x0000FF38                    # Jeonja mode
-  xk_Hangul_Banja*: KeySym = 0x0000FF39                     # Banja mode
-  xk_Hangul_PreHanja*: KeySym = 0x0000FF3A                  # Pre Hanja conversion
-  xk_Hangul_PostHanja*: KeySym = 0x0000FF3B                 # Post Hanja conversion
-  xk_Hangul_SingleCandidate*: KeySym = 0x0000FF3C           # Single candidate
-  xk_Hangul_MultipleCandidate*: KeySym = 0x0000FF3D         # Multiple candidate
-  xk_Hangul_PreviousCandidate*: KeySym = 0x0000FF3E         # Previous candidate
-  xk_Hangul_Special*: KeySym = 0x0000FF3F                   # Special symbols
-  xk_Hangul_switch*: KeySym = 0x0000FF7E                    # Alias for mode_switch \
+  xk_Hangul*: KeySym = 0x0000FF31 # Hangul start/stop(toggle)
+  xk_Hangul_Start*: KeySym = 0x0000FF32 # Hangul start
+  xk_Hangul_End*: KeySym = 0x0000FF33 # Hangul end, English start
+  xk_Hangul_Hanja*: KeySym = 0x0000FF34 # Start Hangul->Hanja Conversion
+  xk_Hangul_Jamo*: KeySym = 0x0000FF35 # Hangul Jamo mode
+  xk_Hangul_Romaja*: KeySym = 0x0000FF36 # Hangul Romaja mode
+  xk_Hangul_Codeinput*: KeySym = 0x0000FF37 # Hangul code input mode
+  xk_Hangul_Jeonja*: KeySym = 0x0000FF38 # Jeonja mode
+  xk_Hangul_Banja*: KeySym = 0x0000FF39 # Banja mode
+  xk_Hangul_PreHanja*: KeySym = 0x0000FF3A # Pre Hanja conversion
+  xk_Hangul_PostHanja*: KeySym = 0x0000FF3B # Post Hanja conversion
+  xk_Hangul_SingleCandidate*: KeySym = 0x0000FF3C # Single candidate
+  xk_Hangul_MultipleCandidate*: KeySym = 0x0000FF3D # Multiple candidate
+  xk_Hangul_PreviousCandidate*: KeySym = 0x0000FF3E # Previous candidate
+  xk_Hangul_Special*: KeySym = 0x0000FF3F # Special symbols
+  xk_Hangul_switch*: KeySym = 0x0000FF7E # Alias for mode_switch \
                                   # Hangul Consonant Characters
   xk_Hangul_Kiyeog*: KeySym = 0x00000EA1
   xk_Hangul_SsangKiyeog*: KeySym = 0x00000EA2
@@ -1388,7 +1392,7 @@ const
   xk_Hangul_Khieuq*: KeySym = 0x00000EBB
   xk_Hangul_Tieut*: KeySym = 0x00000EBC
   xk_Hangul_Phieuf*: KeySym = 0x00000EBD
-  xk_Hangul_Hieuh*: KeySym = 0x00000EBE                     # Hangul Vowel Characters
+  xk_Hangul_Hieuh*: KeySym = 0x00000EBE # Hangul Vowel Characters
   xk_Hangul_A*: KeySym = 0x00000EBF
   xk_Hangul_AE*: KeySym = 0x00000EC0
   xk_Hangul_YA*: KeySym = 0x00000EC1
@@ -1443,12 +1447,12 @@ const
   xk_Hangul_PanSios*: KeySym = 0x00000EF2
   xk_Hangul_KkogjiDalrinIeung*: KeySym = 0x00000EF3
   xk_Hangul_SunkyeongeumPhieuf*: KeySym = 0x00000EF4
-  xk_Hangul_YeorinHieuh*: KeySym = 0x00000EF5               # Ancient Hangul Vowel Characters
+  xk_Hangul_YeorinHieuh*: KeySym = 0x00000EF5 # Ancient Hangul Vowel Characters
   xk_Hangul_AraeA*: KeySym = 0x00000EF6
   xk_Hangul_AraeAE*: KeySym = 0x00000EF7 # Ancient Hangul syllable-final (JongSeong) Characters
   xk_Hangul_J_PanSios*: KeySym = 0x00000EF8
   xk_Hangul_J_KkogjiDalrinIeung*: KeySym = 0x00000EF9
-  xk_Hangul_J_YeorinHieuh*: KeySym = 0x00000EFA             # Korean currency symbol
+  xk_Hangul_J_YeorinHieuh*: KeySym = 0x00000EFA # Korean currency symbol
   xk_Korean_Won*: KeySym = 0x00000EFF
 
   xk_Armenian_eternity*: KeySym = 0x000014A1
@@ -1620,7 +1624,7 @@ const
   xkc_Lbelowdot*: KeySym = 0x000016D1
   xkc_Lstrokebelowdot*: KeySym = 0x000016D2
   xk_lbelowdot*: KeySym = 0x000016E1
-  xk_lstrokebelowdot*: KeySym = 0x000016E2                  # For Guarani
+  xk_lstrokebelowdot*: KeySym = 0x000016E2 # For Guarani
   xkc_Gtilde*: KeySym = 0x000016D3
   xk_gtilde*: KeySym = 0x000016E3
 
@@ -1712,15 +1716,15 @@ const
   xk_yhook*: KeySym = 0x00001EF7
   xkc_Ytilde*: KeySym = 0x00001EF8
   xk_ytilde*: KeySym = 0x00001EF9
-  xkc_Ohorn*: KeySym = 0x00001EFA                           # U+01a0
-  xk_ohorn*: KeySym = 0x00001EFB                            # U+01a1
-  xkc_Uhorn*: KeySym = 0x00001EFC                           # U+01af
-  xk_uhorn*: KeySym = 0x00001EFD                            # U+01b0
-  xk_combining_tilde*: KeySym = 0x00001E9F                  # U+0303
-  xk_combining_grave*: KeySym = 0x00001EF2                  # U+0300
-  xk_combining_acute*: KeySym = 0x00001EF3                  # U+0301
-  xk_combining_hook*: KeySym = 0x00001EFE                   # U+0309
-  xk_combining_belowdot*: KeySym = 0x00001EFF               # U+0323
+  xkc_Ohorn*: KeySym = 0x00001EFA # U+01a0
+  xk_ohorn*: KeySym = 0x00001EFB # U+01a1
+  xkc_Uhorn*: KeySym = 0x00001EFC # U+01af
+  xk_uhorn*: KeySym = 0x00001EFD # U+01b0
+  xk_combining_tilde*: KeySym = 0x00001E9F # U+0303
+  xk_combining_grave*: KeySym = 0x00001EF2 # U+0300
+  xk_combining_acute*: KeySym = 0x00001EF3 # U+0301
+  xk_combining_hook*: KeySym = 0x00001EFE # U+0309
+  xk_combining_belowdot*: KeySym = 0x00001EFF # U+0323
 
   xk_EcuSign*: KeySym = 0x000020A0
   xk_ColonSign*: KeySym = 0x000020A1

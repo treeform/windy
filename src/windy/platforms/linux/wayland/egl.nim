@@ -1,5 +1,4 @@
-import vmath
-import ../../../common
+import ../../../common, vmath
 
 type
   OpenglContext* = object
@@ -25,24 +24,22 @@ type
     badParameter = 0x300C
     badSurface = 0x300D
 
-
 const
   eglSurfaceType = int32 0x3033
-  eglPBufferBit  = int32 0x0001
+  eglPBufferBit = int32 0x0001
 
   eglRenderableType = int32 0x3040
-  eglOpenglEs2Bit   = int32 0x0004
+  eglOpenglEs2Bit = int32 0x0004
 
   eglAlphaSize = int32 0x3021
-  eglBlueSize  = int32 0x3022
+  eglBlueSize = int32 0x3022
   eglGreenSize = int32 0x3023
-  eglRedSize   = int32 0x3024
+  eglRedSize = int32 0x3024
 
-  eglWidth  = int32 0x3057
+  eglWidth = int32 0x3057
   eglHeight = int32 0x3056
 
   eglNone = int32 0x3038
-
 
 {.push, cdecl, dynlib: "libEGL.so(|.1)", importc.}
 
@@ -51,23 +48,25 @@ using d: EglDisplay
 proc eglGetError(): EglError
 proc eglGetDisplay(native: pointer = nil): EglDisplay
 
-proc eglInitialize(d; major: ptr int32 = nil, minor: ptr int32 = nil): bool
+proc eglInitialize(d; major: ptr int32 = nil; minor: ptr int32 = nil): bool
 proc eglTerminate(d)
 
-proc eglChooseConfig(d; attrs: ptr int32, retConfigs: ptr EglConfig, maxConfigs: int32, retConfigCount: ptr int32): bool
+proc eglChooseConfig(d; attrs: ptr int32; retConfigs: ptr EglConfig;
+    maxConfigs: int32; retConfigCount: ptr int32): bool
 
-proc eglCreateContext(d; config: EglConfig, share: EglContext = nil, attrs: ptr int32 = nil): EglContext
+proc eglCreateContext(d; config: EglConfig; share: EglContext = nil;
+    attrs: ptr int32 = nil): EglContext
 
-proc eglCreatePbufferSurface(d; config: EglConfig, attrs: ptr int32 = nil): EglSurface
+proc eglCreatePbufferSurface(d; config: EglConfig;
+    attrs: ptr int32 = nil): EglSurface
 
-proc eglMakeCurrent(d; draw, read: EglSurface, ctx: EglContext): bool
+proc eglMakeCurrent(d; draw, read: EglSurface; ctx: EglContext): bool
 
 {.pop.}
 
-
 template expect(x) =
-  if not x: raise WindyError.newException("Error creating OpenGL context (" & $eglGetError() & ")")
-
+  if not x: raise WindyError.newException("Error creating OpenGL context (" &
+      $eglGetError() & ")")
 
 var d: EglDisplay
 
@@ -76,19 +75,18 @@ proc initEgl* =
   expect d != nil
   expect d.eglInitialize
 
-
 proc newOpenglContext*: OpenglContext =
   ## creates opengl context (on new dummy surface)
   var
     config: EglConfig
     configCount: int32
   var attrs = [
-    eglSurfaceType,    eglPBufferBit,
+    eglSurfaceType, eglPBufferBit,
     eglRenderableType, eglOpenglEs2Bit,
-    eglRedSize,        8,
-    eglGreenSize,      8,
-    eglBlueSize,       8,
-    eglAlphaSize,      8,
+    eglRedSize, 8,
+    eglGreenSize, 8,
+    eglBlueSize, 8,
+    eglAlphaSize, 8,
     eglNone
   ]
   expect d.eglChooseConfig(attrs[0].addr, config.addr, 1, configCount.addr)
@@ -105,11 +103,10 @@ proc newOpenglContext*: OpenglContext =
   result.srf = d.eglCreatePbufferSurface(config, attrs2[0].addr)
   expect result.srf != nil
 
-
 proc makeCurrent*(context: OpenglContext) =
   if not d.eglMakeCurrent(context.srf, context.srf, context.ctx):
-    raise WindyError.newException("Error creating OpenGL context (" & $eglGetError() & ")")
-
+    raise WindyError.newException("Error creating OpenGL context (" &
+        $eglGetError() & ")")
 
 proc terminateEgl* =
   d.eglTerminate

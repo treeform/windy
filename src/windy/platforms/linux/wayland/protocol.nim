@@ -1,5 +1,5 @@
 include basic
-import macros, strformat, sequtils, vmath, options, unicode
+import macros, options, sequtils, strformat, unicode, vmath
 
 proc unshl(x: int): int =
   var x = x
@@ -19,15 +19,15 @@ macro protocol(body) =
   ## transforms
   ##   T:
   ##     iface "wl_t"
-  ## 
+  ##
   ##     proc f(a: int): R
   ##     proc e(a: int): event
-  ## 
+  ##
   ## to
   ##   type
   ##     T* = ref object of Proxy
   ##       e*: proc (a: int)
-  ## 
+  ##
   ##   proc iface*(t: type T): string = "wl_t"
   ##
   ##   proc f*(this: T; a: int): R =
@@ -50,12 +50,13 @@ macro protocol(body) =
   proc injectAllParams(x: NimNode): NimNode =
     result = nnkFormalParams.newTree(
       @[x[0]] &
-      x[1..^1].mapit(newIdentDefs(nnkPragmaExpr.newTree(it[0], nnkPragma.newTree(ident"inject")), it[1], it[2]))
+      x[1..^1].mapit(newIdentDefs(nnkPragmaExpr.newTree(it[0],
+          nnkPragma.newTree(ident"inject")), it[1], it[2]))
     )
-  
+
   proc separateParams(x: NimNode): tuple[p, t: seq[NimNode]] =
     (x[1..^1].mapit(it[0..^3]).concat, x[1..^1].mapit(it[^2].repeat(it.len - 2)).concat)
-  
+
   proc applyBitfield(p, t: seq[NimNode], reverse = false): tuple[p, t: seq[NimNode]] =
     zip(p, t).mapit(
       if it[1].kind == nnkCommand and it[1][0] == ident"bitField":
@@ -63,17 +64,16 @@ macro protocol(body) =
         else: (newCall(ident"toBitfield", it[0]), it[1][1])
       else: it
     ).unzip
-  
+
   proc prepareArgs(x: NimNode, reverse = false): tuple[p, t, pc: seq[NimNode]] =
     let (p, t) = x.separateParams
     let (pc, t2) = applyBitfield(p, t, reverse)
     (p, t2, pc)
-  
+
   proc prepareParams(x: NimNode): NimNode =
     let (p, t) = x.separateParams
     let (_, t2) = applyBitfield(p, t)
     nnkFormalParams.newTree(@[x[0]] & zip(p, t2).mapit(newIdentDefs(it[0], it[1])))
-
 
   result = newStmtList()
   var types: seq[seq[NimNode]]
@@ -103,7 +103,7 @@ macro protocol(body) =
           ),
           newEmptyNode()
         )
-        
+
         let onei = ident &"on{($a.name).runeAt(0).toUpper}{($a.name).toRunes[1..^1]}"
         onei.copyLineInfo a.name
 
@@ -123,25 +123,26 @@ macro protocol(body) =
               nnkDotExpr.newTree(
                 ident"x",
                 a.name
-              ),
-              nnkLambda.newTree(
-                newEmptyNode(),
-                newEmptyNode(),
-                newEmptyNode(),
-                p.prepareParams.injectAllParams,
-                newEmptyNode(),
-                newEmptyNode(),
-                nnkStmtList.newTree(
-                  ident"body"
-                )
+            ),
+            nnkLambda.newTree(
+              newEmptyNode(),
+              newEmptyNode(),
+              newEmptyNode(),
+              p.prepareParams.injectAllParams,
+              newEmptyNode(),
+              newEmptyNode(),
+              nnkStmtList.newTree(
+                ident"body"
               )
             )
+          )
           )
         )
         unms.add nnkOfBranch.newTree( # unmarshaling
           newLit unms.len - 1,
           nnkIfStmt.newTree(nnkElifBranch.newTree(
-            nnkInfix.newTree(ident"!=", nnkDotExpr.newTree(ident"this", a.name), newNilLit()),
+            nnkInfix.newTree(ident"!=", nnkDotExpr.newTree(ident"this", a.name),
+                newNilLit()),
             block:
               let (args, types, argvals) = p.prepareArgs(true)
               newStmtList(
@@ -180,8 +181,8 @@ macro protocol(body) =
               newCall(ident"new",
                 @[nnkDotExpr.newTree(ident"this", ident"display")] &
                 @[p[0]]
-              )
-            ),
+            )
+          ),
             a.body
           )
         if $a.name == "destroy":
@@ -191,14 +192,15 @@ macro protocol(body) =
           )
         result.add a
         inc i
-    
+
     unms.add nnkElse.newTree(
       nnkDiscardStmt.newTree(newEmptyNode())
     )
     result.add quote do:
-      method unmarshal(this {.inject.}: `t`, op {.inject.}: int, data {.inject.}: seq[uint32]) {.locks: "unknown".} =
+      method unmarshal(this {.inject.}: `t`, op {.inject.}: int,
+          data {.inject.}: seq[uint32]) {.locks: "unknown".} =
         `unms`
-  
+
   result.insert 0, nnkTypeSection.newTree( # type declaration
     types.filterit($it[0] != "Display").mapit( # do not redefine Display
       nnkTypeDef.newTree(
@@ -213,13 +215,12 @@ macro protocol(body) =
     )
   )
 
-
 type
   PixelFormat* {.pure.} = enum
     argb8888 = 0
     xrgb8888 = 1
     c8 = 0x20203843
-    
+
     bgra1010102 = 0x30334142
     rgba1010102 = 0x30334152
     abgr2101010 = 0x30334241
@@ -234,7 +235,7 @@ type
 
     nv21 = 0x3132564e
     nv61 = 0x3136564e
-    
+
     bgra4444 = 0x32314142
     rgba4444 = 0x32314152
     abgr4444 = 0x32314241
@@ -245,7 +246,7 @@ type
     yuv420 = 0x32315559
     nv12 = 0x3231564e
     yvu420 = 0x32315659
-    
+
     bgrx4444 = 0x32315842
     rgbx4444 = 0x32315852
 
@@ -253,10 +254,10 @@ type
     rgba8888 = 0x34324152
     abgr8888 = 0x34324241
     xbgr8888 = 0x34324258
-    
+
     bgr888 = 0x34324742
     rgb888 = 0x34324752
-    
+
     yuv444 = 0x34325559
     yvu444 = 0x34325659
 
@@ -271,7 +272,7 @@ type
     xrgb1555 = 0x35315258
     bgrx5551 = 0x35315842
     rgbx5551 = 0x35315852
-    
+
     bgr565 = 0x36314742
     rgb565 = 0x36314752
 
@@ -281,21 +282,21 @@ type
 
     rgb332 = 0x38424752
     bgr233 = 0x38524742
-    
+
     yvu410 = 0x39555659
     yuv410 = 0x39565559
-    
+
     yvyu = 0x55595659
     ayuv = 0x56555941
     yuyv = 0x56595559
     vyuy = 0x59555956
     uyvy = 0x59565955
-  
+
   DndAction* {.pure.} = enum
     copy
     move
     ask
-  
+
   Transform* {.pure.} = enum
     normal
     rotated90
@@ -305,26 +306,26 @@ type
     flippedRotated90
     flippedRotated180
     flippedRotated270
-  
+
   Capability* {.pure.} = enum
     cursor
     keyboard
     touch
-  
+
   Axis* {.pure.} = enum
     horizontal
     vertical
-  
+
   AxisSource* {.pure.} = enum
     wheel
     finger
     continuous
     wheelTilt
-  
+
   KeyboardFormat* {.pure.} = enum
     no
     xkb_v1
-  
+
   Subpixel* {.pure.} = enum
     unknown
     none
@@ -332,11 +333,11 @@ type
     horisontalBgr
     verticalRgb
     verticalBgr
-  
+
   ModeFlag* {.pure.} = enum
     current
     prefered
-  
+
   Anchor* {.pure.} = enum
     none
     top
@@ -347,7 +348,7 @@ type
     bottomLeft
     topRight
     bottomRight
-  
+
   ConstraintAllignment* {.pure.} = enum
     slideX
     slideY
@@ -361,7 +362,7 @@ type
     bottom
     left
     right
-  
+
   ShellSurfaceState* {.pure.} = enum
     maximized = 1
     fullscreen
@@ -371,10 +372,9 @@ type
     tiledRight
     tiledTop
     tiledBottom
-  
+
   DrmCapability* {.pure.} = enum
     prime = 1
-
 
 protocol:
   Display:
@@ -384,24 +384,20 @@ protocol:
     proc error(objId: Id, code: int, message: string): event
     proc deleteId(id: Id): event
 
-
   Registry:
     # proc bindInterface*(T: type, name: int, iface: string, version: int): T
 
     proc global(name: int, iface: string, version: int): event
     proc globalRemove(name: int): event
 
-
   Callback:
     proc done(cbData: uint32): event
-
 
   Compositor:
     iface "wl_compositor"
 
     proc newSurface: Surface
     proc newRegion: Region
-
 
   Shm:
     iface "wl_shm"
@@ -410,18 +406,16 @@ protocol:
 
     proc format(format: PixelFormat): event
 
-
   ShmPool:
-    proc newBuffer(offset: int, size: IVec2, stride: int, format: PixelFormat): Buffer
+    proc newBuffer(offset: int, size: IVec2, stride: int,
+        format: PixelFormat): Buffer
     proc destroy
     proc resize(size: int)
-
 
   Buffer:
     proc destroy
 
     proc release: event
-
 
   DataOffer:
     proc accept(serial: int, mime: string)
@@ -433,7 +427,6 @@ protocol:
     proc offer(mime: string): event
     proc sourceActions(actions: set[DndAction]): event
     proc action(action: bitField Option[DndAction]): event
-
 
   DataSource:
     proc offer(mime: string)
@@ -447,26 +440,24 @@ protocol:
     proc dndFinished: event
     proc action(action: bitField Option[DndAction]): event
 
-
   DataDevice:
     proc startDrag(origin, icon: Surface, serial: int): DataSource
     proc sellect(serial: int): DataSource
     proc destroy
 
     proc offer(offer: DataOffer): event
-    proc enter(serial: int, surface: Surface, pos: Vec2, offer: DataOffer): event
+    proc enter(serial: int, surface: Surface, pos: Vec2,
+        offer: DataOffer): event
     proc leave: event
     proc motion(time: int, pos: Vec2): event
     proc drop: event
     proc sellected(offer: DataOffer): event
-
 
   DataDeviceManager:
     iface "wl_data_device_manager"
 
     proc newDataSource: DataSource
     proc dataDevice(seat: Seat): DataDevice
-
 
   Surface:
     proc destroy
@@ -483,7 +474,6 @@ protocol:
     proc enter(output: Output): event
     proc leave(output: Output): event
 
-
   Seat:
     iface "wl_seat"
 
@@ -494,7 +484,6 @@ protocol:
 
     proc capabilities(capabilities: set[Capability]): event
     proc name(name: string): event
-
 
   Cursor:
     proc setCursor(serial: int, surface: Surface, hotspot: IVec2)
@@ -510,7 +499,6 @@ protocol:
     proc scrollStop(time: int, axis: Axis): event
     proc scrollDiscrete(axis: Axis, value: int): event
 
-
   Keyboard:
     proc destroy
 
@@ -518,14 +506,15 @@ protocol:
     proc enter(serial: int, surface: Surface, keys: seq[uint32]): event
     proc leave(serial: int, surface: Surface): event
     proc key(serial: int, time: int, key: uint32, pressed: bool): event
-    proc modifiers(serial: int, depressed, latched, locked: int, group: int): event
+    proc modifiers(serial: int, depressed, latched, locked: int,
+        group: int): event
     proc repeatInfo(rate: int, delay: int): event
-
 
   Touch:
     proc destroy
 
-    proc down(serial: int, time: int, surface: Surface, id: int, pos: Vec2): event
+    proc down(serial: int, time: int, surface: Surface, id: int,
+        pos: Vec2): event
     proc up(serial: int, time: int, id: int): event
     proc motion(time: int, id: int, pos: Vec2): event
     proc frame: event
@@ -533,30 +522,27 @@ protocol:
     proc shape(id: int, major, minor: float): event
     proc orientation(id: int, orientation: float): event
 
-
   Output:
     iface "wl_output"
 
     proc destroy
 
-    proc geometry(pos: IVec2, sizeInMillimeters: IVec2, subpixel: Subpixel, make: string, model: string, transform: Transform): event
+    proc geometry(pos: IVec2, sizeInMillimeters: IVec2, subpixel: Subpixel,
+        make: string, model: string, transform: Transform): event
     proc mode(flags: set[ModeFlag], size: IVec2, refresh: int): event
     proc done: event
     proc scale(factor: int): event
-
 
   Region:
     proc destroy
     proc add(pos: IVec2, size: IVec2)
     proc substract(pos: IVec2, size: IVec2)
 
-
   Subcompositor:
     iface "wl_subcompositor"
 
     proc destroy
     proc subsurface(surface: Surface, parent: Surface): Subsurface
-
 
   Subsurface:
     proc destroy
@@ -565,7 +551,6 @@ protocol:
     proc placeBelow(sibling: Surface)
     proc setSync
     proc setDesync
-  
 
   XdgWmBase:
     iface "xdg_wm_base"
@@ -576,7 +561,6 @@ protocol:
     proc pong(serial: int)
 
     proc ping(serial: int): event
-  
 
   Positioner:
     proc destroy
@@ -590,7 +574,6 @@ protocol:
     proc `parentSize=`(v: IVec2)
     proc setParentConfigure(serial: int)
 
-
   ShellSurface:
     proc destroy
     proc toplevel: Toplevel
@@ -599,7 +582,6 @@ protocol:
     proc ackConfigure(serial: int)
 
     proc configure(serial: int): event
-  
 
   Toplevel:
     proc destroy
@@ -619,7 +601,6 @@ protocol:
 
     proc configure(size: IVec2, states: seq[ShellSurfaceState]): event
     proc close: event
-  
 
   Popup:
     proc destroy
@@ -629,22 +610,22 @@ protocol:
     proc configure(pos: IVec2, size: IVec2): event
     proc done: event
     proc repositioned(token: int): event
-  
 
   Drm:
     iface "wl_drm"
 
     proc init(id: int)
-    proc newBuffer(name: int, size: IVec2, stride: int, format: PixelFormat): Buffer
-    proc newPlanarBuffer(name: int, size: IVec2, format: PixelFormat, offsetsAndStrides: array[3, (int, int)]): Buffer
-    proc newPrimeBuffer(name: FileDescriptor, size: IVec2, format: PixelFormat, offsetsAndStrides: array[3, (int, int)]): Buffer
+    proc newBuffer(name: int, size: IVec2, stride: int,
+        format: PixelFormat): Buffer
+    proc newPlanarBuffer(name: int, size: IVec2, format: PixelFormat,
+        offsetsAndStrides: array[3, (int, int)]): Buffer
+    proc newPrimeBuffer(name: FileDescriptor, size: IVec2, format: PixelFormat,
+        offsetsAndStrides: array[3, (int, int)]): Buffer
 
     proc device(name: string): event
     proc format(format: PixelFormat): event
     proc inited: event
     proc capabilities(capabilities: set[DrmCapability]): event
-
-
 
 proc sync*(this: Display) =
   let cb = this.syncRequest
@@ -652,7 +633,7 @@ proc sync*(this: Display) =
   cb.onDone: done = true
   while not done: this.pollNextEvent
 
-
-proc bindInterface*(this: Registry, T: type, name: int, iface: string, version: int): T =
+proc bindInterface*(this: Registry, T: type, name: int, iface: string,
+    version: int): T =
   result = this.display.new(T)
   this.marshal(0, (name, iface, version, result.id))

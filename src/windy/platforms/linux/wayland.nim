@@ -1,6 +1,5 @@
-import vmath
-import ../../common, ../../internal
-import wayland/[protocol, sharedBuffer, egl]
+import ../../common, ../../internal, vmath, wayland/egl, wayland/protocol,
+    wayland/sharedBuffer
 
 var
   initialized: bool
@@ -14,30 +13,30 @@ var
 
   pixelFormats: seq[PixelFormat]
 
-
 proc init* =
   if initialized: return
 
   display = connect()
   display.onError:
-    raise WindyError.newException("Wayland error for " & $objId.uint32 & ": " & $code & ", " & message)
-  
+    raise WindyError.newException("Wayland error for " & $objId.uint32 & ": " &
+        $code & ", " & message)
+
   registry = display.registry
 
   registry.onGlobal:
     case iface
     of Compositor.iface:
       compositor = registry.bindInterface(Compositor, name, iface, version)
-    
+
     of Shm.iface:
       shm = registry.bindInterface(Shm, name, iface, version)
 
       shm.onFormat:
         pixelFormats.add format
-    
+
     of XdgWmBase.iface:
       shell = registry.bindInterface(XdgWmBase, name, iface, version)
-  
+
       shell.onPing:
         shell.pong(serial)
 
@@ -50,7 +49,7 @@ proc init* =
       (if shm == nil: "wl_shm " else: "") &
       (if shell == nil: "xdg_wm_base " else: "")
     )
-  
+
   sync display
 
   initEgl()

@@ -1,8 +1,11 @@
 import vmath, x, xlib
 
 type
-  IfEventProc* = proc (d: Display, event: ptr XEvent,
-      p: pointer): bool {.cdecl.}
+  IfEventProc* = proc (
+    d: Display,
+    event: ptr XEvent,
+    p: pointer
+  ): bool {.cdecl.}
   ErrorHandleProc* = proc (d: Display, event: ptr XErrorEvent): bool {.cdecl.}
 
   XEventKind* {.size: cint.sizeof.} = enum
@@ -426,12 +429,11 @@ type
     cookie*: XGenericEventCookie
     pad: array[0..23, clong]
 
-using d: Display
-
 {.push, cdecl, dynlib: libX11, importc.}
 
-proc XCheckIfEvent*(d; e: ptr XEvent, cb: IfEventProc, userData: pointer): bool
-proc XSendEvent*(d; window: Window, propogate: bool, mask: clong, e: ptr XEvent)
+proc XCheckIfEvent*(d: Display; e: ptr XEvent, cb: IfEventProc,
+    userData: pointer): bool
+proc XSendEvent*(d: Display; window: Window, propogate: bool, mask: clong, e: ptr XEvent)
 
 proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint,
     ks: ptr KeySym, status: ptr cint): cint
