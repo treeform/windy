@@ -742,7 +742,7 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-proc init*() =
+proc init() =
   if initialized:
     return
   loadLibraries()
