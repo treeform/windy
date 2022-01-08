@@ -36,9 +36,9 @@ type
 
     closeRequested, closed: bool
     runeInputEnabled: bool
-    innervisible: bool
+    innerVisible: bool
     innerDecorated: bool
-    innerfocused: bool
+    innerFocused: bool
 
   WmForDecoratedKind {.pure.} = enum
     unsupported
@@ -67,11 +67,11 @@ proc atom[name: static string](): Atom =
     a = display.XInternAtom(name, 0)
   a
 
-template atom(name: static string):
-  Atom = atom[name]()
+template atom(name: static string): Atom =
+  atom[name]()
 
-proc atomIfExist(name: string):
-  Atom = display.XInternAtom(name, 1)
+proc atomIfExist(name: string): Atom =
+  display.XInternAtom(name, 1)
 
 proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
   raise WindyError.newException("Error dealing with X11: " &
@@ -329,7 +329,7 @@ proc swapBuffers*(window: Window) =
   display.glXSwapBuffers(window.handle)
 
 proc visible*(window: Window): bool =
-  window.innervisible
+  window.innerVisible
 
 proc `visible=`*(window: Window, v: bool) =
   if v:
@@ -389,7 +389,7 @@ proc `minimized=`*(window: Window, v: bool) =
     display.XRaiseWindow(window.handle)
 
 proc focused*(window: Window): bool =
-  return window.innerfocused
+  return window.innerFocused
 
 proc focus*(window: Window) =
   display.XSetInputFocus(window.handle, rtNone)
@@ -622,9 +622,11 @@ proc newWindow*(
   windows.add result
 
 proc pollEvents(window: Window) =
+
   template pushEvent(e) =
     if window.e != nil:
       window.e()
+
   template pushEvent(e, arg) =
     if window.e != nil:
       window.e(arg)
@@ -655,11 +657,11 @@ proc pollEvents(window: Window) =
       window.buttonPressed.incl button
       window.buttonClicking.incl button
       window.buttonToggle.invert button
-      pushEvent onButtonPress, button
+      pushEvent(onButtonPress, button)
     else:
       window.buttonDown.excl button
       window.buttonReleased.incl button
-      pushEvent onButtonRelease, button
+      pushEvent(onButtonRelease, button)
 
   while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
     case ev.kind
@@ -667,7 +669,7 @@ proc pollEvents(window: Window) =
     of xeClientMessage:
       if ev.client.data.l[0] == "WM_DELETE_WINDOW".atom.clong:
         window.closeRequested = true
-        pushEvent onCloseRequest
+        pushEvent(onCloseRequest)
         return # end polling events immediently
 
       elif ev.client.data.l[0] == "_NET_WM_SYNC_REQUEST".atom.clong:
@@ -677,9 +679,9 @@ proc pollEvents(window: Window) =
         )
 
     of xeFocusIn:
-      if window.innerfocused:
+      if window.innerFocused:
         return # was duplicated
-      window.innerfocused = true
+      window.innerFocused = true
 
       if window.ic != nil:
         XSetICFocus window.ic
@@ -692,12 +694,12 @@ proc pollEvents(window: Window) =
           continue
         pushButtonEvent k, true
 
-      pushEvent onFocusChange
+      pushEvent(onFocusChange)
 
     of xeFocusOut:
-      if not window.innerfocused:
+      if not window.innerFocused:
         return # was duplicated
-      window.innerfocused = false
+      window.innerFocused = false
 
       if window.ic != nil:
         XUnsetICFocus window.ic
@@ -707,21 +709,21 @@ proc pollEvents(window: Window) =
       window.buttonDown = {}
       for k in bd: pushButtonEvent k.Button, false
 
-      pushEvent onFocusChange
+      pushEvent(onFocusChange)
 
     of xeMap:
-      window.innervisible = true
+      window.innerVisible = true
     of xeUnmap:
-      window.innervisible = false
+      window.innerVisible = false
 
     of xeConfigure:
       let pos = window.pos
       if pos != window.prevPos:
         window.prevPos = pos
-        pushEvent onMove
+        pushEvent(onMove)
       if ev.configure.size != window.prevSize:
         window.prevSize = ev.configure.size
-        pushEvent onResize
+        pushEvent(onResize)
 
     of xeMotion:
       window.perFrame.mousePrevPos = window.mousePos
@@ -731,12 +733,12 @@ proc pollEvents(window: Window) =
       if (window.mousePos - window.lastClickPosition).vec2.length > multiClickRadius:
         window.buttonClicking = {}
         window.clickSeqLen = 0
-      pushEvent onMouseMove
+      pushEvent(onMouseMove)
 
     of xeButtonPress, xeButtonRelease:
       template pushScrollEvent(delta: Vec2) =
         window.perFrame.scrollDelta = delta
-        pushEvent onScroll
+        pushEvent(onScroll)
 
       let
         now = getTime()
@@ -792,8 +794,9 @@ proc pollEvents(window: Window) =
             window.ic.Xutf8LookupString(ev.key.addr, s, 16, nil, status.addr)
           )
 
-          if s != "\u001B":
-            for r in s.runes: pushEvent onRune, r
+          if s != "\u001B": # Why ignore ESC?
+            for r in s.runes:
+              pushEvent(onRune, r)
 
     else: discard
 
