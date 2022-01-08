@@ -623,14 +623,6 @@ proc newWindow*(
 
 proc pollEvents(window: Window) =
 
-  template pushEvent(e) =
-    if window.e != nil:
-      window.e()
-
-  template pushEvent(e, arg) =
-    if window.e != nil:
-      window.e(arg)
-
   # Clear all per-frame data
   window.perFrame = PerFrame()
   window.buttonPressed = {}
@@ -657,11 +649,13 @@ proc pollEvents(window: Window) =
       window.buttonPressed.incl button
       window.buttonClicking.incl button
       window.buttonToggle.invert button
-      pushEvent(onButtonPress, button)
+      if window.onButtonPress != nil:
+        window.onButtonPress(button)
     else:
       window.buttonDown.excl button
       window.buttonReleased.incl button
-      pushEvent(onButtonRelease, button)
+      if window.onButtonRelease != nil:
+        window.onButtonRelease(button)
 
   while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
     case ev.kind
@@ -669,7 +663,8 @@ proc pollEvents(window: Window) =
     of xeClientMessage:
       if ev.client.data.l[0] == "WM_DELETE_WINDOW".atom.clong:
         window.closeRequested = true
-        pushEvent(onCloseRequest)
+        if window.onCloseRequest != nil:
+          window.onCloseRequest()
         return # end polling events immediently
 
       elif ev.client.data.l[0] == "_NET_WM_SYNC_REQUEST".atom.clong:
@@ -692,9 +687,10 @@ proc pollEvents(window: Window) =
         )):
         if k == ButtonUnknown:
           continue
-        pushButtonEvent k, true
+        pushButtonEvent(k, true)
 
-      pushEvent(onFocusChange)
+      if window.onFocusChange != nil:
+          window.onFocusChange()
 
     of xeFocusOut:
       if not window.innerFocused:
@@ -707,9 +703,10 @@ proc pollEvents(window: Window) =
       # release currently pressed keys
       let bd = window.buttonDown
       window.buttonDown = {}
-      for k in bd: pushButtonEvent k.Button, false
+      for k in bd: pushButtonEvent(k.Button, false)
 
-      pushEvent(onFocusChange)
+      if window.onFocusChange != nil:
+        window.onFocusChange()
 
     of xeMap:
       window.innerVisible = true
@@ -720,10 +717,13 @@ proc pollEvents(window: Window) =
       let pos = window.pos
       if pos != window.prevPos:
         window.prevPos = pos
-        pushEvent(onMove)
+        if window.onMove != nil:
+          window.onMove()
+
       if ev.configure.size != window.prevSize:
         window.prevSize = ev.configure.size
-        pushEvent(onResize)
+        if window.onResize != nil:
+          window.onResize()
 
     of xeMotion:
       window.perFrame.mousePrevPos = window.mousePos
@@ -733,12 +733,15 @@ proc pollEvents(window: Window) =
       if (window.mousePos - window.lastClickPosition).vec2.length > multiClickRadius:
         window.buttonClicking = {}
         window.clickSeqLen = 0
-      pushEvent(onMouseMove)
+      if window.onMouseMove != nil:
+        window.onMouseMove()
 
     of xeButtonPress, xeButtonRelease:
+
       template pushScrollEvent(delta: Vec2) =
         window.perFrame.scrollDelta = delta
-        pushEvent(onScroll)
+        if window.onScroll != nil:
+          window.onScroll()
 
       let
         now = getTime()
@@ -748,26 +751,26 @@ proc pollEvents(window: Window) =
 
       case ev.button.button
       of 1:
-        pushButtonEvent MouseLeft
+        pushButtonEvent(MouseLeft)
 
         if ev.kind == xeButtonRelease and MouseLeft in window.buttonClicking and isDblclk:
           inc window.clickSeqLen
           if window.clickSeqLen >= 2:
-            pushButtonEvent DoubleClick
+            pushButtonEvent(DoubleClick)
           if window.clickSeqLen >= 3:
-            pushButtonEvent TripleClick
+            pushButtonEvent(TripleClick)
           if window.clickSeqLen >= 4:
-            pushButtonEvent QuadrupleClick
+            pushButtonEvent(QuadrupleClick)
 
-      of 2: pushButtonEvent MouseMiddle
-      of 3: pushButtonEvent MouseRight
-      of 8: pushButtonEvent MouseButton4
-      of 9: pushButtonEvent MouseButton5
+      of 2: pushButtonEvent(MouseMiddle)
+      of 3: pushButtonEvent(MouseRight)
+      of 8: pushButtonEvent(MouseButton4)
+      of 9: pushButtonEvent(MouseButton5)
 
-      of 4: pushScrollEvent vec2(1, 0) # scroll up
-      of 5: pushScrollEvent vec2(-1, 0) # scroll down
-      of 6: pushScrollEvent vec2(0, 1) # scroll left?
-      of 7: pushScrollEvent vec2(0, -1) # scroll right?
+      of 4: pushScrollEvent(vec2(1, 0)) # scroll up
+      of 5: pushScrollEvent(vec2(-1, 0)) # scroll down
+      of 6: pushScrollEvent(vec2(0, 1)) # scroll left?
+      of 7: pushScrollEvent(vec2(0, -1)) # scroll right?
       else: discard
 
       if not isDblclk:
@@ -780,7 +783,7 @@ proc pollEvents(window: Window) =
         key = keysymToButton(XLookupKeysym(ev.key.addr, i.cint))
         inc i
       if key != ButtonUnknown:
-        pushButtonEvent key, ev.kind == xeKeyPress
+        pushButtonEvent(key, ev.kind == xeKeyPress)
 
       # handle text input
       if window.runeInputEnabled and
@@ -790,13 +793,13 @@ proc pollEvents(window: Window) =
           var
             status: cint
             s = newString(16)
-          s.setLen(
-            window.ic.Xutf8LookupString(ev.key.addr, s, 16, nil, status.addr)
-          )
-
-          if s != "\u001B": # Why ignore ESC?
-            for r in s.runes:
-              pushEvent(onRune, r)
+          s.setLen(window.ic.Xutf8LookupString(
+            ev.key.addr, s.cstring, 16, nil, status.addr
+          ))
+          if s != "\u001B": # Ignore ESC.
+            for rune in s.runes:
+              if window.onRune != nil:
+                window.onRune(rune)
 
     else: discard
 
