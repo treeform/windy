@@ -5,7 +5,7 @@ type
   Atom* = culong
   VisualID* = culong
   Time* = culong
-  
+
   Drawable* = XID
   Window* = XID
   Font* = XID
@@ -15,7 +15,7 @@ type
   GContext* = XID
   KeySym* = XID
   XSyncCounter* = distinct XID
-  
+
   KeyCode* = cuchar
 
   PropMode* {.size: int32.sizeof.} = enum
@@ -42,11 +42,11 @@ type
     badName = 15
     badLength = 16
     badImplementation = 17
-  
+
   ByteOrder* = enum
     leftToRight = 0
     rightToLeft = 1
-  
+
   RevertTo* {.size: int32.sizeof.} = enum
     rtNone = 0
     rtRoot = 1
