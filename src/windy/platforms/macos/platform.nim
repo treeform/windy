@@ -263,7 +263,7 @@ proc handleRune(windowPtr: pointer, rune: uint32) {.cdecl.} =
 
   window.handleRune(Rune(rune))
 
-proc init*() =
+proc init() =
   if not initialized:
     innerInit(
       handleMove,
