@@ -36,9 +36,9 @@ type
 
     closeRequested, closed: bool
     runeInputEnabled: bool
-    `"_visible"`: bool
-    `"_decorated"`: bool
-    `"_focused"`: bool
+    innervisible: bool
+    innerDecorated: bool
+    innerfocused: bool
 
   WmForDecoratedKind {.pure.} = enum
     unsupported
@@ -63,18 +63,23 @@ var
 
 proc atom[name: static string](): Atom =
   var a {.global.}: Atom
-  if a == 0: a = display.XInternAtom(name, 0)
+  if a == 0:
+    a = display.XInternAtom(name, 0)
   a
 
-template atom(name: static string): Atom = atom[name]()
-proc atomIfExist(name: string): Atom = display.XInternAtom(name, 1)
+template atom(name: static string):
+  Atom = atom[name]()
+
+proc atomIfExist(name: string):
+  Atom = display.XInternAtom(name, 1)
 
 proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
   raise WindyError.newException("Error dealing with X11: " &
       $event.errorCode.Status)
 
 proc init =
-  if initialized: return
+  if initialized:
+    return
 
   XSetErrorHandler handleXError
 
@@ -111,7 +116,8 @@ proc property(
 
   let len = lenght.int * format.int div 8
   result.data = newString(len)
-  if len != 0: copyMem(result.data[0].addr, data, len)
+  if len != 0:
+    copyMem(result.data[0].addr, data, len)
 
 proc setProperty(
   window: XWindow, property: Atom, kind: Atom, format: cint, data: string
@@ -130,7 +136,8 @@ proc delProperty(window: XWindow, property: Atom) =
   display.XDeleteProperty(window, property)
 
 proc asSeq(s: string, T: type = uint8): seq[T] =
-  if s.len == 0: return
+  if s.len == 0:
+    return
   result = newSeq[T]((s.len + T.sizeof - 1) div T.sizeof)
   copyMem(result[0].addr, s[0].unsafeaddr, s.len)
 
@@ -141,8 +148,10 @@ proc asString[T](x: seq[T]|HashSet[T]): string =
       result.add v
 
 proc invert[T](x: var set[T], v: T) =
-  if x.contains v: x.excl v
-  else: x.incl v
+  if x.contains v:
+    x.excl v
+  else:
+    x.incl v
 
 proc send(a: XWindow, e: XEvent, mask: clong = NoEventMask, propagate = false) =
   display.XSendEvent(a, propagate, mask, e.unsafeAddr)
@@ -320,14 +329,19 @@ proc swapBuffers*(window: Window) =
   display.glXSwapBuffers(window.handle)
 
 proc visible*(window: Window): bool =
-  window.`"_visible"`
+  window.innervisible
 
 proc `visible=`*(window: Window, v: bool) =
-  if v: display.XMapWindow(window.handle)
-  else: display.XUnmapWindow(window.handle)
+  if v:
+    display.XMapWindow(window.handle)
+  else:
+    display.XUnmapWindow(window.handle)
 
 proc size*(window: Window): IVec2 =
-  window.prevSize
+  var
+    xwa: XWindowAttributes
+  display.XGetWindowAttributes(window.handle, xwa.addr)
+  result = xwa.size
 
 proc `size=`*(window: Window, v: IVec2) =
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
@@ -369,11 +383,13 @@ proc minimized*(window: Window): bool =
   atom"_NET_WM_STATE_HIDDEN" in window.handle.wmState
 
 proc `minimized=`*(window: Window, v: bool) =
-  if v: display.XIconifyWindow(window.handle, display.defaultScreen)
-  else: display.XRaiseWindow(window.handle)
+  if v:
+    display.XIconifyWindow(window.handle, display.defaultScreen)
+  else:
+    display.XRaiseWindow(window.handle)
 
 proc focused*(window: Window): bool =
-  return window.`"_focused"`
+  return window.innerfocused
 
 proc focus*(window: Window) =
   display.XSetInputFocus(window.handle, rtNone)
@@ -385,22 +401,26 @@ proc `fullscreen=`*(window: Window, v: bool) =
   window.handle.wmStateSend v.int, atom"_NET_WM_STATE_FULLSCREEN"
 
 proc style*(window: Window): WindowStyle =
-  if window.`"_decorated"`:
+  if window.innerDecorated:
     var hints: XSizeHints
     display.XGetNormalHints(window.handle, hints.addr)
     if (hints.flags and 0b110000) == 0b110000:
       WindowStyle.Decorated
-    else: WindowStyle.DecoratedResizable
-  else: WindowStyle.Undecorated
+    else:
+      WindowStyle.DecoratedResizable
+  else:
+    WindowStyle.Undecorated
 
 proc `style=`*(window: Window, v: WindowStyle) =
-  if window.fullscreen: return
+  if window.fullscreen:
+    return
 
   let currentStyle = window.style
-  if currentStyle == v: return
+  if currentStyle == v:
+    return
 
-  template addDecorations {.dirty.} =
-    window.`"_decorated"` = true
+  template addDecorations() {.dirty.} =
+    window.innerDecorated = true
     case wmForDecoratedKind
     of WmForDecoratedKind.motiv,
         WmForDecoratedKind.kwm,
@@ -418,7 +438,7 @@ proc `style=`*(window: Window, v: WindowStyle) =
 
   case v
   of WindowStyle.Undecorated:
-    window.`"_decorated"` = false
+    window.innerDecorated = false
     let size = window.size # save current window size
 
     case wmForDecoratedKind
@@ -430,7 +450,8 @@ proc `style=`*(window: Window, v: WindowStyle) =
       window.handle.setProperty(
         decoratedAtom, decoratedAtom, 32, @[0'i32].asString
       )
-    else: return
+    else:
+      return
 
     display.XSetTransientForHint(window.handle, display.defaultRootWindow)
     if window.visible:
@@ -443,7 +464,8 @@ proc `style=`*(window: Window, v: WindowStyle) =
   of WindowStyle.Decorated:
     let size = window.size
 
-    if currentStyle == WindowStyle.Undecorated: addDecorations
+    if currentStyle == WindowStyle.Undecorated:
+      addDecorations()
 
     # make window unresizable
     var hints = XSizeHints(
@@ -456,7 +478,8 @@ proc `style=`*(window: Window, v: WindowStyle) =
   of WindowStyle.DecoratedResizable:
     let size = window.size
 
-    if currentStyle == WindowStyle.Undecorated: addDecorations
+    if currentStyle == WindowStyle.Undecorated:
+      addDecorations()
 
     # make window resizable
     var hints = XSizeHints(flags: 0)
@@ -498,8 +521,8 @@ proc newWindow*(
 ): Window =
   ## Creates a new window. Intitializes Windy if needed.
   init()
-  new result
-  result.`"_decorated"` = true
+  result = Window()
+  result.innerDecorated = true
   result.runeInputEnabled = true
 
   let root = display.defaultRootWindow
@@ -600,9 +623,11 @@ proc newWindow*(
 
 proc pollEvents(window: Window) =
   template pushEvent(e) =
-    if window.e != nil: window.e()
+    if window.e != nil:
+      window.e()
   template pushEvent(e, arg) =
-    if window.e != nil: window.e(arg)
+    if window.e != nil:
+      window.e(arg)
 
   # Clear all per-frame data
   window.perFrame = PerFrame()
@@ -652,10 +677,12 @@ proc pollEvents(window: Window) =
         )
 
     of xeFocusIn:
-      if window.`"_focused"`: return # was duplicated
-      window.`"_focused"` = true
+      if window.innerfocused:
+        return # was duplicated
+      window.innerfocused = true
 
-      if window.ic != nil: XSetICFocus window.ic
+      if window.ic != nil:
+        XSetICFocus window.ic
 
       # press currently pressed keys
       for k in queryKeyboardState().mapit(
@@ -668,10 +695,12 @@ proc pollEvents(window: Window) =
       pushEvent onFocusChange
 
     of xeFocusOut:
-      if not window.`"_focused"`: return # was duplicated
-      window.`"_focused"` = false
+      if not window.innerfocused:
+        return # was duplicated
+      window.innerfocused = false
 
-      if window.ic != nil: XUnsetICFocus window.ic
+      if window.ic != nil:
+        XUnsetICFocus window.ic
 
       # release currently pressed keys
       let bd = window.buttonDown
@@ -680,8 +709,10 @@ proc pollEvents(window: Window) =
 
       pushEvent onFocusChange
 
-    of xeMap: window.`"_visible"` = true
-    of xeUnmap: window.`"_visible"` = false
+    of xeMap:
+      window.innervisible = true
+    of xeUnmap:
+      window.innervisible = false
 
     of xeConfigure:
       let pos = window.pos
@@ -719,9 +750,12 @@ proc pollEvents(window: Window) =
 
         if ev.kind == xeButtonRelease and MouseLeft in window.buttonClicking and isDblclk:
           inc window.clickSeqLen
-          if window.clickSeqLen >= 2: pushButtonEvent DoubleClick
-          if window.clickSeqLen >= 3: pushButtonEvent TripleClick
-          if window.clickSeqLen >= 4: pushButtonEvent QuadrupleClick
+          if window.clickSeqLen >= 2:
+            pushButtonEvent DoubleClick
+          if window.clickSeqLen >= 3:
+            pushButtonEvent TripleClick
+          if window.clickSeqLen >= 4:
+            pushButtonEvent QuadrupleClick
 
       of 2: pushButtonEvent MouseMiddle
       of 3: pushButtonEvent MouseRight
@@ -797,7 +831,8 @@ proc `closeRequested=`*(window: Window, v: bool) =
       window.onCloseRequest()
 
 proc initClipboard =
-  if clipboardWindow != 0: return
+  if clipboardWindow != 0:
+    return
   clipboardWindow = display.XCreateSimpleWindow(
     display.defaultRootWindow, 0, 0, 1, 1, 0, 0, 0
   )
