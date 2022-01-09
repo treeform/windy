@@ -36,7 +36,6 @@ type
 
     closeRequested, closed: bool
     runeInputEnabled: bool
-    innerVisible: bool
     innerDecorated: bool
     innerFocused: bool
 
@@ -312,7 +311,7 @@ proc keysymToButton(sym: KeySym): Button =
 proc queryKeyboardState(): set[0..255] =
   var r: array[32, char]
   display.XQueryKeymap(r)
-  result = cast[ptr set[0..255]](r.addr)[]
+  return cast[ptr set[0..255]](r.addr)[]
 
 proc destroy(window: Window) =
   if window.ic != nil:
@@ -340,7 +339,10 @@ proc swapBuffers*(window: Window) =
   display.glXSwapBuffers(window.handle)
 
 proc visible*(window: Window): bool =
-  window.innerVisible
+  var
+    xwa: XWindowAttributes
+  display.XGetWindowAttributes(window.handle, xwa.addr)
+  return xwa.map_state == IsViewable
 
 proc `visible=`*(window: Window, v: bool) =
   if v:
@@ -352,7 +354,7 @@ proc size*(window: Window): IVec2 =
   var
     xwa: XWindowAttributes
   display.XGetWindowAttributes(window.handle, xwa.addr)
-  result = xwa.size
+  return xwa.size
 
 proc `size=`*(window: Window, v: IVec2) =
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
@@ -719,11 +721,6 @@ proc pollEvents(window: Window) =
 
       if window.onFocusChange != nil:
         window.onFocusChange()
-
-    of xeMap:
-      window.innerVisible = true
-    of xeUnmap:
-      window.innerVisible = false
 
     of xeConfigure:
       let pos = window.pos
