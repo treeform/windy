@@ -61,14 +61,23 @@ var
   clipboardWindow: XWindow
   clipboardContent: string
 
-proc atom[name: static string](): Atom =
-  var a {.global.}: Atom
-  if a == 0:
-    a = display.XInternAtom(name, 0)
-  a
-
-template atom(name: static string): Atom =
-  atom[name]()
+proc initConstants(display: Display) =
+  xaNetWMState = display.XInternAtom("_NET_WM_STATE", 0)
+  xaNetWMStateMaximizedHorz = display.XInternAtom("_NET_WM_STATE_MAXIMIZED_HORZ", 0)
+  xaNetWMStateMaximizedVert = display.XInternAtom("_NET_WM_STATE_MAXIMIZED_VERT", 0)
+  xaWMState = display.XInternAtom("WM_STATE", 0)
+  xaNetWMStateHiden = display.XInternAtom("_NET_WM_STATE_HIDDEN", 0)
+  xaNetWMStateFullscreen = display.XInternAtom("_NET_WM_STATE_FULLSCREEN", 0)
+  xaNetWMName = display.XInternAtom("_NET_WM_NAME", 0)
+  xaUTF8String = display.XInternAtom("UTF8_STRING", 0)
+  xaNetWMIconName = display.XInternAtom("_NET_WM_ICON_NAME", 0)
+  xaWMDeleteWindow = display.XInternAtom("WM_DELETE_WINDOW", 0)
+  xaNetWMSyncRequest = display.XInternAtom("_NET_WM_SYNC_REQUEST", 0)
+  xaNetWMSyncRequestCounter = display.XInternAtom("_NET_WM_SYNC_REQUEST_COUNTER", 0)
+  xaClipboard = display.XInternAtom("CLIPBOARD", 0)
+  xaWindyClipboardTargetProperty = display.XInternAtom("windy_clipboardTargetProperty", 0)
+  xaTargets = display.XInternAtom("TARGETS", 0)
+  xaText = display.XInternAtom("TEXT", 0)
 
 proc atomIfExist(name: string): Atom =
   display.XInternAtom(name, 1)
@@ -86,6 +95,8 @@ proc init =
   display = XOpenDisplay(getEnv("DISPLAY"))
   if display == nil:
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
+
+  display.initConstants()
 
   wmForDecoratedKind =
     if (decoratedAtom = atomIfExist"_MOTIF_WM_HINTS"; decoratedAtom != 0):
@@ -181,12 +192,12 @@ proc newClientMessage[T](
   result.client.sendEvent = sendEvent
 
 proc wmState(window: XWindow): HashSet[Atom] =
-  window.property(atom"_NET_WM_STATE").data.asSeq(Atom).toHashSet
+  window.property(xaNetWMState).data.asSeq(Atom).toHashSet
 
 proc wmStateSend(window: XWindow, op: int, atom: Atom) =
   # op: 2 - switch, 1 - set true, 0 - set false
   display.defaultRootWindow.send(
-    window.newClientMessage(atom"_NET_WM_STATE", [Atom op, atom]),
+    window.newClientMessage(xaNetWMState, [Atom op, atom]),
     SubstructureNotifyMask or SubstructureRedirectMask
   )
 
@@ -370,17 +381,17 @@ proc `pos=`*(window: Window, v: IVec2) =
 
 proc maximized*(window: Window): bool =
   let wmState = window.handle.wmState
-  atom"_NET_WM_STATE_MAXIMIZED_HORZ" in wmState and
-  atom"_NET_WM_STATE_MAXIMIZED_VERT" in wmState
+  xaNetWMStateMaximizedHorz in wmState and
+  xaNetWMStateMaximizedVert in wmState
 
 proc `maximized=`*(window: Window, v: bool) =
-  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_MAXIMIZED_HORZ"
-  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_MAXIMIZED_VERT"
+  window.handle.wmStateSend v.int, xaNetWMStateMaximizedHorz
+  window.handle.wmStateSend v.int, xaNetWMStateMaximizedVert
 
 proc minimized*(window: Window): bool =
-  let wState = window.handle.property(atom"WM_STATE").data.asSeq(int32)
-  wState.len >= 1 and wState[0] == 3 or
-  atom"_NET_WM_STATE_HIDDEN" in window.handle.wmState
+  let wState = window.handle.property(xaWMState).data.asSeq(int32)
+  return wState.len >= 1 and wState[0] == 3 or
+    xaNetWMStateHiden in window.handle.wmState
 
 proc `minimized=`*(window: Window, v: bool) =
   if v:
@@ -395,10 +406,10 @@ proc focus*(window: Window) =
   display.XSetInputFocus(window.handle, rtNone)
 
 proc fullscreen*(window: Window): bool =
-  atom"_NET_WM_STATE_FULLSCREEN" in window.handle.wmState
+  xaNetWMStateFullscreen in window.handle.wmState
 
 proc `fullscreen=`*(window: Window, v: bool) =
-  window.handle.wmStateSend v.int, atom"_NET_WM_STATE_FULLSCREEN"
+  window.handle.wmStateSend v.int, xaNetWMStateFullscreen
 
 proc style*(window: Window): WindowStyle =
   if window.innerDecorated:
@@ -486,11 +497,11 @@ proc `style=`*(window: Window, v: WindowStyle) =
     display.XSetNormalHints(window.handle, hints.addr)
 
 proc title*(window: Window): string =
-  window.handle.property(atom"_NET_WM_NAME").data
+  window.handle.property(xaNetWMName).data
 
 proc `title=`*(window: Window, v: string) =
-  window.handle.setProperty(atom"_NET_WM_NAME", atom"UTF8_STRING", 8, v)
-  window.handle.setProperty(atom"_NET_WM_ICON_NAME", atom"UTF8_STRING", 8, v)
+  window.handle.setProperty(xaNetWMName, xaUTF8String, 8, v)
+  window.handle.setProperty(xaNetWMIconName, xaUTF8String, 8, v)
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
 proc contentScale*(window: Window): float32 =
@@ -565,7 +576,7 @@ proc newWindow*(
     FocusChangeMask
   )
 
-  var wmProtocols = [atom"WM_DELETE_WINDOW", atom"_NET_WM_SYNC_REQUEST"]
+  var wmProtocols = [xaWMDeleteWindow, xaNetWMSyncRequest]
   display.XSetWMProtocols(
     result.handle, wmProtocols[0].addr, cint wmProtocols.len
   )
@@ -613,7 +624,7 @@ proc newWindow*(
       display.XSyncInitialize(vMaj.addr, vMin.addr)
       result.xsyncConter = display.XSyncCreateCounter(XSyncValue())
       result.handle.setProperty(
-        atom"_NET_WM_SYNC_REQUEST_COUNTER",
+        xaNetWMSyncRequestCounter,
         xaCardinal,
         32,
         @[result.xsyncConter].asString
@@ -661,13 +672,13 @@ proc pollEvents(window: Window) =
     case ev.kind
 
     of xeClientMessage:
-      if ev.client.data.l[0] == "WM_DELETE_WINDOW".atom.clong:
+      if ev.client.data.l[0] == xaWMDeleteWindow.clong:
         window.closeRequested = true
         if window.onCloseRequest != nil:
           window.onCloseRequest()
         return # end polling events immediently
 
-      elif ev.client.data.l[0] == "_NET_WM_SYNC_REQUEST".atom.clong:
+      elif ev.client.data.l[0] == xaNetWMSyncRequest.clong:
         window.lastSync = XSyncValue(
           lo: cast[uint32](ev.client.data.l[2]),
           hi: cast[int32](ev.client.data.l[3])
@@ -860,13 +871,13 @@ proc processClipboardEvents: bool =
     of xeSelection:
       template e: untyped = ev.selection
 
-      if e.property == 0 or e.selection != atom"CLIPBOARD":
+      if e.property == 0 or e.selection != xaClipboard:
         continue
 
       clipboardContent = clipboardWindow.property(
-        atom"windy_clipboardTargetProperty"
+        xaWindyClipboardTargetProperty
       ).data
-      clipboardWindow.delProperty(atom"windy_clipboardTargetProperty")
+      clipboardWindow.delProperty(xaWindyClipboardTargetProperty)
 
       return true
 
@@ -882,19 +893,19 @@ proc processClipboardEvents: bool =
         time: e.time
       )
 
-      if e.selection == atom"CLIPBOARD":
-        if e.target == atom"TARGETS":
+      if e.selection == xaClipboard:
+        if e.target == xaTargets:
           # request requests that we can handle
           e.requestor.setProperty(e.property, xaAtom, 32, @[
-            atom"TARGETS",
-            atom"TEXT",
+            xaTargets,
+            xaText,
             xaString,
-            atom"UTF8_STRING"
+            xaUTF8String
           ].asString)
           e.requestor.send(XEvent(selection: resp), propagate = true)
           continue
 
-        elif e.target in {xaString, atom"TEXT", atom"UTF8_STRING"}:
+        elif e.target in {xaString, xaText, xaUTF8String}:
           # request clipboard data
           e.requestor.setProperty(e.property, xaAtom, 8, clipboardContent)
           e.requestor.send(XEvent(selection: resp), propagate = true)
@@ -908,16 +919,16 @@ proc processClipboardEvents: bool =
 
 proc getClipboardString*: string =
   initClipboard()
-  if display.XGetSelectionOwner(atom"CLIPBOARD") == 0:
+  if display.XGetSelectionOwner(xaClipboard) == 0:
     return ""
 
-  if display.XGetSelectionOwner(atom"CLIPBOARD") == clipboardWindow:
+  if display.XGetSelectionOwner(xaClipboard) == clipboardWindow:
     return clipboardContent
 
   display.XConvertSelection(
-    atom"CLIPBOARD",
-    atom"UTF8_STRING",
-    atom"windy_clipboardTargetProperty",
+    xaClipboard,
+    xaUTF8String,
+    xaWindyClipboardTargetProperty,
     clipboardWindow
   )
 
@@ -928,7 +939,7 @@ proc getClipboardString*: string =
 proc setClipboardString*(s: string) =
   initClipboard()
   clipboardContent = s
-  display.XSetSelectionOwner(atom"CLIPBOARD", clipboardWindow)
+  display.XSetSelectionOwner(xaClipboard, clipboardWindow)
 
 proc pollEvents* =
   let ws = windows
