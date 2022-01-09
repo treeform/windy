@@ -358,6 +358,17 @@ proc size*(window: Window): IVec2 =
 
 proc `size=`*(window: Window, v: IVec2) =
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
+  # Block until the size is correct
+  for i in 0 .. 100:
+    var
+      xwa: XWindowAttributes
+    display.XGetWindowAttributes(window.handle, xwa.addr)
+    if v == xwa.size:
+      break
+    if i == 100:
+      raise newException(WindyError, "Error setting window size.")
+  # Needs to swap buffer or viewport stays in incomplete state.
+  window.swapBuffers()
 
 proc framebufferSize*(window: Window): IVec2 =
   window.size
