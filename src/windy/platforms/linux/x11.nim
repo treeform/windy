@@ -381,12 +381,12 @@ proc `pos=`*(window: Window, v: IVec2) =
 
 proc maximized*(window: Window): bool =
   let wmState = window.handle.wmState
-  xaNetWMStateMaximizedHorz in wmState and
-  xaNetWMStateMaximizedVert in wmState
+  return xaNetWMStateMaximizedHorz in wmState and
+    xaNetWMStateMaximizedVert in wmState
 
 proc `maximized=`*(window: Window, v: bool) =
-  window.handle.wmStateSend v.int, xaNetWMStateMaximizedHorz
-  window.handle.wmStateSend v.int, xaNetWMStateMaximizedVert
+  window.handle.wmStateSend(v.int, xaNetWMStateMaximizedHorz)
+  window.handle.wmStateSend(v.int, xaNetWMStateMaximizedVert)
 
 proc minimized*(window: Window): bool =
   let wState = window.handle.property(xaWMState).data.asSeq(int32)
@@ -409,7 +409,7 @@ proc fullscreen*(window: Window): bool =
   xaNetWMStateFullscreen in window.handle.wmState
 
 proc `fullscreen=`*(window: Window, v: bool) =
-  window.handle.wmStateSend v.int, xaNetWMStateFullscreen
+  window.handle.wmStateSend(v.int, xaNetWMStateFullscreen)
 
 proc style*(window: Window): WindowStyle =
   if window.innerDecorated:
@@ -445,7 +445,8 @@ proc `style=`*(window: Window, v: WindowStyle) =
         display.XMapWindow(window.handle)
 
       window.size = size # restore window size
-    else: discard
+    else:
+      discard
 
   case v
   of WindowStyle.Undecorated:
@@ -812,7 +813,8 @@ proc pollEvents(window: Window) =
               if window.onRune != nil:
                 window.onRune(rune)
 
-    else: discard
+    else:
+      discard
 
 proc mousePos*(window: Window): IVec2 =
   window.mousePos
@@ -915,7 +917,8 @@ proc processClipboardEvents: bool =
       resp.property = 0
       e.requestor.send(XEvent(selection: resp), propagate = true)
 
-    else: discard
+    else:
+      discard
 
 proc getClipboardString*: string =
   initClipboard()
