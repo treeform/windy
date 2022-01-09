@@ -561,7 +561,7 @@ proc newWindow*(
     vi.depth.cuint,
     InputOutput,
     vi.visual,
-    CwColormap or CwEventMask or CwBorderPixel or CwBackPixel,
+    CwColormap or CwEventMask or CwBorderPixel,
     swa.addr
   )
 
