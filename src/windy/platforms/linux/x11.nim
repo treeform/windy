@@ -704,7 +704,7 @@ proc pollEvents(window: Window) =
         pushButtonEvent(k, true)
 
       if window.onFocusChange != nil:
-          window.onFocusChange()
+        window.onFocusChange()
 
     of xeFocusOut:
       if not window.innerFocused:
@@ -717,7 +717,8 @@ proc pollEvents(window: Window) =
       # release currently pressed keys
       let bd = window.buttonDown
       window.buttonDown = {}
-      for k in bd: pushButtonEvent(k.Button, false)
+      for k in bd:
+        pushButtonEvent(k.Button, false)
 
       if window.onFocusChange != nil:
         window.onFocusChange()
@@ -809,7 +810,6 @@ proc pollEvents(window: Window) =
             for rune in s.runes:
               if window.onRune != nil:
                 window.onRune(rune)
-
     else:
       discard
 
