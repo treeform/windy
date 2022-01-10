@@ -17,23 +17,28 @@ while not window.closeRequested:
 
   pollEvents()
 
-  # Window will block chaning size.
-  window.size = ivec2(300, 300)
-  doAssert window.size == ivec2(300, 300)
+  # Window will block changing size.
+  window.size = ivec2(300, 400)
+  doAssert window.size == ivec2(300, 400)
 
   # Not all sizes are valid, window try to go max it can.
   window.size = ivec2(300, 30000)
-  doAssert window.size != ivec2(300, 300)
+  doAssert window.size.y != 30000 # You can't get height 30000 even if you ask.
+  doAssert window.size != ivec2(300, 400)
 
   # Change size back.
-  window.size = ivec2(300, 300)
-  doAssert window.size == ivec2(300, 300)
+  window.size = ivec2(300, 400)
+  doAssert window.size == ivec2(300, 400)
 
-  # Window will block chaning size.
   window.pos = ivec2(200, 100)
   doAssert window.pos == ivec2(200, 100)
 
   window.pos = ivec2(-9000, 100)
+  when defined(windows):
+    # On Windows it is possible to set window to invalid locations.
+    doAssert window.pos.x == -9000
+  else:
+    doAssert window.pos.x != -9000
   doAssert window.pos != ivec2(200, 100)
 
   window.maximized = false
@@ -59,8 +64,6 @@ while not window.closeRequested:
 
   window.fullscreen = false
   doAssert not window.fullscreen
-
-
 
   echo "SUCESS!"
   quit()

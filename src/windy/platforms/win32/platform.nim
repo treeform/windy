@@ -379,7 +379,7 @@ proc `pos=`*(window: Window, pos: IVec2) =
   if window.fullscreen:
     return
 
-  var rect = RECT(top: pos.x, left: pos.y, bottom: pos.x, right: pos.y)
+  var rect = RECT(top: pos.y, left: pos.x, bottom: pos.y, right: pos.x)
   discard AdjustWindowRectExForDpi(
     rect.addr,
     getWindowStyle(window.hWnd),
