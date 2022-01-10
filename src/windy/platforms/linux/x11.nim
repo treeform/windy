@@ -109,7 +109,7 @@ proc property(
     lenght: culong
     bytesAfter: culong
     data: cstring
-  display.XGetWindowProperty(window, property, 0, 0, false, 0, kind.addr,
+  display.XGetWindowProperty(window, property, 0, -1, false, 0, kind.addr,
       format.addr, lenght.addr, bytesAfter.addr, data.addr)
 
   result.kind = kind
