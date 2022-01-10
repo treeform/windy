@@ -1,7 +1,9 @@
-import ../../common, ../../internal, times, unicode, utils, vmath, windefs
+import ../../common, ../../internal, pixie/images, pixie/fileformats/png, times,
+    unicode, utils, vmath, windefs, flatty/hashy
 
 const
   windowClassName = "WINDY0"
+  trayIconId = 2022
   defaultScreenDpi = 96
   wheelDelta = 120
   decoratedWindowStyle = WS_OVERLAPPEDWINDOW
@@ -28,6 +30,8 @@ const
   WGL_CONTEXT_FLAGS_ARB = 0x2094
   # WGL_CONTEXT_DEBUG_BIT_ARB = 0x0001
   WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB = 0x0002
+
+  WM_TRAY_ICON = WM_APP + 0
 
 type
   Window* = ref object
@@ -56,6 +60,17 @@ type
     style: LONG
     rect: RECT
 
+  TrayMenyEntryKind* = enum
+    TrayMenuOption, TrayMenuSeparator
+
+  TrayMenuEntry* = object
+    case kind*: TrayMenyEntryKind
+    of TrayMenuOption:
+      text*: string
+      onClick*: Callback
+    of TrayMenuSeparator:
+      discard
+
 var
   wglCreateContext: wglCreateContext
   wglDeleteContext: wglDeleteContext
@@ -73,6 +88,10 @@ var
 var
   helperWindow: HWND
   windows: seq[Window]
+  iconCache: seq[(Hash, HICON)]
+  onTrayIconClick: Callback
+  trayMenuHandle: HMENU
+  trayMenuEntries: seq[TrayMenuEntry]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
   ## Returns the window for this handle, else -1
@@ -528,9 +547,39 @@ proc createHelperWindow(): HWND =
   let helperWindowClassName = "WindyHelper"
 
   proc helperWndProc(
-    hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM
+    hWnd: HWND,
+    uMsg: UINT,
+    wParam: WPARAM,
+    lParam: LPARAM
   ): LRESULT {.stdcall.} =
-    DefWindowProcW(hWnd, uMsg, wParam, lParam)
+    case uMsg:
+    of WM_APP:
+      let innerMsg = LOWORD(lParam)
+      case innerMsg:
+      of WM_LBUTTONUP:
+        if onTrayIconClick != nil:
+          onTrayIconClick()
+      of WM_RBUTTONUP:
+        if trayMenuHandle > 0:
+          var pos: POINT
+          discard GetCursorPos(pos.addr)
+          let clicked = TrackPopupMenu(
+            trayMenuHandle,
+            TPM_RETURNCMD,
+            pos.x,
+            pos.y,
+            0,
+            helperWindow,
+            nil
+          ).int
+          if clicked > 0:
+            if trayMenuEntries[clicked - 1].onClick != nil:
+              trayMenuEntries[clicked - 1].onClick()
+      else:
+        discard
+      return 0
+    else:
+      DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
   registerWindowClass(helperWindowClassName, helperWndProc)
 
@@ -998,3 +1047,93 @@ proc setClipboardString*(value: string) =
   discard EmptyClipboard()
   discard SetClipboardData(CF_UNICODETEXT, dataHandle)
   discard CloseClipboard()
+
+proc createIconHandle(image: Image): HICON =
+  let iconHash = hashy(image.data[0].addr, image.data.len * 4)
+
+  for (hash, handle) in iconCache:
+    if iconHash == hash:
+      result = handle
+      break
+
+  if result == 0:
+    let encoded = image.encodePng()
+    result = CreateIconFromResourceEx(
+      cast[PBYTE](encoded[0].unsafeAddr),
+      encoded.len.DWORD,
+      TRUE,
+      0x00030000,
+      0,
+      0,
+      0
+    )
+
+    if result != 0:
+      iconCache.add((iconHash, result))
+    else:
+      raise newException(WindyError, "Error creating tray icon")
+
+proc showTrayIcon*(
+  icon: Image,
+  tooltip: string,
+  onClick: Callback,
+  menu: seq[TrayMenuEntry] = @[]
+) =
+  if trayMenuHandle != 0:
+    discard DestroyMenu(trayMenuHandle)
+    trayMenuHandle = 0
+    trayMenuEntries = @[]
+
+  if menu.len > 0:
+    trayMenuEntries = menu
+    trayMenuHandle = CreatePopupMenu()
+    for i, entry in menu:
+      case entry.kind:
+      of TrayMenuOption:
+        let wstr = entry.text.wstr()
+        discard AppendMenuW(
+          trayMenuHandle,
+          MF_STRING,
+          (i + 1).UINT_PTR,
+          cast[ptr WCHAR](wstr[0].unsafeAddr)
+        )
+      of TrayMenuSeparator:
+        discard AppendMenuW(trayMenuHandle, MF_SEPARATOR, 0, nil)
+
+  onTrayIconClick = onClick
+
+  var nid: NOTIFYICONDATAW
+  nid.cbSize = sizeof(NOTIFYICONDATAW).DWORD
+  nid.hWnd = helperWindow
+  nid.uID = trayIconId
+  nid.uFlags = NIF_MESSAGE or NIF_ICON
+  nid.uCallbackMessage = WM_TRAY_ICON
+  nid.hIcon = icon.createIconHandle()
+  nid.union1.uVersion = NOTIFYICON_VERSION_4
+
+  if tooltip != "":
+    nid.uFlags = nid.uFlags or NIF_TIP or NIF_SHOWTIP
+
+    let wstr = tooltip.wstr()
+    copyMem(
+      nid.szTip[0].addr,
+      wstr[0].unsafeAddr,
+      min(nid.szTip.high, wstr.high) * 2 # Leave room for null terminator
+    )
+
+  discard Shell_NotifyIconW(NIM_ADD, nid.addr)
+
+proc hideTrayIcon*() =
+  var nid: NOTIFYICONDATAW
+  nid.cbSize = sizeof(NOTIFYICONDATAW).DWORD
+  nid.hWnd = helperWindow
+  nid.uID = trayIconId
+
+  discard Shell_NotifyIconW(NIM_DELETE, nid.addr)
+
+  onTrayIconClick = nil
+
+  if trayMenuHandle != 0:
+    discard DestroyMenu(trayMenuHandle)
+    trayMenuHandle = 0
+    trayMenuEntries = @[]
