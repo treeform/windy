@@ -409,3 +409,23 @@ const
   xaWmClass* = Atom 67
   xaWmTransientFor* = Atom 68
   xaLastPredefined* = Atom 68
+
+var
+  # These "constants" are not known at compile time,
+  # but are poluatinged by x11 via initConstants().
+  xaNetWMState*: Atom
+  xaNetWMStateMaximizedHorz*: Atom
+  xaNetWMStateMaximizedVert*: Atom
+  xaWMState*: Atom
+  xaNetWMStateHiden*: Atom
+  xaNetWMStateFullscreen*: Atom
+  xaNetWMName*: Atom
+  xaUTF8String*: Atom
+  xaNetWMIconName*: Atom
+  xaWMDeleteWindow*: Atom
+  xaNetWMSyncRequest*: Atom
+  xaNetWMSyncRequestCounter*: Atom
+  xaClipboard*: Atom
+  xaWindyClipboardTargetProperty*: Atom
+  xaTargets*: Atom
+  xaText*: Atom
