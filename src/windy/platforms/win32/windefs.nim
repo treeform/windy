@@ -9,6 +9,7 @@ else:
 
 type
   BYTE* = uint8
+  PBYTE* = ptr BYTE
   SHORT* = int16
   BOOL* = int32
   LPBOOL* = ptr BOOL
@@ -44,7 +45,7 @@ type
   WPARAM* = UINT_PTR
   LPARAM* = LONG_PTR
   LRESULT* = LONG_PTR
-  WNDPROC* = proc (
+  WNDPROC* = proc(
     hWnd: HWND,
     uMsg: UINT,
     wParam: WPARAM,
@@ -141,6 +142,31 @@ type
     ptCurrentPos*: POINT
     rcArea*: RECT
   LPCANDIDATEFORM* = ptr CANDIDATEFORM
+  GUID* {.pure.} = object
+    Data1*: int32
+    Data2*: uint16
+    Data3*: uint16
+    Data4*: array[8, uint8]
+  NOTIFYICONDATAW_UNION1* {.pure, union.} = object
+    uTimeout*: UINT
+    uVersion*: UINT
+  NOTIFYICONDATAW* {.pure.} = object
+    cbSize*: DWORD
+    hWnd*: HWND
+    uID*: UINT
+    uFlags*: UINT
+    uCallbackMessage*: UINT
+    hIcon*: HICON
+    szTip*: array[128, WCHAR]
+    dwState*: DWORD
+    dwStateMask*: DWORD
+    szInfo*: array[256, WCHAR]
+    union1*: NOTIFYICONDATAW_UNION1
+    szInfoTitle*: array[64, WCHAR]
+    dwInfoFlags*: DWORD
+    guidItem*: GUID
+    hBalloonIcon*: HICON
+  PNOTIFYICONDATAW* = ptr NOTIFYICONDATAW
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -288,6 +314,8 @@ const
   WM_DWMWINDOWMAXIMIZEDCHANGE* = 0x0321
   WM_DWMSENDICONICTHUMBNAIL* = 0x0323
   WM_DWMSENDICONICLIVEPREVIEWBITMAP* = 0x0326
+  WM_USER* = 0x0400
+  WM_APP* = 0x8000
   SC_RESTORE* = 0xF120
   SC_MINIMIZE* = 0xF020
   SC_MAXIMIZE* = 0xF030
@@ -388,6 +416,23 @@ const
   IACE_CHILDREN* = 0x0001
   IACE_DEFAULT* = 0x0010
   IACE_IGNORENOCONTEXT* = 0x0020
+  NOTIFYICON_VERSION_4* = 4
+  NIM_ADD* = 0x00000000
+  NIM_MODIFY* = 0x00000001
+  NIM_DELETE* = 0x00000002
+  NIM_SETFOCUS* = 0x00000003
+  NIM_SETVERSION* = 0x00000004
+  NIF_MESSAGE* = 0x00000001
+  NIF_ICON* = 0x00000002
+  NIF_TIP* = 0x00000004
+  NIF_STATE* = 0x00000008
+  NIF_INFO* = 0x00000010
+  NIF_GUID* = 0x00000020
+  NIF_REALTIME* = 0x00000040
+  NIF_SHOWTIP* = 0x00000080
+  MF_STRING* = 0x00000000
+  MF_SEPARATOR* = 0x00000800
+  TPM_RETURNCMD* = 0x0100
 
 {.push importc, stdcall.}
 
@@ -679,6 +724,37 @@ proc SetCaretPos*(
   y: int32
 ): BOOL {.dynlib: "User32".}
 
+proc CreateIconFromResourceEx*(
+  presbits: PBYTE,
+  dwResSize: DWORD,
+  fIcon: BOOL,
+  dwVer: DWORD,
+  cxDesired: int32,
+  cyDesired: int32,
+  Flags: UINT
+): HICON {.dynlib: "User32".}
+
+proc CreatePopupMenu*(): HMENU {.dynlib: "User32".}
+
+proc DestroyMenu*(hMenu: HMENU): BOOL {.dynlib: "User32".}
+
+proc AppendMenuW*(
+  hMenu: HMENU,
+  uFlags: UINT,
+  uIDNewItem: UINT_PTR,
+  lpNewItem: LPCWSTR
+): BOOL {.dynlib: "User32".}
+
+proc TrackPopupMenu*(
+  hMenu: HMENU,
+  uFlags: UINT,
+  x: int32,
+  y: int32,
+  nReserved: int32,
+  hWnd: HWND,
+  prcRect: ptr RECT
+): BOOL {.dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
@@ -739,5 +815,10 @@ proc ImmAssociateContextEx*(
   hIMC: HIMC,
   dwFlags: DWORD
 ): BOOL {.dynlib: "imm32".}
+
+proc Shell_NotifyIconW*(
+  dwMessage: DWORD,
+  lpData: PNOTIFYICONDATAW
+): BOOL {.dynlib: "shell32".}
 
 {.pop.}

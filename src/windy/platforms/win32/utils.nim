@@ -54,7 +54,7 @@ template HIWORD*(param: WPARAM | LPARAM): int16 =
   cast[int16]((param shr 16))
 
 template LOWORD*(param: WPARAM | LPARAM): int16 =
-  cast[int16](param and uint16.high)
+  cast[int16](param and uint16.high.WPARAM)
 
 const scancodeToButton* = block:
   var s = newSeq[Button](512)
@@ -279,5 +279,9 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_IME_ENDCOMPOSITION"
   of WM_IME_COMPOSITION:
     "WM_IME_COMPOSITION"
+  of WM_USER:
+    "WM_USER"
+  of WM_APP:
+    "WM_APP"
   else:
     "WM " & $wm & " " & $toHex(wm)
