@@ -380,7 +380,6 @@ proc `visible=`*(window: Window, v: bool) =
 proc pos*(window: Window): IVec2 =
   var
     child: XWindow
-    attributes: XWindowAttributes
   display.XTranslateCoordinates(
     window.handle,
     display.defaultRootWindow,
@@ -390,19 +389,20 @@ proc pos*(window: Window): IVec2 =
     result.y.addr,
     child.addr
   )
-  display.XGetWindowAttributes(window.handle, attributes.addr)
-  result -= attributes.pos
 
-  # TODO: Compute the chrome border size.
-  result += ivec2(10, 8)
+proc borderSize(window: Window): IVec2 =
+  # Figure out the chrome size of the window.
+  let originalValue = window.pos
+  display.XMoveWindow(window.handle, 100, 100)
+  blockUntil(originalValue != window.pos)
+  return window.pos - ivec2(100, 100)
 
 proc `pos=`*(window: Window, v: IVec2) =
+  let v = v - window.borderSize()
   let originalValue = window.pos
   if originalValue == v:
     return
-
   display.XMoveWindow(window.handle, v.x, v.y)
-
   blockUntil(originalValue != window.pos)
 
 proc size*(window: Window): IVec2 =
