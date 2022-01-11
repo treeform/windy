@@ -31,7 +31,7 @@ type
     gc: GC
     ic: XIC
     im: XIM
-    xsyncConter: XSyncCounter
+    xSyncCounter: XSyncCounter
     lastSync: XSyncValue
 
     closeRequested, closed: bool
@@ -116,7 +116,7 @@ proc property(
   var
     kind: Atom
     format: cint
-    lenght: culong
+    length: culong
     bytesAfter: culong
     data: cstring
   display.XGetWindowProperty(
@@ -128,14 +128,14 @@ proc property(
     0,
     kind.addr,
     format.addr,
-    lenght.addr,
+    length.addr,
     bytesAfter.addr,
     data.addr
   )
 
   result.kind = kind
 
-  let len = lenght.int * format.int div 8
+  let len = length.int * format.int div 8
   result.data = newString(len)
   if len != 0:
     copyMem(result.data[0].addr, data, len)
@@ -333,8 +333,8 @@ proc destroy(window: Window) =
     display.XFreeGC(window.gc)
   if window.handle != 0:
     display.XDestroyWindow(window.handle)
-  if window.xsyncConter.int != 0:
-    display.XSyncDestroyCounter(window.xsyncConter)
+  if window.xSyncCounter.int != 0:
+    display.XSyncDestroyCounter(window.xSyncCounter)
   wasMoved window[]
   window.closed = true
 
@@ -421,7 +421,7 @@ proc `size=`*(window: Window, v: IVec2) =
 
   # Its important to swap buffers so that openGL viewport updates.
   window.swapBuffers()
-  # TODO: for some reaosn Chrome GLFW just do display.XFlush() and its enough?
+  # TODO: for some reason Chrome GLFW just do display.XFlush() and its enough?
   display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
 
   blockUntil(originalValue != window.size)
@@ -594,7 +594,7 @@ proc newWindow*(
     display.XMatchVisualInfo(display.defaultScreen, 32, TrueColor, vi.addr)
   else:
     display.XMatchVisualInfo(display.defaultScreen, 24, TrueColor, vi.addr)
-    # strangely, glx rerutns nil when -d:danger
+    # strangely, glx returns nil when -d:danger
     # var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
     # vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
 
@@ -673,12 +673,12 @@ proc newWindow*(
     if display.XSyncQueryExtension(vEv.addr, vEr.addr):
       var vMaj, vMin: cint
       display.XSyncInitialize(vMaj.addr, vMin.addr)
-      result.xsyncConter = display.XSyncCreateCounter(XSyncValue())
+      result.xSyncCounter = display.XSyncCreateCounter(XSyncValue())
       result.handle.setProperty(
         xaNetWMSyncRequestCounter,
         xaCardinal,
         32,
-        @[result.xsyncConter].asString
+        @[result.xSyncCounter].asString
       )
 
   windows.add result
@@ -691,7 +691,7 @@ proc pollEvents(window: Window) =
   window.buttonReleased = {}
 
   # signal that frame was drawn
-  display.XSyncSetCounter(window.xsyncConter, window.lastSync)
+  display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
 
   var ev: XEvent
 
