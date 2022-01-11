@@ -202,31 +202,29 @@ const
   XLookupKeySymVal* = 3
   XLookupBoth* = 4
 
-using d: Display
-
-proc screen*(d; id: cint): ptr Screen =
+proc screen*(d: Display, id: cint): ptr Screen =
   cast[ptr Screen](cast[int](d.screens) + id * Screen.sizeof)
 
-proc defaultScreen*(d): cint =
+proc defaultScreen*(d: Display): cint =
   d.defaultScreen
 
-proc defaultRootWindow*(d): Window =
+proc defaultRootWindow*(d: Display): Window =
   d.screen(d.defaultScreen).root
 
 {.push, cdecl, dynlib: libX11, importc.}
 
 proc XOpenDisplay*(displayName: cstring): Display
-proc XSync*(d; disc = false)
-proc XFlush*(d)
+proc XSync*(d: Display, disc = false)
+proc XFlush*(d: Display)
 proc XFree*(x: pointer)
 
-proc XInternAtom*(d; name: cstring; onlyIfExist: cint): Atom
+proc XInternAtom*(d: Display, name: cstring; onlyIfExist: cint): Atom
 
-proc XCreateColormap*(d; root: Window; visual: ptr Visual;
+proc XCreateColormap*(d: Display, root: Window; visual: ptr Visual;
     flags: cint): Colormap
 
 proc XCreateWindow*(
-  d;
+  d: Display,
   root: Window;
   x, y: cint;
   w, h: cuint;
@@ -237,10 +235,10 @@ proc XCreateWindow*(
   valueMask: culong;
   attributes: ptr XSetWindowAttributes
 ): Window
-proc XDestroyWindow*(d; window: Window)
+proc XDestroyWindow*(d: Display, window: Window)
 
 proc XCreateSimpleWindow*(
-  d;
+  d: Display,
   root: Window;
   x, y: cint;
   w, h: cuint;
@@ -248,43 +246,43 @@ proc XCreateSimpleWindow*(
   border, background: culong
 ): Window
 
-proc XMapWindow*(d; window: Window)
-proc XUnmapWindow*(d; window: Window)
+proc XMapWindow*(d: Display, window: Window)
+proc XUnmapWindow*(d: Display, window: Window)
 
-proc XRaiseWindow*(d; window: Window)
-proc XLowerWindow*(d; window: Window)
-proc XIconifyWindow*(d; window: Window; screen: cint)
+proc XRaiseWindow*(d: Display, window: Window)
+proc XLowerWindow*(d: Display, window: Window)
+proc XIconifyWindow*(d: Display, window: Window; screen: cint)
 
-proc XSetWMProtocols*(d; window: Window; wmProtocols: ptr Atom; len: cint)
-proc XSelectInput*(d; window: Window; inputs: clong)
+proc XSetWMProtocols*(d: Display, window: Window; wmProtocols: ptr Atom; len: cint)
+proc XSelectInput*(d: Display, window: Window; inputs: clong)
 
 proc XGetWindowProperty*(
-  d; window: Window; property: Atom;
+  d: Display, window: Window; property: Atom;
   offset: clong; len: clong; delete: bool; requiredKind: Atom;
   kindReturn: ptr Atom; formatReturn: ptr cint; lenReturn: ptr culong;
   bytesAfterReturn: ptr culong; dataReturn: ptr cstring
 )
 proc XChangeProperty*(
-  d; window: Window; property: Atom; kind: Atom;
+  d: Display, window: Window; property: Atom; kind: Atom;
   format: cint; mode: PropMode; data: cstring; len: cint
 )
-proc XDeleteProperty*(d; window: Window; property: Atom)
+proc XDeleteProperty*(d: Display, window: Window; property: Atom)
 
 proc Xutf8SetWMProperties*(
-  d; window: Window;
+  d: Display, window: Window;
   name: cstring; iconName: cstring;
   argv: ptr cstring; argc: cint;
   normalHints: pointer; wmHints: pointer; classHints: pointer
 )
 
 proc XTranslateCoordinates*(
-  d; window: Window; root: Window; x, y: int32;
+  d: Display, window: Window; root: Window; x, y: int32;
   xReturn, yReturn: ptr int32; childReturn: ptr Window
 )
 
-proc XGetWindowAttributes*(d; window: Window; res: ptr XWindowAttributes)
+proc XGetWindowAttributes*(d: Display, window: Window; res: ptr XWindowAttributes)
 
-proc XOpenIM*(d; db: pointer = nil; resName: cstring = nil;
+proc XOpenIM*(d: Display, db: pointer = nil; resName: cstring = nil;
     resClass: cstring = nil): XIM
 proc XCloseIM*(im: XIM)
 
@@ -293,19 +291,19 @@ proc XDestroyIC*(ic: XIC)
 proc XSetICFocus*(ic: XIC)
 proc XUnsetICFocus*(ic: XIC)
 
-proc XCreateGC*(d; o: Drawable; flags: culong; gcv: ptr XGCValues): GC
-proc XFreeGC*(d; gc: GC)
+proc XCreateGC*(d: Display, o: Drawable; flags: culong; gcv: ptr XGCValues): GC
+proc XFreeGC*(d: Display, gc: GC)
 
-proc XMatchVisualInfo*(d; screen: cint; depth: cint; flags: cint;
+proc XMatchVisualInfo*(d: Display, screen: cint; depth: cint; flags: cint;
     result: ptr XVisualInfo)
 
-proc XSetTransientForHint*(d; window: Window; root: Window)
+proc XSetTransientForHint*(d: Display, window: Window; root: Window)
 
-proc XSetNormalHints*(d; window: Window; hints: ptr XSizeHints)
-proc XGetNormalHints*(d; window: Window; res: ptr XSizeHints)
+proc XSetNormalHints*(d: Display, window: Window; hints: ptr XSizeHints)
+proc XGetNormalHints*(d: Display, window: Window; res: ptr XSizeHints)
 
 proc XGetGeometry*(
-  d; window: Drawable;
+  d: Display, window: Drawable;
   root: ptr Window;
   x, y: ptr int32;
   w, h: ptr uint32;
@@ -313,32 +311,32 @@ proc XGetGeometry*(
   depth: ptr uint32
 )
 
-proc XResizeWindow*(d; window: Window; w, h: uint32)
-proc XMoveWindow*(d; window: Window; x, y: int32)
+proc XResizeWindow*(d: Display, window: Window; w, h: uint32)
+proc XMoveWindow*(d: Display, window: Window; x, y: int32)
 
-proc XGetInputFocus*(d; window: ptr Window; revertTo: ptr RevertTo)
-proc XSetInputFocus*(d; window: Window; revertTo: RevertTo;
+proc XGetInputFocus*(d: Display, window: ptr Window; revertTo: ptr RevertTo)
+proc XSetInputFocus*(d: Display, window: Window; revertTo: RevertTo;
     time: int32 = CurrentTime)
 
-proc XQueryKeymap*(d; res: var array[32, char])
-proc XKeycodeToKeysym*(d; code: KeyCode; i: cint): KeySym
+proc XQueryKeymap*(d: Display, res: var array[32, char])
+proc XKeycodeToKeysym*(d: Display, code: KeyCode; i: cint): KeySym
 
-proc XGetSelectionOwner*(d; kind: Atom): Window
-proc XSetSelectionOwner*(d; kind: Atom; window: Window;
+proc XGetSelectionOwner*(d: Display, kind: Atom): Window
+proc XSetSelectionOwner*(d: Display, kind: Atom; window: Window;
     time: int32 = CurrentTime)
-proc XConvertSelection*(d; kind: Atom; to: Atom; resultProperty: Atom;
+proc XConvertSelection*(d: Display, kind: Atom; to: Atom; resultProperty: Atom;
     window: Window; time: int32 = CurrentTime)
 
 {.pop.}
 
 {.push, cdecl, dynlib: libXExt, importc.}
 
-proc XSyncQueryExtension*(d; vEv, vEr: ptr cint): bool
-proc XSyncInitialize*(d; verMaj, verMin: ptr cint)
+proc XSyncQueryExtension*(d: Display, vEv, vEr: ptr cint): bool
+proc XSyncInitialize*(d: Display, verMaj, verMin: ptr cint)
 
-proc XSyncCreateCounter*(d; v: XSyncValue): XSyncCounter
-proc XSyncDestroyCounter*(d; c: XSyncCounter)
+proc XSyncCreateCounter*(d: Display, v: XSyncValue): XSyncCounter
+proc XSyncDestroyCounter*(d: Display, c: XSyncCounter)
 
-proc XSyncSetCounter*(d; c: XSyncCounter; v: XSyncValue)
+proc XSyncSetCounter*(d: Display, c: XSyncCounter; v: XSyncValue)
 
 {.pop.}
