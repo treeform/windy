@@ -217,7 +217,7 @@ proc defaultRootWindow*(d): Window =
 
 proc XOpenDisplay*(displayName: cstring): Display
 proc XSync*(d; disc = false)
-
+proc XFlush*(d)
 proc XFree*(x: pointer)
 
 proc XInternAtom*(d; name: cstring; onlyIfExist: cint): Atom

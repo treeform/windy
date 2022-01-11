@@ -119,7 +119,7 @@ proc property(
     lenght: culong
     bytesAfter: culong
     data: cstring
-  display.XGetWindowProperty(window, property, 0, 0, false, 0, kind.addr,
+  display.XGetWindowProperty(window, property, 0, -1, false, 0, kind.addr,
       format.addr, lenght.addr, bytesAfter.addr, data.addr)
 
   result.kind = kind
@@ -338,45 +338,38 @@ proc makeContextCurrent*(window: Window) =
 proc swapBuffers*(window: Window) =
   display.glXSwapBuffers(window.handle)
 
+template blockUntil(expression: untyped) {.dirty.} =
+  ## In X11 many properties are async, you change them and then it takes
+  ## time for them to take effect. This is different from Win/Mac. This
+  ## waits till property changes before continueing to mach behavior.
+  ## It will stop waiting eventually though and just return.
+  let start = epochTime()
+  while true:
+    if expression:
+      break
+    if epochTime() - start > 0.500:
+      # We could throw exception here, Chrome + GLFW do not though,
+      # and just let it slide, giving it kind of best effort.
+      break
+    sleep(1)
+
 proc visible*(window: Window): bool =
   var
-    xwa: XWindowAttributes
-  display.XGetWindowAttributes(window.handle, xwa.addr)
-  return xwa.map_state == IsViewable
+    attributes: XWindowAttributes
+  display.XGetWindowAttributes(window.handle, attributes.addr)
+  return attributes.map_state == IsViewable
 
 proc `visible=`*(window: Window, v: bool) =
   if v:
     display.XMapWindow(window.handle)
   else:
     display.XUnmapWindow(window.handle)
-
-proc size*(window: Window): IVec2 =
-  var
-    xwa: XWindowAttributes
-  display.XGetWindowAttributes(window.handle, xwa.addr)
-  return xwa.size
-
-proc `size=`*(window: Window, v: IVec2) =
-  display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
-  # Block until the size is correct
-  for i in 0 .. 100:
-    var
-      xwa: XWindowAttributes
-    display.XGetWindowAttributes(window.handle, xwa.addr)
-    if v == xwa.size:
-      break
-    if i == 100:
-      raise newException(WindyError, "Error setting window size.")
-  # Needs to swap buffer or viewport stays in incomplete state.
-  window.swapBuffers()
-
-proc framebufferSize*(window: Window): IVec2 =
-  window.size
+  blockUntil(window.visible == v)
 
 proc pos*(window: Window): IVec2 =
   var
     child: XWindow
-    xwa: XWindowAttributes
+    attributes: XWindowAttributes
   display.XTranslateCoordinates(
     window.handle,
     display.defaultRootWindow,
@@ -386,11 +379,41 @@ proc pos*(window: Window): IVec2 =
     result.y.addr,
     child.addr
   )
-  display.XGetWindowAttributes(window.handle, xwa.addr)
-  result -= xwa.pos
+  display.XGetWindowAttributes(window.handle, attributes.addr)
+  result -= attributes.pos
+
+  # TODO: Compute the chrome border size.
+  result += ivec2(10, 8)
 
 proc `pos=`*(window: Window, v: IVec2) =
+  let originalValue = window.pos
+  if originalValue == v:
+    return
+
   display.XMoveWindow(window.handle, v.x, v.y)
+
+  blockUntil(originalValue != window.pos)
+
+proc size*(window: Window): IVec2 =
+  var
+    attributes: XWindowAttributes
+  display.XGetWindowAttributes(window.handle, attributes.addr)
+  return attributes.size
+
+proc framebufferSize*(window: Window): IVec2 =
+  window.size
+
+proc `size=`*(window: Window, v: IVec2) =
+  let originalValue = window.size
+  if originalValue == v:
+    return
+
+  # Its important to swap buffers so that openGL viewport updates.
+  window.swapBuffers()
+  # TODO: for some reaosn Chrome GLFW just do display.XFlush() and its enough?
+  display.XResizeWindow(window.handle, v.x.uint32, v.y.uint32)
+
+  blockUntil(originalValue != window.size)
 
 proc maximized*(window: Window): bool =
   let wmState = window.handle.wmState
@@ -400,6 +423,7 @@ proc maximized*(window: Window): bool =
 proc `maximized=`*(window: Window, v: bool) =
   window.handle.wmStateSend(v.int, xaNetWMStateMaximizedHorz)
   window.handle.wmStateSend(v.int, xaNetWMStateMaximizedVert)
+  blockUntil(window.maximized == v)
 
 proc minimized*(window: Window): bool =
   let wState = window.handle.property(xaWMState).data.asSeq(int32)
@@ -411,6 +435,7 @@ proc `minimized=`*(window: Window, v: bool) =
     display.XIconifyWindow(window.handle, display.defaultScreen)
   else:
     display.XRaiseWindow(window.handle)
+  blockUntil(window.minimized == v)
 
 proc focused*(window: Window): bool =
   return window.innerFocused
@@ -423,6 +448,7 @@ proc fullscreen*(window: Window): bool =
 
 proc `fullscreen=`*(window: Window, v: bool) =
   window.handle.wmStateSend(v.int, xaNetWMStateFullscreen)
+  blockUntil(window.fullscreen == v)
 
 proc style*(window: Window): WindowStyle =
   if window.innerDecorated:

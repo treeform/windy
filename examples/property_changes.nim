@@ -41,6 +41,12 @@ while not window.closeRequested:
     doAssert window.pos.x != -9000
   doAssert window.pos != ivec2(200, 100)
 
+  window.visible = false
+  doAssert not window.visible
+
+  window.visible = true
+  doAssert window.visible
+
   window.maximized = false
   doAssert not window.maximized
 
