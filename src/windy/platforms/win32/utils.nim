@@ -227,6 +227,8 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_DPICHANGED"
   of WM_NULL:
     "WM_NULL"
+  of WM_SETCURSOR:
+    "WM_SETCURSOR"
   of WM_MOUSEMOVE:
     "WM_MOUSEMOVE"
   of WM_MOUSEWHEEL:

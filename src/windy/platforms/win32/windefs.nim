@@ -215,6 +215,7 @@ const
   IDC_ARROW* = MAKEINTRESOURCE(32512)
   IDI_APPLICATION* = MAKEINTRESOURCE(32512)
   IMAGE_ICON* = 1
+  LR_DEFAULTCOLOR* = 0x0000
   LR_DEFAULTSIZE* = 0x0040
   LR_SHARED* = 0x8000
   CW_USEDEFAULT* = 0x80000000'i32
@@ -263,6 +264,7 @@ const
   WM_ERASEBKGND* = 0x0014
   WM_SHOWWINDOW* = 0x0018
   WM_ACTIVATEAPP* = 0x001C
+  WM_SETCURSOR* = 0x0020
   WM_GETMINMAXINFO* = 0x0024
   WM_WINDOWPOSCHANGING* = 0x0046
   WM_WINDOWPOSCHANGED* = 0x0047
@@ -433,6 +435,7 @@ const
   MF_STRING* = 0x00000000
   MF_SEPARATOR* = 0x00000800
   TPM_RETURNCMD* = 0x0100
+  HTCLIENT* = 1
 
 {.push importc, stdcall.}
 
@@ -734,6 +737,8 @@ proc CreateIconFromResourceEx*(
   Flags: UINT
 ): HICON {.dynlib: "User32".}
 
+proc DestroyIcon*(hIcon: HICON): BOOL {.dynlib: "User32".}
+
 proc CreatePopupMenu*(): HMENU {.dynlib: "User32".}
 
 proc DestroyMenu*(hMenu: HMENU): BOOL {.dynlib: "User32".}
@@ -754,6 +759,10 @@ proc TrackPopupMenu*(
   hWnd: HWND,
   prcRect: ptr RECT
 ): BOOL {.dynlib: "User32".}
+
+proc SetCursor*(hCursor: HCURSOR): HCURSOR {.dynlib: "User32".}
+
+proc DestroyCursor*(hCursor: HCURSOR): BOOL {.dynlib: "User32".}
 
 proc ChoosePixelFormat*(
   hdc: HDC,

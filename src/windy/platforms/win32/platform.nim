@@ -1,5 +1,5 @@
 import ../../common, ../../internal, pixie/images, pixie/fileformats/png, times,
-    unicode, utils, vmath, windefs, flatty/hashy
+    unicode, utils, vmath, windefs, flatty/binny
 
 const
   windowClassName = "WINDY0"
@@ -54,6 +54,7 @@ type
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+    customCursor: HCURSOR
 
   ExitFullscreenInfo = ref object
     maximized: bool
@@ -88,8 +89,8 @@ var
 var
   helperWindow: HWND
   windows: seq[Window]
-  iconCache: seq[(Hash, HICON)]
   onTrayIconClick: Callback
+  trayIconHandle: HICON
   trayMenuHandle: HMENU
   trayMenuEntries: seq[TrayMenuEntry]
 
@@ -614,7 +615,7 @@ proc wndProc(
 
   let window = windows.forHandle(hWnd)
   if window == nil:
-    return
+    raise newException(WindyError, "Received message for missing window")
 
   case uMsg:
   of WM_CLOSE:
@@ -666,6 +667,10 @@ proc wndProc(
   of WM_MOUSELEAVE:
     window.trackMouseEventRegistered = false
     return 0
+  of WM_SETCURSOR:
+    if window.customCursor != 0 and LOWORD(lParam) == HTCLIENT:
+      discard SetCursor(window.customCursor)
+      return TRUE
   of WM_MOUSEWHEEL:
     let hiword = HIWORD(wParam)
     window.state.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
@@ -1049,29 +1054,45 @@ proc setClipboardString*(value: string) =
   discard CloseClipboard()
 
 proc createIconHandle(image: Image): HICON =
-  let iconHash = hashy(image.data[0].addr, image.data.len * 4)
-
-  for (hash, handle) in iconCache:
-    if iconHash == hash:
-      result = handle
-      break
+  let encoded = image.encodePng()
+  result = CreateIconFromResourceEx(
+    cast[PBYTE](encoded[0].unsafeAddr),
+    encoded.len.DWORD,
+    TRUE,
+    0x00030000,
+    0,
+    0,
+    0
+  )
 
   if result == 0:
-    let encoded = image.encodePng()
-    result = CreateIconFromResourceEx(
-      cast[PBYTE](encoded[0].unsafeAddr),
-      encoded.len.DWORD,
-      TRUE,
-      0x00030000,
-      0,
-      0,
-      0
-    )
+    raise newException(WindyError, "Error creating icon")
 
-    if result != 0:
-      iconCache.add((iconHash, result))
-    else:
-      raise newException(WindyError, "Error creating tray icon")
+proc createCursorHandle(image: Image, hotspot: IVec2): HCURSOR =
+  var encoded: string
+  encoded.addUint16(hotspot.x.uint16)
+  encoded.addUint16(hotspot.y.uint16)
+  encoded &= image.encodePng()
+
+  result = CreateIconFromResourceEx(
+    cast[PBYTE](encoded[0].unsafeAddr),
+    encoded.len.DWORD,
+    FALSE,
+    0x00030000,
+    0,
+    0,
+    0
+  )
+
+  if result == 0:
+    raise newException(WindyError, "Error creating cursor")
+
+proc useCustomCursor*(window: Window, cursor: Image, hotspot: IVec2) =
+  if window.customCursor != 0:
+    discard DestroyCursor(window.customCursor)
+
+  window.customCursor = cursor.createCursorHandle(hotspot)
+  discard SetCursor(window.customCursor)
 
 proc showTrayIcon*(
   icon: Image,
@@ -1100,6 +1121,11 @@ proc showTrayIcon*(
       of TrayMenuSeparator:
         discard AppendMenuW(trayMenuHandle, MF_SEPARATOR, 0, nil)
 
+  if trayIconHandle != 0:
+    discard DestroyIcon(trayIconHandle)
+
+  trayIconHandle = icon.createIconHandle()
+
   onTrayIconClick = onClick
 
   var nid: NOTIFYICONDATAW
@@ -1108,7 +1134,7 @@ proc showTrayIcon*(
   nid.uID = trayIconId
   nid.uFlags = NIF_MESSAGE or NIF_ICON
   nid.uCallbackMessage = WM_TRAY_ICON
-  nid.hIcon = icon.createIconHandle()
+  nid.hIcon = trayIconHandle
   nid.union1.uVersion = NOTIFYICON_VERSION_4
 
   if tooltip != "":
@@ -1137,3 +1163,7 @@ proc hideTrayIcon*() =
     discard DestroyMenu(trayMenuHandle)
     trayMenuHandle = 0
     trayMenuEntries = @[]
+
+  if trayIconHandle != 0:
+    discard DestroyIcon(trayIconHandle)
+    trayIconHandle = 0
