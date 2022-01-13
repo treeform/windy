@@ -87,10 +87,11 @@ var
   AdjustWindowRectExForDpi: AdjustWindowRectExForDpi
 
 var
+  windowPropKey: string
   helperWindow: HWND
   windows: seq[Window]
   onTrayIconClick: Callback
-  trayIconHandle: HICON
+  iconHandle, trayIconHandle: HICON
   trayMenuHandle: HMENU
   trayMenuEntries: seq[TrayMenuEntry]
 
@@ -166,8 +167,7 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
 
-  let key = "Windy".wstr()
-  discard SetPropW(result, cast[ptr WCHAR](key[0].unsafeAddr), 1)
+  discard SetPropW(result, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
 proc destroy(window: Window) =
   window.onCloseRequest = nil
@@ -189,13 +189,46 @@ proc destroy(window: Window) =
     discard ReleaseDC(window.hWnd, window.hdc)
     window.hdc = 0
   if window.hWnd != 0:
-    let key = "Windy".wstr()
-    discard RemovePropW(window.hWnd, cast[ptr WCHAR](key[0].unsafeAddr))
+    discard RemovePropW(window.hWnd, cast[ptr WCHAR](windowPropKey[0].addr))
     discard DestroyWindow(window.hWnd)
     let index = windows.indexForHandle(window.hWnd)
     if index != -1:
       windows.delete(index)
     window.hWnd = 0
+
+proc createIconHandle(image: Image): HICON =
+  let encoded = image.encodePng()
+  result = CreateIconFromResourceEx(
+    cast[PBYTE](encoded[0].unsafeAddr),
+    encoded.len.DWORD,
+    TRUE,
+    0x00030000,
+    0,
+    0,
+    0
+  )
+
+  if result == 0:
+    raise newException(WindyError, "Error creating icon")
+
+proc createCursorHandle(image: Image, hotspot: IVec2): HCURSOR =
+  var encoded: string
+  encoded.addUint16(hotspot.x.uint16)
+  encoded.addUint16(hotspot.y.uint16)
+  encoded &= image.encodePng()
+
+  result = CreateIconFromResourceEx(
+    cast[PBYTE](encoded[0].unsafeAddr),
+    encoded.len.DWORD,
+    FALSE,
+    0x00030000,
+    0,
+    0,
+    0
+  )
+
+  if result == 0:
+    raise newException(WindyError, "Error creating cursor")
 
 proc getDC(hWnd: HWND): HDC =
   result = GetDC(hWnd)
@@ -286,6 +319,14 @@ proc `title=`*(window: Window, title: string) =
   window.state.title = title
   var wideTitle = title.wstr()
   discard SetWindowTextW(window.hWnd, cast[ptr WCHAR](wideTitle[0].addr))
+
+proc `icon=`*(window: Window, icon: Image) =
+  let prevIconHandle = iconHandle
+  iconHandle = icon.createIconHandle()
+  discard SendMessageW(window.hWnd, WM_SETICON, ICON_SMALL, iconHandle.LPARAM)
+  discard SendMessageW(window.hWnd, WM_SETICON, ICON_BIG, iconHandle.LPARAM)
+  discard DestroyIcon(prevIconHandle)
+  window.state.icon = icon
 
 proc `visible=`*(window: Window, visible: bool) =
   if visible:
@@ -606,9 +647,7 @@ proc wndProc(
   lParam: LPARAM
 ): LRESULT {.stdcall.} =
   # echo wmEventName(uMsg)
-  let
-    key = "Windy".wstr()
-    data = GetPropW(hWnd, cast[ptr WCHAR](key[0].unsafeAddr))
+  let data = GetPropW(hWnd, cast[ptr WCHAR](windowPropKey[0].addr))
   if data == 0:
     # This event is for a window being created (CreateWindowExW has not returned)
     return DefWindowProcW(hWnd, uMsg, wParam, lParam)
@@ -799,6 +838,7 @@ proc wndProc(
 proc init() =
   if initialized:
     return
+  windowPropKey = "Windy".wstr()
   loadLibraries()
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
@@ -967,6 +1007,9 @@ proc newWindow*(
 proc title*(window: Window): string =
   window.state.title
 
+proc icon*(window: Window): Image =
+  window.state.icon
+
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
 
@@ -1052,40 +1095,6 @@ proc setClipboardString*(value: string) =
   discard EmptyClipboard()
   discard SetClipboardData(CF_UNICODETEXT, dataHandle)
   discard CloseClipboard()
-
-proc createIconHandle(image: Image): HICON =
-  let encoded = image.encodePng()
-  result = CreateIconFromResourceEx(
-    cast[PBYTE](encoded[0].unsafeAddr),
-    encoded.len.DWORD,
-    TRUE,
-    0x00030000,
-    0,
-    0,
-    0
-  )
-
-  if result == 0:
-    raise newException(WindyError, "Error creating icon")
-
-proc createCursorHandle(image: Image, hotspot: IVec2): HCURSOR =
-  var encoded: string
-  encoded.addUint16(hotspot.x.uint16)
-  encoded.addUint16(hotspot.y.uint16)
-  encoded &= image.encodePng()
-
-  result = CreateIconFromResourceEx(
-    cast[PBYTE](encoded[0].unsafeAddr),
-    encoded.len.DWORD,
-    FALSE,
-    0x00030000,
-    0,
-    0,
-    0
-  )
-
-  if result == 0:
-    raise newException(WindyError, "Error creating cursor")
 
 proc useCustomCursor*(window: Window, cursor: Image, hotspot: IVec2) =
   if window.customCursor != 0:

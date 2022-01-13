@@ -195,6 +195,8 @@ proc wmEventName*(wm: int | UINT): string =
     "WM_PAINT"
   of WM_GETICON:
     "WM_GETICON"
+  of WM_SETICON:
+    "WM_SETICON"
   of WM_IME_SETCONTEXT:
     "WM_IME_SETCONTEXT"
   of WM_IME_NOTIFY:
