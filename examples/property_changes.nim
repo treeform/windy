@@ -62,14 +62,15 @@ while not window.closeRequested:
   window.minimized = true
   doAssert window.minimized
 
-  window.fullscreen = false
-  doAssert not window.fullscreen
+  when not defined(macosx):
+    window.fullscreen = false
+    doAssert not window.fullscreen
 
-  window.fullscreen = true
-  doAssert window.fullscreen
+    window.fullscreen = true
+    doAssert window.fullscreen
 
-  window.fullscreen = false
-  doAssert not window.fullscreen
+    window.fullscreen = false
+    doAssert not window.fullscreen
 
   echo "SUCESS!"
   quit()
