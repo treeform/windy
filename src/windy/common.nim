@@ -1,7 +1,22 @@
-import unicode
+import unicode, pixie
 
 type
   WindyError* = object of ValueError
+
+  Display* = object
+    left*, right*, top*, bottom*: int
+    primary*: bool
+
+  CursorKind* = enum
+    DefaultCursor, CustomCursor
+
+  Cursor* = object
+    case kind*: CursorKind:
+    of DefaultCursor:
+      discard
+    of CustomCursor:
+      image*: Image
+      hotspot*: IVec2
 
   MSAA* = enum
     msaaDisabled = 0, msaa2x = 2, msaa4x = 4, msaa8x = 8

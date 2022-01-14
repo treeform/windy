@@ -212,11 +212,11 @@ proc createIconHandle(image: Image): HICON =
   if result == 0:
     raise newException(WindyError, "Error creating icon")
 
-proc createCursorHandle(image: Image, hotspot: IVec2): HCURSOR =
+proc createCursorHandle(cursor: Cursor): HCURSOR =
   var encoded: string
-  encoded.addUint16(hotspot.x.uint16)
-  encoded.addUint16(hotspot.y.uint16)
-  encoded &= image.encodePng()
+  encoded.addUint16(cursor.hotspot.x.uint16)
+  encoded.addUint16(cursor.hotspot.y.uint16)
+  encoded &= cursor.image.encodePng()
 
   result = CreateIconFromResourceEx(
     cast[PBYTE](encoded[0].unsafeAddr),
@@ -497,6 +497,14 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
     discard ImmAssociateContextEx(window.hWnd, 0, IACE_DEFAULT)
   else:
     discard ImmAssociateContextEx(window.hWnd, 0, 0)
+
+proc `cursor=`*(window: Window, cursor: Cursor) =
+  if window.customCursor != 0:
+    discard DestroyCursor(window.customCursor)
+
+  window.state.cursor = cursor
+  window.customCursor = cursor.createCursorHandle()
+  discard SetCursor(window.customCursor)
 
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")
@@ -1036,6 +1044,9 @@ proc scrollDelta*(window: Window): Vec2 =
 proc runeInputEnabled*(window: Window): bool =
   window.state.runeInputEnabled
 
+proc cursor*(window: Window): Cursor =
+  window.state.cursor
+
 proc imeCursorIndex*(window: Window): int =
   window.state.imeCursorIndex
 
@@ -1106,13 +1117,6 @@ proc setClipboardString*(value: string) =
   discard EmptyClipboard()
   discard SetClipboardData(CF_UNICODETEXT, dataHandle)
   discard CloseClipboard()
-
-proc useCustomCursor*(window: Window, cursor: Image, hotspot: IVec2) =
-  if window.customCursor != 0:
-    discard DestroyCursor(window.customCursor)
-
-  window.customCursor = cursor.createCursorHandle(hotspot)
-  discard SetCursor(window.customCursor)
 
 proc showTrayIcon*(
   icon: Image,
@@ -1187,3 +1191,36 @@ proc hideTrayIcon*() =
   if trayIconHandle != 0:
     discard DestroyIcon(trayIconHandle)
     trayIconHandle = 0
+
+proc getDisplays*(): seq[Display] =
+  ## Queries and returns the currently connected displays.
+
+  type Holder = ref object
+    displays: seq[Display]
+
+  var h = Holder()
+
+  proc callback(
+    hMonitor: HMONITOR,
+    hdc: HDC,
+    screenCoords: LPRECT,
+    extra: LPARAM
+  ): BOOL {.stdcall, raises: [].} =
+    var mi: MONITORINFO
+    mi.cbSize = sizeof(MONITORINFO).DWORD
+
+    discard GetMonitorInfoW(hMonitor, mi.addr)
+
+    cast[ptr Holder](extra).displays.add(Display(
+      left: screenCoords.left,
+      right: screenCoords.right,
+      top: screenCoords.top,
+      bottom: screenCoords.bottom,
+      primary: (mi.dwFlags and MONITORINFOF_PRIMARY) != 0
+    ))
+
+    return TRUE
+
+  discard EnumDisplayMonitors(0, nil, callback, cast[LPARAM](h.addr))
+
+  h.displays
