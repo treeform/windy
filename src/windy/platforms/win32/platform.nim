@@ -1192,11 +1192,11 @@ proc hideTrayIcon*() =
     discard DestroyIcon(trayIconHandle)
     trayIconHandle = 0
 
-proc getDisplays*(): seq[Display] =
-  ## Queries and returns the currently connected displays.
+proc getMonitors*(): seq[Monitor] =
+  ## Queries and returns the currently connected monitors.
 
   type Holder = ref object
-    displays: seq[Display]
+    monitors: seq[Monitor]
 
   var h = Holder()
 
@@ -1211,7 +1211,7 @@ proc getDisplays*(): seq[Display] =
 
     discard GetMonitorInfoW(hMonitor, mi.addr)
 
-    cast[ptr Holder](extra).displays.add(Display(
+    cast[ptr Holder](extra).monitors.add(Monitor(
       left: screenCoords.left,
       right: screenCoords.right,
       top: screenCoords.top,
@@ -1223,4 +1223,4 @@ proc getDisplays*(): seq[Display] =
 
   discard EnumDisplayMonitors(0, nil, callback, cast[LPARAM](h.addr))
 
-  h.displays
+  h.monitors
