@@ -112,6 +112,7 @@ type
     right*: LONG
     bottom*: LONG
   LPRECT* = ptr RECT
+  LPCRECT* = ptr RECT
   WINDOWPLACEMENT* {.pure.} = object
     length*: UINT
     flags*: UINT
@@ -199,6 +200,12 @@ type
     bMenu: BOOL,
     dwExStyle: DWORD,
     dpi: UINT
+  ): BOOL {.stdcall, raises: [].}
+  MONITORENUMPROC* = proc(
+    P1: HMONITOR,
+    P2: HDC,
+    P3: LPRECT,
+    P4: LPARAM
   ): BOOL {.stdcall, raises: [].}
 
 template MAKEINTRESOURCE*(i: untyped): untyped = cast[LPWSTR](i and 0xffff)
@@ -439,6 +446,7 @@ const
   HTCLIENT* = 1
   ICON_SMALL* = 0
   ICON_BIG* = 1
+  MONITORINFOF_PRIMARY* = 0x00000001
 
 {.push importc, stdcall.}
 
@@ -584,6 +592,13 @@ proc GetDC*(hWnd: HWND): HDC {.dynlib: "User32".}
 proc ReleaseDC*(
   hWnd: HWND,
   hdc: HDC
+): BOOL {.dynlib: "User32".}
+
+proc EnumDisplayMonitors*(
+  hdc: HDC,
+  lprcClip: LPCRECT,
+  lpfnEnum: MONITORENUMPROC,
+  dwData: LPARAM
 ): BOOL {.dynlib: "User32".}
 
 proc MonitorFromWindow*(
