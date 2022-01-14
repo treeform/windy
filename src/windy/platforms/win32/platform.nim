@@ -54,6 +54,7 @@ type
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+    iconHandle: HICON
     customCursor: HCURSOR
 
   ExitFullscreenInfo = ref object
@@ -91,7 +92,7 @@ var
   helperWindow: HWND
   windows: seq[Window]
   onTrayIconClick: Callback
-  iconHandle, trayIconHandle: HICON
+  trayIconHandle: HICON
   trayMenuHandle: HMENU
   trayMenuEntries: seq[TrayMenuEntry]
 
@@ -321,10 +322,20 @@ proc `title=`*(window: Window, title: string) =
   discard SetWindowTextW(window.hWnd, cast[ptr WCHAR](wideTitle[0].addr))
 
 proc `icon=`*(window: Window, icon: Image) =
-  let prevIconHandle = iconHandle
-  iconHandle = icon.createIconHandle()
-  discard SendMessageW(window.hWnd, WM_SETICON, ICON_SMALL, iconHandle.LPARAM)
-  discard SendMessageW(window.hWnd, WM_SETICON, ICON_BIG, iconHandle.LPARAM)
+  let prevIconHandle = window.iconHandle
+  window.iconHandle = icon.createIconHandle()
+  discard SendMessageW(
+    window.hWnd,
+    WM_SETICON,
+    ICON_SMALL,
+    window.iconHandle.LPARAM
+  )
+  discard SendMessageW(
+    window.hWnd,
+    WM_SETICON,
+    ICON_BIG,
+    window.iconHandle.LPARAM
+  )
   discard DestroyIcon(prevIconHandle)
   window.state.icon = icon
 
