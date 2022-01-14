@@ -14,6 +14,7 @@ Features:
 * Multi-platform (Windows, macOS, Linux)
 * Manage one or many windows
 * Customizable windows (resizable, hidden, fullscreen and more)
+* Use custom window icons and cursors
 * DPI and content-scaling aware
 * Mouse input (position, clicks, scroll)
 * Double-click, triple-click and quadruple-click events

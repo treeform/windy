@@ -1,4 +1,4 @@
-import common, vmath
+import common, pixie
 
 const
   multiClickRadius = 4
@@ -6,6 +6,7 @@ const
 type
   State* = object
     title*: string
+    icon*: Image
     closeRequested*, closed*: bool
     mousePos*: IVec2
     buttonDown*, buttonToggle*: set[Button]
