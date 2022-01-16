@@ -3,7 +3,7 @@ import unicode, pixie
 type
   WindyError* = object of ValueError
 
-  Monitor* = object
+  Screen* = object
     left*, right*, top*, bottom*: int
     primary*: bool
 

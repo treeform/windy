@@ -132,24 +132,10 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   if RegisterClassExW(wc.addr) == 0:
     raise newException(WindyError, "Error registering window class")
 
-proc createWindow(windowClassName, title: string, size: IVec2): HWND =
+proc createWindow(windowClassName, title: string): HWND =
   let
     wideWindowClassName = windowClassName.wstr()
     wideTitle = title.wstr()
-
-  var size = size
-  if size != ivec2(CW_USEDEFAULT, CW_USEDEFAULT):
-    # Adjust the window creation size for window styles (border, etc)
-    var rect = Rect(top: 0, left: 0, right: size.x, bottom: size.y)
-    discard AdjustWindowRectExForDpi(
-      rect.addr,
-      decoratedWindowStyle,
-      0,
-      WS_EX_APPWINDOW,
-      defaultScreenDpi
-    )
-    size.x = rect.right - rect.left
-    size.y = rect.bottom - rect.top
 
   result = CreateWindowExW(
     WS_EX_APPWINDOW,
@@ -158,8 +144,8 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
     decoratedWindowStyle,
     CW_USEDEFAULT,
     CW_USEDEFAULT,
-    size.x,
-    size.y,
+    CW_USEDEFAULT,
+    CW_USEDEFAULT,
     0,
     0,
     GetModuleHandleW(nil),
@@ -167,8 +153,6 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   )
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
-
-  discard SetPropW(result, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
 proc destroy(window: Window) =
   window.onCloseRequest = nil
@@ -305,9 +289,6 @@ proc minimized*(window: Window): bool =
 
 proc maximized*(window: Window): bool =
   IsZoomed(window.hWnd) != 0
-
-proc framebufferSize*(window: Window): IVec2 =
-  window.size
 
 proc contentScale*(window: Window): float32 =
   let dpi = GetDpiForWindow(window.hWnd)
@@ -541,11 +522,7 @@ proc loadOpenGL() =
   registerWindowClass(dummyWindowClassName, dummyWndProc)
 
   let
-    hWnd = createWindow(
-      dummyWindowClassName,
-      dummyWindowClassName,
-      ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
-    )
+    hWnd = createWindow(dummyWindowClassName, dummyWindowClassName)
     hdc = getDC(hWnd)
 
   var pfd: PIXELFORMATDESCRIPTOR
@@ -644,11 +621,7 @@ proc createHelperWindow(): HWND =
 
   registerWindowClass(helperWindowClassName, helperWndProc)
 
-  result = createWindow(
-    helperWindowClassName,
-    helperWindowClassName,
-    ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
-  )
+  result = createWindow(helperWindowClassName,helperWindowClassName)
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -705,13 +678,13 @@ proc wndProc(
     )
     return 0
   of WM_MOUSEMOVE:
-    window.state.perFrame.mousePrevPos = window.state.mousePos
+    window.state.mousePrevPos = window.state.mousePos
     var pos: POINT
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
     window.state.mousePos = ivec2(pos.x, pos.y)
-    window.state.perFrame.mouseDelta =
-      window.state.mousePos - window.state.perFrame.mousePrevPos
+    window.state.perFrame.mouseDelta +=
+      window.state.mousePos - window.state.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
     if not window.trackMouseEventRegistered:
@@ -927,11 +900,10 @@ proc newWindow*(
 
   result = Window()
   result.title = title
-  result.hWnd = createWindow(
-    windowClassName,
-    title,
-    size
-  )
+  result.hWnd = createWindow(windowClassName, title)
+  result.size = size
+
+  discard SetPropW(result.hWnd, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
   try:
     result.hdc = getDC(result.hWnd)
@@ -1033,7 +1005,7 @@ proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
 
 proc mousePrevPos*(window: Window): IVec2 =
-  window.state.perFrame.mousePrevPos
+  window.state.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
   window.state.perFrame.mouseDelta
@@ -1192,11 +1164,11 @@ proc hideTrayIcon*() =
     discard DestroyIcon(trayIconHandle)
     trayIconHandle = 0
 
-proc getMonitors*(): seq[Monitor] =
-  ## Queries and returns the currently connected monitors.
+proc getScreens*(): seq[Screen] =
+  ## Queries and returns the currently connected screens.
 
   type Holder = ref object
-    monitors: seq[Monitor]
+    screens: seq[Screen]
 
   var h = Holder()
 
@@ -1211,7 +1183,7 @@ proc getMonitors*(): seq[Monitor] =
 
     discard GetMonitorInfoW(hMonitor, mi.addr)
 
-    cast[ptr Holder](extra).monitors.add(Monitor(
+    cast[ptr Holder](extra).screens.add(Screen(
       left: screenCoords.left,
       right: screenCoords.right,
       top: screenCoords.top,
@@ -1223,4 +1195,4 @@ proc getMonitors*(): seq[Monitor] =
 
   discard EnumDisplayMonitors(0, nil, callback, cast[LPARAM](h.addr))
 
-  h.monitors
+  h.screens
