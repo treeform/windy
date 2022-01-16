@@ -678,13 +678,13 @@ proc wndProc(
     )
     return 0
   of WM_MOUSEMOVE:
-    window.state.perFrame.mousePrevPos = window.state.mousePos
+    window.state.mousePrevPos = window.state.mousePos
     var pos: POINT
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
     window.state.mousePos = ivec2(pos.x, pos.y)
     window.state.perFrame.mouseDelta +=
-      window.state.mousePos - window.state.perFrame.mousePrevPos
+      window.state.mousePos - window.state.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
     if not window.trackMouseEventRegistered:
@@ -1005,7 +1005,7 @@ proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
 
 proc mousePrevPos*(window: Window): IVec2 =
-  window.state.perFrame.mousePrevPos
+  window.state.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
   window.state.perFrame.mouseDelta

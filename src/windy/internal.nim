@@ -9,7 +9,7 @@ type
     icon*: Image
     cursor*: Cursor
     closeRequested*, closed*: bool
-    mousePos*: IVec2
+    mousePos*, mousePrevPos*: IVec2
     buttonDown*, buttonToggle*: set[Button]
     perFrame*: PerFrame
 
@@ -23,7 +23,6 @@ type
     imeCompositionString*: string
 
   PerFrame* = object
-    mousePrevPos*: IVec2
     mouseDelta*: IVec2
     scrollDelta*: Vec2
     buttonPressed*, buttonReleased*: set[Button]
