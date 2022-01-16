@@ -290,9 +290,6 @@ proc minimized*(window: Window): bool =
 proc maximized*(window: Window): bool =
   IsZoomed(window.hWnd) != 0
 
-proc framebufferSize*(window: Window): IVec2 =
-  window.size
-
 proc contentScale*(window: Window): float32 =
   let dpi = GetDpiForWindow(window.hWnd)
   result = dpi.float32 / defaultScreenDpi
