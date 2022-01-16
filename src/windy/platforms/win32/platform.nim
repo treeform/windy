@@ -686,7 +686,7 @@ proc wndProc(
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
     window.state.mousePos = ivec2(pos.x, pos.y)
-    window.state.perFrame.mouseDelta =
+    window.state.perFrame.mouseDelta +=
       window.state.mousePos - window.state.perFrame.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
