@@ -132,24 +132,10 @@ proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   if RegisterClassExW(wc.addr) == 0:
     raise newException(WindyError, "Error registering window class")
 
-proc createWindow(windowClassName, title: string, size: IVec2): HWND =
+proc createWindow(windowClassName, title: string): HWND =
   let
     wideWindowClassName = windowClassName.wstr()
     wideTitle = title.wstr()
-
-  var size = size
-  if size != ivec2(CW_USEDEFAULT, CW_USEDEFAULT):
-    # Adjust the window creation size for window styles (border, etc)
-    var rect = Rect(top: 0, left: 0, right: size.x, bottom: size.y)
-    discard AdjustWindowRectExForDpi(
-      rect.addr,
-      decoratedWindowStyle,
-      0,
-      WS_EX_APPWINDOW,
-      defaultScreenDpi
-    )
-    size.x = rect.right - rect.left
-    size.y = rect.bottom - rect.top
 
   result = CreateWindowExW(
     WS_EX_APPWINDOW,
@@ -158,8 +144,8 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
     decoratedWindowStyle,
     CW_USEDEFAULT,
     CW_USEDEFAULT,
-    size.x,
-    size.y,
+    CW_USEDEFAULT,
+    CW_USEDEFAULT,
     0,
     0,
     GetModuleHandleW(nil),
@@ -167,8 +153,6 @@ proc createWindow(windowClassName, title: string, size: IVec2): HWND =
   )
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
-
-  discard SetPropW(result, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
 proc destroy(window: Window) =
   window.onCloseRequest = nil
@@ -541,11 +525,7 @@ proc loadOpenGL() =
   registerWindowClass(dummyWindowClassName, dummyWndProc)
 
   let
-    hWnd = createWindow(
-      dummyWindowClassName,
-      dummyWindowClassName,
-      ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
-    )
+    hWnd = createWindow(dummyWindowClassName, dummyWindowClassName)
     hdc = getDC(hWnd)
 
   var pfd: PIXELFORMATDESCRIPTOR
@@ -644,11 +624,7 @@ proc createHelperWindow(): HWND =
 
   registerWindowClass(helperWindowClassName, helperWndProc)
 
-  result = createWindow(
-    helperWindowClassName,
-    helperWindowClassName,
-    ivec2(CW_USEDEFAULT, CW_USEDEFAULT)
-  )
+  result = createWindow(helperWindowClassName,helperWindowClassName)
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -927,11 +903,10 @@ proc newWindow*(
 
   result = Window()
   result.title = title
-  result.hWnd = createWindow(
-    windowClassName,
-    title,
-    size
-  )
+  result.hWnd = createWindow(windowClassName, title)
+  result.size = size
+
+  discard SetPropW(result.hWnd, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
   try:
     result.hdc = getDC(result.hWnd)

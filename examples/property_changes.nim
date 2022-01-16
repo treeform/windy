@@ -17,6 +17,9 @@ while not window.closeRequested:
 
   pollEvents()
 
+  # Initial window open size
+  doAssert window.size == ivec2(1280, 800)
+
   # Window will block changing size.
   window.size = ivec2(300, 400)
   doAssert window.size == ivec2(300, 400)
@@ -72,5 +75,5 @@ while not window.closeRequested:
     window.fullscreen = false
     doAssert not window.fullscreen
 
-  echo "SUCESS!"
+  echo "SUCCESS!"
   quit()
