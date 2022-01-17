@@ -1,9 +1,5 @@
-import ../../common, ../../internal, times, unicode, utils, vmath
-
-{.
-  passL: "-framework Cocoa",
-  compile: "macos.m",
-.}
+import ../../common, ../../internal, macdefs, opengl, pixie/images, times,
+    unicode, utils, vmath
 
 type
   Window* = ref object
@@ -17,148 +13,155 @@ type
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
     onImeChange*: Callback
+    imePos*: IVec2
 
     state: State
 
-    windowPtr: pointer
+    inner: NSWindow
+    trackingArea: NSTrackingArea
 
-  InnerHandler = proc(windowPtr: pointer) {.cdecl.}
-  InnerMouseHandler = proc(windowPtr: pointer, x, y: int32) {.cdecl.}
-  InnerScrollHandler = proc(windowPtr: pointer, x, y: float32) {.cdecl.}
-  InnerKeyHandler = proc(windowPtr: pointer, keyCode: int32) {.cdecl.}
-  InnerRuneHandler = proc(windowPtr: pointer, rune: uint32) {.cdecl.}
+const
+  decoratedResizableWindowMask =
+    NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or
+    NSWindowStyleMaskMiniaturizable or NSWindowStyleMaskResizable
+  decoratedWindowMask =
+    NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or
+    NSWindowStyleMaskMiniaturizable
+  undecoratedWindowMask =
+    NSWindowStyleMaskBorderless or NSWindowStyleMaskMiniaturizable
 
-var windows: seq[Window]
+var
+  WindyAppDelegate, WindyWindow, WindyView: Class
+  windows: seq[Window]
 
-proc indexForPointer(windows: seq[Window], windowPtr: pointer): int =
-  ## Returns the window for this pointer, else -1
+proc indexForNSWindow(windows: seq[Window], inner: NSWindow): int =
+  ## Returns the window for this handle, else -1
   for i, window in windows:
-    if window.windowPtr == windowPtr:
+    if window.inner.int == inner.int:
       return i
   -1
 
-proc forPointer(windows: seq[Window], windowPtr: pointer): Window =
-  ## Returns the window for this pointer, else nil
-  let index = windows.indexForPointer(windowPtr)
+proc forNSWindow(windows: seq[Window], inner: NSWindow): Window =
+  ## Returns the window for this window handle, else nil
+  let index = windows.indexForNSWindow(inner)
   if index == -1:
     return nil
   windows[index]
 
-proc innerGetDoubleClickInterval(): float64 {.importc.}
-
-proc innerGetVisible(windowPtr: pointer): bool {.importc.}
-
-proc innerGetSize(windowPtr: pointer, width, height: ptr int32) {.importc.}
-
-proc innerGetPos(windowPtr: pointer, x, y: ptr int32) {.importc.}
-
-proc innerGetFramebufferSize(windowPtr: pointer, x, y: ptr int32) {.importc.}
-
-proc innerGetContentScale(windowPtr: pointer, scale: ptr float32) {.importc.}
-
-proc innerGetFocused(windowPtr: pointer): bool {.importc.}
-
-proc innerGetMinimized(windowPtr: pointer): bool {.importc.}
-
-proc innerGetMaximized(windowPtr: pointer): bool {.importc.}
-
-proc innerSetTitle(windowPtr: pointer, title: cstring) {.importc.}
-
-proc innerSetVisible(windowPtr: pointer, visible: bool) {.importc.}
-
-proc innerSetSize(windowPtr: pointer, width, height: int32) {.importc.}
-
-proc innerSetPos(windowPtr: pointer, x, y: int32) {.importc.}
-
-proc innerSetMinimized(windowPtr: pointer, minimized: bool) {.importc.}
-
-proc innerSetMaximized(windowPtr: pointer, maximized: bool) {.importc.}
-
-proc innerInit(
-  handleMove, handleResize, handleCloseRequested, handleFocusChange: InnerHandler,
-  handleMouseMove: InnerMouseHandler,
-  handleScroll: InnerScrollHandler,
-  handleKeyDown, handleKeyUp, handleFlagsChanged: InnerKeyHandler,
-  handleRune: InnerRuneHandler
-) {.importc.}
-
-proc innerPollEvents() {.importc.}
-
-proc innerMakeContextCurrent(windowPtr: pointer) {.importc.}
-
-proc innerSwapBuffers(windowPtr: pointer) {.importc.}
-
-proc innerClose(windowPtr: pointer) {.importc.}
-
-proc innerNewWindow(
-  title: cstring,
-  width: int32,
-  height: int32,
-  vsync: bool,
-  openglMajorVersion: int32,
-  openglMinorVersion: int32,
-  msaa: int32,
-  depthBits: int32,
-  stencilBits: int32
-): pointer {.importc.}
-
-proc innerGetClipboardString(): cstring {.importc.}
-
-proc innerSetClipboardString(value: cstring) {.importc.}
-
 proc visible*(window: Window): bool =
-  innerGetVisible(window.windowPtr)
+  window.inner.isVisible
 
 proc style*(window: Window): WindowStyle =
-  discard
+  let styleMask = window.inner.styleMask
+  if (styleMask and NSWindowStyleMaskTitled) != 0:
+    if (styleMask and NSWindowStyleMaskResizable) != 0:
+      DecoratedResizable
+    else:
+      Decorated
+  else:
+    Undecorated
 
 proc fullscreen*(window: Window): bool =
   discard
 
+proc contentScale*(window: Window): float32 =
+  autoreleasepool:
+    let
+      contentView = window.inner.contentView
+      frame = contentView.frame
+      backing = contentView.convertRectToBacking(frame)
+    result = backing.size.width / frame.size.width
+
 proc size*(window: Window): IVec2 =
-  innerGetSize(window.windowPtr, result.x.addr, result.y.addr)
+  autoreleasepool:
+    let
+      contentView = window.inner.contentView
+      frame = contentView.frame
+      backing = contentView.convertRectToBacking(frame)
+    result = ivec2(backing.size.width.int32, backing.size.height.int32)
 
 proc pos*(window: Window): IVec2 =
-  innerGetPos(window.windowPtr, result.x.addr, result.y.addr)
+  autoreleasepool:
+    let
+      windowFrame = window.inner.frame
+      screenFrame = window.inner.screen.frame
+    result = vec2(
+      windowFrame.origin.x,
+      screenFrame.size.height - windowFrame.origin.y - windowFrame.size.height - 1
+    ).ivec2
 
 proc minimized*(window: Window): bool =
-  innerGetMinimized(window.windowPtr)
+  window.inner.isMiniaturized
 
 proc maximized*(window: Window): bool =
-  innerGetMaximized(window.windowPtr)
-
-proc framebufferSize*(window: Window): IVec2 =
-  innerGetFramebufferSize(window.windowPtr, result.x.addr, result.y.addr)
-
-proc contentScale*(window: Window): float32 =
-  innerGetContentScale(window.windowPtr, result.addr)
+  window.inner.isZoomed
 
 proc focused*(window: Window): bool =
-  innerGetFocused(window.windowPtr)
+  window.inner.isKeyWindow
 
 proc `title=`*(window: Window, title: string) =
-  innerSetTitle(window.windowPtr, title.cstring)
+  autoreleasepool:
+    window.state.title = title
+    window.inner.setTitle(@title)
+
+proc `icon=`*(window: Window, icon: Image) =
+  window.state.icon = icon
 
 proc `visible=`*(window: Window, visible: bool) =
-  innerSetVisible(window.windowPtr, visible)
+  autoreleasepool:
+    if visible:
+      window.inner.orderFront(0.ID)
+    else:
+      window.inner.orderOut(0.ID)
 
-proc `style=`*(window: Window, style: WindowStyle) =
-  discard
+proc `style=`*(window: Window, windowStyle: WindowStyle) =
+  autoreleasepool:
+    case windowStyle:
+    of DecoratedResizable:
+      window.inner.setStyleMask(decoratedResizableWindowMask)
+    of Decorated:
+      window.inner.setStyleMask(decoratedWindowMask)
+    of Undecorated:
+      window.inner.setStyleMask(undecoratedWindowMask)
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
   discard
 
 proc `size=`*(window: Window, size: IVec2) =
-  innerSetSize(window.windowPtr, size.x, size.y)
+  autoreleasepool:
+    let virtualSize = (size.vec2 / window.contentScale)
+
+    var contentRect = window.inner.contentRectForFrameRect(window.inner.frame)
+    contentRect.origin.y += contentRect.size.height - virtualSize.y
+    contentRect.size = NSMakeSize(virtualSize.x, virtualSize.y)
+
+    let frameRect = window.inner.frameRectForContentRect(contentRect)
+    window.inner.setFrame(frameRect, YES)
 
 proc `pos=`*(window: Window, pos: IVec2) =
-  innerSetPos(window.windowPtr, pos.x, pos.y)
+  autoreleasepool:
+    let
+      windowFrame = window.inner.frame
+      screenFrame = window.inner.screen.frame
+      newOrigin = NSPoint(
+        x: pos.x.float64,
+        y: screenFrame.size.height - windowFrame.size.height - pos.y.float64 - 1
+      )
+    window.inner.setFrameOrigin(newOrigin)
 
 proc `minimized=`*(window: Window, minimized: bool) =
-  innerSetMinimized(window.windowPtr, minimized);
+  autoreleasepool:
+    if minimized and not window.minimized:
+      window.inner.miniaturize(0.ID)
+    elif not minimized and window.minimized:
+      window.inner.deminiaturize(0.ID)
 
 proc `maximized=`*(window: Window, maximized: bool) =
-  innerSetMaximized(window.windowPtr, maximized);
+  autoreleasepool:
+    if maximized and not window.maximized:
+      window.inner.zoom(0.ID)
+    elif not maximized and window.maximized:
+      window.inner.zoom(0.ID)
 
 proc `closeRequested=`*(window: Window, closeRequested: bool) =
   window.state.closeRequested = closeRequested
@@ -169,6 +172,9 @@ proc `closeRequested=`*(window: Window, closeRequested: bool) =
 proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   window.state.runeInputEnabled = runeInputEnabled
 
+proc `cursor=`*(window: Window, cursor: Cursor) =
+  discard
+
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
 
@@ -178,106 +184,685 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
 
-proc handleMove(windowPtr: pointer) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc createMenuBar() =
+  let
+    menuBar = NSMenu.getClass().new().NSMenu
+    appMenuItem = NSMenuItem.getClass().new().NSMenuItem
+  menuBar.addItem(appMenuItem)
+  NSApp.setMainMenu(menuBar)
+
+  let
+    appMenu = NSMenu.getClass().new().NSMenu
+    processName = NSProcessInfo.processinfo.processName
+    quitTitle = @("Quit " & $processName)
+    quitMenuitem = NSMenuItem.getClass().alloc().NSMenuItem
+  quitMenuitem.initWithTitle(
+    quitTitle,
+    sel_registerName("terminate:".cstring),
+    @"q"
+  )
+  appMenu.addItem(quitMenuItem)
+  appMenuItem.setSubmenu(appMenu)
+
+proc applicationWillFinishLaunching(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  createMenuBar()
+
+proc applicationDidFinishLaunching(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  NSApp.setPresentationOptions(NSApplicationPresentationDefault)
+  NSApp.setActivationPolicy(NSApplicationActivationPolicyRegular)
+  NSApp.activateIgnoringOtherApps(YES)
+
+proc windowDidResize(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSWindow)
   if window == nil:
     return
-
-  if window.onMove != nil:
-    window.onMove()
-
-proc handleResize(windowPtr: pointer) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
-  if window == nil:
-    return
-
   if window.onResize != nil:
     window.onResize()
 
-proc handleCloseRequested(windowPtr: pointer) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc windowDidMove(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSWindow)
   if window == nil:
     return
+  if window.onMove != nil:
+    window.onMove()
 
-  window.closeRequested = true
+proc canBecomeKeyWindow(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): BOOL {.cdecl.} =
+  YES
 
-proc handleFocusChange(windowPtr: pointer) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc windowDidBecomeKey(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSWindow)
   if window == nil:
     return
-
   if window.onFocusChange != nil:
     window.onFocusChange()
 
-proc handleMouseMove(windowPtr: pointer, x, y: int32) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc windowDidResignKey(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSWindow)
+  if window == nil:
+    return
+  if window.onFocusChange != nil:
+    window.onFocusChange()
+
+proc windowShouldClose(
+  sender: ID,
+  cmd: SEL,
+  notification: NSNotification
+): BOOL {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSWindow)
+  if window == nil:
+    return
+  window.closeRequested = true
+  NO
+
+proc acceptsFirstResponder(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+  YES
+
+proc canBecomeKeyView(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+  YES
+
+proc acceptsFirstMouse(sender: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.} =
+  YES
+
+proc viewDidChangeBackingProperties(sender: ID, cmd: SEL): ID {.cdecl.} =
+  callSuper(sender, cmd)
+
+  let window = windows.forNSWindow(sender.NSview.window)
+  if window == nil:
+    return
+  if window.onResize != nil:
+    window.onResize()
+
+proc updateTrackingAreas(sender: ID, cmd: SEL): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
 
-  window.state.perFrame.mousePrevPos = window.state.mousePos
+  if window.trackingArea.int != 0:
+    sender.NSView.removeTrackingArea(window.trackingArea)
+    window.trackingArea.ID.release()
+    window.trackingArea = 0.NSTrackingArea
+
+  let options =
+    NSTrackingMouseEnteredAndExited or
+    NSTrackingMouseMoved or
+    NSTrackingActiveInKeyWindow or
+    NSTrackingCursorUpdate or
+    NSTrackingInVisibleRect or
+    NSTrackingAssumeInside
+
+  window.trackingArea = NSTrackingArea.getClass().alloc().NSTrackingArea
+  window.trackingArea.initWithRect(
+    NSMakeRect(0, 0, 0, 0),
+    options,
+    sender
+  )
+
+  sender.NSView.addTrackingArea(window.trackingArea)
+
+  callSuper(sender, cmd)
+
+proc mouseMoved(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  let
+    locationInWindow = event.locationInWindow
+    x = round(locationInWindow.x).int32
+    y = round(sender.NSView.bounds.size.height - locationInWindow.y).int32
+
+  window.state.mousePrevPos = window.state.mousePos
   window.state.mousePos = ivec2(x, y)
-  window.state.perFrame.mouseDelta =
-    window.state.mousePos - window.state.perFrame.mousePrevPos
+  window.state.perFrame.mouseDelta +=
+    window.state.mousePos - window.state.mousePrevPos
 
   if window.onMouseMove != nil:
     window.onMouseMove()
 
-proc handleScroll(windowPtr: pointer, x, y: float32) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc mouseDragged(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  mouseMoved(sender, cmd, event)
+
+proc rightMouseDragged(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  mouseMoved(sender, cmd, event)
+
+proc otherMouseDragged(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  mouseMoved(sender, cmd, event)
+
+proc scrollWheel(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
 
-  window.state.perFrame.scrollDelta = vec2(x, y)
-  if window.onScroll != nil:
-    window.onScroll()
+  var
+    deltaX = event.scrollingDeltaX
+    deltaY = event.scrollingDeltaY
 
-proc handleKeyDown(windowPtr: pointer, keyCode: int32) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+  if event.hasPreciseScrollingDeltas:
+    deltaX *= 0.1
+    deltaY *= 0.1
+
+  if abs(deltaX) > 0 or abs(deltaY) > 0:
+    window.state.perFrame.scrollDelta += vec2(deltaX, deltaY)
+    if window.onScroll != nil:
+      window.onScroll()
+
+proc mouseDown(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
 
-  window.handleButtonPress(keyCodeToButton[keyCode])
+  window.handleButtonPress(MouseLeft)
 
-proc handleKeyUp(windowPtr: pointer, keyCode: int32) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc mouseUp(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
 
-  window.handleButtonRelease(keyCodeToButton[keyCode])
+  window.handleButtonRelease(MouseLeft)
 
-proc handleFlagsChanged(windowPtr: pointer, keyCode: int32) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc rightMouseDown(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
 
-  let button = keyCodeToButton[keyCode]
+  window.handleButtonPress(MouseRight)
+
+proc rightMouseUp(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  window.handleButtonRelease(MouseRight)
+
+proc otherMouseDown(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  case event.buttonNumber:
+  of 2:
+    window.handleButtonPress(MouseMiddle)
+  of 3:
+    window.handleButtonPress(MouseButton4)
+  of 4:
+    window.handleButtonPress(MouseButton5)
+  else:
+    discard
+
+proc otherMouseUp(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  case event.buttonNumber:
+  of 2:
+    window.handleButtonRelease(MouseMiddle)
+  of 3:
+    window.handleButtonRelease(MouseButton4)
+  of 4:
+    window.handleButtonRelease(MouseButton5)
+  else:
+    discard
+
+proc keyDown(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  window.handleButtonPress(keyCodeToButton[event.keyCode.int])
+  sender.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
+
+proc keyUp(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
+
+proc flagsChanged(
+  sender: ID,
+  cmd: SEL,
+  event: NSEvent
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  let button = keyCodeToButton[event.keyCode]
   if button in window.state.buttonDown:
     window.handleButtonRelease(button)
   else:
     window.handleButtonPress(button)
 
-proc handleRune(windowPtr: pointer, rune: uint32) {.cdecl.} =
-  let window = windows.forPointer(windowPtr)
+proc hasMarkedText(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+  NO
+
+proc markedRange(sender: ID, cmd: SEL): NSRange {.cdecl.} =
+  kEmptyRange
+
+proc selectedRange(sender: ID, cmd: SEL): NSRange {.cdecl.} =
+  kEmptyRange
+
+proc setMarkedText(
+  sender: ID,
+  cmd: SEL,
+  s: NSString,
+  selectedRange: NSRange,
+  replacementRange: NSRange
+): ID {.cdecl.} =
+  discard
+
+proc unmarkText(sender: ID, cmd: SEL): ID {.cdecl.} =
+  discard
+
+proc validAttributesForMarkedText(sender: ID, cmd: SEL): NSArray {.cdecl.} =
+  NSArray.array
+
+proc attributedSubstringForProposedRange(
+  sender: ID,
+  cmd: SEL,
+  range: NSRange,
+  actualRange: NSRangePointer
+): NSAttributedString =
+  discard
+
+proc insertText(
+  sender: ID,
+  cmd: SEL,
+  obj: ID,
+  replacementRange: NSRange
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
 
-  window.handleRune(Rune(rune))
+  var characters: NSString
+  if obj.NSObject.isKindOfClass(NSAttributedString.getClass()):
+    characters = obj.NSAttributedString.str()
+  else:
+    characters = obj.NSString
+
+  var range = NSMakeRange(0, characters.length.uint)
+  while range.length > 0:
+    var codepoint: uint
+    discard characters.getBytes(
+      codepoint.addr,
+      sizeof(codepoint).uint,
+      0,
+      NSUTF32StringEncoding,
+      0.NSStringEncodingConversionOptions,
+      range,
+      range.addr
+    )
+    if codepoint >= 0xf700 and codepoint <= 0xf7ff:
+      continue
+    window.handleRune(Rune(codepoint))
+
+proc characterIndexForPoint(
+  sender: ID,
+  cmd: SEL,
+  point: NSPoint
+): uint {.cdecl.} =
+  0
+
+proc firstRectForCharacterRange(
+  sender: ID,
+  cmd: SEL,
+  range: NSRange,
+  actualRange: NSRangePointer
+): NSRect {.cdecl.} =
+  NSMakeRect(0, 0, 0, 0)
+
+proc doCommandBySelector(sender: ID, cmd: SEL, selector: SEL): ID {.cdecl.} =
+  discard
 
 proc init() =
-  if not initialized:
-    innerInit(
-      handleMove,
-      handleResize,
-      handleCloseRequested,
-      handleFocusChange,
-      handleMouseMove,
-      handleScroll,
-      handleKeyDown,
-      handleKeyUp,
-      handleFlagsChanged,
-      handleRune
+  if initialized:
+    return
+
+  autoreleasepool:
+    NSApplication.sharedApplication()
+
+    block:
+      WindyAppDelegate = objc_allocateClassPair(
+        objc_getClass("NSObject".cstring),
+        "WindyAppDelegate".cstring
+      )
+      discard class_addMethod(
+        WindyAppDelegate,
+        sel_registerName("applicationWillFinishLaunching:".cstring),
+        cast[IMP](applicationWillFinishLaunching),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyAppDelegate,
+        sel_registerName("applicationDidFinishLaunching:".cstring),
+        cast[IMP](applicationDidFinishLaunching),
+        "@@:@".cstring
+      )
+      objc_registerClassPair(WindyAppDelegate)
+
+    block:
+      WindyWindow = objc_allocateClassPair(
+        objc_getClass("NSWindow".cstring),
+        "WindyWindow".cstring
+      )
+      discard class_addMethod(
+        WindyWindow,
+        sel_registerName("windowDidResize:".cstring),
+        cast[IMP](windowDidResize),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyWindow,
+        sel_registerName("windowDidMove:".cstring),
+        cast[IMP](windowDidMove),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyWindow,
+        sel_registerName("canBecomeKeyWindow:".cstring),
+        cast[IMP](canBecomeKeyWindow),
+        "i@:@".cstring
+      )
+      discard class_addMethod(
+        WindyWindow,
+        sel_registerName("windowDidBecomeKey:".cstring),
+        cast[IMP](windowDidBecomeKey),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyWindow,
+        sel_registerName("windowDidResignKey:".cstring),
+        cast[IMP](windowDidResignKey),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyWindow,
+        sel_registerName("windowShouldClose:".cstring),
+        cast[IMP](windowShouldClose),
+        "i@:@".cstring
+      )
+      objc_registerClassPair(WindyWindow)
+
+    block:
+      WindyView = objc_allocateClassPair(
+        objc_getClass("NSOpenGLView".cstring),
+        "WindyView".cstring
+      )
+      discard class_addProtocol(WindyView, objc_getProtocol("NSTextInputClient".cstring))
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("acceptsFirstResponder".cstring),
+        cast[IMP](acceptsFirstResponder),
+        "i@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("canBecomeKeyView".cstring),
+        cast[IMP](canBecomeKeyView),
+        "i@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("acceptsFirstMouse:".cstring),
+        cast[IMP](acceptsFirstMouse),
+        "i@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("viewDidChangeBackingProperties".cstring),
+        cast[IMP](viewDidChangeBackingProperties),
+        "@@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("updateTrackingAreas".cstring),
+        cast[IMP](updateTrackingAreas),
+        "@@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("mouseMoved:".cstring),
+        cast[IMP](mouseMoved),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("mouseDragged:".cstring),
+        cast[IMP](mouseDragged),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("rightMouseDragged:".cstring),
+        cast[IMP](rightMouseDragged),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("otherMouseDragged:".cstring),
+        cast[IMP](otherMouseDragged),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("scrollWheel:".cstring),
+        cast[IMP](scrollWheel),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("mouseDown:".cstring),
+        cast[IMP](mouseDown),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("mouseUp:".cstring),
+        cast[IMP](mouseUp),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("rightMouseDown:".cstring),
+        cast[IMP](rightMouseDown),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("rightMouseUp:".cstring),
+        cast[IMP](rightMouseUp),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("otherMouseDown:".cstring),
+        cast[IMP](otherMouseDown),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("otherMouseUp:".cstring),
+        cast[IMP](otherMouseUp),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("keyDown:".cstring),
+        cast[IMP](keyDown),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("keyUp:".cstring),
+        cast[IMP](keyUp),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("flagsChanged:".cstring),
+        cast[IMP](flagsChanged),
+        "@@:@".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("hasMarkedText".cstring),
+        cast[IMP](hasMarkedText),
+        "i@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("markedRange".cstring),
+        cast[IMP](markedRange),
+        "i@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("selectedRange".cstring),
+        cast[IMP](selectedRange),
+        "i@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("setMarkedText:selectedRange:replacementRange:".cstring),
+        cast[IMP](setMarkedText),
+        "@@:@{_NSRange=II}{_NSRange=II}".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("unmarkText".cstring),
+        cast[IMP](unmarkText),
+        "@@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("validAttributesForMarkedText".cstring),
+        cast[IMP](validAttributesForMarkedText),
+        "@@:".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("attributedSubstringForProposedRange:actualRange:".cstring),
+        cast[IMP](attributedSubstringForProposedRange),
+        "@@:{_NSRange=II}^_NSRange".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("insertText:replacementRange:".cstring),
+        cast[IMP](insertText),
+        "@@:@{_NSRange=II}".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("characterIndexForPoint:".cstring),
+        cast[IMP](characterIndexForPoint),
+        "I@:{CGPoint=dd}".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("firstRectForCharacterRange:actualRange:".cstring),
+        cast[IMP](firstRectForCharacterRange),
+        "{CGRect={CGPoint=dd}{CGSize=dd}}@:{_NSRange=II}^_NSRange".cstring
+      )
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("doCommandBySelector:".cstring),
+        cast[IMP](doCommandBySelector),
+        "@@::".cstring
+      )
+
+      objc_registerClassPair(WindyView)
+
+    let appDelegate = objc_msgSend(
+      WindyAppDelegate.ID,
+      sel_registerName("new".cstring)
     )
-    platformDoubleClickInterval = innerGetDoubleClickInterval()
+    NSApp.setDelegate(appDelegate)
+
+    NSApp.finishLaunching()
+
+    platformDoubleClickInterval = NSEvent.doubleClickInterval
     initialized = true
 
 proc pollEvents*() =
@@ -285,13 +870,23 @@ proc pollEvents*() =
   for window in windows:
     window.state.perFrame = PerFrame()
 
-  innerPollEvents()
+  autoreleasepool:
+    while true:
+      let event = NSApp.nextEventMatchingMask(
+        NSEventMaskAny,
+        NSDate.distantPast,
+        NSDefaultRunLoopMode,
+        YES
+      )
+      if event.int == 0:
+        break
+      NSApp.sendEvent(event)
 
 proc makeContextCurrent*(window: Window) =
-  innerMakeContextCurrent(window.windowPtr)
+  window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
 
 proc swapBuffers*(window: Window) =
-  innerSwapBuffers(window.windowPtr)
+  window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
 
 proc close*(window: Window) =
   window.onCloseRequest = nil
@@ -305,12 +900,14 @@ proc close*(window: Window) =
   window.onRune = nil
   window.onImeChange = nil
 
-  if window.windowPtr != nil:
-    innerClose(window.windowPtr)
-    let index = windows.indexForPointer(window.windowPtr)
+  if window.inner.int != 0:
+    autoreleasepool:
+      window.inner.close()
+
+    let index = windows.indexForNSWindow(window.inner)
     if index != -1:
       windows.delete(index)
-    window.windowPtr = nil
+    window.inner = 0.NSWindow
 
   window.state.closed = true
 
@@ -328,37 +925,83 @@ proc newWindow*(
   depthBits = 24,
   stencilBits = 8
 ): Window =
-  init()
-
   result = Window()
-  result.title = title
-  result.windowPtr = innerNewWindow(
-    title.cstring,
-    size.x,
-    size.y,
-    vsync,
-    openglMajorVersion.int32,
-    openglMinorVersion.int32,
-    msaa.int32,
-    depthBits.int32,
-    stencilBits.int32
-  )
 
-  if result.windowPtr == nil:
-    raise newException(WindyError, "Creating window failed")
+  autoreleasepool:
+    init()
 
-  windows.add(result)
+    result.inner = WindyWindow.alloc().NSWindow
+    result.inner.initWithContentRect(
+      NSMakeRect(0, 0, 400, 400),
+      decoratedResizableWindowMask,
+      NSBackingStoreBuffered,
+      NO
+    )
 
-  result.visible = visible
+    let
+      pixelFormat = NSOpenGLPixelFormat.getClass().alloc().NSOpenGLPixelFormat
+      pixelFormatAttribs = [
+        NSOpenGLPFADoubleBuffer,
+        NSOpenGLPFASampleBuffers, if msaa != msaaDisabled: 1 else: 0,
+        NSOpenGLPFASamples, msaa.uint32,
+        NSOpenGLPFAAccelerated,
+        NSOpenGLPFADoubleBuffer,
+        NSOpenGLPFAColorSize, 32,
+        NSOpenGLPFAAlphaSize, 8,
+        NSOpenGLPFADepthSize, depthBits.uint32,
+        NSOpenGLPFAStencilSize, stencilBits.uint32,
+        NSOpenGLPFAOpenGLProfile, (
+          case openglMajorVersion:
+          of 4:
+            NSOpenGLProfileVersion4_1Core
+          of 3:
+            NSOpenGLProfileVersion3_2Core
+          else:
+            NSOpenGLProfileVersionLegacy
+        ),
+        0
+      ]
+    pixelFormat.initWithAttributes(pixelFormatAttribs[0].unsafeAddr)
+
+    let openglView = WindyView.alloc().NSOpenGLView
+    openglView.initWithFrame(
+      result.inner.contentView.frame,
+      pixelFormat
+    )
+    openglView.setWantsBestResolutionOpenGLSurface(YES)
+
+    openglView.openGLContext.makeCurrentContext()
+
+    var swapInterval: GLint = if vsync: 1 else: 0
+    openglView.openGLContext.setValues(
+      swapInterval.addr,
+      NSOpenGLContextParameterSwapInterval
+    )
+
+    result.inner.setDelegate(result.inner.ID)
+    result.inner.setContentView(openglView.NSView)
+    discard result.inner.makeFirstResponder(openglView.NSView)
+    result.inner.setRestorable(NO)
+
+    windows.add(result)
+
+    result.title = title
+    result.size = size
+    result.visible = visible
+
+  pollEvents()
 
 proc title*(window: Window): string =
   window.state.title
+
+proc icon*(window: Window): Image =
+  window.state.icon
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
 
 proc mousePrevPos*(window: Window): IVec2 =
-  window.state.perFrame.mousePrevPos
+  window.state.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
   window.state.perFrame.mouseDelta
@@ -366,14 +1009,17 @@ proc mouseDelta*(window: Window): IVec2 =
 proc scrollDelta*(window: Window): Vec2 =
   window.state.perFrame.scrollDelta
 
+proc runeInputEnabled*(window: Window): bool =
+  window.state.runeInputEnabled
+
+proc cursor*(window: Window): Cursor =
+  window.state.cursor
+
 proc imeCursorIndex*(window: Window): int =
   window.state.imeCursorIndex
 
 proc imeCompositionString*(window: Window): string =
   window.state.imeCompositionString
-
-proc runeInputEnabled*(window: Window): bool =
-  window.state.runeInputEnabled
 
 proc closeRequested*(window: Window): bool =
   window.state.closeRequested
@@ -394,9 +1040,38 @@ proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
 proc getClipboardString*(): string =
-  init()
-  $innerGetClipboardString()
+  autoreleasepool:
+    let
+      pboard = NSPasteboard.generalPasteboard
+      types = pboard.types
+
+    if not pboard.types.containsObject(NSPasteboardTypeString.ID):
+      return
+
+    let value = pboard.stringForType(NSPasteboardTypeString)
+    if value.int == 0:
+      return
+
+    result = $value
 
 proc setClipboardString*(value: string) =
-  init()
-  innerSetClipboardString(value.cstring)
+  autoreleasepool:
+    let pboard = NSPasteboard.generalPasteboard
+    pboard.clearContents()
+    pboard.setString(@value, NSPasteboardTypeString)
+
+proc getScreens*(): seq[Screen] =
+  ## Queries and returns the currently connected screens.
+  autoreleasepool:
+    let screensArray = NSScreen.screens
+    for i in 0 ..< screensArray.count:
+      let
+        screen = screensArray[i].NSScreen
+        frame = screen.frame
+      result.add(Screen(
+        left: frame.origin.x.int,
+        right: frame.origin.x.int + frame.size.width.int,
+        top: frame.origin.y.int,
+        bottom: frame.origin.y.int + frame.size.height.int,
+        primary: i == 0
+      ))
