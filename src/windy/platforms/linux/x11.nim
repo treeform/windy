@@ -15,7 +15,7 @@ type
     onRune*: RuneCallback
     onImeChange*: Callback
 
-    mousePos: IVec2
+    mousePos, mousePrevPos: IVec2
     buttonClicking, buttonToggle: set[Button]
 
     perFrame: PerFrame
@@ -784,10 +784,9 @@ proc pollEvents(window: Window) =
           window.onResize()
 
     of xeMotion:
-      window.perFrame.mousePrevPos = window.mousePos
+      window.mousePrevPos = window.mousePos
       window.mousePos = ev.motion.pos
-      window.perFrame.mouseDelta = window.mousePos -
-        window.perFrame.mousePrevPos
+      window.perFrame.mouseDelta = window.mousePos - window.mousePrevPos
       if (window.mousePos - window.lastClickPosition).vec2.length > multiClickRadius:
         window.buttonClicking = {}
         window.clickSeqLen = 0
@@ -865,7 +864,7 @@ proc mousePos*(window: Window): IVec2 =
   window.mousePos
 
 proc mousePrevPos*(window: Window): IVec2 =
-  window.perFrame.mousePrevPos
+  window.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
   window.perFrame.mouseDelta
