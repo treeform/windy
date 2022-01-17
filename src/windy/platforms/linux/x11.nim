@@ -786,7 +786,7 @@ proc pollEvents(window: Window) =
     of xeMotion:
       window.mousePrevPos = window.mousePos
       window.mousePos = ev.motion.pos
-      window.perFrame.mouseDelta = window.mousePos - window.mousePrevPos
+      window.perFrame.mouseDelta += window.mousePos - window.mousePrevPos
       if (window.mousePos - window.lastClickPosition).vec2.length > multiClickRadius:
         window.buttonClicking = {}
         window.clickSeqLen = 0
