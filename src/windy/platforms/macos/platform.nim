@@ -634,13 +634,13 @@ proc init() =
         WindyAppDelegate,
         sel_registerName("applicationWillFinishLaunching:".cstring),
         cast[IMP](applicationWillFinishLaunching),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyAppDelegate,
         sel_registerName("applicationDidFinishLaunching:".cstring),
         cast[IMP](applicationDidFinishLaunching),
-        "@@:@".cstring
+        "".cstring
       )
       objc_registerClassPair(WindyAppDelegate)
 
@@ -653,37 +653,37 @@ proc init() =
         WindyWindow,
         sel_registerName("windowDidResize:".cstring),
         cast[IMP](windowDidResize),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowDidMove:".cstring),
         cast[IMP](windowDidMove),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("canBecomeKeyWindow:".cstring),
         cast[IMP](canBecomeKeyWindow),
-        "i@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowDidBecomeKey:".cstring),
         cast[IMP](windowDidBecomeKey),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowDidResignKey:".cstring),
         cast[IMP](windowDidResignKey),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowShouldClose:".cstring),
         cast[IMP](windowShouldClose),
-        "i@:@".cstring
+        "".cstring
       )
       objc_registerClassPair(WindyWindow)
 
@@ -697,187 +697,187 @@ proc init() =
         WindyView,
         sel_registerName("acceptsFirstResponder".cstring),
         cast[IMP](acceptsFirstResponder),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("canBecomeKeyView".cstring),
         cast[IMP](canBecomeKeyView),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("acceptsFirstMouse:".cstring),
         cast[IMP](acceptsFirstMouse),
-        "i@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("viewDidChangeBackingProperties".cstring),
         cast[IMP](viewDidChangeBackingProperties),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("updateTrackingAreas".cstring),
         cast[IMP](updateTrackingAreas),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseMoved:".cstring),
         cast[IMP](mouseMoved),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseDragged:".cstring),
         cast[IMP](mouseDragged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("rightMouseDragged:".cstring),
         cast[IMP](rightMouseDragged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("otherMouseDragged:".cstring),
         cast[IMP](otherMouseDragged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("scrollWheel:".cstring),
         cast[IMP](scrollWheel),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseDown:".cstring),
         cast[IMP](mouseDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseUp:".cstring),
         cast[IMP](mouseUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("rightMouseDown:".cstring),
         cast[IMP](rightMouseDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("rightMouseUp:".cstring),
         cast[IMP](rightMouseUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("otherMouseDown:".cstring),
         cast[IMP](otherMouseDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("otherMouseUp:".cstring),
         cast[IMP](otherMouseUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("keyDown:".cstring),
         cast[IMP](keyDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("keyUp:".cstring),
         cast[IMP](keyUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("flagsChanged:".cstring),
         cast[IMP](flagsChanged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("hasMarkedText".cstring),
         cast[IMP](hasMarkedText),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("markedRange".cstring),
         cast[IMP](markedRange),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("selectedRange".cstring),
         cast[IMP](selectedRange),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("setMarkedText:selectedRange:replacementRange:".cstring),
         cast[IMP](setMarkedText),
-        "@@:@{_NSRange=II}{_NSRange=II}".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("unmarkText".cstring),
         cast[IMP](unmarkText),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("validAttributesForMarkedText".cstring),
         cast[IMP](validAttributesForMarkedText),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("attributedSubstringForProposedRange:actualRange:".cstring),
         cast[IMP](attributedSubstringForProposedRange),
-        "@@:{_NSRange=II}^_NSRange".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("insertText:replacementRange:".cstring),
         cast[IMP](insertText),
-        "@@:@{_NSRange=II}".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("characterIndexForPoint:".cstring),
         cast[IMP](characterIndexForPoint),
-        "I@:{CGPoint=dd}".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("firstRectForCharacterRange:actualRange:".cstring),
         cast[IMP](firstRectForCharacterRange),
-        "{CGRect={CGPoint=dd}{CGSize=dd}}@:{_NSRange=II}^_NSRange".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("doCommandBySelector:".cstring),
         cast[IMP](doCommandBySelector),
-        "@@::".cstring
+        ":".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("resetCursorRects".cstring),
         cast[IMP](resetCursorRects),
-        "@@:".cstring
+        "".cstring
       )
       objc_registerClassPair(WindyView)
 
