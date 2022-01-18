@@ -274,6 +274,10 @@ proc style*(window: Window): WindowStyle =
 proc fullscreen*(window: Window): bool =
   window.exitFullscreenInfo != nil
 
+proc contentScale*(window: Window): float32 =
+  let dpi = GetDpiForWindow(window.hWnd)
+  result = dpi.float32 / defaultScreenDpi
+
 proc size*(window: Window): IVec2 =
   var rect: RECT
   discard GetClientRect(window.hWnd, rect.addr)
@@ -289,10 +293,6 @@ proc minimized*(window: Window): bool =
 
 proc maximized*(window: Window): bool =
   IsZoomed(window.hWnd) != 0
-
-proc contentScale*(window: Window): float32 =
-  let dpi = GetDpiForWindow(window.hWnd)
-  result = dpi.float32 / defaultScreenDpi
 
 proc focused*(window: Window): bool =
   window.hWnd == GetActiveWindow()
@@ -621,7 +621,7 @@ proc createHelperWindow(): HWND =
 
   registerWindowClass(helperWindowClassName, helperWndProc)
 
-  result = createWindow(helperWindowClassName,helperWindowClassName)
+  result = createWindow(helperWindowClassName, helperWindowClassName)
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -704,13 +704,13 @@ proc wndProc(
       return TRUE
   of WM_MOUSEWHEEL:
     let hiword = HIWORD(wParam)
-    window.state.perFrame.scrollDelta = vec2(0, hiword.float32 / wheelDelta)
+    window.state.perFrame.scrollDelta += vec2(0, hiword.float32 / wheelDelta)
     if window.onScroll != nil:
       window.onScroll()
     return 0
   of WM_MOUSEHWHEEL:
     let hiword = HIWORD(wParam)
-    window.state.perFrame.scrollDelta = vec2(hiword.float32 / wheelDelta, 0)
+    window.state.perFrame.scrollDelta += vec2(hiword.float32 / wheelDelta, 0)
     if window.onScroll != nil:
       window.onScroll()
     return 0
