@@ -987,6 +987,7 @@ proc newWindow*(
 
     result.title = title
     result.size = size
+    result.pos = ivec2(0, 0)
     result.visible = visible
 
   pollEvents()
