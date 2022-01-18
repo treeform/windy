@@ -7,7 +7,7 @@ let window = newWindow("Windy Retina", ivec2(1280, 800))
 # on high-dpi screens like a Macbook Retina display.
 
 # To address this, scale the window size by the window's content scale.
-# window.size = (window.size.vec2 * window.contentScale).ivec2
+window.size = (window.size.vec2 * window.contentScale).ivec2
 
 # On a Retina display with a content scale of 2.0, this window will be resized
 # to 2560 x 1600 physical pixels. This resized window will have approximately
