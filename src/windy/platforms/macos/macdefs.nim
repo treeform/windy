@@ -112,6 +112,7 @@ const
   NSWindowStyleMaskClosable* = (1 shl 1).NSWindowStyleMask
   NSWindowStyleMaskMiniaturizable* = (1 shl 2).NSWindowStyleMask
   NSWindowStyleMaskResizable* = (1 shl 3).NSWindowStyleMask
+  NSWindowStyleMaskFullScreen* = (1 shl 14).NSWindowStyleMask
   NSBackingStoreBuffered* = 2.NSBackingStoreType
   NSApplicationActivationPolicyRegular* = 0.NSApplicationActivationPolicy
   NSApplicationPresentationDefault* = 0.NSApplicationPresentationOptions
@@ -706,6 +707,13 @@ proc setStyleMask*(window: NSWindow, styleMask: NSWindowStyleMask) =
     window.ID,
     sel_registerName("setStyleMask:".cstring),
     styleMask
+  )
+
+proc toggleFullscreen*(window: NSWindow, sender: ID) =
+  discard objc_msgSend(
+    window.ID,
+    sel_registerName("toggleFullScreen:".cstring),
+    sender
   )
 
 proc convertRectToBacking*(view: NSView, rect: NSRect): NSRect =

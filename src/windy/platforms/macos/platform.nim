@@ -62,7 +62,7 @@ proc style*(window: Window): WindowStyle =
     Undecorated
 
 proc fullscreen*(window: Window): bool =
-  discard
+  (window.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
 
 proc contentScale*(window: Window): float32 =
   autoreleasepool:
@@ -125,7 +125,9 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
       window.inner.setStyleMask(undecoratedWindowMask)
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
-  discard
+  if window.fullscreen == fullscreen:
+    return
+  window.inner.toggleFullscreen(0.ID)
 
 proc `size=`*(window: Window, size: IVec2) =
   autoreleasepool:
@@ -402,7 +404,6 @@ proc mouseDown(
   let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
-
   window.handleButtonPress(MouseLeft)
 
 proc mouseUp(
@@ -413,7 +414,6 @@ proc mouseUp(
   let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
-
   window.handleButtonRelease(MouseLeft)
 
 proc rightMouseDown(
@@ -424,7 +424,6 @@ proc rightMouseDown(
   let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
-
   window.handleButtonPress(MouseRight)
 
 proc rightMouseUp(
@@ -435,7 +434,6 @@ proc rightMouseUp(
   let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
-
   window.handleButtonRelease(MouseRight)
 
 proc otherMouseDown(
@@ -484,7 +482,6 @@ proc keyDown(
   let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
-
   window.handleButtonPress(keyCodeToButton[event.keyCode.int])
   sender.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
 
@@ -496,7 +493,6 @@ proc keyUp(
   let window = windows.forNSWindow(sender.NSView.window)
   if window == nil:
     return
-
   window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
 
 proc flagsChanged(
