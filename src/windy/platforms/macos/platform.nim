@@ -1,5 +1,5 @@
-import ../../common, ../../internal, macdefs, opengl, pixie/images, times,
-    unicode, utils, vmath
+import ../../common, ../../internal, macdefs, opengl, pixie/images,
+    pixie/fileformats/png, times, unicode, utils, vmath
 
 type
   Window* = ref object
@@ -175,7 +175,9 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   window.state.runeInputEnabled = runeInputEnabled
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
-  discard
+  window.state.cursor = cursor
+  autoreleasepool:
+    window.inner.invalidateCursorRectsForView(window.inner.contentView)
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -592,6 +594,30 @@ proc firstRectForCharacterRange(
 proc doCommandBySelector(sender: ID, cmd: SEL, selector: SEL): ID {.cdecl.} =
   discard
 
+proc resetCursorRects(sender: ID, cmd: SEL): ID {.cdecl.} =
+  let window = windows.forNSWindow(sender.NSView.window)
+  if window == nil:
+    return
+
+  case window.state.cursor.kind:
+  of DefaultCursor:
+    discard
+  else:
+    let
+      encodedPng = window.state.cursor.image.encodePng()
+      image = NSImage.getClass().alloc().NSImage
+      cursor = NSCursor.getClass().alloc().NSCursor
+      hotspot = NSMakePoint(
+        window.state.cursor.hotspot.x.float,
+        window.state.cursor.hotspot.y.float
+      )
+    image.initWithData(NSData.dataWithBytes(
+      encodedPng[0].unsafeAddr,
+      encodedPng.len
+    ))
+    cursor.initWithImage(image, hotspot)
+    sender.NSView.addCursorRect(sender.NSView.bounds, cursor)
+
 proc init() =
   if initialized:
     return
@@ -847,7 +873,12 @@ proc init() =
         cast[IMP](doCommandBySelector),
         "@@::".cstring
       )
-
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("resetCursorRects".cstring),
+        cast[IMP](resetCursorRects),
+        "@@:".cstring
+      )
       objc_registerClassPair(WindyView)
 
     let appDelegate = objc_msgSend(

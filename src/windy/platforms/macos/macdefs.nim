@@ -102,6 +102,8 @@ type
   NSOpenGLContext* = distinct NSObject
   NSTrackingArea* = distinct NSObject
   NSResponder* = distinct NSObject
+  NSImage* = distinct NSObject
+  NSCursor* = distinct NSObject
 
 const
   NSNotFound* = int.high
@@ -158,6 +160,9 @@ proc NSMakeSize*(w, h: float64): NSSize =
 
 proc NSMakeRange*(loc, len: uint): NSRange =
   NSRange(location: loc, length: len)
+
+proc NSMakePoint*(x, y: float): NSPoint =
+  NSPoint(x: x, y: y)
 
 proc getClass*(t: typedesc): Class =
   objc_getClass(t.name.cstring)
@@ -716,6 +721,13 @@ proc toggleFullscreen*(window: NSWindow, sender: ID) =
     sender
   )
 
+proc invalidateCursorRectsForView*(window: NSWindow, view: NSView) =
+  discard objc_msgSend(
+    window.ID,
+    sel_registerName("invalidateCursorRectsForView:".cstring),
+    view.ID
+  )
+
 proc convertRectToBacking*(view: NSView, rect: NSRect): NSRect =
   objc_msgSend_stret(
     result.addr,
@@ -749,6 +761,14 @@ proc addTrackingArea*(view: NSView, trackingArea: NSTrackingArea) =
     view.ID,
     sel_registerName("addTrackingArea:".cstring),
     trackingArea
+  )
+
+proc addCursorRect*(view: NSview, rect: NSRect, cursor: NSCursor) =
+  discard objc_msgSend(
+    view.ID,
+    sel_registerName("addCursorRect:cursor:".cstring),
+    rect,
+    cursor
   )
 
 proc initWithAttributes*(
@@ -833,4 +853,19 @@ proc interpretKeyEvents*(responder: NSResponder, events: NSArray) =
     responder.ID,
     sel_registerName("interpretKeyEvents:".cstring),
     events
+  )
+
+proc initWithData*(image: NSImage, data: NSData) =
+  discard objc_msgSend(
+    image.ID,
+    sel_registerName("initWithData:".cstring),
+    data
+  )
+
+proc initWithImage*(cursor: NSCursor, image: NSImage, hotspot: NSPoint) =
+  discard objc_msgSend(
+    cursor.ID,
+    sel_registerName("initWithImage:hotSpot:".cstring),
+    image,
+    hotspot
   )
