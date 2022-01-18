@@ -487,7 +487,7 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
 
   case cursor.kind:
   of DefaultCursor:
-    discard # Need to reset to default cursor
+    window.customCursor = 0
   else:
     window.customCursor = cursor.createCursorHandle()
     discard SetCursor(window.customCursor)
