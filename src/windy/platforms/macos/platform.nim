@@ -209,14 +209,14 @@ proc createMenuBar() =
   appMenuItem.setSubmenu(appMenu)
 
 proc applicationWillFinishLaunching(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
   createMenuBar()
 
 proc applicationDidFinishLaunching(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
@@ -225,92 +225,92 @@ proc applicationDidFinishLaunching(
   NSApp.activateIgnoringOtherApps(YES)
 
 proc windowDidResize(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onResize != nil:
     window.onResize()
 
 proc windowDidMove(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onMove != nil:
     window.onMove()
 
 proc canBecomeKeyWindow(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): BOOL {.cdecl.} =
   YES
 
 proc windowDidBecomeKey(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onFocusChange != nil:
     window.onFocusChange()
 
 proc windowDidResignKey(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onFocusChange != nil:
     window.onFocusChange()
 
 proc windowShouldClose(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): BOOL {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   window.closeRequested = true
   NO
 
-proc acceptsFirstResponder(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+proc acceptsFirstResponder(self: ID, cmd: SEL): BOOL {.cdecl.} =
   YES
 
-proc canBecomeKeyView(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+proc canBecomeKeyView(self: ID, cmd: SEL): BOOL {.cdecl.} =
   YES
 
-proc acceptsFirstMouse(sender: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.} =
+proc acceptsFirstMouse(self: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.} =
   YES
 
-proc viewDidChangeBackingProperties(sender: ID, cmd: SEL): ID {.cdecl.} =
-  callSuper(sender, cmd)
+proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
+  callSuper(self, cmd)
 
-  let window = windows.forNSWindow(sender.NSview.window)
+  let window = windows.forNSWindow(self.NSview.window)
   if window == nil:
     return
   if window.onResize != nil:
     window.onResize()
 
-proc updateTrackingAreas(sender: ID, cmd: SEL): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
   if window.trackingArea.int != 0:
-    sender.NSView.removeTrackingArea(window.trackingArea)
+    self.NSView.removeTrackingArea(window.trackingArea)
     window.trackingArea.ID.release()
     window.trackingArea = 0.NSTrackingArea
 
@@ -326,26 +326,26 @@ proc updateTrackingAreas(sender: ID, cmd: SEL): ID {.cdecl.} =
   window.trackingArea.initWithRect(
     NSMakeRect(0, 0, 0, 0),
     options,
-    sender
+    self
   )
 
-  sender.NSView.addTrackingArea(window.trackingArea)
+  self.NSView.addTrackingArea(window.trackingArea)
 
-  callSuper(sender, cmd)
+  callSuper(self, cmd)
 
 proc mouseMoved(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
   let
     locationInWindow = event.locationInWindow
     x = round(locationInWindow.x).int32
-    y = round(sender.NSView.bounds.size.height - locationInWindow.y).int32
+    y = round(self.NSView.bounds.size.height - locationInWindow.y).int32
 
   window.state.mousePrevPos = window.state.mousePos
   window.state.mousePos = ivec2(x, y)
@@ -356,32 +356,32 @@ proc mouseMoved(
     window.onMouseMove()
 
 proc mouseDragged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  mouseMoved(sender, cmd, event)
+  mouseMoved(self, cmd, event)
 
 proc rightMouseDragged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  mouseMoved(sender, cmd, event)
+  mouseMoved(self, cmd, event)
 
 proc otherMouseDragged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  mouseMoved(sender, cmd, event)
+  mouseMoved(self, cmd, event)
 
 proc scrollWheel(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -399,51 +399,51 @@ proc scrollWheel(
       window.onScroll()
 
 proc mouseDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonPress(MouseLeft)
 
 proc mouseUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonRelease(MouseLeft)
 
 proc rightMouseDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonPress(MouseRight)
 
 proc rightMouseUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonRelease(MouseRight)
 
 proc otherMouseDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -458,11 +458,11 @@ proc otherMouseDown(
     discard
 
 proc otherMouseUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -477,32 +477,32 @@ proc otherMouseUp(
     discard
 
 proc keyDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonPress(keyCodeToButton[event.keyCode.int])
-  sender.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
+  self.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
 
 proc keyUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
 
 proc flagsChanged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -512,17 +512,17 @@ proc flagsChanged(
   else:
     window.handleButtonPress(button)
 
-proc hasMarkedText(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+proc hasMarkedText(self: ID, cmd: SEL): BOOL {.cdecl.} =
   NO
 
-proc markedRange(sender: ID, cmd: SEL): NSRange {.cdecl.} =
+proc markedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   kEmptyRange
 
-proc selectedRange(sender: ID, cmd: SEL): NSRange {.cdecl.} =
+proc selectedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   kEmptyRange
 
 proc setMarkedText(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   s: NSString,
   selectedRange: NSRange,
@@ -530,14 +530,14 @@ proc setMarkedText(
 ): ID {.cdecl.} =
   discard
 
-proc unmarkText(sender: ID, cmd: SEL): ID {.cdecl.} =
+proc unmarkText(self: ID, cmd: SEL): ID {.cdecl.} =
   discard
 
-proc validAttributesForMarkedText(sender: ID, cmd: SEL): NSArray {.cdecl.} =
+proc validAttributesForMarkedText(self: ID, cmd: SEL): NSArray {.cdecl.} =
   NSArray.array
 
 proc attributedSubstringForProposedRange(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   range: NSRange,
   actualRange: NSRangePointer
@@ -545,12 +545,12 @@ proc attributedSubstringForProposedRange(
   discard
 
 proc insertText(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   obj: ID,
   replacementRange: NSRange
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -577,25 +577,25 @@ proc insertText(
     window.handleRune(Rune(codepoint))
 
 proc characterIndexForPoint(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   point: NSPoint
 ): uint {.cdecl.} =
-  0
+  cast[uint](NSNotFound)
 
 proc firstRectForCharacterRange(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   range: NSRange,
   actualRange: NSRangePointer
 ): NSRect {.cdecl.} =
   NSMakeRect(0, 0, 0, 0)
 
-proc doCommandBySelector(sender: ID, cmd: SEL, selector: SEL): ID {.cdecl.} =
+proc doCommandBySelector(self: ID, cmd: SEL, selector: SEL): ID {.cdecl.} =
   discard
 
-proc resetCursorRects(sender: ID, cmd: SEL): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -616,7 +616,7 @@ proc resetCursorRects(sender: ID, cmd: SEL): ID {.cdecl.} =
       encodedPng.len
     ))
     cursor.initWithImage(image, hotspot)
-    sender.NSView.addCursorRect(sender.NSView.bounds, cursor)
+    self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
 proc init() =
   if initialized:
