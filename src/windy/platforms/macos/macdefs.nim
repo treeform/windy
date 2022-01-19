@@ -36,6 +36,29 @@ proc class_addProtocol*(cls: Class, protocol: Protocol): BOOL
 
 {.pop.}
 
+template addClass*(className, superName: string, cls: Class, body: untyped) =
+  block:
+    cls = objc_allocateClassPair(
+      objc_getClass(superName.cstring),
+      className.cstring
+    )
+
+    template addProtocol(protocolName: string) =
+      discard class_addProtocol(
+        cls, objc_getProtocol(protocolName.cstring))
+
+    template addMethod(methodName: string, fn: untyped) =
+      discard class_addMethod(
+        cls,
+        sel_registerName(methodName.cstring),
+        cast[IMP](fn),
+        "".cstring
+      )
+
+    body
+
+    objc_registerClassPair(cls)
+
 proc `$`*(cls: Class): string =
   $class_getName(cls)
 
