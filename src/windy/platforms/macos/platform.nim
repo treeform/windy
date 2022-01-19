@@ -105,9 +105,7 @@ proc closeIme*(window: Window) =
     return
 
   if window.markedText.int != 0:
-    discard objc_msgSend(
-      window.inner.contentView.ID,
-      s"insertText:replacementRange:",
+    window.inner.contentView.NSTextInputClient.insertText2(
       window.markedText.ID,
       kEmptyRange
     )
