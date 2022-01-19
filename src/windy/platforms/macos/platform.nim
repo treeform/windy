@@ -127,7 +127,8 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
   if window.fullscreen == fullscreen:
     return
-  window.inner.toggleFullscreen(0.ID)
+  autoreleasepool:
+    window.inner.toggleFullscreen(0.ID)
 
 proc `size=`*(window: Window, size: IVec2) =
   autoreleasepool:
@@ -333,11 +334,7 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
 
   callSuper(self, cmd)
 
-proc mouseMoved(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc mouseMoved(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
@@ -355,11 +352,7 @@ proc mouseMoved(
   if window.onMouseMove != nil:
     window.onMouseMove()
 
-proc mouseDragged(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc mouseDragged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   mouseMoved(self, cmd, event)
 
 proc rightMouseDragged(
@@ -376,11 +369,7 @@ proc otherMouseDragged(
 ): ID {.cdecl.} =
   mouseMoved(self, cmd, event)
 
-proc scrollWheel(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc scrollWheel(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
@@ -398,51 +387,31 @@ proc scrollWheel(
     if window.onScroll != nil:
       window.onScroll()
 
-proc mouseDown(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc mouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonPress(MouseLeft)
 
-proc mouseUp(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc mouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonRelease(MouseLeft)
 
-proc rightMouseDown(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc rightMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonPress(MouseRight)
 
-proc rightMouseUp(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc rightMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonRelease(MouseRight)
 
-proc otherMouseDown(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc otherMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
@@ -457,11 +426,7 @@ proc otherMouseDown(
   else:
     discard
 
-proc otherMouseUp(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
@@ -476,32 +441,20 @@ proc otherMouseUp(
   else:
     discard
 
-proc keyDown(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc keyDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonPress(keyCodeToButton[event.keyCode.int])
   self.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
 
-proc keyUp(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc keyUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
   window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
 
-proc flagsChanged(
-  self: ID,
-  cmd: SEL,
-  event: NSEvent
-): ID {.cdecl.} =
+proc flagsChanged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
@@ -625,7 +578,7 @@ proc init() =
   autoreleasepool:
     NSApplication.sharedApplication()
     addClass "WindyAppDelegate", "NSObject", WindyAppDelegate:
-      addMethod "applicationWillFinishLaunching:", applicationDidFinishLaunching
+      addMethod "applicationWillFinishLaunching:", applicationWillFinishLaunching
       addMethod "applicationDidFinishLaunching:", applicationDidFinishLaunching
 
     addClass "WindyWindow", "NSWindow", WindyWindow:
