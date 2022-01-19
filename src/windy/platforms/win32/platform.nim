@@ -297,6 +297,16 @@ proc maximized*(window: Window): bool =
 proc focused*(window: Window): bool =
   window.hWnd == GetActiveWindow()
 
+proc closeIme*(window: Window) =
+  let hIMC = ImmGetContext(window.hWnd)
+  if hIMC != 0:
+    discard ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0)
+    discard ImmReleaseContext(window.hWnd, hIMC)
+    window.state.imeCursorIndex = 0
+    window.state.imeCompositionString = ""
+    if window.onImeChange != nil:
+      window.onImeChange()
+
 proc `title=`*(window: Window, title: string) =
   window.state.title = title
   var wideTitle = title.wstr()
@@ -477,6 +487,7 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   if runeInputEnabled:
     discard ImmAssociateContextEx(window.hWnd, 0, IACE_DEFAULT)
   else:
+    window.closeIme()
     discard ImmAssociateContextEx(window.hWnd, 0, 0)
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
@@ -808,9 +819,7 @@ proc wndProc(
       )
       if len > 0:
         var buf = newString(len + 1) # Include 1 extra byte for WCHAR null terminator
-        discard ImmGetCompositionStringW(
-          hIMC, GCS_COMPSTR, buf[0].addr, len
-        )
+        discard ImmGetCompositionStringW(hIMC, GCS_COMPSTR, buf[0].addr, len)
         window.state.imeCompositionString = $cast[ptr WCHAR](buf[0].addr)
       else:
         window.state.imeCompositionString = ""
@@ -879,16 +888,6 @@ proc swapBuffers*(window: Window) =
 proc close*(window: Window) =
   destroy window
   window.state.closed = true
-
-proc closeIme*(window: Window) =
-  let hIMC = ImmGetContext(window.hWnd)
-  if hIMC != 0:
-    discard ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0)
-    discard ImmReleaseContext(window.hWnd, hIMC)
-    window.state.imeCursorIndex = 0
-    window.state.imeCompositionString = ""
-    if window.onImeChange != nil:
-      window.onImeChange()
 
 proc newWindow*(
   title: string,
