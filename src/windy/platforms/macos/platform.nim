@@ -670,10 +670,7 @@ proc init() =
       addMethod "doCommandBySelector:", doCommandBySelector
       addMethod "resetCursorRects", resetCursorRects
 
-    let appDelegate = objc_msgSend(
-      WindyAppDelegate.ID,
-      s"new"
-    )
+    let appDelegate = WindyAppDelegate.new
     NSApp.setDelegate(appDelegate)
 
     NSApp.finishLaunching()
