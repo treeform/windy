@@ -351,11 +351,11 @@ proc mouseMoved(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
 
   let
     locationInWindow = event.locationInWindow
-    x = round(locationInWindow.x).int32
-    y = round(self.NSView.bounds.size.height - locationInWindow.y).int32
+    x = round(locationInWindow.x)
+    y = round(self.NSView.bounds.size.height - locationInWindow.y)
 
   window.state.mousePrevPos = window.state.mousePos
-  window.state.mousePos = ivec2(x, y)
+  window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
   window.state.perFrame.mouseDelta +=
     window.state.mousePos - window.state.mousePrevPos
 
