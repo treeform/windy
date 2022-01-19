@@ -484,8 +484,13 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
     discard DestroyCursor(window.customCursor)
 
   window.state.cursor = cursor
-  window.customCursor = cursor.createCursorHandle()
-  discard SetCursor(window.customCursor)
+
+  case cursor.kind:
+  of DefaultCursor:
+    window.customCursor = 0
+  else:
+    window.customCursor = cursor.createCursorHandle()
+    discard SetCursor(window.customCursor)
 
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")

@@ -1,5 +1,5 @@
-import ../../common, ../../internal, macdefs, opengl, pixie/images, times,
-    unicode, utils, vmath
+import ../../common, ../../internal, macdefs, opengl, pixie/images,
+    pixie/fileformats/png, times, unicode, utils, vmath
 
 type
   Window* = ref object
@@ -62,7 +62,7 @@ proc style*(window: Window): WindowStyle =
     Undecorated
 
 proc fullscreen*(window: Window): bool =
-  discard
+  (window.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
 
 proc contentScale*(window: Window): float32 =
   autoreleasepool:
@@ -125,7 +125,9 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
       window.inner.setStyleMask(undecoratedWindowMask)
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
-  discard
+  if window.fullscreen == fullscreen:
+    return
+  window.inner.toggleFullscreen(0.ID)
 
 proc `size=`*(window: Window, size: IVec2) =
   autoreleasepool:
@@ -173,7 +175,9 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   window.state.runeInputEnabled = runeInputEnabled
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
-  discard
+  window.state.cursor = cursor
+  autoreleasepool:
+    window.inner.invalidateCursorRectsForView(window.inner.contentView)
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -205,14 +209,14 @@ proc createMenuBar() =
   appMenuItem.setSubmenu(appMenu)
 
 proc applicationWillFinishLaunching(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
   createMenuBar()
 
 proc applicationDidFinishLaunching(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
@@ -221,92 +225,92 @@ proc applicationDidFinishLaunching(
   NSApp.activateIgnoringOtherApps(YES)
 
 proc windowDidResize(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onResize != nil:
     window.onResize()
 
 proc windowDidMove(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onMove != nil:
     window.onMove()
 
 proc canBecomeKeyWindow(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): BOOL {.cdecl.} =
   YES
 
 proc windowDidBecomeKey(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onFocusChange != nil:
     window.onFocusChange()
 
 proc windowDidResignKey(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   if window.onFocusChange != nil:
     window.onFocusChange()
 
 proc windowShouldClose(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   notification: NSNotification
 ): BOOL {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSWindow)
+  let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   window.closeRequested = true
   NO
 
-proc acceptsFirstResponder(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+proc acceptsFirstResponder(self: ID, cmd: SEL): BOOL {.cdecl.} =
   YES
 
-proc canBecomeKeyView(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+proc canBecomeKeyView(self: ID, cmd: SEL): BOOL {.cdecl.} =
   YES
 
-proc acceptsFirstMouse(sender: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.} =
+proc acceptsFirstMouse(self: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.} =
   YES
 
-proc viewDidChangeBackingProperties(sender: ID, cmd: SEL): ID {.cdecl.} =
-  callSuper(sender, cmd)
+proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
+  callSuper(self, cmd)
 
-  let window = windows.forNSWindow(sender.NSview.window)
+  let window = windows.forNSWindow(self.NSview.window)
   if window == nil:
     return
   if window.onResize != nil:
     window.onResize()
 
-proc updateTrackingAreas(sender: ID, cmd: SEL): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
   if window.trackingArea.int != 0:
-    sender.NSView.removeTrackingArea(window.trackingArea)
+    self.NSView.removeTrackingArea(window.trackingArea)
     window.trackingArea.ID.release()
     window.trackingArea = 0.NSTrackingArea
 
@@ -322,26 +326,26 @@ proc updateTrackingAreas(sender: ID, cmd: SEL): ID {.cdecl.} =
   window.trackingArea.initWithRect(
     NSMakeRect(0, 0, 0, 0),
     options,
-    sender
+    self
   )
 
-  sender.NSView.addTrackingArea(window.trackingArea)
+  self.NSView.addTrackingArea(window.trackingArea)
 
-  callSuper(sender, cmd)
+  callSuper(self, cmd)
 
 proc mouseMoved(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
   let
     locationInWindow = event.locationInWindow
     x = round(locationInWindow.x).int32
-    y = round(sender.NSView.bounds.size.height - locationInWindow.y).int32
+    y = round(self.NSView.bounds.size.height - locationInWindow.y).int32
 
   window.state.mousePrevPos = window.state.mousePos
   window.state.mousePos = ivec2(x, y)
@@ -352,32 +356,32 @@ proc mouseMoved(
     window.onMouseMove()
 
 proc mouseDragged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  mouseMoved(sender, cmd, event)
+  mouseMoved(self, cmd, event)
 
 proc rightMouseDragged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  mouseMoved(sender, cmd, event)
+  mouseMoved(self, cmd, event)
 
 proc otherMouseDragged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  mouseMoved(sender, cmd, event)
+  mouseMoved(self, cmd, event)
 
 proc scrollWheel(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -395,55 +399,51 @@ proc scrollWheel(
       window.onScroll()
 
 proc mouseDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-
   window.handleButtonPress(MouseLeft)
 
 proc mouseUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-
   window.handleButtonRelease(MouseLeft)
 
 proc rightMouseDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-
   window.handleButtonPress(MouseRight)
 
 proc rightMouseUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-
   window.handleButtonRelease(MouseRight)
 
 proc otherMouseDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -458,11 +458,11 @@ proc otherMouseDown(
     discard
 
 proc otherMouseUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -477,34 +477,32 @@ proc otherMouseUp(
     discard
 
 proc keyDown(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-
   window.handleButtonPress(keyCodeToButton[event.keyCode.int])
-  sender.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
+  self.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
 
 proc keyUp(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-
   window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
 
 proc flagsChanged(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   event: NSEvent
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -514,17 +512,17 @@ proc flagsChanged(
   else:
     window.handleButtonPress(button)
 
-proc hasMarkedText(sender: ID, cmd: SEL): BOOL {.cdecl.} =
+proc hasMarkedText(self: ID, cmd: SEL): BOOL {.cdecl.} =
   NO
 
-proc markedRange(sender: ID, cmd: SEL): NSRange {.cdecl.} =
+proc markedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   kEmptyRange
 
-proc selectedRange(sender: ID, cmd: SEL): NSRange {.cdecl.} =
+proc selectedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   kEmptyRange
 
 proc setMarkedText(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   s: NSString,
   selectedRange: NSRange,
@@ -532,14 +530,14 @@ proc setMarkedText(
 ): ID {.cdecl.} =
   discard
 
-proc unmarkText(sender: ID, cmd: SEL): ID {.cdecl.} =
+proc unmarkText(self: ID, cmd: SEL): ID {.cdecl.} =
   discard
 
-proc validAttributesForMarkedText(sender: ID, cmd: SEL): NSArray {.cdecl.} =
+proc validAttributesForMarkedText(self: ID, cmd: SEL): NSArray {.cdecl.} =
   NSArray.array
 
 proc attributedSubstringForProposedRange(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   range: NSRange,
   actualRange: NSRangePointer
@@ -547,12 +545,12 @@ proc attributedSubstringForProposedRange(
   discard
 
 proc insertText(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   obj: ID,
   replacementRange: NSRange
 ): ID {.cdecl.} =
-  let window = windows.forNSWindow(sender.NSView.window)
+  let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
 
@@ -564,7 +562,7 @@ proc insertText(
 
   var range = NSMakeRange(0, characters.length.uint)
   while range.length > 0:
-    var codepoint: uint
+    var codepoint: uint32
     discard characters.getBytes(
       codepoint.addr,
       sizeof(codepoint).uint,
@@ -579,22 +577,46 @@ proc insertText(
     window.handleRune(Rune(codepoint))
 
 proc characterIndexForPoint(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   point: NSPoint
 ): uint {.cdecl.} =
-  0
+  cast[uint](NSNotFound)
 
 proc firstRectForCharacterRange(
-  sender: ID,
+  self: ID,
   cmd: SEL,
   range: NSRange,
   actualRange: NSRangePointer
 ): NSRect {.cdecl.} =
   NSMakeRect(0, 0, 0, 0)
 
-proc doCommandBySelector(sender: ID, cmd: SEL, selector: SEL): ID {.cdecl.} =
+proc doCommandBySelector(self: ID, cmd: SEL, selector: SEL): ID {.cdecl.} =
   discard
+
+proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil:
+    return
+
+  case window.state.cursor.kind:
+  of DefaultCursor:
+    discard
+  else:
+    let
+      encodedPng = window.state.cursor.image.encodePng()
+      image = NSImage.getClass().alloc().NSImage
+      cursor = NSCursor.getClass().alloc().NSCursor
+      hotspot = NSMakePoint(
+        window.state.cursor.hotspot.x.float,
+        window.state.cursor.hotspot.y.float
+      )
+    image.initWithData(NSData.dataWithBytes(
+      encodedPng[0].unsafeAddr,
+      encodedPng.len
+    ))
+    cursor.initWithImage(image, hotspot)
+    self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
 proc init() =
   if initialized:
@@ -612,13 +634,13 @@ proc init() =
         WindyAppDelegate,
         sel_registerName("applicationWillFinishLaunching:".cstring),
         cast[IMP](applicationWillFinishLaunching),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyAppDelegate,
         sel_registerName("applicationDidFinishLaunching:".cstring),
         cast[IMP](applicationDidFinishLaunching),
-        "@@:@".cstring
+        "".cstring
       )
       objc_registerClassPair(WindyAppDelegate)
 
@@ -631,37 +653,37 @@ proc init() =
         WindyWindow,
         sel_registerName("windowDidResize:".cstring),
         cast[IMP](windowDidResize),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowDidMove:".cstring),
         cast[IMP](windowDidMove),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("canBecomeKeyWindow:".cstring),
         cast[IMP](canBecomeKeyWindow),
-        "i@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowDidBecomeKey:".cstring),
         cast[IMP](windowDidBecomeKey),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowDidResignKey:".cstring),
         cast[IMP](windowDidResignKey),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyWindow,
         sel_registerName("windowShouldClose:".cstring),
         cast[IMP](windowShouldClose),
-        "i@:@".cstring
+        "".cstring
       )
       objc_registerClassPair(WindyWindow)
 
@@ -675,183 +697,188 @@ proc init() =
         WindyView,
         sel_registerName("acceptsFirstResponder".cstring),
         cast[IMP](acceptsFirstResponder),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("canBecomeKeyView".cstring),
         cast[IMP](canBecomeKeyView),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("acceptsFirstMouse:".cstring),
         cast[IMP](acceptsFirstMouse),
-        "i@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("viewDidChangeBackingProperties".cstring),
         cast[IMP](viewDidChangeBackingProperties),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("updateTrackingAreas".cstring),
         cast[IMP](updateTrackingAreas),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseMoved:".cstring),
         cast[IMP](mouseMoved),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseDragged:".cstring),
         cast[IMP](mouseDragged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("rightMouseDragged:".cstring),
         cast[IMP](rightMouseDragged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("otherMouseDragged:".cstring),
         cast[IMP](otherMouseDragged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("scrollWheel:".cstring),
         cast[IMP](scrollWheel),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseDown:".cstring),
         cast[IMP](mouseDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("mouseUp:".cstring),
         cast[IMP](mouseUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("rightMouseDown:".cstring),
         cast[IMP](rightMouseDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("rightMouseUp:".cstring),
         cast[IMP](rightMouseUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("otherMouseDown:".cstring),
         cast[IMP](otherMouseDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("otherMouseUp:".cstring),
         cast[IMP](otherMouseUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("keyDown:".cstring),
         cast[IMP](keyDown),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("keyUp:".cstring),
         cast[IMP](keyUp),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("flagsChanged:".cstring),
         cast[IMP](flagsChanged),
-        "@@:@".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("hasMarkedText".cstring),
         cast[IMP](hasMarkedText),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("markedRange".cstring),
         cast[IMP](markedRange),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("selectedRange".cstring),
         cast[IMP](selectedRange),
-        "i@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("setMarkedText:selectedRange:replacementRange:".cstring),
         cast[IMP](setMarkedText),
-        "@@:@{_NSRange=II}{_NSRange=II}".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("unmarkText".cstring),
         cast[IMP](unmarkText),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("validAttributesForMarkedText".cstring),
         cast[IMP](validAttributesForMarkedText),
-        "@@:".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("attributedSubstringForProposedRange:actualRange:".cstring),
         cast[IMP](attributedSubstringForProposedRange),
-        "@@:{_NSRange=II}^_NSRange".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("insertText:replacementRange:".cstring),
         cast[IMP](insertText),
-        "@@:@{_NSRange=II}".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("characterIndexForPoint:".cstring),
         cast[IMP](characterIndexForPoint),
-        "I@:{CGPoint=dd}".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("firstRectForCharacterRange:actualRange:".cstring),
         cast[IMP](firstRectForCharacterRange),
-        "{CGRect={CGPoint=dd}{CGSize=dd}}@:{_NSRange=II}^_NSRange".cstring
+        "".cstring
       )
       discard class_addMethod(
         WindyView,
         sel_registerName("doCommandBySelector:".cstring),
         cast[IMP](doCommandBySelector),
-        "@@::".cstring
+        ":".cstring
       )
-
+      discard class_addMethod(
+        WindyView,
+        sel_registerName("resetCursorRects".cstring),
+        cast[IMP](resetCursorRects),
+        "".cstring
+      )
       objc_registerClassPair(WindyView)
 
     let appDelegate = objc_msgSend(
@@ -987,6 +1014,7 @@ proc newWindow*(
 
     result.title = title
     result.size = size
+    result.pos = ivec2(0, 0)
     result.visible = visible
 
   pollEvents()
