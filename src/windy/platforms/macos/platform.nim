@@ -202,7 +202,7 @@ proc createMenuBar() =
     quitMenuitem = NSMenuItem.getClass().alloc().NSMenuItem
   quitMenuitem.initWithTitle(
     quitTitle,
-    sel_registerName("terminate:".cstring),
+    s"terminate:",
     @"q"
   )
   appMenu.addItem(quitMenuItem)
@@ -624,267 +624,53 @@ proc init() =
 
   autoreleasepool:
     NSApplication.sharedApplication()
+    addClass "WindyAppDelegate", "NSObject", WindyAppDelegate:
+      addMethod "applicationWillFinishLaunching:", applicationDidFinishLaunching
+      addMethod "applicationDidFinishLaunching:", applicationDidFinishLaunching
 
-    block:
-      WindyAppDelegate = objc_allocateClassPair(
-        objc_getClass("NSObject".cstring),
-        "WindyAppDelegate".cstring
-      )
-      discard class_addMethod(
-        WindyAppDelegate,
-        sel_registerName("applicationWillFinishLaunching:".cstring),
-        cast[IMP](applicationWillFinishLaunching),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyAppDelegate,
-        sel_registerName("applicationDidFinishLaunching:".cstring),
-        cast[IMP](applicationDidFinishLaunching),
-        "".cstring
-      )
-      objc_registerClassPair(WindyAppDelegate)
+    addClass "WindyWindow", "NSWindow", WindyWindow:
+      addMethod "windowDidResize:", windowDidResize
+      addMethod "windowDidMove:", windowDidMove
+      addMethod "canBecomeKeyWindow:", canBecomeKeyWindow
+      addMethod "windowDidBecomeKey:", windowDidBecomeKey
+      addMethod "windowDidResignKey:", windowDidResignKey
+      addMethod "windowShouldClose:", windowShouldClose
 
-    block:
-      WindyWindow = objc_allocateClassPair(
-        objc_getClass("NSWindow".cstring),
-        "WindyWindow".cstring
-      )
-      discard class_addMethod(
-        WindyWindow,
-        sel_registerName("windowDidResize:".cstring),
-        cast[IMP](windowDidResize),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyWindow,
-        sel_registerName("windowDidMove:".cstring),
-        cast[IMP](windowDidMove),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyWindow,
-        sel_registerName("canBecomeKeyWindow:".cstring),
-        cast[IMP](canBecomeKeyWindow),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyWindow,
-        sel_registerName("windowDidBecomeKey:".cstring),
-        cast[IMP](windowDidBecomeKey),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyWindow,
-        sel_registerName("windowDidResignKey:".cstring),
-        cast[IMP](windowDidResignKey),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyWindow,
-        sel_registerName("windowShouldClose:".cstring),
-        cast[IMP](windowShouldClose),
-        "".cstring
-      )
-      objc_registerClassPair(WindyWindow)
+    addClass "WindyView", "NSOpenGLView", WindyView:
+      addProtocol "NSTextInputClient"
+      addMethod "acceptsFirstResponder", acceptsFirstResponder
+      addMethod "canBecomeKeyView", canBecomeKeyView
+      addMethod "acceptsFirstMouse:", acceptsFirstMouse
+      addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
+      addMethod "updateTrackingAreas", updateTrackingAreas
+      addMethod "mouseMoved:", mouseMoved
+      addMethod "mouseDragged:", mouseDragged
+      addMethod "rightMouseDragged:", rightMouseDragged
+      addMethod "otherMouseDragged:", otherMouseDragged
+      addMethod "scrollWheel:", scrollWheel
+      addMethod "mouseDown:", mouseDown
+      addMethod "mouseUp:", mouseUp
+      addMethod "rightMouseDown:", rightMouseDown
+      addMethod "rightMouseUp:", rightMouseUp
+      addMethod "otherMouseDown:", otherMouseDown
+      addMethod "otherMouseUp:", otherMouseUp
+      addMethod "keyDown:", keyDown
+      addMethod "keyUp:", keyUp
+      addMethod "flagsChanged:", flagsChanged
+      addMethod "hasMarkedText", hasMarkedText
+      addMethod "markedRange", markedRange
+      addMethod "selectedRange", selectedRange
+      addMethod "setMarkedText:selectedRange:replacementRange:", setMarkedText
+      addMethod "unmarkText", unmarkText
+      addMethod "validAttributesForMarkedText", validAttributesForMarkedText
+      addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
+      addMethod "insertText:replacementRange:", insertText
+      addMethod "characterIndexForPoint:", characterIndexForPoint
+      addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
+      addMethod "doCommandBySelector:", doCommandBySelector
+      addMethod "resetCursorRects", resetCursorRects
 
-    block:
-      WindyView = objc_allocateClassPair(
-        objc_getClass("NSOpenGLView".cstring),
-        "WindyView".cstring
-      )
-      discard class_addProtocol(WindyView, objc_getProtocol("NSTextInputClient".cstring))
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("acceptsFirstResponder".cstring),
-        cast[IMP](acceptsFirstResponder),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("canBecomeKeyView".cstring),
-        cast[IMP](canBecomeKeyView),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("acceptsFirstMouse:".cstring),
-        cast[IMP](acceptsFirstMouse),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("viewDidChangeBackingProperties".cstring),
-        cast[IMP](viewDidChangeBackingProperties),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("updateTrackingAreas".cstring),
-        cast[IMP](updateTrackingAreas),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("mouseMoved:".cstring),
-        cast[IMP](mouseMoved),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("mouseDragged:".cstring),
-        cast[IMP](mouseDragged),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("rightMouseDragged:".cstring),
-        cast[IMP](rightMouseDragged),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("otherMouseDragged:".cstring),
-        cast[IMP](otherMouseDragged),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("scrollWheel:".cstring),
-        cast[IMP](scrollWheel),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("mouseDown:".cstring),
-        cast[IMP](mouseDown),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("mouseUp:".cstring),
-        cast[IMP](mouseUp),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("rightMouseDown:".cstring),
-        cast[IMP](rightMouseDown),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("rightMouseUp:".cstring),
-        cast[IMP](rightMouseUp),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("otherMouseDown:".cstring),
-        cast[IMP](otherMouseDown),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("otherMouseUp:".cstring),
-        cast[IMP](otherMouseUp),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("keyDown:".cstring),
-        cast[IMP](keyDown),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("keyUp:".cstring),
-        cast[IMP](keyUp),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("flagsChanged:".cstring),
-        cast[IMP](flagsChanged),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("hasMarkedText".cstring),
-        cast[IMP](hasMarkedText),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("markedRange".cstring),
-        cast[IMP](markedRange),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("selectedRange".cstring),
-        cast[IMP](selectedRange),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("setMarkedText:selectedRange:replacementRange:".cstring),
-        cast[IMP](setMarkedText),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("unmarkText".cstring),
-        cast[IMP](unmarkText),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("validAttributesForMarkedText".cstring),
-        cast[IMP](validAttributesForMarkedText),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("attributedSubstringForProposedRange:actualRange:".cstring),
-        cast[IMP](attributedSubstringForProposedRange),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("insertText:replacementRange:".cstring),
-        cast[IMP](insertText),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("characterIndexForPoint:".cstring),
-        cast[IMP](characterIndexForPoint),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("firstRectForCharacterRange:actualRange:".cstring),
-        cast[IMP](firstRectForCharacterRange),
-        "".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("doCommandBySelector:".cstring),
-        cast[IMP](doCommandBySelector),
-        ":".cstring
-      )
-      discard class_addMethod(
-        WindyView,
-        sel_registerName("resetCursorRects".cstring),
-        cast[IMP](resetCursorRects),
-        "".cstring
-      )
-      objc_registerClassPair(WindyView)
-
-    let appDelegate = objc_msgSend(
-      WindyAppDelegate.ID,
-      sel_registerName("new".cstring)
-    )
+    let appDelegate = WindyAppDelegate.new
     NSApp.setDelegate(appDelegate)
 
     NSApp.finishLaunching()
