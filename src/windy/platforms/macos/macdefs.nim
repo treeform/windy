@@ -130,6 +130,7 @@ type
   NSImage* = distinct NSObject
   NSCursor* = distinct NSObject
   NSTextInputContext* = distinct NSObject
+  NSTextInputClient* = distinct int
 
 const
   NSNotFound* = int.high
@@ -933,6 +934,14 @@ proc activate*(context: NSTextInputContext) =
   discard objc_msgSend(
     context.ID,
     s"activate",
+  )
+
+proc insertText2*(client: NSTextInputClient, obj: ID, range: NSRange) =
+  discard objc_msgSend(
+    client.ID,
+    s"insertText:replacementRange:",
+    obj,
+    range
   )
 
 {.pop.}
