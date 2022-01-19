@@ -36,6 +36,9 @@ proc class_addProtocol*(cls: Class, protocol: Protocol): BOOL
 
 {.pop.}
 
+proc s*(s: string): SEL =
+  sel_registerName(s.cstring)
+
 template addClass*(className, superName: string, cls: Class, body: untyped) =
   block:
     cls = objc_allocateClassPair(
@@ -50,7 +53,7 @@ template addClass*(className, superName: string, cls: Class, body: untyped) =
     template addMethod(methodName: string, fn: untyped) =
       discard class_addMethod(
         cls,
-        sel_registerName(methodName.cstring),
+        s(methodName),
         cast[IMP](fn),
         "".cstring
       )
@@ -193,26 +196,26 @@ proc getClass*(t: typedesc): Class =
 proc new*(cls: Class): ID =
   objc_msgSend(
     cls.ID,
-    sel_registerName("new".cstring)
+    s"new"
   )
 
 proc alloc*(cls: Class): ID =
   objc_msgSend(
     cls.ID,
-    sel_registerName("alloc".cstring)
+    s"alloc"
   )
 
 proc isKindOfClass*(obj: NSObject, cls: Class): bool =
   objc_msgSend(
     obj.ID,
-    sel_registerName("isKindOfClass:".cstring),
+    s"isKindOfClass:",
     cls
   ).int != 0
 
 proc superclass*(obj: NSObject): Class =
   objc_msgSend(
     obj.ID,
-    sel_registerName("superclass".cstring)
+    s"superclass"
   ).Class
 
 proc callSuper*(sender: ID, cmd: SEL) =
@@ -228,7 +231,7 @@ proc callSuper*(sender: ID, cmd: SEL) =
 proc release*(id: ID) =
   discard objc_msgSend(
     id,
-    sel_registerName("release".cstring)
+    s"release"
   )
 
 template autoreleasepool*(body: untyped) =
@@ -241,14 +244,14 @@ template autoreleasepool*(body: untyped) =
 proc `@`*(s: string): NSString =
   objc_msgSend(
     objc_getClass("NSString".cstring).ID,
-    sel_registerName("stringWithUTF8String:".cstring),
+    s"stringWithUTF8String:",
     s.cstring
   ).NSString
 
 proc UTF8String(s: NSString): cstring =
   cast[cstring](objc_msgSend(
     s.ID,
-    sel_registerName("UTF8String".cstring)
+    s"UTF8String"
   ))
 
 proc `$`*(s: NSString): string =
@@ -266,7 +269,7 @@ proc getBytes*(
 ): bool =
   objc_msgSend(
     s.ID,
-    sel_registerName("getBytes:maxLength:usedLength:encoding:options:range:remainingRange:".cstring),
+    s"getBytes:maxLength:usedLength:encoding:options:range:remainingRange:",
     buffer,
     maxLength,
     usedLength,
@@ -279,19 +282,19 @@ proc getBytes*(
 proc str*(s: NSAttributedString): NSString =
   objc_msgSend(
     s.ID,
-    sel_registerName("string".cstring)
+    s"string"
   ).NSString
 
 proc localizedDescription(error: NSError): NSString =
   objc_msgSend(
     error.ID,
-    sel_registerName("localizedDescription".cstring)
+    s"localizedDescription"
   ).NSString
 
 proc doubleClickInterval*(_: typedesc[NSEvent]): float64 =
   objc_msgSend_fpret(
     objc_getClass("NSEvent".cstring).ID,
-    sel_registerName("doubleClickInterval".cstring)
+    s"doubleClickInterval"
   ).float64
 
 proc locationInWindow*(event: NSEvent): NSPoint =
@@ -299,37 +302,37 @@ proc locationInWindow*(event: NSEvent): NSPoint =
     {.importc:"objc_msgSend_fpret", cdecl, dynlib:"libobjc.dylib".}
   send(
     event.ID,
-    sel_registerName("locationInWindow".cstring)
+    s"locationInWindow"
   )
 
 proc scrollingDeltaX*(event: NSEvent): float64 =
   objc_msgSend_fpret(
     event.ID,
-    sel_registerName("scrollingDeltaX".cstring)
+    s"scrollingDeltaX"
   )
 
 proc scrollingDeltaY*(event: NSEvent): float64 =
   objc_msgSend_fpret(
     event.ID,
-    sel_registerName("scrollingDeltaY".cstring)
+    s"scrollingDeltaY"
   )
 
 proc hasPreciseScrollingDeltas*(event: NSEvent): bool =
   objc_msgSend(
     event.ID,
-    sel_registerName("hasPreciseScrollingDeltas".cstring)
+    s"hasPreciseScrollingDeltas"
   ).int != 0
 
 proc buttonNumber*(event: NSEvent): int =
   objc_msgSend(
     event.ID,
-    sel_registerName("buttonNumber".cstring)
+    s"buttonNumber"
   ).int
 
 proc keyCode*(event: NSEvent): uint16 =
   objc_msgSend(
     event.ID,
-    sel_registerName("keyCode".cstring)
+    s"keyCode"
   ).uint16
 
 proc `$`*(error: NSError): string =
@@ -338,13 +341,13 @@ proc `$`*(error: NSError): string =
 proc code*(error: NSError): int =
   objc_msgSend(
     error.ID,
-    sel_registerName("code".cstring)
+    s"code"
   ).int
 
 proc dataWithBytes*(_: typedesc[NSData], bytes: pointer, len: int): NSData =
   objc_msgSend(
     objc_getClass("NSData".cstring).ID,
-    sel_registerName("dataWithBytes:length:".cstring),
+    s"dataWithBytes:length:",
     bytes,
     len
   ).NSData
@@ -352,38 +355,38 @@ proc dataWithBytes*(_: typedesc[NSData], bytes: pointer, len: int): NSData =
 proc bytes*(data: NSData): pointer =
   cast[pointer](objc_msgSend(
     data.ID,
-    sel_registerName("bytes".cstring)
+    s"bytes"
   ))
 
 proc length*(obj: NSData | NSString): int =
   objc_msgSend(
     obj.ID,
-    sel_registerName("length".cstring)
+    s"length"
   ).int
 
 proc array*(_: typedesc[NSArray]): NSArray =
   objc_msgSend(
     objc_getClass("NSArray".cstring).ID,
-    sel_registerName("array".cstring)
+    s"array"
   ).NSArray
 
 proc arrayWithObject*(_: typedesc[NSArray], obj: ID): NSArray =
   objc_msgSend(
     objc_getClass("NSArray".cstring).ID,
-    sel_registerName("arrayWithObject:".cstring),
+    s"arrayWithObject:",
     obj
   ).NSArray
 
 proc count*(arr: NSArray): int =
   objc_msgSend(
     arr.ID,
-    sel_registerName("count".cstring)
+    s"count"
   ).int
 
 proc objectAtIndex*(arr: NSArray, index: int): ID =
   objc_msgSend(
     arr.ID,
-    sel_registerName("objectAtIndex:".cstring),
+    s"objectAtIndex:",
     index
   )
 
@@ -393,52 +396,52 @@ proc `[]`*(arr: NSArray, index: int): ID =
 proc containsObject*(arr: NSArray, o: ID): bool =
   objc_msgSend(
     arr.ID,
-    sel_registerName("containsObject:".cstring),
+    s"containsObject:",
     o
   ).int != 0
 
 proc screens*(_: typedesc[NSScreen]): NSArray =
   objc_msgSend(
     objc_getClass("NSScreen".cstring).ID,
-    sel_registerName("screens".cstring)
+    s"screens"
   ).NSArray
 
 proc frame*(obj: NSScreen | NSWindow | NSView): NSRect =
   objc_msgSend_stret(
     result.addr,
     obj.ID,
-    sel_registerName("frame".cstring)
+    s"frame"
   )
 
 proc generalPasteboard*(_: typedesc[NSPasteboard]): NSPasteboard =
   objc_msgSend(
     objc_getClass("NSPasteboard".cstring).ID,
-    sel_registerName("generalPasteboard".cstring)
+    s"generalPasteboard"
   ).NSPasteboard
 
 proc types*(pboard: NSPasteboard): NSArray =
   objc_msgSend(
     pboard.ID,
-    sel_registerName("types".cstring)
+    s"types"
   ).NSArray
 
 proc stringForType*(pboard: NSPasteboard, t: NSPasteboardType): NSString =
   objc_msgSend(
     pboard.ID,
-    sel_registerName("stringForType:".cstring),
+    s"stringForType:",
     t
   ).NSString
 
 proc clearContents*(pboard: NSPasteboard) =
   discard objc_msgSend(
     pboard.ID,
-    sel_registerName("clearContents".cstring),
+    s"clearContents",
   )
 
 proc setString*(pboard: NSPasteboard, s: NSString, dataType: NSPasteboardType) =
   discard objc_msgSend(
     pboard.ID,
-    sel_registerName("setString:forType:".cstring),
+    s"setString:forType:",
     s,
     dataType
   )
@@ -446,19 +449,19 @@ proc setString*(pboard: NSPasteboard, s: NSString, dataType: NSPasteboardType) =
 proc processInfo*(_: typedesc[NSProcessInfo]): NSProcessInfo =
   objc_msgSend(
     objc_getClass("NSProcessInfo".cstring).ID,
-    sel_registerName("processInfo".cstring),
+    s"processInfo",
   ).NSProcessInfo
 
 proc processName*(processInfo: NSProcessInfo): NSString =
   objc_msgSend(
     processInfo.ID,
-    sel_registerName("processName".cstring),
+    s"processName",
   ).NSString
 
 proc sharedApplication*(_: typedesc[NSApplication]) =
   discard objc_msgSend(
     objc_getClass("NSApplication".cstring).ID,
-    sel_registerName("sharedApplication".cstring),
+    s"sharedApplication",
   )
 
 proc setActivationPolicy*(
@@ -467,7 +470,7 @@ proc setActivationPolicy*(
 ) =
   discard objc_msgSend(
     app.ID,
-    sel_registerName("setActivationPolicy:".cstring),
+    s"setActivationPolicy:",
     policy
   )
 
@@ -477,35 +480,35 @@ proc setPresentationOptions*(
 ) =
   discard objc_msgSend(
     app.ID,
-    sel_registerName("setPresentationOptions:".cstring),
+    s"setPresentationOptions:",
     options
   )
 
 proc activateIgnoringOtherApps*(app: NSApplication, flag: BOOL) =
   discard objc_msgSend(
     app.ID,
-    sel_registerName("activateIgnoringOtherApps:".cstring),
+    s"activateIgnoringOtherApps:",
     flag
   )
 
 proc setDelegate*(app: NSApplication, delegate: ID) =
   discard objc_msgSend(
     app.ID,
-    sel_registerName("setDelegate:".cstring),
+    s"setDelegate:",
     delegate
   )
 
 proc setMainMenu*(app: NSApplication, menu: NSMenu) =
   discard objc_msgSend(
     app.ID,
-    sel_registerName("setMainMenu:".cstring),
+    s"setMainMenu:",
     menu
   )
 
 proc finishLaunching*(app: NSApplication) =
   discard objc_msgSend(
     app.ID,
-    sel_registerName("finishLaunching".cstring),
+    s"finishLaunching",
   )
 
 proc nextEventMatchingMask*(
@@ -517,7 +520,7 @@ proc nextEventMatchingMask*(
 ): NSEvent =
   objc_msgSend(
     app.ID,
-    sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:".cstring),
+    s"nextEventMatchingMask:untilDate:inMode:dequeue:",
     mask,
     expiration,
     mode,
@@ -527,20 +530,20 @@ proc nextEventMatchingMask*(
 proc sendEvent*(app: NSApplication, event: NSEvent) =
   discard objc_msgSend(
     app.ID,
-    sel_registerName("sendEvent:".cstring),
+    s"sendEvent:",
     event
   )
 
 proc distantPast*(_: typedesc[NSDate]): NSDate =
   objc_msgSend(
     objc_getClass("NSDate".cstring).ID,
-    sel_registerName("distantPast".cstring),
+    s"distantPast",
   ).NSDate
 
 proc addItem*(menu: NSMenu, item: NSMenuItem) =
   discard objc_msgSend(
     menu.ID,
-    sel_registerName("addItem:".cstring),
+    s"addItem:",
     item
   )
 
@@ -552,7 +555,7 @@ proc initWithTitle*(
 ) =
   discard objc_msgSend(
     menuItem.ID,
-    sel_registerName("initWithTitle:action:keyEquivalent:".cstring),
+    s"initWithTitle:action:keyEquivalent:",
     title,
     action,
     keyEquivalent
@@ -561,7 +564,7 @@ proc initWithTitle*(
 proc setSubmenu*(menuItem: NSMenuItem, subMenu: NSMenu) =
   discard objc_msgSend(
     menuItem.ID,
-    sel_registerName("setSubmenu:".cstring),
+    s"setSubmenu:",
     subMenu
   )
 
@@ -574,7 +577,7 @@ proc initWithContentRect*(
 ) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("initWithContentRect:styleMask:backing:defer:".cstring),
+    s"initWithContentRect:styleMask:backing:defer:",
     contentRect,
     style,
     backingStoreType,
@@ -584,93 +587,93 @@ proc initWithContentRect*(
 proc setDelegate*(window: NSWindow, delegate: ID) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("setDelegate:".cstring),
+    s"setDelegate:",
     delegate
   )
 
 proc orderFront*(window: NSWindow, sender: ID) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("orderFront:".cstring),
+    s"orderFront:",
     sender
   )
 
 proc orderOut*(window: NSWindow, sender: ID) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("orderOut:".cstring),
+    s"orderOut:",
     sender
   )
 
 proc setTitle*(window: NSWindow, title: NSString) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("setTitle:".cstring),
+    s"setTitle:",
     title
   )
 
 proc close*(window: NSWindow) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("close".cstring)
+    s"close"
   )
 
 proc isVisible*(window: NSWindow): bool =
   objc_msgSend(
     window.ID,
-    sel_registerName("isVisible".cstring)
+    s"isVisible"
   ).int != 0
 
 proc miniaturize*(window: NSWindow, sender: ID) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("miniaturize:".cstring),
+    s"miniaturize:",
     sender
   )
 
 proc deminiaturize*(window: NSWindow, sender: ID) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("deminiaturize:".cstring),
+    s"deminiaturize:",
     sender
   )
 
 proc isMiniaturized*(window: NSWindow): bool =
   objc_msgSend(
     window.ID,
-    sel_registerName("isMiniaturized".cstring)
+    s"isMiniaturized"
   ).int != 0
 
 proc zoom*(window: NSWindow, sender: ID) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("zoom:".cstring),
+    s"zoom:",
     sender
   )
 
 proc isZoomed*(window: NSWindow): bool =
   objc_msgSend(
     window.ID,
-    sel_registerName("isZoomed".cstring)
+    s"isZoomed"
   ).int != 0
 
 proc isKeyWindow*(window: NSWindow): bool =
   objc_msgSend(
     window.ID,
-    sel_registerName("isKeyWindow".cstring)
+    s"isKeyWindow"
   ).int != 0
 
 proc contentView*(window: NSWindow): NSView =
   objc_msgSend(
     window.ID,
-    sel_registerName("contentView".cstring)
+    s"contentView"
   ).NSView
 
 proc contentRectForFrameRect*(window: NSWindow, frameRect: NSRect): NSRect =
   objc_msgSend_stret(
     result.addr,
     window.ID,
-    sel_registerName("contentRectForFrameRect:".cstring),
+    s"contentRectForFrameRect:",
     frameRect
   )
 
@@ -678,14 +681,14 @@ proc frameRectForContentRect*(window: NSWindow, contentRect: NSRect): NSRect =
   objc_msgSend_stret(
     result.addr,
     window.ID,
-    sel_registerName("frameRectForContentRect:".cstring),
+    s"frameRectForContentRect:",
     contentRect
   )
 
 proc setFrame*(window: NSWindow, frameRect: NSRect, flag: BOOL) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("setFrame:display:".cstring),
+    s"setFrame:display:",
     frameRect,
     flag
   )
@@ -693,61 +696,61 @@ proc setFrame*(window: NSWindow, frameRect: NSRect, flag: BOOL) =
 proc screen*(window: NSWindow): NSScreen =
   objc_msgSend(
     window.ID,
-    sel_registerName("screen".cstring)
+    s"screen"
   ).NSScreen
 
 proc setFrameOrigin*(window: NSWindow, origin: NSPoint) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("setFrameOrigin:".cstring),
+    s"setFrameOrigin:",
     origin
   )
 
 proc setRestorable*(window: NSWindow, flag: BOOL) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("setRestorable:".cstring),
+    s"setRestorable:",
     flag
   )
 
 proc setContentView*(window: NSWindow, view: NSView) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("setContentView:".cstring),
+    s"setContentView:",
     view
   )
 
 proc makeFirstResponder*(window: NSWindow, view: NSView): bool =
   objc_msgSend(
     window.ID,
-    sel_registerName("makeFirstResponder:".cstring),
+    s"makeFirstResponder:",
     view
   ).int != 0
 
 proc styleMask*(window: NSWindow): NSWindowStyleMask =
   objc_msgSend(
     window.ID,
-    sel_registerName("styleMask".cstring)
+    s"styleMask"
   ).NSWindowStyleMask
 
 proc setStyleMask*(window: NSWindow, styleMask: NSWindowStyleMask) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("setStyleMask:".cstring),
+    s"setStyleMask:",
     styleMask
   )
 
 proc toggleFullscreen*(window: NSWindow, sender: ID) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("toggleFullScreen:".cstring),
+    s"toggleFullScreen:",
     sender
   )
 
 proc invalidateCursorRectsForView*(window: NSWindow, view: NSView) =
   discard objc_msgSend(
     window.ID,
-    sel_registerName("invalidateCursorRectsForView:".cstring),
+    s"invalidateCursorRectsForView:",
     view.ID
   )
 
@@ -755,41 +758,41 @@ proc convertRectToBacking*(view: NSView, rect: NSRect): NSRect =
   objc_msgSend_stret(
     result.addr,
     view.ID,
-    sel_registerName("convertRectToBacking:".cstring),
+    s"convertRectToBacking:",
     rect
   )
 
 proc window*(view: NSView): NSWindow =
   objc_msgSend(
     view.ID,
-    sel_registerName("window".cstring)
+    s"window"
   ).NSWindow
 
 proc bounds*(view: NSView): NSRect =
   objc_msgSend_stret(
     result.addr,
     view.ID,
-    sel_registerName("bounds".cstring)
+    s"bounds"
   )
 
 proc removeTrackingArea*(view: NSView, trackingArea: NSTrackingArea) =
   discard objc_msgSend(
     view.ID,
-    sel_registerName("removeTrackingArea:".cstring),
+    s"removeTrackingArea:",
     trackingArea
   )
 
 proc addTrackingArea*(view: NSView, trackingArea: NSTrackingArea) =
   discard objc_msgSend(
     view.ID,
-    sel_registerName("addTrackingArea:".cstring),
+    s"addTrackingArea:",
     trackingArea
   )
 
 proc addCursorRect*(view: NSview, rect: NSRect, cursor: NSCursor) =
   discard objc_msgSend(
     view.ID,
-    sel_registerName("addCursorRect:cursor:".cstring),
+    s"addCursorRect:cursor:",
     rect,
     cursor
   )
@@ -800,7 +803,7 @@ proc initWithAttributes*(
 ) =
   discard objc_msgSend(
     pixelFormat.ID,
-    sel_registerName("initWithAttributes:".cstring),
+    s"initWithAttributes:",
     attribs
   )
 
@@ -811,7 +814,7 @@ proc initWithFrame*(
 ) =
   discard objc_msgSend(
     view.ID,
-    sel_registerName("initWithFrame:pixelFormat:".cstring),
+    s"initWithFrame:pixelFormat:",
     frameRect,
     pixelFormat
   )
@@ -822,20 +825,20 @@ proc setWantsBestResolutionOpenGLSurface*(
 ) =
   discard objc_msgSend(
     view.ID,
-    sel_registerName("setWantsBestResolutionOpenGLSurface:".cstring),
+    s"setWantsBestResolutionOpenGLSurface:",
     flag
   )
 
 proc openGLContext*(view: NSOpenGLView): NSOpenGLContext =
   objc_msgSend(
     view.ID,
-    sel_registerName("openGLContext".cstring)
+    s"openGLContext"
   ).NSOpenGLContext
 
 proc makeCurrentContext*(context: NSOpenGLContext) =
   discard objc_msgSend(
     context.ID,
-    sel_registerName("makeCurrentContext".cstring)
+    s"makeCurrentContext"
   )
 
 proc setValues*(
@@ -845,7 +848,7 @@ proc setValues*(
 ) =
   discard objc_msgSend(
     context.ID,
-    sel_registerName("setValues:forParameter:".cstring),
+    s"setValues:forParameter:",
     values,
     param
   )
@@ -853,7 +856,7 @@ proc setValues*(
 proc flushBuffer*(context: NSOpenGLContext) =
   discard objc_msgSend(
     context.ID,
-    sel_registerName("flushBuffer".cstring)
+    s"flushBuffer"
   )
 
 proc initWithRect*(
@@ -864,7 +867,7 @@ proc initWithRect*(
 ) =
   discard objc_msgSend(
     trackingArea.ID,
-    sel_registerName("initWithRect:options:owner:userInfo:".cstring),
+    s"initWithRect:options:owner:userInfo:",
     rect,
     options,
     owner,
@@ -874,21 +877,21 @@ proc initWithRect*(
 proc interpretKeyEvents*(responder: NSResponder, events: NSArray) =
   discard objc_msgSend(
     responder.ID,
-    sel_registerName("interpretKeyEvents:".cstring),
+    s"interpretKeyEvents:",
     events
   )
 
 proc initWithData*(image: NSImage, data: NSData) =
   discard objc_msgSend(
     image.ID,
-    sel_registerName("initWithData:".cstring),
+    s"initWithData:",
     data
   )
 
 proc initWithImage*(cursor: NSCursor, image: NSImage, hotspot: NSPoint) =
   discard objc_msgSend(
     cursor.ID,
-    sel_registerName("initWithImage:hotSpot:".cstring),
+    s"initWithImage:hotSpot:",
     image,
     hotspot
   )

@@ -202,7 +202,7 @@ proc createMenuBar() =
     quitMenuitem = NSMenuItem.getClass().alloc().NSMenuItem
   quitMenuitem.initWithTitle(
     quitTitle,
-    sel_registerName("terminate:".cstring),
+    s"terminate:",
     @"q"
   )
   appMenu.addItem(quitMenuItem)
@@ -672,7 +672,7 @@ proc init() =
 
     let appDelegate = objc_msgSend(
       WindyAppDelegate.ID,
-      sel_registerName("new".cstring)
+      s"new"
     )
     NSApp.setDelegate(appDelegate)
 
