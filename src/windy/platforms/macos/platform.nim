@@ -19,6 +19,7 @@ type
 
     inner: NSWindow
     trackingArea: NSTrackingArea
+    markedText: NSString
 
 const
   decoratedResizableWindowMask =
@@ -99,6 +100,26 @@ proc maximized*(window: Window): bool =
 proc focused*(window: Window): bool =
   window.inner.isKeyWindow
 
+proc closeIme*(window: Window) =
+  if not window.focused:
+    return
+
+  if window.markedText.int != 0:
+    discard objc_msgSend(
+      window.inner.contentView.ID,
+      s"insertText:replacementRange:",
+      window.markedText.ID,
+      kEmptyRange
+    )
+
+  let inputContext = window.inner.contentView.inputContext
+  inputContext.discardMarkedText()
+
+  # This shouldn't? be required but without this the Pinyin IME candidate
+  # window will not close.
+  inputContext.deactivate()
+  inputContext.activate()
+
 proc `title=`*(window: Window, title: string) =
   autoreleasepool:
     window.state.title = title
@@ -160,11 +181,10 @@ proc `minimized=`*(window: Window, minimized: bool) =
       window.inner.deminiaturize(0.ID)
 
 proc `maximized=`*(window: Window, maximized: bool) =
+  if window.maximized == maximized:
+    return
   autoreleasepool:
-    if maximized and not window.maximized:
-      window.inner.zoom(0.ID)
-    elif not maximized and window.maximized:
-      window.inner.zoom(0.ID)
+    window.inner.zoom(0.ID)
 
 proc `closeRequested=`*(window: Window, closeRequested: bool) =
   window.state.closeRequested = closeRequested
@@ -174,6 +194,8 @@ proc `closeRequested=`*(window: Window, closeRequested: bool) =
 
 proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   window.state.runeInputEnabled = runeInputEnabled
+  if not runeInputEnabled:
+    window.closeIme()
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
   window.state.cursor = cursor
@@ -231,9 +253,7 @@ proc windowDidResize(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
-    return
-  if window.onResize != nil:
+  if window != nil and window.onResize != nil:
     window.onResize()
 
 proc windowDidMove(
@@ -242,9 +262,7 @@ proc windowDidMove(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
-    return
-  if window.onMove != nil:
+  if window != nil and window.onMove != nil:
     window.onMove()
 
 proc canBecomeKeyWindow(
@@ -260,9 +278,7 @@ proc windowDidBecomeKey(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
-    return
-  if window.onFocusChange != nil:
+  if window != nil and window.onFocusChange != nil:
     window.onFocusChange()
 
 proc windowDidResignKey(
@@ -271,9 +287,7 @@ proc windowDidResignKey(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
-    return
-  if window.onFocusChange != nil:
+  if window != nil and window.onFocusChange != nil:
     window.onFocusChange()
 
 proc windowShouldClose(
@@ -300,9 +314,7 @@ proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
   callSuper(self, cmd)
 
   let window = windows.forNSWindow(self.NSview.window)
-  if window == nil:
-    return
-  if window.onResize != nil:
+  if window != nil and window.onResize != nil:
     window.onResize()
 
 proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
@@ -445,8 +457,10 @@ proc keyDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+
   window.handleButtonPress(keyCodeToButton[event.keyCode.int])
-  self.NSResponder.interpretKeyEvents(NSArray.arrayWithObject(event.ID))
+  if window.state.runeInputEnabled:
+    discard self.NSView.inputContext.handleEvent(event)
 
 proc keyUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
@@ -466,24 +480,56 @@ proc flagsChanged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
     window.handleButtonPress(button)
 
 proc hasMarkedText(self: ID, cmd: SEL): BOOL {.cdecl.} =
-  NO
+  let window = windows.forNSWindow(self.NSView.window)
+  if window != nil and window.markedText.int != 0:
+    YES
+  else:
+    NO
 
 proc markedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
-  kEmptyRange
+  let window = windows.forNSWindow(self.NSView.window)
+  if window != nil and window.markedText.int != 0:
+    result = NSMakeRange(0, window.markedText.length)
+  else:
+    result = kEmptyRange
 
 proc selectedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
-  kEmptyRange
+  let window = windows.forNSWindow(self.NSView.window)
+  if window != nil:
+    NSMakeRange(window.state.imeCursorIndex.uint, 0)
+  else:
+    kEmptyRange
 
 proc setMarkedText(
   self: ID,
   cmd: SEL,
-  s: NSString,
+  obj: ID,
   selectedRange: NSRange,
   replacementRange: NSRange
 ): ID {.cdecl.} =
-  discard
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil:
+    return
+
+  var characters: NSString
+  if obj.NSObject.isKindOfClass(NSAttributedString.getClass()):
+    characters = obj.NSAttributedString.str()
+  else:
+    characters = obj.NSString
+
+  if window.markedText.int != 0:
+    window.markedText.ID.release()
+
+  window.markedText = NSString.stringWithString(characters)
+  window.markedText.ID.retain()
+  window.state.imeCompositionString = $characters
+  window.state.imeCursorIndex = selectedRange.location.int
+
+  if window.onImeChange != nil:
+    window.onImeChange()
 
 proc unmarkText(self: ID, cmd: SEL): ID {.cdecl.} =
+  # Should accept / commit the marked text, but I can't get this called to test.
   discard
 
 proc validAttributesForMarkedText(self: ID, cmd: SEL): NSArray {.cdecl.} =
@@ -529,6 +575,16 @@ proc insertText(
       continue
     window.handleRune(Rune(codepoint))
 
+  if window.markedText.int != 0:
+    window.markedText.ID.release()
+    window.markedText = 0.NSString
+
+  if window.state.imeCompositionString.len > 0:
+    window.state.imeCompositionString = ""
+    window.state.imeCursorIndex = 0
+    if window.onImeChange != nil:
+      window.onImeChange()
+
 proc characterIndexForPoint(
   self: ID,
   cmd: SEL,
@@ -542,7 +598,17 @@ proc firstRectForCharacterRange(
   range: NSRange,
   actualRange: NSRangePointer
 ): NSRect {.cdecl.} =
-  NSMakeRect(0, 0, 0, 0)
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil:
+    return
+
+  let contentRect = window.inner.contentRectForFrameRect(window.inner.frame)
+  NSMakeRect(
+    contentRect.origin.x + window.imePos.x.float64,
+    contentRect.origin.y + contentRect.size.height - 1 - window.imePos.y.float64,
+    0,
+    0
+  )
 
 proc doCommandBySelector(self: ID, cmd: SEL, selector: SEL): ID {.cdecl.} =
   discard
@@ -676,9 +742,6 @@ proc close*(window: Window) =
     window.inner = 0.NSWindow
 
   window.state.closed = true
-
-proc closeIme*(window: Window) =
-  discard
 
 proc newWindow*(
   title: string,

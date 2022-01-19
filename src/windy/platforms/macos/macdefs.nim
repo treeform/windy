@@ -36,7 +36,7 @@ proc class_addProtocol*(cls: Class, protocol: Protocol): BOOL
 
 {.pop.}
 
-proc s*(s: string): SEL =
+template s*(s: string): SEL =
   sel_registerName(s.cstring)
 
 template addClass*(className, superName: string, cls: Class, body: untyped) =
@@ -127,9 +127,9 @@ type
   NSOpenGLPixelFormat* = distinct NSObject
   NSOpenGLContext* = distinct NSObject
   NSTrackingArea* = distinct NSObject
-  NSResponder* = distinct NSObject
   NSImage* = distinct NSObject
   NSCursor* = distinct NSObject
+  NSTextInputContext* = distinct NSObject
 
 const
   NSNotFound* = int.high
@@ -174,6 +174,16 @@ var
   NSApp* {.importc.}: NSApplication
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
+
+proc locationInWindow*(event: NSEvent): NSPoint =
+  proc send(self: ID, op: SEL): NSPoint
+    {.importc:"objc_msgSend_fpret", cdecl, dynlib:"libobjc.dylib".}
+  send(
+    event.ID,
+    sel_registerName("locationInWindow".cstring)
+  )
+
+{.push inline.}
 
 proc NSMakeRect*(x, y, w, h: float64): NSRect =
   CGRect(
@@ -228,6 +238,12 @@ proc callSuper*(sender: ID, cmd: SEL) =
     cmd
   )
 
+proc retain*(id: ID) =
+  discard objc_msgSend(
+    id,
+    sel_registerName("retain".cstring)
+  )
+
 proc release*(id: ID) =
   discard objc_msgSend(
     id,
@@ -256,6 +272,13 @@ proc UTF8String(s: NSString): cstring =
 
 proc `$`*(s: NSString): string =
   $s.UTF8String
+
+proc stringWithString*(_: typedesc[NSString], s: NSString): NSString =
+  objc_msgSend(
+    objc_getClass("NSString".cstring).ID,
+    s"stringWithString:",
+    s
+  ).NSString
 
 proc getBytes*(
   s: NSString,
@@ -296,14 +319,6 @@ proc doubleClickInterval*(_: typedesc[NSEvent]): float64 =
     objc_getClass("NSEvent".cstring).ID,
     s"doubleClickInterval"
   ).float64
-
-proc locationInWindow*(event: NSEvent): NSPoint =
-  proc send(self: ID, op: SEL): NSPoint
-    {.importc:"objc_msgSend_fpret", cdecl, dynlib:"libobjc.dylib".}
-  send(
-    event.ID,
-    s"locationInWindow"
-  )
 
 proc scrollingDeltaX*(event: NSEvent): float64 =
   objc_msgSend_fpret(
@@ -358,11 +373,11 @@ proc bytes*(data: NSData): pointer =
     s"bytes"
   ))
 
-proc length*(obj: NSData | NSString): int =
+proc length*(obj: NSData | NSString): uint =
   objc_msgSend(
     obj.ID,
     s"length"
-  ).int
+  ).uint
 
 proc array*(_: typedesc[NSArray]): NSArray =
   objc_msgSend(
@@ -797,6 +812,12 @@ proc addCursorRect*(view: NSview, rect: NSRect, cursor: NSCursor) =
     cursor
   )
 
+proc inputContext*(view: NSView): NSTextInputContext =
+  objc_msgSend(
+    view.ID,
+    s"inputContext"
+  ).NSTextInputContext
+
 proc initWithAttributes*(
   pixelFormat: NSOpenGLPixelFormat,
   attribs: ptr NSOpenGLPixelFormatAttribute
@@ -874,13 +895,6 @@ proc initWithRect*(
     0.ID
   )
 
-proc interpretKeyEvents*(responder: NSResponder, events: NSArray) =
-  discard objc_msgSend(
-    responder.ID,
-    s"interpretKeyEvents:",
-    events
-  )
-
 proc initWithData*(image: NSImage, data: NSData) =
   discard objc_msgSend(
     image.ID,
@@ -895,3 +909,30 @@ proc initWithImage*(cursor: NSCursor, image: NSImage, hotspot: NSPoint) =
     image,
     hotspot
   )
+
+proc discardMarkedText*(context: NSTextInputContext) =
+  discard objc_msgSend(
+    context.ID,
+    s"discardMarkedText",
+  )
+
+proc handleEvent*(context: NSTextInputContext, event: NSEvent): bool =
+  objc_msgSend(
+    context.ID,
+    s"handleEvent:",
+    event
+  ).int != 0
+
+proc deactivate*(context: NSTextInputContext) =
+  discard objc_msgSend(
+    context.ID,
+    s"deactivate",
+  )
+
+proc activate*(context: NSTextInputContext) =
+  discard objc_msgSend(
+    context.ID,
+    s"activate",
+  )
+
+{.pop.}
