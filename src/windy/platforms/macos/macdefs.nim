@@ -15,9 +15,9 @@ type
 
 const
   YES* = BOOL(1)
-  NO*  = BOOL(0)
+  NO* = BOOL(0)
 
-{.push importc, cdecl, dynlib:"libobjc.dylib".}
+{.push importc, cdecl, dynlib: "libobjc.dylib".}
 
 proc objc_msgSend*(self: ID, op: SEL): ID {.varargs.}
 proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.varargs.}
@@ -178,7 +178,7 @@ var
 
 proc locationInWindow*(event: NSEvent): NSPoint =
   proc send(self: ID, op: SEL): NSPoint
-    {.importc:"objc_msgSend_fpret", cdecl, dynlib:"libobjc.dylib".}
+    {.importc: "objc_msgSend_fpret", cdecl, dynlib: "libobjc.dylib".}
   send(
     event.ID,
     sel_registerName("locationInWindow".cstring)
@@ -586,7 +586,7 @@ proc setSubmenu*(menuItem: NSMenuItem, subMenu: NSMenu) =
 
 proc initWithContentRect*(
   window: NSWindow,
-  contentRect:NSRect,
+  contentRect: NSRect,
   style: NSWindowStyleMask,
   backingStoreType: NSBackingStoreType,
   deferFlag: BOOL

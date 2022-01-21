@@ -1,5 +1,5 @@
-import ../../common, ../../internal, macdefs, opengl, pixie/images,
-    pixie/fileformats/png, times, unicode, utils, vmath
+import ../../common, ../../internal, macdefs, opengl, pixie/fileformats/png,
+    pixie/images, times, unicode, utils, vmath
 
 type
   Window* = ref object
@@ -602,8 +602,8 @@ proc firstRectForCharacterRange(
 
   let contentRect = window.inner.contentRectForFrameRect(window.inner.frame)
   NSMakeRect(
-    contentRect.origin.x + window.imePos.x.float64,
-    contentRect.origin.y + contentRect.size.height - 1 - window.imePos.y.float64,
+    contentRect.origin.x + window.imePos.x.float,
+    contentRect.origin.y + contentRect.size.height - 1 - window.imePos.y.float,
     0,
     0
   )

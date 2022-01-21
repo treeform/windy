@@ -1,7 +1,5 @@
 import unicode, vmath, windy/common
 
-export common, unicode, vmath
-
 when defined(windows):
   import windy/platforms/win32/platform
 elif defined(macosx):
@@ -9,4 +7,4 @@ elif defined(macosx):
 elif defined(linux):
   import windy/platforms/linux/platform
 
-export platform
+export common, platform, unicode, vmath

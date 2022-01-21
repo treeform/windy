@@ -1,4 +1,4 @@
-import unicode, pixie
+import pixie, unicode
 
 type
   WindyError* = object of ValueError

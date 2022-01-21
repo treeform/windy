@@ -1,5 +1,5 @@
-import ../../common, ../../internal, pixie/images, pixie/fileformats/png, times,
-    unicode, utils, vmath, windefs, flatty/binny
+import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
+    pixie/images, times, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
