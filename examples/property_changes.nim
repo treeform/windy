@@ -1,4 +1,4 @@
-import opengl, windy, os
+import opengl, os, windy
 
 let window = newWindow("Windy Properties", ivec2(1280, 800))
 
