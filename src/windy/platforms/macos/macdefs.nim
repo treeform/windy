@@ -19,10 +19,6 @@ const
 
 {.push importc, cdecl, dynlib: "libobjc.dylib".}
 
-proc objc_msgSend*(self: ID, op: SEL): ID {.varargs.}
-proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.varargs.}
-proc objc_msgSend_stret*(stretAddr: pointer, self: ID, op: SEL) {.varargs.}
-proc objc_msgSendSuper*(super: ptr objc_super, op: SEL): ID {.varargs.}
 proc objc_getClass*(name: cstring): Class
 proc objc_getProtocol*(name: cstring): Protocol
 proc objc_allocateClassPair*(super: Class, name: cstring, extraBytes = 0): Class
@@ -35,6 +31,23 @@ proc sel_getName*(sel: SEL): cstring
 proc class_addProtocol*(cls: Class, protocol: Protocol): BOOL
 
 {.pop.}
+
+{.emit: "#include <objc/Object.h>" .}
+
+var
+  objc_msgSendAddr: pointer
+  objc_msgSendSuperAddr: pointer
+  objc_msgSend_fpretAddr: pointer
+  objc_msgSend_stretAddr: pointer
+proc initObjc*() =
+  {.emit: "`objc_msgSendAddr` = objc_msgSend;".}
+  {.emit: "`objc_msgSendSuperAddr` = objc_msgSendSuper;".}
+  when defined(amd64):
+    {.emit: "`objc_msgSend_fpretAddr` = objc_msgSend_fpret;".}
+    {.emit: "`objc_msgSend_stretAddr` = objc_msgSend_stret;".}
+  else:
+    {.emit: "`objc_msgSend_fpretAddr` = objc_msgSend;".}
+    {.emit: "`objc_msgSend_stretAddr` = objc_msgSend;".}
 
 template s*(s: string): SEL =
   sel_registerName(s.cstring)
@@ -72,17 +85,17 @@ proc `$`*(sel: SEL): string =
   $sel_getName(sel)
 
 type
-  CGPoint* {.bycopy.} = object
+  CGPoint* {.pure, bycopy.} = object
     x*, y*: float64
 
-  CGSize* {.bycopy.} = object
+  CGSize* {.pure, bycopy.} = object
     width*, height*: float64
 
-  CGRect* {.bycopy.} = object
+  CGRect* {.pure, bycopy.} = object
     origin*: CGPoint
     size*: CGSize
 
-  NSRange* {.bycopy.} = object
+  NSRange* {.pure, bycopy.} = object
     location*, length*: uint
 
   NSRangePointer* = ptr NSRange
@@ -176,14 +189,6 @@ var
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
 
-proc locationInWindow*(event: NSEvent): NSPoint =
-  proc send(self: ID, op: SEL): NSPoint
-    {.importc: "objc_msgSend_fpret", cdecl, dynlib: "libobjc.dylib".}
-  send(
-    event.ID,
-    sel_registerName("locationInWindow".cstring)
-  )
-
 {.push inline.}
 
 proc NSMakeRect*(x, y, w, h: float64): NSRect =
@@ -205,26 +210,31 @@ proc getClass*(t: typedesc): Class =
   objc_getClass(t.name.cstring)
 
 proc new*(cls: Class): ID =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     cls.ID,
     s"new"
   )
 
 proc alloc*(cls: Class): ID =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     cls.ID,
     s"alloc"
   )
 
 proc isKindOfClass*(obj: NSObject, cls: Class): bool =
-  objc_msgSend(
+  let msgSend =
+    cast[proc(self: ID, cmd: SEL, cls: Class): BOOL {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     obj.ID,
     s"isKindOfClass:",
     cls
-  ).int != 0
+  ) == YES
 
 proc superclass*(obj: NSObject): Class =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     obj.ID,
     s"superclass"
   ).Class
@@ -234,52 +244,72 @@ proc callSuper*(sender: ID, cmd: SEL) =
     receiver: sender,
     super_class: sender.NSObject.superclass
   )
-  discard objc_msgSendSuper(
+  let msgSendSuper = cast[
+    proc(super: ptr objc_super, cmd: SEL) {.cdecl.}
+  ](objc_msgSendSuperAddr)
+  msgSendSuper(
     super.addr,
     cmd
   )
 
 proc retain*(id: ID) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSendAddr)
+  discard msgSend(
     id,
     sel_registerName("retain".cstring)
   )
 
 proc release*(id: ID) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     id,
     s"release"
   )
 
 template autoreleasepool*(body: untyped) =
-  let pool = NSAutoreleasePool.getClass().new().NSAutoreleasePool
+  let pool = NSAutoreleasePool.getClass().new()
   try:
     body
   finally:
     pool.ID.release()
 
 proc `@`*(s: string): NSString =
-  objc_msgSend(
-    objc_getClass("NSString".cstring).ID,
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      s: cstring
+    ): NSString {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
+    NSString.getClass().ID,
     s"stringWithUTF8String:",
     s.cstring
-  ).NSString
+  )
 
 proc UTF8String(s: NSString): cstring =
-  cast[cstring](objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): cstring {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     s.ID,
     s"UTF8String"
-  ))
+  )
 
 proc `$`*(s: NSString): string =
   $s.UTF8String
 
 proc stringWithString*(_: typedesc[NSString], s: NSString): NSString =
-  objc_msgSend(
-    objc_getClass("NSString".cstring).ID,
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      s: NSString
+    ): NSString {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
+    NSString.getClass().ID,
     s"stringWithString:",
     s
-  ).NSString
+  )
 
 proc getBytes*(
   s: NSString,
@@ -291,7 +321,20 @@ proc getBytes*(
   range: NSRange,
   remainingRange: NSRangePointer
 ): bool =
-  objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      buffer: pointer,
+      maxLength: uint,
+      usedLength: uint,
+      encoding: NSStringEncoding,
+      options: NSStringEncodingConversionOptions,
+      range: NSRange,
+      remainingRange: NSRangePointer
+    ): BOOL {.cdecl.}
+  ](objc_msgSend_stretAddr)
+  msgSend(
     s.ID,
     s"getBytes:maxLength:usedLength:encoding:options:range:remainingRange:",
     buffer,
@@ -301,161 +344,179 @@ proc getBytes*(
     options,
     range,
     remainingRange
-  ).int != 0
+  ) == YES
 
 proc str*(s: NSAttributedString): NSString =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSString {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     s.ID,
     s"string"
-  ).NSString
-
-proc localizedDescription(error: NSError): NSString =
-  objc_msgSend(
-    error.ID,
-    s"localizedDescription"
-  ).NSString
+  )
 
 proc doubleClickInterval*(_: typedesc[NSEvent]): float64 =
-  objc_msgSend_fpret(
-    objc_getClass("NSEvent".cstring).ID,
+  let msgSend = cast[proc(self: ID, cmd: SEL): float64 {.cdecl.}](objc_msgSend_fpretAddr)
+  msgSend(
+    NSEvent.getClass().ID,
     s"doubleClickInterval"
-  ).float64
+  )
 
 proc scrollingDeltaX*(event: NSEvent): float64 =
-  objc_msgSend_fpret(
+  let msgSend = cast[proc(self: ID, cmd: SEL): float64 {.cdecl.}](objc_msgSend_fpretAddr)
+  msgSend(
     event.ID,
     s"scrollingDeltaX"
   )
 
 proc scrollingDeltaY*(event: NSEvent): float64 =
-  objc_msgSend_fpret(
+  let msgSend = cast[proc(self: ID, cmd: SEL): float64 {.cdecl.}](objc_msgSend_fpretAddr)
+  msgSend(
     event.ID,
     s"scrollingDeltaY"
   )
 
 proc hasPreciseScrollingDeltas*(event: NSEvent): bool =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     event.ID,
     s"hasPreciseScrollingDeltas"
-  ).int != 0
+  ) == YES
+
+proc locationInWindow*(event: NSEvent): NSPoint =
+  let msgSend = cast[proc(self: ID, op: SEL): NSPoint {.cdecl.}](objc_msgSend_fpretAddr)
+  msgSend(
+    event.ID,
+    sel_registerName("locationInWindow".cstring)
+  )
 
 proc buttonNumber*(event: NSEvent): int =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): int {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     event.ID,
     s"buttonNumber"
-  ).int
+  )
 
 proc keyCode*(event: NSEvent): uint16 =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): uint16 {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     event.ID,
     s"keyCode"
-  ).uint16
-
-proc `$`*(error: NSError): string =
-  $error.localizedDescription
-
-proc code*(error: NSError): int =
-  objc_msgSend(
-    error.ID,
-    s"code"
-  ).int
+  )
 
 proc dataWithBytes*(_: typedesc[NSData], bytes: pointer, len: int): NSData =
-  objc_msgSend(
-    objc_getClass("NSData".cstring).ID,
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      bytes: pointer,
+      len: int
+    ): NSData {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
+    NSData.getClass().ID,
     s"dataWithBytes:length:",
     bytes,
     len
-  ).NSData
-
-proc bytes*(data: NSData): pointer =
-  cast[pointer](objc_msgSend(
-    data.ID,
-    s"bytes"
-  ))
+  )
 
 proc length*(obj: NSData | NSString): uint =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): uint {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     obj.ID,
     s"length"
-  ).uint
+  )
 
 proc array*(_: typedesc[NSArray]): NSArray =
-  objc_msgSend(
-    objc_getClass("NSArray".cstring).ID,
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSArray {.cdecl.}](objc_msgSendAddr)
+  msgSend(
+    NSArray.getClass().ID,
     s"array"
-  ).NSArray
-
-proc arrayWithObject*(_: typedesc[NSArray], obj: ID): NSArray =
-  objc_msgSend(
-    objc_getClass("NSArray".cstring).ID,
-    s"arrayWithObject:",
-    obj
-  ).NSArray
+  )
 
 proc count*(arr: NSArray): int =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): uint {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     arr.ID,
     s"count"
   ).int
 
 proc objectAtIndex*(arr: NSArray, index: int): ID =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL, index: uint): ID {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     arr.ID,
     s"objectAtIndex:",
-    index
+    index.uint
   )
 
 proc `[]`*(arr: NSArray, index: int): ID =
   arr.objectAtIndex(index)
 
 proc containsObject*(arr: NSArray, o: ID): bool =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL, o: ID): BOOL {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     arr.ID,
     s"containsObject:",
     o
-  ).int != 0
+  ) == YES
 
 proc screens*(_: typedesc[NSScreen]): NSArray =
-  objc_msgSend(
-    objc_getClass("NSScreen".cstring).ID,
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSArray {.cdecl.}](objc_msgSendAddr)
+  msgSend(
+    NSScreen.getClass().ID,
     s"screens"
-  ).NSArray
+  )
 
 proc frame*(obj: NSScreen | NSWindow | NSView): NSRect =
-  objc_msgSend_stret(
-    result.addr,
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSRect {.cdecl.}](objc_msgSend_stretAddr)
+  msgSend(
     obj.ID,
     s"frame"
   )
 
 proc generalPasteboard*(_: typedesc[NSPasteboard]): NSPasteboard =
-  objc_msgSend(
-    objc_getClass("NSPasteboard".cstring).ID,
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSPasteboard {.cdecl.}](objc_msgSendAddr)
+  msgSend(
+    NSPasteboard.getClass().ID,
     s"generalPasteboard"
-  ).NSPasteboard
+  )
 
 proc types*(pboard: NSPasteboard): NSArray =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSArray {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     pboard.ID,
     s"types"
-  ).NSArray
+  )
 
 proc stringForType*(pboard: NSPasteboard, t: NSPasteboardType): NSString =
-  objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      t: NSPasteboardType
+    ): NSString {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     pboard.ID,
     s"stringForType:",
     t
-  ).NSString
+  )
 
 proc clearContents*(pboard: NSPasteboard) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): int {.cdecl.}](objc_msgSendAddr)
+  discard msgSend(
     pboard.ID,
     s"clearContents",
   )
 
 proc setString*(pboard: NSPasteboard, s: NSString, dataType: NSPasteboardType) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      s: NSString,
+      dataType: NSPasteboardType
+    ): BOOL {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     pboard.ID,
     s"setString:forType:",
     s,
@@ -463,20 +524,23 @@ proc setString*(pboard: NSPasteboard, s: NSString, dataType: NSPasteboardType) =
   )
 
 proc processInfo*(_: typedesc[NSProcessInfo]): NSProcessInfo =
-  objc_msgSend(
-    objc_getClass("NSProcessInfo".cstring).ID,
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSProcessInfo {.cdecl.}](objc_msgSendAddr)
+  msgSend(
+    NSProcessInfo.getClass().ID,
     s"processInfo",
-  ).NSProcessInfo
+  )
 
 proc processName*(processInfo: NSProcessInfo): NSString =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSString {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     processInfo.ID,
     s"processName",
-  ).NSString
+  )
 
 proc sharedApplication*(_: typedesc[NSApplication]) =
-  discard objc_msgSend(
-    objc_getClass("NSApplication".cstring).ID,
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSendAddr)
+  discard msgSend(
+    NSApplication.getClass().ID,
     s"sharedApplication",
   )
 
@@ -484,7 +548,14 @@ proc setActivationPolicy*(
   app: NSApplication,
   policy: NSApplicationActivationPolicy
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      policy: NSApplicationActivationPolicy
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     app.ID,
     s"setActivationPolicy:",
     policy
@@ -494,35 +565,64 @@ proc setPresentationOptions*(
   app: NSApplication,
   options: NSApplicationPresentationOptions
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      options: NSApplicationPresentationOptions
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     app.ID,
     s"setPresentationOptions:",
     options
   )
 
 proc activateIgnoringOtherApps*(app: NSApplication, flag: BOOL) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      flag: BOOL
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     app.ID,
     s"activateIgnoringOtherApps:",
     flag
   )
 
-proc setDelegate*(app: NSApplication, delegate: ID) =
-  discard objc_msgSend(
-    app.ID,
+proc setDelegate*(obj: NSApplication | NSWindow, delegate: ID) =
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      delegate: ID
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
+    obj.ID,
     s"setDelegate:",
     delegate
   )
 
 proc setMainMenu*(app: NSApplication, menu: NSMenu) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      menu: NSMenu
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     app.ID,
     s"setMainMenu:",
     menu
   )
 
 proc finishLaunching*(app: NSApplication) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     app.ID,
     s"finishLaunching",
   )
@@ -534,30 +634,55 @@ proc nextEventMatchingMask*(
   mode: NSRunLoopMode,
   deqFlag: BOOL
 ): NSEvent =
-  objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      mask: NSEventMask,
+      expiration: NSDate,
+      mode: NSRunLoopMode,
+      deqFlag: BOOL
+    ): NSEvent {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     app.ID,
     s"nextEventMatchingMask:untilDate:inMode:dequeue:",
     mask,
     expiration,
     mode,
     deqFlag
-  ).NSEvent
+  )
 
 proc sendEvent*(app: NSApplication, event: NSEvent) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      event:NSEvent
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     app.ID,
     s"sendEvent:",
     event
   )
 
 proc distantPast*(_: typedesc[NSDate]): NSDate =
-  objc_msgSend(
-    objc_getClass("NSDate".cstring).ID,
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSDate {.cdecl.}](objc_msgSendAddr)
+  msgSend(
+    NSDate.getClass().ID,
     s"distantPast",
-  ).NSDate
+  )
 
 proc addItem*(menu: NSMenu, item: NSMenuItem) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      item: NSMenuItem
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     menu.ID,
     s"addItem:",
     item
@@ -569,7 +694,16 @@ proc initWithTitle*(
   action: SEL,
   keyEquivalent: NSString
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      title: NSString,
+      action: SEL,
+      keyEquivalent: NSString
+    ): ID {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     menuItem.ID,
     s"initWithTitle:action:keyEquivalent:",
     title,
@@ -578,7 +712,14 @@ proc initWithTitle*(
   )
 
 proc setSubmenu*(menuItem: NSMenuItem, subMenu: NSMenu) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      subMenu: NSMenu
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     menuItem.ID,
     s"setSubmenu:",
     subMenu
@@ -591,7 +732,17 @@ proc initWithContentRect*(
   backingStoreType: NSBackingStoreType,
   deferFlag: BOOL
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      contentRect: NSRect,
+      style: NSWindowStyleMask,
+      backingStoreType: NSBackingStoreType,
+      deferFlag: BOOL
+    ): ID {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     window.ID,
     s"initWithContentRect:styleMask:backing:defer:",
     contentRect,
@@ -600,109 +751,158 @@ proc initWithContentRect*(
     deferFlag
   )
 
-proc setDelegate*(window: NSWindow, delegate: ID) =
-  discard objc_msgSend(
-    window.ID,
-    s"setDelegate:",
-    delegate
-  )
-
 proc orderFront*(window: NSWindow, sender: ID) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      sender: ID
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"orderFront:",
     sender
   )
 
 proc orderOut*(window: NSWindow, sender: ID) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      sender: ID
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"orderOut:",
     sender
   )
 
 proc setTitle*(window: NSWindow, title: NSString) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      title: NSString
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"setTitle:",
     title
   )
 
 proc close*(window: NSWindow) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"close"
   )
 
 proc isVisible*(window: NSWindow): bool =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"isVisible"
-  ).int != 0
+  ) == YES
 
 proc miniaturize*(window: NSWindow, sender: ID) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      sender: ID
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"miniaturize:",
     sender
   )
 
 proc deminiaturize*(window: NSWindow, sender: ID) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      sender: ID
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"deminiaturize:",
     sender
   )
 
 proc isMiniaturized*(window: NSWindow): bool =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"isMiniaturized"
-  ).int != 0
+  ) == YES
 
 proc zoom*(window: NSWindow, sender: ID) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      sender: ID
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"zoom:",
     sender
   )
 
 proc isZoomed*(window: NSWindow): bool =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"isZoomed"
-  ).int != 0
+  ) == YES
 
 proc isKeyWindow*(window: NSWindow): bool =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"isKeyWindow"
-  ).int != 0
+  ) == YES
 
 proc contentView*(window: NSWindow): NSView =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSView {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"contentView"
-  ).NSView
+  )
 
 proc contentRectForFrameRect*(window: NSWindow, frameRect: NSRect): NSRect =
-  objc_msgSend_stret(
-    result.addr,
+  let msgSend = cast[proc(self: ID, cmd: SEL, frameRect: NSRect): NSRect {.cdecl.}](objc_msgSend_stretAddr)
+  msgSend(
     window.ID,
     s"contentRectForFrameRect:",
     frameRect
   )
 
 proc frameRectForContentRect*(window: NSWindow, contentRect: NSRect): NSRect =
-  objc_msgSend_stret(
-    result.addr,
+  let msgSend = cast[proc(self: ID, cmd: SEL, frameRect: NSRect): NSRect {.cdecl.}](objc_msgSend_stretAddr)
+  msgSend(
     window.ID,
     s"frameRectForContentRect:",
     contentRect
   )
 
 proc setFrame*(window: NSWindow, frameRect: NSRect, flag: BOOL) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      frameRect: NSRect,
+      flag: BOOL
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"setFrame:display:",
     frameRect,
@@ -710,103 +910,169 @@ proc setFrame*(window: NSWindow, frameRect: NSRect, flag: BOOL) =
   )
 
 proc screen*(window: NSWindow): NSScreen =
-  objc_msgSend(
+  let msgSend =
+    cast[proc(self: ID, cmd: SEL): NSScreen {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"screen"
-  ).NSScreen
+  )
 
 proc setFrameOrigin*(window: NSWindow, origin: NSPoint) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      origin: NSPoint
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"setFrameOrigin:",
     origin
   )
 
 proc setRestorable*(window: NSWindow, flag: BOOL) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      flag: BOOL
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"setRestorable:",
     flag
   )
 
 proc setContentView*(window: NSWindow, view: NSView) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      view: NSView
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"setContentView:",
     view
   )
 
 proc makeFirstResponder*(window: NSWindow, view: NSView): bool =
-  objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      view: NSView
+    ): BOOL {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"makeFirstResponder:",
     view
-  ).int != 0
+  ) == YES
 
 proc styleMask*(window: NSWindow): NSWindowStyleMask =
-  objc_msgSend(
+  let msgSend =
+    cast[proc(self: ID, cmd: SEL): NSWindowStyleMask {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"styleMask"
-  ).NSWindowStyleMask
+  )
 
 proc setStyleMask*(window: NSWindow, styleMask: NSWindowStyleMask) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      styleMask: NSWindowStyleMask
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"setStyleMask:",
     styleMask
   )
 
 proc toggleFullscreen*(window: NSWindow, sender: ID) =
-  discard objc_msgSend(
+  let msgSend =
+    cast[proc(self: ID, cmd: SEL, sender: ID) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"toggleFullScreen:",
     sender
   )
 
 proc invalidateCursorRectsForView*(window: NSWindow, view: NSView) =
-  discard objc_msgSend(
+  let msgSend =
+    cast[proc(self: ID, cmd: SEL, view: NSView) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     window.ID,
     s"invalidateCursorRectsForView:",
-    view.ID
+    view
   )
 
 proc convertRectToBacking*(view: NSView, rect: NSRect): NSRect =
-  objc_msgSend_stret(
-    result.addr,
+  let msgSend = cast[proc(self: ID, cmd: SEL, rect: NSRect): NSRect {.cdecl.}](objc_msgSend_stretAddr)
+  msgSend(
     view.ID,
     s"convertRectToBacking:",
     rect
   )
 
 proc window*(view: NSView): NSWindow =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSWindow {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     view.ID,
     s"window"
-  ).NSWindow
+  )
 
 proc bounds*(view: NSView): NSRect =
-  objc_msgSend_stret(
-    result.addr,
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSRect {.cdecl.}](objc_msgSend_stretAddr)
+  msgSend(
     view.ID,
     s"bounds"
   )
 
 proc removeTrackingArea*(view: NSView, trackingArea: NSTrackingArea) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      trackingArea: NSTrackingArea
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     view.ID,
     s"removeTrackingArea:",
     trackingArea
   )
 
 proc addTrackingArea*(view: NSView, trackingArea: NSTrackingArea) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      trackingArea: NSTrackingArea
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     view.ID,
     s"addTrackingArea:",
     trackingArea
   )
 
 proc addCursorRect*(view: NSview, rect: NSRect, cursor: NSCursor) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      rect: NSRect,
+      cursor: NSCursor
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     view.ID,
     s"addCursorRect:cursor:",
     rect,
@@ -814,16 +1080,24 @@ proc addCursorRect*(view: NSview, rect: NSRect, cursor: NSCursor) =
   )
 
 proc inputContext*(view: NSView): NSTextInputContext =
-  objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL): NSTextInputContext {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     view.ID,
     s"inputContext"
-  ).NSTextInputContext
+  )
 
 proc initWithAttributes*(
   pixelFormat: NSOpenGLPixelFormat,
   attribs: ptr NSOpenGLPixelFormatAttribute
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      attribs: ptr NSOpenGLPixelFormatAttribute
+    ): ID {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     pixelFormat.ID,
     s"initWithAttributes:",
     attribs
@@ -834,7 +1108,15 @@ proc initWithFrame*(
   frameRect: NSRect,
   pixelFormat: NSOpenGLPixelFormat
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      rect: NSRect,
+      pixelFormat:NSOpenGLPixelFormat
+    ): ID {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     view.ID,
     s"initWithFrame:pixelFormat:",
     frameRect,
@@ -845,20 +1127,26 @@ proc setWantsBestResolutionOpenGLSurface*(
   view: NSOpenGLView,
   flag: BOOL
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(self: ID, cmd: SEL, flag: BOOL) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     view.ID,
     s"setWantsBestResolutionOpenGLSurface:",
     flag
   )
 
 proc openGLContext*(view: NSOpenGLView): NSOpenGLContext =
-  objc_msgSend(
+  let msgSend =
+    cast[proc(self: ID, cmd: SEL): NSOpenGLContext {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     view.ID,
     s"openGLContext"
-  ).NSOpenGLContext
+  )
 
 proc makeCurrentContext*(context: NSOpenGLContext) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     context.ID,
     s"makeCurrentContext"
   )
@@ -868,7 +1156,15 @@ proc setValues*(
   values: ptr GLint,
   param: NSOpenGLContextParameter
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      values: ptr GLint,
+      param: NSOpenGLContextParameter
+    ) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     context.ID,
     s"setValues:forParameter:",
     values,
@@ -876,7 +1172,8 @@ proc setValues*(
   )
 
 proc flushBuffer*(context: NSOpenGLContext) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     context.ID,
     s"flushBuffer"
   )
@@ -887,7 +1184,17 @@ proc initWithRect*(
   options: NSTrackingAreaOptions,
   owner: ID
 ) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(
+      self: ID,
+      cmd: SEL,
+      rect: NSRect,
+      options: NSTrackingAreaOptions,
+      owner: ID,
+      userInfo: ID
+    ): ID {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     trackingArea.ID,
     s"initWithRect:options:owner:userInfo:",
     rect,
@@ -897,14 +1204,20 @@ proc initWithRect*(
   )
 
 proc initWithData*(image: NSImage, data: NSData) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(self: ID, cmd: SEL, data: NSData): ID {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     image.ID,
     s"initWithData:",
     data
   )
 
 proc initWithImage*(cursor: NSCursor, image: NSImage, hotspot: NSPoint) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(self: ID, cmd: SEL, image: NSImage, hotspot: NSPoint): ID {.cdecl.}
+  ](objc_msgSendAddr)
+  discard msgSend(
     cursor.ID,
     s"initWithImage:hotSpot:",
     image,
@@ -912,32 +1225,41 @@ proc initWithImage*(cursor: NSCursor, image: NSImage, hotspot: NSPoint) =
   )
 
 proc discardMarkedText*(context: NSTextInputContext) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     context.ID,
     s"discardMarkedText",
   )
 
 proc handleEvent*(context: NSTextInputContext, event: NSEvent): bool =
-  objc_msgSend(
+  let msgSend = cast[
+    proc(self: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     context.ID,
     s"handleEvent:",
     event
-  ).int != 0
+  ).BOOL == YES
 
 proc deactivate*(context: NSTextInputContext) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     context.ID,
     s"deactivate",
   )
 
 proc activate*(context: NSTextInputContext) =
-  discard objc_msgSend(
+  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSendAddr)
+  msgSend(
     context.ID,
     s"activate",
   )
 
 proc insertText2*(client: NSTextInputClient, obj: ID, range: NSRange) =
-  discard objc_msgSend(
+  let msgSend = cast[
+    proc(self: ID, cmd: SEL, obj: ID, range: NSRange) {.cdecl.}
+  ](objc_msgSendAddr)
+  msgSend(
     client.ID,
     s"insertText:replacementRange:",
     obj,
