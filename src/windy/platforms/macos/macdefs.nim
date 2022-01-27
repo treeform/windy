@@ -18,14 +18,14 @@ const
   NO* = BOOL(0)
 
 {.push cdecl, dynlib: "libobjc.dylib".}
-proc objc_msgSend*(self: ID, op: SEL): ID {.varargs, importc.}
-proc objc_msgSendSuper*(super: ptr objc_super, op: SEL): ID {.varargs, importc.}
+proc objc_msgSend*(self: ID, op: SEL): ID {.importc.}
+proc objc_msgSendSuper*(super: ptr objc_super, op: SEL): ID {.importc.}
 when defined(amd64):
-  proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.varargs, importc.}
-  proc objc_msgSend_stret*(stretAddr: pointer, self: ID, op: SEL) {.varargs, importc.}
+  proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.importc.}
+  proc objc_msgSend_stret*(stretAddr: pointer, self: ID, op: SEL) {.importc.}
 else:
-  proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.varargs, importc: "objc_msgSend".}
-  proc objc_msgSend_stret*(stretAddr: pointer, self: ID, op: SEL) {.varargs, importc: "objc_msgSend".}
+  proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.importc: "objc_msgSend".}
+  proc objc_msgSend_stret*(stretAddr: pointer, self: ID, op: SEL) {.importc: "objc_msgSend".}
 proc objc_getClass*(name: cstring): Class {.importc.}
 proc objc_getProtocol*(name: cstring): Protocol {.importc.}
 proc objc_allocateClassPair*(super: Class, name: cstring, extraBytes = 0): Class {.importc.}
