@@ -60,8 +60,7 @@ template addClass*(className, superName: string, cls: Class, body: untyped) =
     )
 
     template addProtocol(protocolName: string) =
-      discard class_addProtocol(
-        cls, objc_getProtocol(protocolName.cstring))
+      discard class_addProtocol(cls, objc_getProtocol(protocolName.cstring))
 
     template addMethod(methodName: string, fn: untyped) =
       discard class_addMethod(
