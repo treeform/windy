@@ -559,11 +559,13 @@ proc insertText(
 
   var range = NSMakeRange(0, characters.length.uint)
   while range.length > 0:
-    var codepoint: uint32
+    var
+      codepoint: uint32
+      usedLength: uint
     discard characters.getBytes(
       codepoint.addr,
       sizeof(codepoint).uint,
-      0,
+      usedLength.addr,
       NSUTF32StringEncoding,
       0.NSStringEncodingConversionOptions,
       range,
