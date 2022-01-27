@@ -314,7 +314,7 @@ proc getBytes*(
   s: NSString,
   buffer: pointer,
   maxLength: uint,
-  usedLength: uint,
+  usedLength: ptr uint,
   encoding: NSStringEncoding,
   options: NSStringEncodingConversionOptions,
   range: NSRange,
@@ -326,13 +326,13 @@ proc getBytes*(
       cmd: SEL,
       buffer: pointer,
       maxLength: uint,
-      usedLength: uint,
+      usedLength: ptr uint,
       encoding: NSStringEncoding,
       options: NSStringEncodingConversionOptions,
       range: NSRange,
       remainingRange: NSRangePointer
     ): BOOL {.cdecl.}
-  ](objc_msgSend_stretAddr)
+  ](objc_msgSendAddr)
   msgSend(
     s.ID,
     s"getBytes:maxLength:usedLength:encoding:options:range:remainingRange:",
