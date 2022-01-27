@@ -639,8 +639,11 @@ proc init() =
   if initialized:
     return
 
+  initObjc()
+
   autoreleasepool:
     NSApplication.sharedApplication()
+
     addClass "WindyAppDelegate", "NSObject", WindyAppDelegate:
       addMethod "applicationWillFinishLaunching:", applicationWillFinishLaunching
       addMethod "applicationDidFinishLaunching:", applicationDidFinishLaunching
@@ -693,7 +696,8 @@ proc init() =
     NSApp.finishLaunching()
 
     platformDoubleClickInterval = NSEvent.doubleClickInterval
-    initialized = true
+
+  initialized = true
 
 proc pollEvents*() =
   # Clear all per-frame data
@@ -754,9 +758,9 @@ proc newWindow*(
 ): Window =
   result = Window()
 
-  autoreleasepool:
-    init()
+  init()
 
+  autoreleasepool:
     result.inner = WindyWindow.alloc().NSWindow
     result.inner.initWithContentRect(
       NSMakeRect(0, 0, 400, 400),
@@ -868,12 +872,16 @@ proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
 proc getClipboardString*(): string =
+  init()
   autoreleasepool:
     let
       pboard = NSPasteboard.generalPasteboard
       types = pboard.types
 
-    if not pboard.types.containsObject(NSPasteboardTypeString.ID):
+    if types.int == 0:
+      return
+
+    if not types.containsObject(NSPasteboardTypeString.ID):
       return
 
     let value = pboard.stringForType(NSPasteboardTypeString)
@@ -883,6 +891,7 @@ proc getClipboardString*(): string =
     result = $value
 
 proc setClipboardString*(value: string) =
+  init()
   autoreleasepool:
     let pboard = NSPasteboard.generalPasteboard
     pboard.clearContents()
@@ -890,6 +899,7 @@ proc setClipboardString*(value: string) =
 
 proc getScreens*(): seq[Screen] =
   ## Queries and returns the currently connected screens.
+  init()
   autoreleasepool:
     let screensArray = NSScreen.screens
     for i in 0 ..< screensArray.count:
