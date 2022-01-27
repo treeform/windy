@@ -641,8 +641,6 @@ proc init() =
   if initialized:
     return
 
-  initObjc()
-
   autoreleasepool:
     NSApplication.sharedApplication()
 
