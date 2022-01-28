@@ -54,7 +54,10 @@ macro objc*(body: untyped) =
     # echo name
     sel.removeSuffix("*")
 
-    # add a template body without the arguments.
+    # Mark each prock inline:
+    fn[4] = quote do: {.inline.}
+
+    # Add a template body without the arguments.
     let msgSend = ident("msgSend")
     var procBody = quote do:
       let `msgSend` = cast[proc(): `retType` {.cdecl, raises: [], gcsafe.}](
@@ -69,7 +72,7 @@ macro objc*(body: untyped) =
     if repr(retType) in ["float64", "NSPoint"]:
       procBody[0][0][2][1] = ident("objc_msgSend_fpret")
 
-    # for each argument decide what to do
+    # For each argument decide what to do
     for defs in fn[3][1..^1]:
       for arg in defs[0 .. ^3]:
         let
@@ -137,7 +140,7 @@ macro objc*(body: untyped) =
 
   body.insert(0, header)
 
-  # echo repr body
+  echo repr body
 
   return body
 

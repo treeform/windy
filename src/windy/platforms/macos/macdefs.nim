@@ -106,8 +106,6 @@ var
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
 
-{.push inline.}
-
 objc:
   proc isKindOfClass*(self: NSObject, _: Class): bool
   proc superclass*(self: NSObject): Class
@@ -254,6 +252,8 @@ objc:
   proc deactivate*(self: NSTextInputContext)
   proc activate*(self: NSTextInputContext)
   proc insertText*(self: NSTextInputClient, _: ID, replacementRange: NSRange)
+
+{.push inline.}
 
 proc NSMakeRect*(x, y, w, h: float64): NSRect =
   CGRect(
