@@ -105,7 +105,7 @@ proc closeIme*(window: Window) =
     return
 
   if window.markedText.int != 0:
-    window.inner.contentView.NSTextInputClient.insertText2(
+    window.inner.contentView.NSTextInputClient.insertText(
       window.markedText.ID,
       kEmptyRange
     )
@@ -211,13 +211,13 @@ proc handleRune(window: Window, rune: Rune) =
 
 proc createMenuBar() =
   let
-    menuBar = NSMenu.getClass().new().NSMenu
-    appMenuItem = NSMenuItem.getClass().new().NSMenuItem
+    menuBar = NSMenu.new()
+    appMenuItem = NSMenuItem.new()
   menuBar.addItem(appMenuItem)
   NSApp.setMainMenu(menuBar)
 
   let
-    appMenu = NSMenu.getClass().new().NSMenu
+    appMenu = NSMenu.new()
     processName = NSProcessInfo.processinfo.processName
     quitTitle = @("Quit " & $processName)
     quitMenuitem = NSMenuItem.getClass().alloc().NSMenuItem
@@ -337,7 +337,8 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
   window.trackingArea.initWithRect(
     NSMakeRect(0, 0, 0, 0),
     options,
-    self
+    self,
+    0.ID
   )
 
   self.NSView.addTrackingArea(window.trackingArea)
@@ -511,7 +512,7 @@ proc setMarkedText(
 
   var characters: NSString
   if obj.NSObject.isKindOfClass(NSAttributedString.getClass()):
-    characters = obj.NSAttributedString.str()
+    characters = obj.NSAttributedString.string()
   else:
     characters = obj.NSString
 
@@ -541,7 +542,7 @@ proc attributedSubstringForProposedRange(
 ): NSAttributedString =
   discard
 
-proc insertText(
+proc insertText2(
   self: ID,
   cmd: SEL,
   obj: ID,
@@ -553,7 +554,7 @@ proc insertText(
 
   var characters: NSString
   if obj.NSObject.isKindOfClass(NSAttributedString.getClass()):
-    characters = obj.NSAttributedString.str()
+    characters = obj.NSAttributedString.string()
   else:
     characters = obj.NSString
 
@@ -642,7 +643,7 @@ proc init() =
     return
 
   autoreleasepool:
-    NSApplication.sharedApplication()
+    discard NSApplication.sharedApplication()
 
     addClass "WindyAppDelegate", "NSObject", WindyAppDelegate:
       addMethod "applicationWillFinishLaunching:", applicationWillFinishLaunching
@@ -684,13 +685,13 @@ proc init() =
       addMethod "unmarkText", unmarkText
       addMethod "validAttributesForMarkedText", validAttributesForMarkedText
       addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
-      addMethod "insertText:replacementRange:", insertText
+      addMethod "insertText:replacementRange:", insertText2
       addMethod "characterIndexForPoint:", characterIndexForPoint
       addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
       addMethod "doCommandBySelector:", doCommandBySelector
       addMethod "resetCursorRects", resetCursorRects
 
-    let appDelegate = WindyAppDelegate.new
+    let appDelegate = WindyAppDelegate.new()
     NSApp.setDelegate(appDelegate)
 
     NSApp.finishLaunching()
@@ -902,7 +903,7 @@ proc getScreens*(): seq[Screen] =
   init()
   autoreleasepool:
     let screensArray = NSScreen.screens
-    for i in 0 ..< screensArray.count:
+    for i in 0 ..< screensArray.count.int:
       let
         screen = screensArray[i].NSScreen
         frame = screen.frame

@@ -1,76 +1,7 @@
-import opengl, std/typetraits
+import opengl, std/typetraits, objc
+export objc
 
 {.passL: "-framework Cocoa".}
-
-type
-  BOOL* = cchar
-  Class* = distinct int
-  ID* = distinct int
-  SEL* = distinct int
-  Protocol* = distinct int
-  IMP* = proc(self: ID, cmd: SEL): ID {.cdecl, varargs.}
-  objc_super* = object
-    receiver*: ID
-    super_class*: Class
-
-const
-  YES* = BOOL(1)
-  NO* = BOOL(0)
-
-{.push cdecl, dynlib: "libobjc.dylib".}
-proc objc_msgSend*(self: ID, op: SEL): ID {.importc.}
-proc objc_msgSendSuper*(super: ptr objc_super, op: SEL): ID {.importc.}
-when defined(amd64):
-  proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.importc.}
-  proc objc_msgSend_stret*(stretAddr: pointer, self: ID, op: SEL) {.importc.}
-else:
-  proc objc_msgSend_fpret*(self: ID, op: SEL): float64 {.importc: "objc_msgSend".}
-  proc objc_msgSend_stret*(stretAddr: pointer, self: ID, op: SEL) {.importc: "objc_msgSend".}
-proc objc_getClass*(name: cstring): Class {.importc.}
-proc objc_getProtocol*(name: cstring): Protocol {.importc.}
-proc objc_allocateClassPair*(super: Class, name: cstring, extraBytes = 0): Class {.importc.}
-proc objc_registerClassPair*(cls: Class) {.importc.}
-proc class_getName*(cls: Class): cstring {.importc.}
-proc class_addMethod*(cls: Class, name: SEL, imp: IMP, types: cstring): BOOL {.importc.}
-proc object_getClass*(id: ID): Class {.importc.}
-proc sel_registerName*(s: cstring): SEL {.importc.}
-proc sel_getName*(sel: SEL): cstring {.importc.}
-proc class_addProtocol*(cls: Class, protocol: Protocol): BOOL {.importc.}
-{.pop.}
-
-template s*(s: string): SEL =
-  sel_registerName(s.cstring)
-
-template addClass*(className, superName: string, cls: Class, body: untyped) =
-  block:
-    cls = objc_allocateClassPair(
-      objc_getClass(superName.cstring),
-      className.cstring
-    )
-
-    template addProtocol(protocolName: string) =
-      discard class_addProtocol(cls, objc_getProtocol(protocolName.cstring))
-
-    template addMethod(methodName: string, fn: untyped) =
-      discard class_addMethod(
-        cls,
-        s(methodName),
-        cast[IMP](fn),
-        "".cstring
-      )
-
-    body
-
-    objc_registerClassPair(cls)
-
-proc `$`*(cls: Class): string =
-  $class_getName(cls)
-
-proc `$`*(id: ID): string =
-  $object_getClass(id)
-
-proc `$`*(sel: SEL): string =
-  $sel_getName(sel)
 
 type
   CGPoint* {.pure, bycopy.} = object
@@ -106,10 +37,8 @@ type
 
   NSObject* = distinct int
   NSAutoreleasePool* = distinct NSObject
-  NSString* = distinct NSObject
   NSAttributedString* = distinct NSObject
   NSData* = distinct NSObject
-  NSError* = distinct NSObject
   NSArray* = distinct NSObject
   NSScreen* = distinct NSObject
   NSPasteboard* = distinct NSObject
@@ -179,6 +108,155 @@ var
 
 {.push inline.}
 
+objc:
+  proc isKindOfClass*(self: NSObject, _: Class): bool
+  proc superclass*(self: NSObject): Class
+  proc retain*(self: ID)
+  proc release*(self: ID)
+  proc stringWithString*(class: typedesc[NSString], _: NSString): NSString
+  proc getBytes*(
+    self: NSString,
+    _: pointer,
+    maxLength: uint,
+    usedLength: ptr uint,
+    encoding: NSStringEncoding,
+    options: NSStringEncodingConversionOptions,
+    range: NSRange,
+    remainingRange: NSRangePointer
+  ): bool
+  proc string*(self: NSAttributedString): NSString
+  proc doubleClickInterval*(class: typedesc[NSEvent]): float64
+  proc scrollingDeltaX*(self: NSEvent): float64
+  proc scrollingDeltaY*(self: NSEvent): float64
+  proc hasPreciseScrollingDeltas*(self: NSEvent): bool
+  proc locationInWindow*(self: NSEvent): NSPoint
+  proc buttonNumber*(self: NSEvent): int
+  proc keyCode*(self: NSEvent): uint16
+  proc dataWithBytes*(class: typedesc[NSData], _: pointer, length: int): NSData
+  proc length*(self: NSData): uint
+  proc length*(self: NSString): uint
+  proc array*(class: typedesc[NSArray]): NSArray
+  proc count*(self: NSArray): uint
+  proc objectAtIndex*(self: NSArray, _: uint): ID
+  proc containsObject*(self: NSArray, _: ID): bool
+  proc screens*(class: typedesc[NSScreen]): NSArray
+  proc frame*(self: NSScreen): NSRect
+  proc frame*(self: NSWindow): NSRect
+  proc frame*(self: NSView): NSRect
+  proc generalPasteboard*(class: typedesc[NSPasteboard]): NSPasteboard
+  proc types*(self: NSPasteboard): NSArray
+  proc stringForType*(self: NSPasteboard, _: NSPasteboardType): NSString
+  proc clearContents*(self: NSPasteboard)
+  proc setString*(self: NSPasteboard, _: NSString, forType: NSPasteboardType)
+  proc processInfo*(class: typedesc[NSProcessInfo]): NSProcessInfo
+  proc processName*(self: NSProcessInfo): NSString
+  proc sharedApplication*(class: typedesc[NSApplication]): NSApplication
+  proc setActivationPolicy*(
+    self: NSApplication,
+    _: NSApplicationActivationPolicy
+  )
+  proc setPresentationOptions*(
+    self: NSApplication,
+    _: NSApplicationPresentationOptions
+  )
+  proc activateIgnoringOtherApps*(self: NSApplication, _: BOOL)
+  proc setDelegate*(self: NSApplication, _: ID)
+  proc setDelegate*(self: NSWindow, _: ID)
+  proc setMainMenu*(self: NSApplication, _: NSMenu)
+  proc finishLaunching*(self: NSApplication)
+  proc nextEventMatchingMask*(
+    self: NSApplication,
+    _: NSEventMask,
+    untilDate: NSDate,
+    inMode: NSRunLoopMode,
+    dequeue: BOOL
+  ): NSEvent
+  proc sendEvent*(self: NSApplication, _: NSEvent)
+  proc distantPast*(class: typedesc[NSDate]): NSDate
+  proc addItem*(self: NSMenu, _: NSMenuItem)
+  proc initWithTitle*(
+    self: NSMenuItem,
+    _: NSString,
+    action: SEL,
+    keyEquivalent: NSString
+  )
+  proc setSubmenu*(self: NSMenuItem, _: NSMenu)
+  proc initWithContentRect*(
+    self: NSWindow,
+    _: NSRect,
+    styleMask: NSWindowStyleMask,
+    backing: NSBackingStoreType,
+    defer_mangle: BOOL
+  )
+  proc orderFront*(self: NSWindow, _: ID)
+  proc orderOut*(self: NSWindow, _: ID)
+  proc setTitle*(self: NSWindow, _: NSString)
+  proc close*(self: NSWindow)
+  proc isVisible*(self: NSWindow): bool
+  proc miniaturize*(self: NSWindow, _: ID)
+  proc deminiaturize*(self: NSWindow, _: ID)
+  proc isMiniaturized*(self: NSWindow): bool
+  proc zoom*(self: NSWindow, _: ID)
+  proc isZoomed*(self: NSWindow): bool
+  proc isKeyWindow*(self: NSWindow): bool
+  proc contentView*(self: NSWindow): NSView
+  proc contentRectForFrameRect*(self: NSWindow, _: NSRect): NSRect
+  proc frameRectForContentRect*(self: NSWindow, _: NSRect): NSRect
+  proc setFrame*(self: NSWindow, _: NSRect, display: BOOL)
+  proc screen*(self: NSWindow): NSScreen
+  proc setFrameOrigin*(self: NSWindow, _: NSPoint)
+  proc setRestorable*(self: NSWindow, _: BOOL)
+  proc setContentView*(self: NSWindow, _: NSView)
+  proc makeFirstResponder*(self: NSWindow, _: NSView): bool
+  proc styleMask*(self: NSWindow): NSWindowStyleMask
+  proc setStyleMask*(self: NSWindow, _: NSWindowStyleMask)
+  proc toggleFullscreen*(self: NSWindow, _: ID)
+  proc invalidateCursorRectsForView*(self: NSWindow, _: NSView)
+  proc convertRectToBacking*(self: NSView, _: NSRect): NSRect
+  proc window*(self: NSView): NSWindow
+  proc bounds*(self: NSView): NSRect
+  proc removeTrackingArea*(self: NSView, _: NSTrackingArea)
+  proc addTrackingArea*(self: NSView, _: NSTrackingArea)
+  proc addCursorRect*(self: NSview, _: NSRect, cursor: NSCursor)
+  proc inputContext*(self: NSView): NSTextInputContext
+  proc initWithAttributes*(
+    self: NSOpenGLPixelFormat,
+    _: ptr NSOpenGLPixelFormatAttribute
+  )
+  proc initWithFrame*(
+    self: NSOpenGLView,
+    _: NSRect,
+    pixelFormat: NSOpenGLPixelFormat
+  )
+  proc setWantsBestResolutionOpenGLSurface*(
+    self: NSOpenGLView,
+    _: BOOL
+  )
+  proc openGLContext*(self: NSOpenGLView): NSOpenGLContext
+  proc makeCurrentContext*(self: NSOpenGLContext)
+  proc setValues*(
+    self: NSOpenGLContext,
+    _: ptr GLint,
+    forParameter: NSOpenGLContextParameter
+  )
+  proc flushBuffer*(self: NSOpenGLContext)
+  proc initWithRect*(
+    self: NSTrackingArea,
+    _: NSRect,
+    options: NSTrackingAreaOptions,
+    owner: ID,
+    userInfo: ID
+  )
+  proc initWithData*(self: NSImage, _: NSData)
+  proc initWithImage*(self: NSCursor, _: NSImage, hotSpot: NSPoint)
+  proc discardMarkedText*(self: NSTextInputContext)
+  proc handleEvent*(self: NSTextInputContext, _: NSEvent): bool
+  proc deactivate*(self: NSTextInputContext)
+  proc activate*(self: NSTextInputContext)
+  proc insertText*(self: NSTextInputClient, _: ID, replacementRange: NSRange)
+  proc new*(class: typedesc[NSMenu]): NSMenu
+  proc new*(class: typedesc[NSMenuItem]): NSMenuItem
+
 proc NSMakeRect*(x, y, w, h: float64): NSRect =
   CGRect(
     origin: CGPoint(x: x, y: y),
@@ -194,9 +272,6 @@ proc NSMakeRange*(loc, len: uint): NSRange =
 proc NSMakePoint*(x, y: float): NSPoint =
   NSPoint(x: x, y: y)
 
-proc getClass*(t: typedesc): Class =
-  objc_getClass(t.name.cstring)
-
 proc new*(cls: Class): ID =
   let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
   msgSend(
@@ -211,21 +286,8 @@ proc alloc*(cls: Class): ID =
     s"alloc"
   )
 
-proc isKindOfClass*(obj: NSObject, cls: Class): bool =
-  let msgSend =
-    cast[proc(self: ID, cmd: SEL, cls: Class): BOOL {.cdecl.}](objc_msgSend)
-  msgSend(
-    obj.ID,
-    s"isKindOfClass:",
-    cls
-  ) == YES
-
-proc superclass*(obj: NSObject): Class =
-  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
-  msgSend(
-    obj.ID,
-    s"superclass"
-  ).Class
+proc `[]`*(arr: NSArray, index: int): ID =
+  arr.objectAtIndex(index.uint)
 
 proc callSuper*(sender: ID, cmd: SEL) =
   var super = objc_super(
@@ -238,1020 +300,6 @@ proc callSuper*(sender: ID, cmd: SEL) =
   msgSendSuper(
     super.addr,
     cmd
-  )
-
-proc retain*(id: ID) =
-  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
-  discard msgSend(
-    id,
-    sel_registerName("retain".cstring)
-  )
-
-proc release*(id: ID) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    id,
-    s"release"
-  )
-
-template autoreleasepool*(body: untyped) =
-  let pool = NSAutoreleasePool.getClass().new()
-  try:
-    body
-  finally:
-    pool.ID.release()
-
-proc `@`*(s: string): NSString =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      s: cstring
-    ): NSString {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    NSString.getClass().ID,
-    s"stringWithUTF8String:",
-    s.cstring
-  )
-
-proc UTF8String(s: NSString): cstring =
-  let msgSend = cast[proc(self: ID, cmd: SEL): cstring {.cdecl.}](objc_msgSend)
-  msgSend(
-    s.ID,
-    s"UTF8String"
-  )
-
-proc `$`*(s: NSString): string =
-  $s.UTF8String
-
-proc stringWithString*(_: typedesc[NSString], s: NSString): NSString =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      s: NSString
-    ): NSString {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    NSString.getClass().ID,
-    s"stringWithString:",
-    s
-  )
-
-proc getBytes*(
-  s: NSString,
-  buffer: pointer,
-  maxLength: uint,
-  usedLength: ptr uint,
-  encoding: NSStringEncoding,
-  options: NSStringEncodingConversionOptions,
-  range: NSRange,
-  remainingRange: NSRangePointer
-): bool =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      buffer: pointer,
-      maxLength: uint,
-      usedLength: ptr uint,
-      encoding: NSStringEncoding,
-      options: NSStringEncodingConversionOptions,
-      range: NSRange,
-      remainingRange: NSRangePointer
-    ): BOOL {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    s.ID,
-    s"getBytes:maxLength:usedLength:encoding:options:range:remainingRange:",
-    buffer,
-    maxLength,
-    usedLength,
-    encoding,
-    options,
-    range,
-    remainingRange
-  ) == YES
-
-proc str*(s: NSAttributedString): NSString =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSString {.cdecl.}](objc_msgSend)
-  msgSend(
-    s.ID,
-    s"string"
-  )
-
-proc doubleClickInterval*(_: typedesc[NSEvent]): float64 =
-  let msgSend = cast[proc(self: ID, cmd: SEL): float64 {.cdecl.}](objc_msgSend_fpret)
-  msgSend(
-    NSEvent.getClass().ID,
-    s"doubleClickInterval"
-  )
-
-proc scrollingDeltaX*(event: NSEvent): float64 =
-  let msgSend = cast[proc(self: ID, cmd: SEL): float64 {.cdecl.}](objc_msgSend_fpret)
-  msgSend(
-    event.ID,
-    s"scrollingDeltaX"
-  )
-
-proc scrollingDeltaY*(event: NSEvent): float64 =
-  let msgSend = cast[proc(self: ID, cmd: SEL): float64 {.cdecl.}](objc_msgSend_fpret)
-  msgSend(
-    event.ID,
-    s"scrollingDeltaY"
-  )
-
-proc hasPreciseScrollingDeltas*(event: NSEvent): bool =
-  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSend)
-  msgSend(
-    event.ID,
-    s"hasPreciseScrollingDeltas"
-  ) == YES
-
-proc locationInWindow*(event: NSEvent): NSPoint =
-  let msgSend = cast[proc(self: ID, op: SEL): NSPoint {.cdecl.}](objc_msgSend_fpret)
-  msgSend(
-    event.ID,
-    sel_registerName("locationInWindow".cstring)
-  )
-
-proc buttonNumber*(event: NSEvent): int =
-  let msgSend = cast[proc(self: ID, cmd: SEL): int {.cdecl.}](objc_msgSend)
-  msgSend(
-    event.ID,
-    s"buttonNumber"
-  )
-
-proc keyCode*(event: NSEvent): uint16 =
-  let msgSend = cast[proc(self: ID, cmd: SEL): uint16 {.cdecl.}](objc_msgSend)
-  msgSend(
-    event.ID,
-    s"keyCode"
-  )
-
-proc dataWithBytes*(_: typedesc[NSData], bytes: pointer, len: int): NSData =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      bytes: pointer,
-      len: int
-    ): NSData {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    NSData.getClass().ID,
-    s"dataWithBytes:length:",
-    bytes,
-    len
-  )
-
-proc length*(obj: NSData | NSString): uint =
-  let msgSend = cast[proc(self: ID, cmd: SEL): uint {.cdecl.}](objc_msgSend)
-  msgSend(
-    obj.ID,
-    s"length"
-  )
-
-proc array*(_: typedesc[NSArray]): NSArray =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSArray {.cdecl.}](objc_msgSend)
-  msgSend(
-    NSArray.getClass().ID,
-    s"array"
-  )
-
-proc count*(arr: NSArray): int =
-  let msgSend = cast[proc(self: ID, cmd: SEL): uint {.cdecl.}](objc_msgSend)
-  msgSend(
-    arr.ID,
-    s"count"
-  ).int
-
-proc objectAtIndex*(arr: NSArray, index: int): ID =
-  let msgSend = cast[proc(self: ID, cmd: SEL, index: uint): ID {.cdecl.}](objc_msgSend)
-  msgSend(
-    arr.ID,
-    s"objectAtIndex:",
-    index.uint
-  )
-
-proc `[]`*(arr: NSArray, index: int): ID =
-  arr.objectAtIndex(index)
-
-proc containsObject*(arr: NSArray, o: ID): bool =
-  let msgSend = cast[proc(self: ID, cmd: SEL, o: ID): BOOL {.cdecl.}](objc_msgSend)
-  msgSend(
-    arr.ID,
-    s"containsObject:",
-    o
-  ) == YES
-
-proc screens*(_: typedesc[NSScreen]): NSArray =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSArray {.cdecl.}](objc_msgSend)
-  msgSend(
-    NSScreen.getClass().ID,
-    s"screens"
-  )
-
-proc frame*(obj: NSScreen | NSWindow | NSView): NSRect =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSRect {.cdecl.}](objc_msgSend_stret)
-  msgSend(
-    obj.ID,
-    s"frame"
-  )
-
-proc generalPasteboard*(_: typedesc[NSPasteboard]): NSPasteboard =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSPasteboard {.cdecl.}](objc_msgSend)
-  msgSend(
-    NSPasteboard.getClass().ID,
-    s"generalPasteboard"
-  )
-
-proc types*(pboard: NSPasteboard): NSArray =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSArray {.cdecl.}](objc_msgSend)
-  msgSend(
-    pboard.ID,
-    s"types"
-  )
-
-proc stringForType*(pboard: NSPasteboard, t: NSPasteboardType): NSString =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      t: NSPasteboardType
-    ): NSString {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    pboard.ID,
-    s"stringForType:",
-    t
-  )
-
-proc clearContents*(pboard: NSPasteboard) =
-  let msgSend = cast[proc(self: ID, cmd: SEL): int {.cdecl.}](objc_msgSend)
-  discard msgSend(
-    pboard.ID,
-    s"clearContents",
-  )
-
-proc setString*(pboard: NSPasteboard, s: NSString, dataType: NSPasteboardType) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      s: NSString,
-      dataType: NSPasteboardType
-    ): BOOL {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    pboard.ID,
-    s"setString:forType:",
-    s,
-    dataType
-  )
-
-proc processInfo*(_: typedesc[NSProcessInfo]): NSProcessInfo =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSProcessInfo {.cdecl.}](objc_msgSend)
-  msgSend(
-    NSProcessInfo.getClass().ID,
-    s"processInfo",
-  )
-
-proc processName*(processInfo: NSProcessInfo): NSString =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSString {.cdecl.}](objc_msgSend)
-  msgSend(
-    processInfo.ID,
-    s"processName",
-  )
-
-proc sharedApplication*(_: typedesc[NSApplication]) =
-  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
-  discard msgSend(
-    NSApplication.getClass().ID,
-    s"sharedApplication",
-  )
-
-proc setActivationPolicy*(
-  app: NSApplication,
-  policy: NSApplicationActivationPolicy
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      policy: NSApplicationActivationPolicy
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    app.ID,
-    s"setActivationPolicy:",
-    policy
-  )
-
-proc setPresentationOptions*(
-  app: NSApplication,
-  options: NSApplicationPresentationOptions
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      options: NSApplicationPresentationOptions
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    app.ID,
-    s"setPresentationOptions:",
-    options
-  )
-
-proc activateIgnoringOtherApps*(app: NSApplication, flag: BOOL) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      flag: BOOL
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    app.ID,
-    s"activateIgnoringOtherApps:",
-    flag
-  )
-
-proc setDelegate*(obj: NSApplication | NSWindow, delegate: ID) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      delegate: ID
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    obj.ID,
-    s"setDelegate:",
-    delegate
-  )
-
-proc setMainMenu*(app: NSApplication, menu: NSMenu) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      menu: NSMenu
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    app.ID,
-    s"setMainMenu:",
-    menu
-  )
-
-proc finishLaunching*(app: NSApplication) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    app.ID,
-    s"finishLaunching",
-  )
-
-proc nextEventMatchingMask*(
-  app: NSApplication,
-  mask: NSEventMask,
-  expiration: NSDate,
-  mode: NSRunLoopMode,
-  deqFlag: BOOL
-): NSEvent =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      mask: NSEventMask,
-      expiration: NSDate,
-      mode: NSRunLoopMode,
-      deqFlag: BOOL
-    ): NSEvent {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    app.ID,
-    s"nextEventMatchingMask:untilDate:inMode:dequeue:",
-    mask,
-    expiration,
-    mode,
-    deqFlag
-  )
-
-proc sendEvent*(app: NSApplication, event: NSEvent) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      event:NSEvent
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    app.ID,
-    s"sendEvent:",
-    event
-  )
-
-proc distantPast*(_: typedesc[NSDate]): NSDate =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSDate {.cdecl.}](objc_msgSend)
-  msgSend(
-    NSDate.getClass().ID,
-    s"distantPast",
-  )
-
-proc addItem*(menu: NSMenu, item: NSMenuItem) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      item: NSMenuItem
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    menu.ID,
-    s"addItem:",
-    item
-  )
-
-proc initWithTitle*(
-  menuItem: NSMenuItem,
-  title: NSString,
-  action: SEL,
-  keyEquivalent: NSString
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      title: NSString,
-      action: SEL,
-      keyEquivalent: NSString
-    ): ID {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    menuItem.ID,
-    s"initWithTitle:action:keyEquivalent:",
-    title,
-    action,
-    keyEquivalent
-  )
-
-proc setSubmenu*(menuItem: NSMenuItem, subMenu: NSMenu) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      subMenu: NSMenu
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    menuItem.ID,
-    s"setSubmenu:",
-    subMenu
-  )
-
-proc initWithContentRect*(
-  window: NSWindow,
-  contentRect: NSRect,
-  style: NSWindowStyleMask,
-  backingStoreType: NSBackingStoreType,
-  deferFlag: BOOL
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      contentRect: NSRect,
-      style: NSWindowStyleMask,
-      backingStoreType: NSBackingStoreType,
-      deferFlag: BOOL
-    ): ID {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    window.ID,
-    s"initWithContentRect:styleMask:backing:defer:",
-    contentRect,
-    style,
-    backingStoreType,
-    deferFlag
-  )
-
-proc orderFront*(window: NSWindow, sender: ID) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      sender: ID
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"orderFront:",
-    sender
-  )
-
-proc orderOut*(window: NSWindow, sender: ID) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      sender: ID
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"orderOut:",
-    sender
-  )
-
-proc setTitle*(window: NSWindow, title: NSString) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      title: NSString
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"setTitle:",
-    title
-  )
-
-proc close*(window: NSWindow) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"close"
-  )
-
-proc isVisible*(window: NSWindow): bool =
-  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"isVisible"
-  ) == YES
-
-proc miniaturize*(window: NSWindow, sender: ID) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      sender: ID
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"miniaturize:",
-    sender
-  )
-
-proc deminiaturize*(window: NSWindow, sender: ID) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      sender: ID
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"deminiaturize:",
-    sender
-  )
-
-proc isMiniaturized*(window: NSWindow): bool =
-  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"isMiniaturized"
-  ) == YES
-
-proc zoom*(window: NSWindow, sender: ID) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      sender: ID
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"zoom:",
-    sender
-  )
-
-proc isZoomed*(window: NSWindow): bool =
-  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"isZoomed"
-  ) == YES
-
-proc isKeyWindow*(window: NSWindow): bool =
-  let msgSend = cast[proc(self: ID, cmd: SEL): BOOL {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"isKeyWindow"
-  ) == YES
-
-proc contentView*(window: NSWindow): NSView =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSView {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"contentView"
-  )
-
-proc contentRectForFrameRect*(window: NSWindow, frameRect: NSRect): NSRect =
-  let msgSend = cast[proc(self: ID, cmd: SEL, frameRect: NSRect): NSRect {.cdecl.}](objc_msgSend_stret)
-  msgSend(
-    window.ID,
-    s"contentRectForFrameRect:",
-    frameRect
-  )
-
-proc frameRectForContentRect*(window: NSWindow, contentRect: NSRect): NSRect =
-  let msgSend = cast[proc(self: ID, cmd: SEL, frameRect: NSRect): NSRect {.cdecl.}](objc_msgSend_stret)
-  msgSend(
-    window.ID,
-    s"frameRectForContentRect:",
-    contentRect
-  )
-
-proc setFrame*(window: NSWindow, frameRect: NSRect, flag: BOOL) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      frameRect: NSRect,
-      flag: BOOL
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"setFrame:display:",
-    frameRect,
-    flag
-  )
-
-proc screen*(window: NSWindow): NSScreen =
-  let msgSend =
-    cast[proc(self: ID, cmd: SEL): NSScreen {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"screen"
-  )
-
-proc setFrameOrigin*(window: NSWindow, origin: NSPoint) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      origin: NSPoint
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"setFrameOrigin:",
-    origin
-  )
-
-proc setRestorable*(window: NSWindow, flag: BOOL) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      flag: BOOL
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"setRestorable:",
-    flag
-  )
-
-proc setContentView*(window: NSWindow, view: NSView) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      view: NSView
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"setContentView:",
-    view
-  )
-
-proc makeFirstResponder*(window: NSWindow, view: NSView): bool =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      view: NSView
-    ): BOOL {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"makeFirstResponder:",
-    view
-  ) == YES
-
-proc styleMask*(window: NSWindow): NSWindowStyleMask =
-  let msgSend =
-    cast[proc(self: ID, cmd: SEL): NSWindowStyleMask {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"styleMask"
-  )
-
-proc setStyleMask*(window: NSWindow, styleMask: NSWindowStyleMask) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      styleMask: NSWindowStyleMask
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"setStyleMask:",
-    styleMask
-  )
-
-proc toggleFullscreen*(window: NSWindow, sender: ID) =
-  let msgSend =
-    cast[proc(self: ID, cmd: SEL, sender: ID) {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"toggleFullScreen:",
-    sender
-  )
-
-proc invalidateCursorRectsForView*(window: NSWindow, view: NSView) =
-  let msgSend =
-    cast[proc(self: ID, cmd: SEL, view: NSView) {.cdecl.}](objc_msgSend)
-  msgSend(
-    window.ID,
-    s"invalidateCursorRectsForView:",
-    view
-  )
-
-proc convertRectToBacking*(view: NSView, rect: NSRect): NSRect =
-  let msgSend = cast[proc(self: ID, cmd: SEL, rect: NSRect): NSRect {.cdecl.}](objc_msgSend_stret)
-  msgSend(
-    view.ID,
-    s"convertRectToBacking:",
-    rect
-  )
-
-proc window*(view: NSView): NSWindow =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSWindow {.cdecl.}](objc_msgSend)
-  msgSend(
-    view.ID,
-    s"window"
-  )
-
-proc bounds*(view: NSView): NSRect =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSRect {.cdecl.}](objc_msgSend_stret)
-  msgSend(
-    view.ID,
-    s"bounds"
-  )
-
-proc removeTrackingArea*(view: NSView, trackingArea: NSTrackingArea) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      trackingArea: NSTrackingArea
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    view.ID,
-    s"removeTrackingArea:",
-    trackingArea
-  )
-
-proc addTrackingArea*(view: NSView, trackingArea: NSTrackingArea) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      trackingArea: NSTrackingArea
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    view.ID,
-    s"addTrackingArea:",
-    trackingArea
-  )
-
-proc addCursorRect*(view: NSview, rect: NSRect, cursor: NSCursor) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      rect: NSRect,
-      cursor: NSCursor
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    view.ID,
-    s"addCursorRect:cursor:",
-    rect,
-    cursor
-  )
-
-proc inputContext*(view: NSView): NSTextInputContext =
-  let msgSend = cast[proc(self: ID, cmd: SEL): NSTextInputContext {.cdecl.}](objc_msgSend)
-  msgSend(
-    view.ID,
-    s"inputContext"
-  )
-
-proc initWithAttributes*(
-  pixelFormat: NSOpenGLPixelFormat,
-  attribs: ptr NSOpenGLPixelFormatAttribute
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      attribs: ptr NSOpenGLPixelFormatAttribute
-    ): ID {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    pixelFormat.ID,
-    s"initWithAttributes:",
-    attribs
-  )
-
-proc initWithFrame*(
-  view: NSOpenGLView,
-  frameRect: NSRect,
-  pixelFormat: NSOpenGLPixelFormat
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      rect: NSRect,
-      pixelFormat:NSOpenGLPixelFormat
-    ): ID {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    view.ID,
-    s"initWithFrame:pixelFormat:",
-    frameRect,
-    pixelFormat
-  )
-
-proc setWantsBestResolutionOpenGLSurface*(
-  view: NSOpenGLView,
-  flag: BOOL
-) =
-  let msgSend = cast[
-    proc(self: ID, cmd: SEL, flag: BOOL) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    view.ID,
-    s"setWantsBestResolutionOpenGLSurface:",
-    flag
-  )
-
-proc openGLContext*(view: NSOpenGLView): NSOpenGLContext =
-  let msgSend =
-    cast[proc(self: ID, cmd: SEL): NSOpenGLContext {.cdecl.}](objc_msgSend)
-  msgSend(
-    view.ID,
-    s"openGLContext"
-  )
-
-proc makeCurrentContext*(context: NSOpenGLContext) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    context.ID,
-    s"makeCurrentContext"
-  )
-
-proc setValues*(
-  context: NSOpenGLContext,
-  values: ptr GLint,
-  param: NSOpenGLContextParameter
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      values: ptr GLint,
-      param: NSOpenGLContextParameter
-    ) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    context.ID,
-    s"setValues:forParameter:",
-    values,
-    param
-  )
-
-proc flushBuffer*(context: NSOpenGLContext) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    context.ID,
-    s"flushBuffer"
-  )
-
-proc initWithRect*(
-  trackingArea: NSTrackingArea,
-  rect: NSRect,
-  options: NSTrackingAreaOptions,
-  owner: ID
-) =
-  let msgSend = cast[
-    proc(
-      self: ID,
-      cmd: SEL,
-      rect: NSRect,
-      options: NSTrackingAreaOptions,
-      owner: ID,
-      userInfo: ID
-    ): ID {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    trackingArea.ID,
-    s"initWithRect:options:owner:userInfo:",
-    rect,
-    options,
-    owner,
-    0.ID
-  )
-
-proc initWithData*(image: NSImage, data: NSData) =
-  let msgSend = cast[
-    proc(self: ID, cmd: SEL, data: NSData): ID {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    image.ID,
-    s"initWithData:",
-    data
-  )
-
-proc initWithImage*(cursor: NSCursor, image: NSImage, hotspot: NSPoint) =
-  let msgSend = cast[
-    proc(self: ID, cmd: SEL, image: NSImage, hotspot: NSPoint): ID {.cdecl.}
-  ](objc_msgSend)
-  discard msgSend(
-    cursor.ID,
-    s"initWithImage:hotSpot:",
-    image,
-    hotspot
-  )
-
-proc discardMarkedText*(context: NSTextInputContext) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    context.ID,
-    s"discardMarkedText",
-  )
-
-proc handleEvent*(context: NSTextInputContext, event: NSEvent): bool =
-  let msgSend = cast[
-    proc(self: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    context.ID,
-    s"handleEvent:",
-    event
-  ).BOOL == YES
-
-proc deactivate*(context: NSTextInputContext) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    context.ID,
-    s"deactivate",
-  )
-
-proc activate*(context: NSTextInputContext) =
-  let msgSend = cast[proc(self: ID, cmd: SEL) {.cdecl.}](objc_msgSend)
-  msgSend(
-    context.ID,
-    s"activate",
-  )
-
-proc insertText2*(client: NSTextInputClient, obj: ID, range: NSRange) =
-  let msgSend = cast[
-    proc(self: ID, cmd: SEL, obj: ID, range: NSRange) {.cdecl.}
-  ](objc_msgSend)
-  msgSend(
-    client.ID,
-    s"insertText:replacementRange:",
-    obj,
-    range
   )
 
 {.pop.}
