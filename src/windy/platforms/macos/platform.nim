@@ -105,7 +105,7 @@ proc closeIme*(window: Window) =
     return
 
   if window.markedText.int != 0:
-    window.inner.contentView.NSTextInputClient.insertText2(
+    window.inner.contentView.NSTextInputClient.insertText(
       window.markedText.ID,
       kEmptyRange
     )
@@ -158,7 +158,7 @@ proc `size=`*(window: Window, size: IVec2) =
     contentRect.size = NSMakeSize(virtualSize.x, virtualSize.y)
 
     let frameRect = window.inner.frameRectForContentRect(contentRect)
-    window.inner.setFrame(frameRect, YES)
+    window.inner.setFrame(frameRect, true)
 
 proc `pos=`*(window: Window, pos: IVec2) =
   autoreleasepool:
@@ -211,16 +211,16 @@ proc handleRune(window: Window, rune: Rune) =
 
 proc createMenuBar() =
   let
-    menuBar = NSMenu.getClass().new().NSMenu
-    appMenuItem = NSMenuItem.getClass().new().NSMenuItem
+    menuBar = NSMenu.new()
+    appMenuItem = NSMenuItem.new()
   menuBar.addItem(appMenuItem)
   NSApp.setMainMenu(menuBar)
 
   let
-    appMenu = NSMenu.getClass().new().NSMenu
+    appMenu = NSMenu.new()
     processName = NSProcessInfo.processinfo.processName
     quitTitle = @("Quit " & $processName)
-    quitMenuitem = NSMenuItem.getClass().alloc().NSMenuItem
+    quitMenuitem = NSMenuItem.alloc()
   quitMenuitem.initWithTitle(
     quitTitle,
     s"terminate:",
@@ -243,7 +243,7 @@ proc applicationDidFinishLaunching(
 ): ID {.cdecl.} =
   NSApp.setPresentationOptions(NSApplicationPresentationDefault)
   NSApp.setActivationPolicy(NSApplicationActivationPolicyRegular)
-  NSApp.activateIgnoringOtherApps(YES)
+  NSApp.activateIgnoringOtherApps(true)
 
 proc windowDidResize(
   self: ID,
@@ -267,8 +267,8 @@ proc canBecomeKeyWindow(
   self: ID,
   cmd: SEL,
   notification: NSNotification
-): BOOL {.cdecl.} =
-  YES
+): bool {.cdecl.} =
+  true
 
 proc windowDidBecomeKey(
   self: ID,
@@ -292,21 +292,21 @@ proc windowShouldClose(
   self: ID,
   cmd: SEL,
   notification: NSNotification
-): BOOL {.cdecl.} =
+): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   window.closeRequested = true
-  NO
+  false
 
-proc acceptsFirstResponder(self: ID, cmd: SEL): BOOL {.cdecl.} =
-  YES
+proc acceptsFirstResponder(self: ID, cmd: SEL): bool {.cdecl.} =
+  true
 
-proc canBecomeKeyView(self: ID, cmd: SEL): BOOL {.cdecl.} =
-  YES
+proc canBecomeKeyView(self: ID, cmd: SEL): bool {.cdecl.} =
+  true
 
-proc acceptsFirstMouse(self: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.} =
-  YES
+proc acceptsFirstMouse(self: ID, cmd: SEL, event: NSEvent): bool {.cdecl.} =
+  true
 
 proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
   callSuper(self, cmd)
@@ -333,11 +333,12 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
     NSTrackingInVisibleRect or
     NSTrackingAssumeInside
 
-  window.trackingArea = NSTrackingArea.getClass().alloc().NSTrackingArea
+  window.trackingArea = NSTrackingArea.alloc()
   window.trackingArea.initWithRect(
     NSMakeRect(0, 0, 0, 0),
     options,
-    self
+    self,
+    0.ID
   )
 
   self.NSView.addTrackingArea(window.trackingArea)
@@ -477,12 +478,12 @@ proc flagsChanged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   else:
     window.handleButtonPress(button)
 
-proc hasMarkedText(self: ID, cmd: SEL): BOOL {.cdecl.} =
+proc hasMarkedText(self: ID, cmd: SEL): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window != nil and window.markedText.int != 0:
-    YES
+    true
   else:
-    NO
+    false
 
 proc markedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
@@ -511,7 +512,7 @@ proc setMarkedText(
 
   var characters: NSString
   if obj.NSObject.isKindOfClass(NSAttributedString.getClass()):
-    characters = obj.NSAttributedString.str()
+    characters = obj.NSAttributedString.string()
   else:
     characters = obj.NSString
 
@@ -541,7 +542,7 @@ proc attributedSubstringForProposedRange(
 ): NSAttributedString =
   discard
 
-proc insertText(
+proc insertText2(
   self: ID,
   cmd: SEL,
   obj: ID,
@@ -553,7 +554,7 @@ proc insertText(
 
   var characters: NSString
   if obj.NSObject.isKindOfClass(NSAttributedString.getClass()):
-    characters = obj.NSAttributedString.str()
+    characters = obj.NSAttributedString.string()
   else:
     characters = obj.NSString
 
@@ -624,8 +625,8 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
   else:
     let
       encodedPng = window.state.cursor.image.encodePng()
-      image = NSImage.getClass().alloc().NSImage
-      cursor = NSCursor.getClass().alloc().NSCursor
+      image = NSImage.alloc()
+      cursor = NSCursor.alloc()
       hotspot = NSMakePoint(
         window.state.cursor.hotspot.x.float,
         window.state.cursor.hotspot.y.float
@@ -642,7 +643,7 @@ proc init() =
     return
 
   autoreleasepool:
-    NSApplication.sharedApplication()
+    discard NSApplication.sharedApplication()
 
     addClass "WindyAppDelegate", "NSObject", WindyAppDelegate:
       addMethod "applicationWillFinishLaunching:", applicationWillFinishLaunching
@@ -684,13 +685,13 @@ proc init() =
       addMethod "unmarkText", unmarkText
       addMethod "validAttributesForMarkedText", validAttributesForMarkedText
       addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
-      addMethod "insertText:replacementRange:", insertText
+      addMethod "insertText:replacementRange:", insertText2
       addMethod "characterIndexForPoint:", characterIndexForPoint
       addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
       addMethod "doCommandBySelector:", doCommandBySelector
       addMethod "resetCursorRects", resetCursorRects
 
-    let appDelegate = WindyAppDelegate.new
+    let appDelegate = WindyAppDelegate.new()
     NSApp.setDelegate(appDelegate)
 
     NSApp.finishLaunching()
@@ -710,7 +711,7 @@ proc pollEvents*() =
         NSEventMaskAny,
         NSDate.distantPast,
         NSDefaultRunLoopMode,
-        YES
+        true
       )
       if event.int == 0:
         break
@@ -766,11 +767,11 @@ proc newWindow*(
       NSMakeRect(0, 0, 400, 400),
       decoratedResizableWindowMask,
       NSBackingStoreBuffered,
-      NO
+      false
     )
 
     let
-      pixelFormat = NSOpenGLPixelFormat.getClass().alloc().NSOpenGLPixelFormat
+      pixelFormat = NSOpenGLPixelFormat.alloc()
       pixelFormatAttribs = [
         NSOpenGLPFADoubleBuffer,
         NSOpenGLPFASampleBuffers, if msaa != msaaDisabled: 1 else: 0,
@@ -799,7 +800,7 @@ proc newWindow*(
       result.inner.contentView.frame,
       pixelFormat
     )
-    openglView.setWantsBestResolutionOpenGLSurface(YES)
+    openglView.setWantsBestResolutionOpenGLSurface(true)
 
     openglView.openGLContext.makeCurrentContext()
 
@@ -812,7 +813,7 @@ proc newWindow*(
     result.inner.setDelegate(result.inner.ID)
     result.inner.setContentView(openglView.NSView)
     discard result.inner.makeFirstResponder(openglView.NSView)
-    result.inner.setRestorable(NO)
+    result.inner.setRestorable(false)
 
     windows.add(result)
 
@@ -902,7 +903,7 @@ proc getScreens*(): seq[Screen] =
   init()
   autoreleasepool:
     let screensArray = NSScreen.screens
-    for i in 0 ..< screensArray.count:
+    for i in 0 ..< screensArray.count.int:
       let
         screen = screensArray[i].NSScreen
         frame = screen.frame
