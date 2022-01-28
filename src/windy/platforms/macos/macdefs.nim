@@ -159,7 +159,7 @@ objc:
     self: NSApplication,
     _: NSApplicationPresentationOptions
   )
-  proc activateIgnoringOtherApps*(self: NSApplication, _: BOOL)
+  proc activateIgnoringOtherApps*(self: NSApplication, _: bool)
   proc setDelegate*(self: NSApplication, _: ID)
   proc setDelegate*(self: NSWindow, _: ID)
   proc setMainMenu*(self: NSApplication, _: NSMenu)
@@ -169,7 +169,7 @@ objc:
     _: NSEventMask,
     untilDate: NSDate,
     inMode: NSRunLoopMode,
-    dequeue: BOOL
+    dequeue: bool
   ): NSEvent
   proc sendEvent*(self: NSApplication, _: NSEvent)
   proc distantPast*(class: typedesc[NSDate]): NSDate
@@ -186,7 +186,7 @@ objc:
     _: NSRect,
     styleMask: NSWindowStyleMask,
     backing: NSBackingStoreType,
-    defer_mangle: BOOL
+    defer_mangle: bool
   )
   proc orderFront*(self: NSWindow, _: ID)
   proc orderOut*(self: NSWindow, _: ID)
@@ -202,10 +202,10 @@ objc:
   proc contentView*(self: NSWindow): NSView
   proc contentRectForFrameRect*(self: NSWindow, _: NSRect): NSRect
   proc frameRectForContentRect*(self: NSWindow, _: NSRect): NSRect
-  proc setFrame*(self: NSWindow, _: NSRect, display: BOOL)
+  proc setFrame*(self: NSWindow, _: NSRect, display: bool)
   proc screen*(self: NSWindow): NSScreen
   proc setFrameOrigin*(self: NSWindow, _: NSPoint)
-  proc setRestorable*(self: NSWindow, _: BOOL)
+  proc setRestorable*(self: NSWindow, _: bool)
   proc setContentView*(self: NSWindow, _: NSView)
   proc makeFirstResponder*(self: NSWindow, _: NSView): bool
   proc styleMask*(self: NSWindow): NSWindowStyleMask
@@ -230,7 +230,7 @@ objc:
   )
   proc setWantsBestResolutionOpenGLSurface*(
     self: NSOpenGLView,
-    _: BOOL
+    _: bool
   )
   proc openGLContext*(self: NSOpenGLView): NSOpenGLContext
   proc makeCurrentContext*(self: NSOpenGLContext)

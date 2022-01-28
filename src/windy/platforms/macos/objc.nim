@@ -1,7 +1,6 @@
 import macros, typetraits, strutils
 
 type
-  BOOL* = cchar
   Class* = distinct int
   ID* = distinct int
   SEL* = distinct int
@@ -10,10 +9,6 @@ type
   objc_super* = object
     receiver*: ID
     super_class*: Class
-
-const
-  YES* = BOOL(1)
-  NO* = BOOL(0)
 
 {.push cdecl, dynlib: "libobjc.dylib".}
 proc objc_msgSend*() {.importc.}
@@ -29,11 +24,11 @@ proc objc_getProtocol*(name: cstring): Protocol {.importc.}
 proc objc_allocateClassPair*(super: Class, name: cstring, extraBytes = 0): Class {.importc.}
 proc objc_registerClassPair*(cls: Class) {.importc.}
 proc class_getName*(cls: Class): cstring {.importc.}
-proc class_addMethod*(cls: Class, name: SEL, imp: IMP, types: cstring): BOOL {.importc.}
+proc class_addMethod*(cls: Class, name: SEL, imp: IMP, types: cstring): bool {.importc.}
 proc object_getClass*(id: ID): Class {.importc.}
 proc sel_registerName*(s: cstring): SEL {.importc.}
 proc sel_getName*(sel: SEL): cstring {.importc.}
-proc class_addProtocol*(cls: Class, protocol: Protocol): BOOL {.importc.}
+proc class_addProtocol*(cls: Class, protocol: Protocol): bool {.importc.}
 {.pop.}
 
 var

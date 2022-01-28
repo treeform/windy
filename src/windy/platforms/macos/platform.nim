@@ -158,7 +158,7 @@ proc `size=`*(window: Window, size: IVec2) =
     contentRect.size = NSMakeSize(virtualSize.x, virtualSize.y)
 
     let frameRect = window.inner.frameRectForContentRect(contentRect)
-    window.inner.setFrame(frameRect, YES)
+    window.inner.setFrame(frameRect, true)
 
 proc `pos=`*(window: Window, pos: IVec2) =
   autoreleasepool:
@@ -243,7 +243,7 @@ proc applicationDidFinishLaunching(
 ): ID {.cdecl.} =
   NSApp.setPresentationOptions(NSApplicationPresentationDefault)
   NSApp.setActivationPolicy(NSApplicationActivationPolicyRegular)
-  NSApp.activateIgnoringOtherApps(YES)
+  NSApp.activateIgnoringOtherApps(true)
 
 proc windowDidResize(
   self: ID,
@@ -267,8 +267,8 @@ proc canBecomeKeyWindow(
   self: ID,
   cmd: SEL,
   notification: NSNotification
-): BOOL {.cdecl.} =
-  YES
+): bool {.cdecl.} =
+  true
 
 proc windowDidBecomeKey(
   self: ID,
@@ -292,21 +292,21 @@ proc windowShouldClose(
   self: ID,
   cmd: SEL,
   notification: NSNotification
-): BOOL {.cdecl.} =
+): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
   window.closeRequested = true
-  NO
+  false
 
-proc acceptsFirstResponder(self: ID, cmd: SEL): BOOL {.cdecl.} =
-  YES
+proc acceptsFirstResponder(self: ID, cmd: SEL): bool {.cdecl.} =
+  true
 
-proc canBecomeKeyView(self: ID, cmd: SEL): BOOL {.cdecl.} =
-  YES
+proc canBecomeKeyView(self: ID, cmd: SEL): bool {.cdecl.} =
+  true
 
-proc acceptsFirstMouse(self: ID, cmd: SEL, event: NSEvent): BOOL {.cdecl.} =
-  YES
+proc acceptsFirstMouse(self: ID, cmd: SEL, event: NSEvent): bool {.cdecl.} =
+  true
 
 proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
   callSuper(self, cmd)
@@ -478,12 +478,12 @@ proc flagsChanged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   else:
     window.handleButtonPress(button)
 
-proc hasMarkedText(self: ID, cmd: SEL): BOOL {.cdecl.} =
+proc hasMarkedText(self: ID, cmd: SEL): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window != nil and window.markedText.int != 0:
-    YES
+    true
   else:
-    NO
+    false
 
 proc markedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
@@ -711,7 +711,7 @@ proc pollEvents*() =
         NSEventMaskAny,
         NSDate.distantPast,
         NSDefaultRunLoopMode,
-        YES
+        true
       )
       if event.int == 0:
         break
@@ -767,7 +767,7 @@ proc newWindow*(
       NSMakeRect(0, 0, 400, 400),
       decoratedResizableWindowMask,
       NSBackingStoreBuffered,
-      NO
+      false
     )
 
     let
@@ -800,7 +800,7 @@ proc newWindow*(
       result.inner.contentView.frame,
       pixelFormat
     )
-    openglView.setWantsBestResolutionOpenGLSurface(YES)
+    openglView.setWantsBestResolutionOpenGLSurface(true)
 
     openglView.openGLContext.makeCurrentContext()
 
@@ -813,7 +813,7 @@ proc newWindow*(
     result.inner.setDelegate(result.inner.ID)
     result.inner.setContentView(openglView.NSView)
     discard result.inner.makeFirstResponder(openglView.NSView)
-    result.inner.setRestorable(NO)
+    result.inner.setRestorable(false)
 
     windows.add(result)
 
