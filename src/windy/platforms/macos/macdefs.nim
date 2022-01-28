@@ -254,8 +254,6 @@ objc:
   proc deactivate*(self: NSTextInputContext)
   proc activate*(self: NSTextInputContext)
   proc insertText*(self: NSTextInputClient, _: ID, replacementRange: NSRange)
-  proc new*(class: typedesc[NSMenu]): NSMenu
-  proc new*(class: typedesc[NSMenuItem]): NSMenuItem
 
 proc NSMakeRect*(x, y, w, h: float64): NSRect =
   CGRect(
@@ -271,20 +269,6 @@ proc NSMakeRange*(loc, len: uint): NSRange =
 
 proc NSMakePoint*(x, y: float): NSPoint =
   NSPoint(x: x, y: y)
-
-proc new*(cls: Class): ID =
-  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
-  msgSend(
-    cls.ID,
-    s"new"
-  )
-
-proc alloc*(cls: Class): ID =
-  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
-  msgSend(
-    cls.ID,
-    s"alloc"
-  )
 
 proc `[]`*(arr: NSArray, index: int): ID =
   arr.objectAtIndex(index.uint)

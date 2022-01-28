@@ -154,7 +154,6 @@ type
 objc:
   proc UTF8String(self: NSString): cstring
   proc localizedDescription(self: NSError): NSString
-  proc new*(class: typedesc[NSAutoreleasePool]): NSAutoreleasePool
   proc release*(self: NSAutoreleasePool)
 
 template addClass*(className, superName: string, cls: Class, body: untyped) =
@@ -216,3 +215,23 @@ proc `$`*(s: NSString): string =
 
 proc `$`*(error: NSError): string =
   $error.localizedDescription
+
+proc new*(cls: Class): ID =
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
+  msgSend(
+    cls.ID,
+    s"new"
+  )
+
+proc new*[T](class: typedesc[T]): T =
+  class.getClass().new().T
+
+proc alloc*(cls: Class): ID =
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
+  msgSend(
+    cls.ID,
+    s"alloc"
+  )
+
+proc alloc*[T](class: typedesc[T]): T =
+  class.getClass().alloc().T

@@ -220,7 +220,7 @@ proc createMenuBar() =
     appMenu = NSMenu.new()
     processName = NSProcessInfo.processinfo.processName
     quitTitle = @("Quit " & $processName)
-    quitMenuitem = NSMenuItem.getClass().alloc().NSMenuItem
+    quitMenuitem = NSMenuItem.alloc()
   quitMenuitem.initWithTitle(
     quitTitle,
     s"terminate:",
@@ -333,7 +333,7 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
     NSTrackingInVisibleRect or
     NSTrackingAssumeInside
 
-  window.trackingArea = NSTrackingArea.getClass().alloc().NSTrackingArea
+  window.trackingArea = NSTrackingArea.alloc()
   window.trackingArea.initWithRect(
     NSMakeRect(0, 0, 0, 0),
     options,
@@ -625,8 +625,8 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
   else:
     let
       encodedPng = window.state.cursor.image.encodePng()
-      image = NSImage.getClass().alloc().NSImage
-      cursor = NSCursor.getClass().alloc().NSCursor
+      image = NSImage.alloc()
+      cursor = NSCursor.alloc()
       hotspot = NSMakePoint(
         window.state.cursor.hotspot.x.float,
         window.state.cursor.hotspot.y.float
@@ -771,7 +771,7 @@ proc newWindow*(
     )
 
     let
-      pixelFormat = NSOpenGLPixelFormat.getClass().alloc().NSOpenGLPixelFormat
+      pixelFormat = NSOpenGLPixelFormat.alloc()
       pixelFormatAttribs = [
         NSOpenGLPFADoubleBuffer,
         NSOpenGLPFASampleBuffers, if msaa != msaaDisabled: 1 else: 0,
