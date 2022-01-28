@@ -215,7 +215,7 @@ proc `$`*(error: NSError): string =
   $error.localizedDescription
 
 proc new*(cls: Class): ID =
-  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl, gcsafe, raises: [].}](objc_msgSend)
   msgSend(
     cls.ID,
     s"new"
@@ -225,7 +225,7 @@ proc new*[T](class: typedesc[T]): T =
   class.getClass().new().T
 
 proc alloc*(cls: Class): ID =
-  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl.}](objc_msgSend)
+  let msgSend = cast[proc(self: ID, cmd: SEL): ID {.cdecl, gcsafe, raises: [].}](objc_msgSend)
   msgSend(
     cls.ID,
     s"alloc"
