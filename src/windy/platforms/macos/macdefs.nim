@@ -1,4 +1,4 @@
-import opengl, std/typetraits, objc
+import opengl, objc
 export objc
 
 {.passL: "-framework Cocoa".}
