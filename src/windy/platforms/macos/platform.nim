@@ -200,6 +200,19 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   autoreleasepool:
     window.inner.invalidateCursorRectsForView(window.inner.contentView)
 
+proc handleMouseMove(window: Window, location: NSPoint) =
+  let
+    x = round(location.x)
+    y = round(window.inner.contentView.bounds.size.height - location.y)
+
+  window.state.mousePrevPos = window.state.mousePos
+  window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
+  window.state.perFrame.mouseDelta +=
+    window.state.mousePos - window.state.mousePrevPos
+
+  if window.onMouseMove != nil:
+    window.onMouseMove()
+
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
 
@@ -276,8 +289,10 @@ proc windowDidBecomeKey(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window != nil and window.onFocusChange != nil:
-    window.onFocusChange()
+  if window != nil:
+    if window.onFocusChange != nil:
+      window.onFocusChange()
+    handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
 
 proc windowDidResignKey(
   self: ID,
@@ -349,19 +364,7 @@ proc mouseMoved(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-
-  let
-    locationInWindow = event.locationInWindow
-    x = round(locationInWindow.x)
-    y = round(self.NSView.bounds.size.height - locationInWindow.y)
-
-  window.state.mousePrevPos = window.state.mousePos
-  window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
-  window.state.perFrame.mouseDelta +=
-    window.state.mousePos - window.state.mousePrevPos
-
-  if window.onMouseMove != nil:
-    window.onMouseMove()
+  handleMouseMove(window, event.locationInWindow)
 
 proc mouseDragged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   mouseMoved(self, cmd, event)
