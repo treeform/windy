@@ -1,4 +1,4 @@
-import opengl, std/typetraits, objc
+import opengl, objc
 export objc
 
 {.passL: "-framework Cocoa".}
@@ -210,6 +210,7 @@ objc:
   proc setStyleMask*(self: NSWindow, _: NSWindowStyleMask)
   proc toggleFullscreen*(self: NSWindow, _: ID)
   proc invalidateCursorRectsForView*(self: NSWindow, _: NSView)
+  proc mouseLocationOutsideOfEventStream*(self: NSWindow): NSPoint
   proc convertRectToBacking*(self: NSView, _: NSRect): NSRect
   proc window*(self: NSView): NSWindow
   proc bounds*(self: NSView): NSRect
