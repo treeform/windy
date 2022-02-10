@@ -21,6 +21,7 @@ type
   DWORD* = int32
   LPCSTR* = cstring
   LPSTR* = cstring
+  SIZE_T* = int64 # only for 64 bit
   WCHAR* = uint16
   LPCCH* = cstring
   LPCWSTR* = ptr WCHAR
@@ -106,6 +107,27 @@ type
     dwLayerMask*: DWORD
     dwVisibleMask*: DWORD
     dwDamageMask*: DWORD
+  BITMAPINFOHEADER* {.pure.} = object
+    biSize*: DWORD 
+    biWidth*: LONG  
+    biHeight*: LONG  
+    biPlanes*: WORD  
+    biBitCount*: WORD  
+    biCompression*: DWORD 
+    biSizeImage*: DWORD 
+    biXPelsPerMeter*: LONG  
+    biYPelsPerMeter*: LONG  
+    biClrUsed*: DWORD 
+    biClrImportant*: DWORD 
+  RGBQUAD* {.pure.} = object
+    rgbBlue*: BYTE
+    rgbGreen*: BYTE
+    rgbRed*: BYTE
+    rgbReserved*: BYTE
+  BITMAPINFO* {.pure.} = object
+    bmiHeader*: BITMAPINFOHEADER
+    bmiColors*:  array[1, RGBQUAD]
+  LPBITMAPINFO* = ptr BITMAPINFO
   RECT* {.pure.} = object
     left*: LONG
     top*: LONG
@@ -397,6 +419,7 @@ const
   VK_RSHIFT* = 0xA1
   VK_PROCESSKEY* = 0xE5
   CF_UNICODETEXT* = 13
+  CF_DIB* = 8
   GMEM_MOVEABLE* = 0x2
   XBUTTON1* = 0x0001
   XBUTTON2* = 0x0002
@@ -498,6 +521,10 @@ proc GetProcessId*(
 proc GlobalLock*(
   hMem: HGLOBAL
 ): LPVOID {.dynlib: "Kernel32".}
+
+proc GlobalSize*(
+  hMem: HGLOBAL
+): SIZE_T {.dynlib: "Kernel32".}
 
 proc GlobalUnlock*(
   hMem: HGLOBAL

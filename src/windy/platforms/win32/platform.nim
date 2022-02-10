@@ -1047,6 +1047,31 @@ proc buttonReleased*(window: Window): ButtonView =
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
+proc getClipboardImage*(): string = 
+  init()
+  if IsClipboardFormatAvailable(CF_DIB) == FALSE:
+    return ""
+
+  if OpenClipboard(helperWindow) == 0:
+    return ""
+
+  let dataHandle = GetClipboardData(CF_DIB)
+  if dataHandle != 0:
+    let p = cast[ptr BYTE](GlobalLock(dataHandle))
+    if p != nil:
+      result.add("BM") # The header field used to identify the BMP
+      result.addUint32(0) # The size of the BMP file in bytes.
+      result.addUint16(0) # Reserved.
+      result.addUint16(0) # Reserved.
+      result.addUint32(2 + 4 + 2 + 2 + 4 + sizeof(BITMAPINFO)) # The offset to the pixel array.
+      let gotLen = GlobalSize(dataHandle)
+      result.setLen(gotLen + result.len)
+      copyMem(result[14].addr, p, gotLen)
+
+      discard GlobalUnlock(dataHandle)
+
+  discard CloseClipboard()
+
 proc getClipboardString*(): string =
   init()
 
