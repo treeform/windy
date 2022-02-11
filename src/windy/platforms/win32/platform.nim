@@ -1,5 +1,5 @@
-import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
-    pixie/images, times, unicode, utils, vmath, windefs
+import ../../common, ../../internal, flatty/binny, pixie/fileformats/[png, bmp],
+    pixie/images, times, unicode, utils, vmath, windefs, std/options
 
 const
   windowClassName = "WINDY0"
@@ -1047,32 +1047,35 @@ proc buttonReleased*(window: Window): ButtonView =
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
-proc getClipboardImage*(): string = 
+proc getClipboardImage*(): Option[Image] = 
   init()
   if IsClipboardFormatAvailable(CF_DIB) == FALSE:
-    return ""
+    return none(Image)
 
   if OpenClipboard(helperWindow) == 0:
-    return ""
+    return none(Image)
 
   let dataHandle = GetClipboardData(CF_DIB)
+  var bitmapData = newString(0)
   if dataHandle != 0:
     let p = cast[ptr BYTE](GlobalLock(dataHandle))
     if p != nil:
-      result.add("BM") # The header field used to identify the BMP
-      result.addUint32(0) # The size of the BMP file in bytes.
-      result.addUint16(0) # Reserved.
-      result.addUint16(0) # Reserved.
-      result.addUint32(0) # The offset to the pixel array will be calculated after reading the data.
+      bitmapData.add("BM") # The header field used to identify the BMP
+      bitmapData.addUint32(0) # The size of the BMP file in bytes.
+      bitmapData.addUint16(0) # Reserved.
+      bitmapData.addUint16(0) # Reserved.
+      bitmapData.addUint32(0) # The offset to the pixel array will be calculated after reading the data.
 
-      let sizeOfBitmapFileHeader: uint32 = result.len().uint32
+      let sizeOfBitmapFileHeader: uint32 = bitmapData.len().uint32
       let gotLen = GlobalSize(dataHandle)
-      result.setLen(gotLen + result.len)
-      copyMem(result[sizeOfBitmapFileHeader].addr, p, gotLen)
+      bitmapData.setLen(gotLen + bitmapData.len)
+      copyMem(bitmapData[sizeOfBitmapFileHeader].addr, p, gotLen)
 
-      let bitmapInfo: BITMAPINFO = cast[ptr BITMAPINFO](result[sizeOfBitmapFileHeader].addr)[]
+      let bitmapInfo: BITMAPINFO = cast[ptr BITMAPINFO](bitmapData[sizeOfBitmapFileHeader].addr)[]
       let offsetToPixelArray = sizeOfBitmapFileHeader + sizeof(BITMAPINFOHEADER).uint32 + (ColorTableLength(bitmapInfo.bmiHeader) * sizeof(RGBQUAD).int32).uint32
-      result.writeUint32((sizeOfBitmapFileHeader - 4).int, offsetToPixelArray)
+      bitmapData.writeUint32((sizeOfBitmapFileHeader - 4).int, offsetToPixelArray)
+
+      result = some(decodeBmp(bitmapData))
 
       discard GlobalUnlock(dataHandle)
 
