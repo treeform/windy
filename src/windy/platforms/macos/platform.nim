@@ -1,5 +1,5 @@
 import ../../common, ../../internal, macdefs, opengl, pixie/fileformats/png,
-    pixie/images, times, unicode, utils, vmath
+    pixie/images, times, unicode, utils, vmath, std/options
 
 type
   Window* = ref object
@@ -874,6 +874,8 @@ proc buttonReleased*(window: Window): ButtonView =
 
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
+
+proc getClipboardImage*(): Option[Image]  = {.error: "not implemented yet".}
 
 proc getClipboardString*(): string =
   init()

@@ -1,5 +1,5 @@
 import ../../common, ../../internal, os, sequtils, sets, strformat, times,
-    unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib
+    unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, std/options, pixie
 type
   XWindow = x.Window
 
@@ -963,6 +963,8 @@ proc processClipboardEvents: bool =
 
     else:
       discard
+
+proc getClipboardImage*: Option[Image] = {.error: "Not implemented yet".}
 
 proc getClipboardString*: string =
   initClipboard()
