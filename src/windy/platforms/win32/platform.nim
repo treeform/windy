@@ -1063,10 +1063,16 @@ proc getClipboardImage*(): string =
       result.addUint32(0) # The size of the BMP file in bytes.
       result.addUint16(0) # Reserved.
       result.addUint16(0) # Reserved.
-      result.addUint32(2 + 4 + 2 + 2 + 4 + sizeof(BITMAPINFO)) # The offset to the pixel array.
+      result.addUint32(0) # The offset to the pixel array will be calculated after reading the data.
+
+      let sizeOfBitmapFileHeader: uint32 = result.len().uint32
       let gotLen = GlobalSize(dataHandle)
       result.setLen(gotLen + result.len)
-      copyMem(result[14].addr, p, gotLen)
+      copyMem(result[sizeOfBitmapFileHeader].addr, p, gotLen)
+
+      let bitmapInfo: BITMAPINFO = cast[ptr BITMAPINFO](result[sizeOfBitmapFileHeader].addr)[]
+      let offsetToPixelArray = sizeOfBitmapFileHeader + sizeof(BITMAPINFOHEADER).uint32 + (ColorTableLength(bitmapInfo.bmiHeader) * sizeof(RGBQUAD).int32).uint32
+      result.writeUint32((sizeOfBitmapFileHeader - 4).int, offsetToPixelArray)
 
       discard GlobalUnlock(dataHandle)
 

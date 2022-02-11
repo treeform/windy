@@ -1,5 +1,25 @@
 import ../../common, strutils, windefs
 
+# https://stackoverflow.com/questions/59548027/win32-bitmapinfo-how-to-reliably-allocate-enough-memory-for-rgbquad-array-colo
+proc ColorTableLength*( h: BITMAPINFOHEADER ): DWORD =
+  let biClrUsed: DWORD      = h.biClrUsed;
+  let biBitCount: WORD      = h.biBitCount;
+  let biCompression: DWORD  = h.biCompression;
+
+  case biBitCount:
+    of 24:
+      result = biClrUsed
+    of 16, 32:
+      if biCompression == BI_RGB:
+        result = biClrUsed
+      elif biCompression == BI_BITFIELDS:
+        result = 3
+    else: # for 0, 1, 2, 4, and 8
+      if biClrUsed == 0:
+        result = (1 shl biBitCount).DWORD # 2^biBitCount
+      else:
+        result = biClrUsed
+
 proc wstr*(str: string): string =
   let wlen = MultiByteToWideChar(
     CP_UTF8,
