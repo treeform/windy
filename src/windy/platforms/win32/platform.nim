@@ -1,5 +1,5 @@
 import ../../common, ../../internal, flatty/binny, pixie/fileformats/[png, bmp],
-    pixie/images, times, unicode, utils, vmath, windefs, std/options
+    pixie/images, times, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -1047,13 +1047,13 @@ proc buttonReleased*(window: Window): ButtonView =
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
-proc getClipboardImage*(): Option[Image] = 
+proc getClipboardImage*(): Image = 
   init()
   if IsClipboardFormatAvailable(CF_DIB) == FALSE:
-    return none(Image)
+    return nil
 
   if OpenClipboard(helperWindow) == 0:
-    return none(Image)
+    return nil
 
   let dataHandle = GetClipboardData(CF_DIB)
   var bitmapData = newString(0)
@@ -1075,7 +1075,7 @@ proc getClipboardImage*(): Option[Image] =
       let offsetToPixelArray = sizeOfBitmapFileHeader + sizeof(BITMAPINFOHEADER).uint32 + (ColorTableLength(bitmapInfo.bmiHeader) * sizeof(RGBQUAD).int32).uint32
       bitmapData.writeUint32((sizeOfBitmapFileHeader - 4).int, offsetToPixelArray)
 
-      result = some(decodeBmp(bitmapData))
+      result = decodeBmp(bitmapData)
 
       discard GlobalUnlock(dataHandle)
 

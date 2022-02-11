@@ -1,11 +1,10 @@
-import windy, std/options, pixie
+import windy, pixie
 
-let imgMaybe = getClipboardImage()
+let img = getClipboardImage()
 
-if imgMaybe.isNone:
+if img.isNil:
     echo "No image in clipboard"
 else:
-    let img = imgMaybe.get
     echo "Width: ", img.width, " Height: ", img.height
     let pngImg = encodeImage(img, FileFormat.ffPng)
     writeFile("clipboard_image.png", pngImg)
