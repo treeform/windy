@@ -126,7 +126,7 @@ type
     rgbReserved*: BYTE
   BITMAPINFO* {.pure.} = object
     bmiHeader*: BITMAPINFOHEADER
-    bmiColors*:  array[1, RGBQUAD]
+    bmiColors*:  array[1, RGBQUAD] # variable size struct array, 0 or more quads
   LPBITMAPINFO* = ptr BITMAPINFO
   RECT* {.pure.} = object
     left*: LONG
