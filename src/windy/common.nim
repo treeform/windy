@@ -18,6 +18,9 @@ type
       image*: Image
       hotspot*: IVec2
 
+  ClipboardContentKind* = enum
+    TextContent, ImageContent
+
   MSAA* = enum
     msaaDisabled = 0, msaa2x = 2, msaa4x = 4, msaa8x = 8
 

@@ -289,10 +289,11 @@ proc windowDidBecomeKey(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window != nil:
-    if window.onFocusChange != nil:
-      window.onFocusChange()
-    handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
+  if window == nil:
+    return
+  if window.onFocusChange != nil:
+    window.onFocusChange()
+  handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
 
 proc windowDidResignKey(
   self: ID,

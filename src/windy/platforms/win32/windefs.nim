@@ -2,10 +2,12 @@ when defined(cpu64):
   type
     UINT_PTR* = int64
     LONG_PTR* = int64
+    ULONG_PTR* = int64
 else:
   type
     UINT_PTR* = int32
     LONG_PTR* = int32
+    ULONG_PTR* = int32
 
 type
   BYTE* = uint8
@@ -19,6 +21,7 @@ type
   WORD* = uint16
   ATOM* = WORD
   DWORD* = int32
+  SIZE_T* = ULONG_PTR
   LPCSTR* = cstring
   LPSTR* = cstring
   WCHAR* = uint16
@@ -397,6 +400,8 @@ const
   VK_RSHIFT* = 0xA1
   VK_PROCESSKEY* = 0xE5
   CF_UNICODETEXT* = 13
+  CF_DIB* = 8
+  CF_DIBV5* = 17
   GMEM_MOVEABLE* = 0x2
   XBUTTON1* = 0x0001
   XBUTTON2* = 0x0002
@@ -511,6 +516,10 @@ proc GlobalAlloc*(
 proc GlobalFree*(
   hMem: HGLOBAL
 ): HGLOBAL {.dynlib: "Kernel32".}
+
+proc GlobalSize*(
+  hMem: HGLOBAL
+): SIZE_T {.dynlib: "Kernel32".}
 
 proc GetUserDefaultUILanguage*(): LANGID {.dynlib: "Kernel32".}
 
@@ -730,6 +739,10 @@ proc GetClipboardData*(
 proc IsClipboardFormatAvailable*(
   format: UINT
 ): BOOL {.dynlib: "User32".}
+
+proc EnumClipboardFormats*(
+  format: UINT
+): UINT {.dynlib: "User32".}
 
 proc CreateCaret*(
   hWnd: HWND,
