@@ -1,5 +1,5 @@
 import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
-    pixie/images, times, unicode, utils, vmath, windefs
+    pixie/fileformats/bmp, pixie/images, times, unicode, utils, vmath, windefs
 
 const
   windowClassName = "WINDY0"
@@ -1047,6 +1047,52 @@ proc buttonReleased*(window: Window): ButtonView =
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
+proc getAvailableClipboardFormats(): seq[UINT] =
+  var format = 0.UINT
+  while true:
+    format = EnumClipboardFormats(format)
+    if format == 0:
+      break
+    result.add(format)
+
+proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  let availableFormats = getAvailableClipboardFormats()
+  if CF_UNICODETEXT in availableFormats:
+    result.incl TextContent
+  if CF_DIBV5 in availableFormats or CF_DIB in availableFormats:
+    result.incl ImageContent
+
+proc getClipboardImage*(): Image =
+  init()
+
+  if OpenClipboard(helperWindow) == 0:
+    return
+
+  proc decodeClipboardImage(format: UINT): Image =
+    let dataHandle = GetClipboardData(format)
+    if dataHandle == 0:
+      return
+
+    let p = GlobalLock(dataHandle)
+    if p != nil:
+      try:
+        let size = GlobalSize(dataHandle).int
+        result = decodeDib(p, size, true)
+      except:
+        discard
+      finally:
+        discard GlobalUnlock(dataHandle)
+
+  let availableFormats = getAvailableClipboardFormats()
+
+  try:
+    if CF_DIBV5 in availableFormats:
+      result = decodeClipboardImage(CF_DIBV5)
+    elif CF_DIB in availableFormats:
+      result = decodeClipboardImage(CF_DIB)
+  finally:
+    discard CloseClipboard()
+
 proc getClipboardString*(): string =
   init()
 
@@ -1171,7 +1217,7 @@ proc hideTrayIcon*() =
 proc getScreens*(): seq[Screen] =
   ## Queries and returns the currently connected screens.
 
-  type Holder = ref object
+  type Holder = object
     screens: seq[Screen]
 
   var h = Holder()

@@ -7,4 +7,4 @@ srcDir = "src"
 
 requires "nim >= 1.4.8"
 requires "opengl >= 1.2.6"
-requires "pixie >= 3.1.2"
+requires "pixie >= 4.0.0"
