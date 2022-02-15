@@ -30,6 +30,7 @@ type
   NSTrackingAreaOptions* = uint
   NSStringEncoding* = uint
   NSStringEncodingConversionOptions* = uint
+  NSBitmapImageFileType* = uint
 
   NSRect* = CGRect
   NSPoint* = CGPoint
@@ -61,6 +62,8 @@ type
   NSCursor* = distinct NSObject
   NSTextInputContext* = distinct NSObject
   NSTextInputClient* = distinct int
+  NSBitmapImageRep* = distinct NSObject
+  NSDictionary* = distinct NSObject
 
 const
   NSNotFound* = int.high
@@ -100,10 +103,12 @@ const
   NSTrackingInVisibleRect* = 0x200.NSTrackingAreaOptions
   NSTrackingEnabledDuringMouseDrag* = 0x400.NSTrackingAreaOptions
   NSUTF32StringEncoding* = 0x8c000100.NSStringEncoding
+  NSBitmapImageFileTypePNG* = 4.NSBitmapImageFileType
 
 var
   NSApp* {.importc.}: NSApplication
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
+  NSPasteboardTypeTIFF* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
 
 objc:
@@ -132,6 +137,7 @@ objc:
   proc keyCode*(self: NSEvent): uint16
   proc dataWithBytes*(class: typedesc[NSData], _: pointer, length: int): NSData
   proc length*(self: NSData): uint
+  proc bytes*(self: NSData): pointer
   proc length*(self: NSString): uint
   proc array*(class: typedesc[NSArray]): NSArray
   proc count*(self: NSArray): uint
@@ -144,6 +150,7 @@ objc:
   proc generalPasteboard*(class: typedesc[NSPasteboard]): NSPasteboard
   proc types*(self: NSPasteboard): NSArray
   proc stringForType*(self: NSPasteboard, _: NSPasteboardType): NSString
+  proc dataForType*(self: NSPasteboard, _: NSPasteboardType): NSData
   proc clearContents*(self: NSPasteboard)
   proc setString*(self: NSPasteboard, _: NSString, forType: NSPasteboardType)
   proc processInfo*(class: typedesc[NSProcessInfo]): NSProcessInfo
@@ -177,7 +184,7 @@ objc:
     _: NSString,
     action: SEL,
     keyEquivalent: NSString
-  )
+  ): NSMenuItem
   proc setSubmenu*(self: NSMenuItem, _: NSMenu)
   proc initWithContentRect*(
     self: NSWindow,
@@ -185,7 +192,7 @@ objc:
     styleMask: NSWindowStyleMask,
     backing: NSBackingStoreType,
     defer_mangle: bool
-  )
+  ): NSWindow
   proc orderFront*(self: NSWindow, _: ID)
   proc orderOut*(self: NSWindow, _: ID)
   proc setTitle*(self: NSWindow, _: NSString)
@@ -221,12 +228,12 @@ objc:
   proc initWithAttributes*(
     self: NSOpenGLPixelFormat,
     _: ptr NSOpenGLPixelFormatAttribute
-  )
+  ): NSOpenGLPixelFormat
   proc initWithFrame*(
     self: NSOpenGLView,
     _: NSRect,
     pixelFormat: NSOpenGLPixelFormat
-  )
+  ): NSOpenGLView
   proc setWantsBestResolutionOpenGLSurface*(
     self: NSOpenGLView,
     _: bool
@@ -245,14 +252,20 @@ objc:
     options: NSTrackingAreaOptions,
     owner: ID,
     userInfo: ID
-  )
-  proc initWithData*(self: NSImage, _: NSData)
-  proc initWithImage*(self: NSCursor, _: NSImage, hotSpot: NSPoint)
+  ): NSTrackingArea
+  proc initWithData*(self: NSImage, _: NSData): NSImage
+  proc initWithImage*(self: NSCursor, _: NSImage, hotSpot: NSPoint): NSCursor
   proc discardMarkedText*(self: NSTextInputContext)
   proc handleEvent*(self: NSTextInputContext, _: NSEvent): bool
   proc deactivate*(self: NSTextInputContext)
   proc activate*(self: NSTextInputContext)
   proc insertText*(self: NSTextInputClient, _: ID, replacementRange: NSRange)
+  proc initWithData*(self: NSBitmapImageRep, _: NSData): NSBitmapImageRep
+  proc representationUsingType*(
+    self: NSBitmapImageRep,
+    _: NSBitmapImageFileType,
+    properties: NSDictionary
+  ): NSData
 
 {.push inline.}
 
