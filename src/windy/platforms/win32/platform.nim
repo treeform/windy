@@ -2021,7 +2021,6 @@ when compileOption("threads"):
 
   proc openWebSocket*(
     url: string,
-    headers = newSeq[HttpHeader](),
     deadline = defaultHttpDeadline
   ): WebSocketHandle {.raises: [].} =
     when not compileOption("threads"):
@@ -2030,12 +2029,17 @@ when compileOption("threads"):
     init()
 
     let state = cast[ptr WebSocketState](allocShared0(sizeof(WebSocketState)))
-    state.httpRequest = startHttpRequest(url)
+    state.httpRequest = startHttpRequest(
+      url,
+      "GET",
+      body = "",
+      deadline = deadline
+    )
 
     var handle: WebSocketHandle
     while true:
       handle = windyRand.rand(int.high).WebSocketHandle
-      if handle.int notin httpRequests:
+      if handle.int notin httpRequests and handle.int notin webSockets:
         webSockets[handle.int] = state
         break
 
@@ -2129,7 +2133,7 @@ when compileOption("threads"):
   proc send*(msg: string, kind = Utf8Message) =
     discard
 
-  proc onReadComplete*(
+  proc onReadComplete(
     handle: WebSocketHandle,
     bytesRead: int,
     bufferKind: WINHTTP_WEB_SOCKET_BUFFER_TYPE
