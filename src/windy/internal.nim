@@ -1,10 +1,11 @@
-import common, pixie
+import common, pixie, std/random
 
 const
   multiClickRadius = 4
+  CRLF* = "\r\n"
 
 type
-  State* = object
+  WindowState* = object
     title*: string
     icon*: Image
     cursor*: Cursor
@@ -30,6 +31,7 @@ type
 var
   initialized*: bool
   platformDoubleClickInterval*: float64
+  windyRand* = initRand(2022)
 
 template handleButtonPressTemplate*() =
   window.state.buttonDown.incl button
@@ -122,3 +124,10 @@ template handleRuneTemplate*() =
     return
   if window.onRune != nil:
     window.onRune(rune)
+
+proc addDefaultHeaders*(headers: var seq[HttpHeader]) =
+  if headers["user-agent"].len == 0:
+    headers["user-agent"] = "Windy"
+  if headers["accept-encoding"].len == 0:
+    # If there isn't a specific accept-encoding specified, enable gzip
+    headers["accept-encoding"] = "gzip"
