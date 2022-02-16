@@ -6,8 +6,9 @@ import windy
 
 # You can have many requests in-flight at the same time.
 
-# Calling startHttpRequest never fails. If there is any error, onError will
-# be called during the next pollEvents (or later).
+# Calling startHttpRequest never throws an exception.
+# If there is any error, onError will be called during
+# the next pollEvents (or later).
 
 let req = startHttpRequest("https://www.google.com")
 
