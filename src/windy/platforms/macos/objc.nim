@@ -157,12 +157,13 @@ template addClass*(className, superName: string, cls: Class, body: untyped) =
       discard class_addProtocol(cls, objc_getProtocol(protocolName.cstring))
 
     template addMethod(methodName: string, fn: untyped) =
-      discard class_addMethod(
-        cls,
-        s(methodName),
-        cast[IMP](fn),
-        "".cstring
-      )
+      {.cast(raises: []).}:
+        discard class_addMethod(
+          cls,
+          s(methodName),
+          cast[IMP](fn),
+          "".cstring
+        )
 
     body
 
