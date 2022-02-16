@@ -1354,846 +1354,845 @@ proc onDeadlineExceeded(handle: HttpRequestHandle) =
     msg = "Deadline of " & $state.deadline & " exceeded, time is " & $now
   handle.onHttpError(msg)
 
-proc startHttpRequest*(
-  url: string,
-  verb = "GET",
-  headers = newSeq[HttpHeader](),
-  body = "",
-  deadline = defaultHttpDeadline
-): HttpRequestHandle {.raises: [].} =
-  when not compileOption("threads"):
-    {.error: "startHttpRequest requires --threads:on option.".}
+when compileOption("threads"):
 
-  init()
+  proc startHttpRequest*(
+    url: string,
+    verb = "GET",
+    headers = newSeq[HttpHeader](),
+    body = "",
+    deadline = defaultHttpDeadline
+  ): HttpRequestHandle {.raises: [].} =
+    init()
 
-  var headers = headers
-  headers.addDefaultHeaders()
+    var headers = headers
+    headers.addDefaultHeaders()
 
-  let state = cast[ptr HttpRequestState](allocShared0(sizeof(HttpRequestState)))
-  state.url = url
-  state.verb = verb
-  state.headers = headers
+    let state = cast[ptr HttpRequestState](allocShared0(sizeof(HttpRequestState)))
+    state.url = url
+    state.verb = verb
+    state.headers = headers
 
-  if body.len > 0:
-    state.requestBody = allocShared0(body.len)
-    state.requestBodyLen = body.len
-    copyMem(state.requestBody, body[0].unsafeAddr, body.len)
+    if body.len > 0:
+      state.requestBody = allocShared0(body.len)
+      state.requestBodyLen = body.len
+      copyMem(state.requestBody, body[0].unsafeAddr, body.len)
 
-  if deadline >= 0:
+    if deadline >= 0:
+      state.deadline = deadline
+    else:
+      state.deadline = epochTime() + 60 # Default deadline
+
+    while true:
+      result = windyRand.rand(int.high).HttpRequestHandle
+      if result.int notin httpRequests:
+        httpRequests[result.int] = state
+        break
+
+    discard PostMessageW(helperWindow, WM_HTTP, HTTP_REQUEST_START, result.LPARAM)
+
+  proc deadline*(handle: HttpRequestHandle): float64 =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.deadline
+
+  proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
     state.deadline = deadline
-  else:
-    state.deadline = epochTime() + 60 # Default deadline
 
-  while true:
-    result = windyRand.rand(int.high).HttpRequestHandle
-    if result.int notin httpRequests:
-      httpRequests[result.int] = state
-      break
+  proc `onError=`*(
+    handle: HttpRequestHandle,
+    callback: HttpErrorCallback
+  ) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onError = callback
 
-  discard PostMessageW(helperWindow, WM_HTTP, HTTP_REQUEST_START, result.LPARAM)
+  proc `onResponse=`*(
+    handle: HttpRequestHandle,
+    callback: HttpResponseCallback
+  ) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onResponse = callback
 
-proc deadline*(handle: HttpRequestHandle): float64 =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.deadline
+  proc `onUploadProgress=`*(
+    handle: HttpRequestHandle,
+    callback: HttpProgressCallback
+  ) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onUploadProgress = callback
 
-proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.deadline = deadline
+  proc `onDownloadProgress=`*(
+    handle: HttpRequestHandle,
+    callback: HttpProgressCallback
+  ) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onDownloadProgress = callback
 
-proc `onError=`*(
-  handle: HttpRequestHandle,
-  callback: HttpErrorCallback
-) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onError = callback
+  proc cancel*(handle: HttpRequestHandle) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
 
-proc `onResponse=`*(
-  handle: HttpRequestHandle,
-  callback: HttpResponseCallback
-) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onResponse = callback
+    state.canceled = true
 
-proc `onUploadProgress=`*(
-  handle: HttpRequestHandle,
-  callback: HttpProgressCallback
-) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onUploadProgress = callback
-
-proc `onDownloadProgress=`*(
-  handle: HttpRequestHandle,
-  callback: HttpProgressCallback
-) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onDownloadProgress = callback
-
-proc cancel*(handle: HttpRequestHandle) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-
-  state.canceled = true
-
-  discard PostMessageW(
-    helperWindow,
-    WM_HTTP,
-    HTTP_REQUEST_CANCEL,
-    handle.LPARAM
-  )
-
-proc httpCallback(
-  hInternet: HINTERNET,
-  dwContext: DWORD_PTR,
-  dwInternetStatus: DWORD,
-  lpvStatusInformation: LPVOID,
-  dwStatusInformationLength: DWORD
-): void {.stdcall, raises: [].} =
-  {.push stackTrace: off.}
-
-  var wParam: WPARAM
-
-  case dwInternetStatus:
-  of WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
-    wParam = HTTP_REQUEST_ERROR
-  of WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
-    wParam = HTTP_SECURE_ERROR
-  of WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE:
-    let bytesWritten = cast[ptr DWORD](lpvStatusInformation)[]
-    wParam = bytesWritten shl 16 # HIWORD
-    wParam = wParam or HTTP_WRITE_COMPLETE
-  of WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE:
-    wParam = HTTP_SENDREQUEST_COMPLETE
-  of WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
-    wParam = HTTP_HEADERS_AVAILABLE
-  of WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
-    wParam = dwStatusInformationLength shl 16 # HIWORD
-    wParam = wParam or HTTP_READ_COMPLETE
-  of WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING:
-    wParam = HTTP_HANDLE_CLOSING
-  else:
-    discard
-
-  if wParam > 0:
     discard PostMessageW(
       helperWindow,
       WM_HTTP,
-      wParam,
-      dwContext.LPARAM
+      HTTP_REQUEST_CANCEL,
+      handle.LPARAM
     )
 
-  {.pop.}
+  proc httpCallback(
+    hInternet: HINTERNET,
+    dwContext: DWORD_PTR,
+    dwInternetStatus: DWORD,
+    lpvStatusInformation: LPVOID,
+    dwStatusInformationLength: DWORD
+  ): void {.stdcall, raises: [].} =
+    {.push stackTrace: off.}
 
-proc webSocketCallback(
-  hWebSocket: HINTERNET,
-  dwContext: DWORD_PTR,
-  dwInternetStatus: DWORD,
-  lpvStatusInformation: LPVOID,
-  dwStatusInformationLength: DWORD
-): void {.stdcall, raises: [].} =
-  {.push stackTrace: off.}
+    var wParam: WPARAM
 
-  var wParam: WPARAM
-
-  case dwInternetStatus:
-  of WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
-    wParam = HTTP_REQUEST_ERROR
-  of WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
-    wParam = HTTP_SECURE_ERROR
-  of WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
-    let socketStatus =
-      cast[ptr WINHTTP_WEB_SOCKET_STATUS](lpvStatusInformation)[]
-    wParam = socketStatus.dwBytesTransferred shl 16
-    wParam = wParam or (socketStatus.eBufferType.DWORD shl 8)
-    wparam = wparam or HTTP_READ_COMPLETE
-  of WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING:
-    wParam = HTTP_HANDLE_CLOSING
-  else:
-    discard
-
-  if wParam > 0:
-    discard PostMessageW(
-      helperWindow,
-      WM_HTTP,
-      wParam,
-      dwContext.LPARAM
-    )
-
-  {.pop.}
-
-proc onStartRequest(handle: HttpRequestHandle) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-
-  if state.canceled:
-    return
-
-  if state.deadline > 0 and state.deadline <= epochTime():
-    handle.onDeadlineExceeded()
-    return
-
-  let url =
-    try:
-      parseUrl(state.url)
-    except:
-      handle.onHttpError("Parsing URL failed: " & getCurrentExceptionMsg())
-      return
-
-  if state.onWebSocketUpgrade != nil: # WebSocket request
-    # WinHttp does not like ws:// or wss:// so convert internally
-    let scheme = url.scheme.toLowerAscii()
-    if scheme == "ws":
-      url.scheme = "http"
-    elif scheme == "wss":
-      url.scheme = "https"
+    case dwInternetStatus:
+    of WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
+      wParam = HTTP_REQUEST_ERROR
+    of WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
+      wParam = HTTP_SECURE_ERROR
+    of WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE:
+      let bytesWritten = cast[ptr DWORD](lpvStatusInformation)[]
+      wParam = bytesWritten shl 16 # HIWORD
+      wParam = wParam or HTTP_WRITE_COMPLETE
+    of WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE:
+      wParam = HTTP_SENDREQUEST_COMPLETE
+    of WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
+      wParam = HTTP_HEADERS_AVAILABLE
+    of WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
+      wParam = dwStatusInformationLength shl 16 # HIWORD
+      wParam = wParam or HTTP_READ_COMPLETE
+    of WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING:
+      wParam = HTTP_HANDLE_CLOSING
     else:
-      handle.onHttpError("Invalid URL scheme: " & url.scheme)
-      return
-  else:
-    if url.scheme.toLowerAscii() notin ["http", "https"]:
-      handle.onHttpError("Invalid URL scheme: " & url.scheme)
-      return
-
-  var port: INTERNET_PORT
-  if url.port == "":
-    case url.scheme.toLowerAscii():
-    of "http":
-      port = 80
-    of "https":
-      port = 443
-    else:
-      discard # Scheme is validated above
-  else:
-    try:
-      let parsedPort = parseInt(url.port)
-      if parsedPort < 0 or parsedPort > uint16.high.int:
-        handle.onHttpError("Invalid port: " & url.port)
-        return
-      port = parsedPort.uint16
-    except:
-      handle.onHttpError("Parsing port failed")
-      return
-
-  block:
-    var wideUserAgent = state.headers["user-agent"].wstr()
-    state.wideUserAgent = cast[ptr WCHAR](allocShared0(wideUserAgent.len + 2))
-    copyMem(
-      state.wideUserAgent,
-      wideUserAgent[0].addr,
-      wideUserAgent.len
-    )
-
-  state.hOpen = WinHttpOpen(
-    state.wideUserAgent,
-    WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
-    nil,
-    nil,
-    WINHTTP_FLAG_ASYNC
-  )
-  if state.hOpen == 0:
-    handle.onHttpError("WinHttpOpen error: " & $GetLastError())
-    return
-
-  # Set timeouts to 0, we handle deadline ourselves
-  if WinHttpSetTimeouts(state.hOpen, 0, 0, 0, 0) == 0:
-    handle.onHttpError("WinHttpSetTimeouts error: " & $GetLastError())
-    return
-
-  let prevCallback = WinHttpSetStatusCallback(
-    state.hOpen,
-    httpCallback,
-    cast[DWORD](WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS),
-    0
-  )
-
-  if prevCallback == WINHTTP_INVALID_STATUS_CALLBACK:
-    handle.onHttpError("WinHttpSetStatusCallback error")
-    return
-
-  block:
-    var wideHostname = url.hostname.wstr()
-    state.wideHostname = cast[ptr WCHAR](allocShared0(wideHostname.len + 2))
-    copyMem(
-      state.wideHostname,
-      wideHostname[0].addr,
-      wideHostname.len
-    )
-
-  state.hConnect = WinHttpConnect(
-    state.hOpen,
-    state.wideHostname,
-    port,
-    0
-  )
-  if state.hConnect == 0:
-    handle.onHttpError("WinHttpConnect error: " & $GetLastError())
-    return
-
-  block:
-    var wideVerb = state.verb.toUpperAscii().wstr()
-    state.wideVerb = cast[ptr WCHAR](allocShared0(wideVerb.len + 2))
-    copyMem(
-      state.wideVerb,
-      wideVerb[0].addr,
-      wideVerb.len
-    )
-
-  block:
-    var objectName = url.path
-    if url.search != "":
-      objectName &= "?" & url.search
-
-    var wideObjectName = objectName.wstr()
-    state.wideObjectName = cast[ptr WCHAR](allocShared0(wideObjectName.len + 2))
-    copyMem(
-      state.wideObjectName,
-      wideObjectName[0].addr,
-      wideObjectName.len
-    )
-
-  block:
-    var wideDefaultAcceptType = "*/*".wstr()
-    state.wideDefaultAcceptType =
-      cast[ptr WCHAR](allocShared0(wideDefaultAcceptType.len + 2))
-    copyMem(
-      state.wideDefaultAcceptType,
-      wideDefaultAcceptType[0].addr,
-      wideDefaultAcceptType.len
-    )
-
-  state.defaultAcceptTypes = [
-    state.wideDefaultAcceptType,
-    nil
-  ]
-
-  state.hRequest = WinHttpOpenRequest(
-    state.hConnect,
-    state.wideVerb,
-    state.wideObjectName,
-    nil,
-    nil,
-    cast[ptr ptr WCHAR](state.defaultAcceptTypes.addr),
-    if url.scheme.toLowerAscii() == "https": WINHTTP_FLAG_SECURE.DWORD else: 0
-  )
-  if state.hRequest == 0:
-    handle.onHttpError("WinHttpOpenRequest error: " & $GetLastError())
-    return
-
-  block:
-    if state.requestBodyLen > 0:
-      state.headers["Content-Length"] = $state.requestBodyLen
-
-    var requestHeaders: string
-    for header in state.headers:
-      requestHeaders &= header.key & ": " & header.value & CRLF
-
-    var wideRequestHeaders = requestHeaders.wstr()
-    state.wideRequestHeaders =
-      cast[ptr WCHAR](allocShared0(wideRequestHeaders.len + 2))
-    copyMem(
-      state.wideRequestHeaders,
-      wideRequestHeaders[0].addr,
-      wideRequestHeaders.len
-    )
-
-  if WinHttpAddRequestHeaders(
-    state.hRequest,
-    cast[ptr WCHAR](state.wideRequestHeaders),
-    -1,
-    (WINHTTP_ADDREQ_FLAG_ADD or WINHTTP_ADDREQ_FLAG_REPLACE).DWORD
-  ) == 0:
-    handle.onHttpError("WinHttpAddRequestHeaders error: " & $GetLastError())
-    return
-
-  if state.onWebSocketUpgrade != nil: # WebSocket request
-    if WinHttpSetOption(
-      state.hRequest,
-      WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET,
-      nil,
-      0
-    ) == 0:
-      handle.onHttpError("WinHttpSetOption error: " & $GetLastError())
-      return
-
-  # WinHttpSendRequest starts triggering callbacks
-
-  if WinHttpSendRequest(
-    state.hRequest,
-    nil,
-    0,
-    nil,
-    0,
-    0,
-    cast[DWORD_PTR](handle)
-  ) == 0:
-    handle.onHttpError("WinHttpSendRequest error: " & $GetLastError())
-    return
-
-proc onSendRequestComplete(handle: HttpRequestHandle) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-
-  if state.canceled or state.closed:
-    return
-
-  if state.deadline > 0 and state.deadline <= epochTime():
-    handle.onDeadlineExceeded()
-    return
-
-  if state.requestBodyLen > 0:
-    if WinHttpWriteData(
-      state.hRequest,
-      state.requestBody,
-      min(
-        state.requestBodyLen,
-        int16.high # Never read more than HIWORD
-      ).DWORD,
-      nil
-    ) == 0:
-      handle.onHttpError("WinHttpWriteData error " & $GetLastError())
-  else:
-    if WinHttpReceiveResponse(state.hRequest, nil) == 0:
-      handle.onHttpError("WinHttpReceiveResponse error " & $GetLastError())
-
-proc onHeadersAvailable(handle: HttpRequestHandle) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-
-  if state.canceled or state.closed:
-    return
-
-  if state.deadline > 0 and state.deadline <= epochTime():
-    handle.onDeadlineExceeded()
-    return
-
-  if state.onWebSocketUpgrade != nil: # WebSocket request
-    state.onWebSocketUpgrade()
-    return
-
-  var dwSize = sizeof(DWORD).DWORD
-  if WinHttpQueryHeaders(
-    state.hRequest,
-    WINHTTP_QUERY_STATUS_CODE or WINHTTP_QUERY_FLAG_NUMBER,
-    nil,
-    state.responseCode.addr,
-    dwSize.addr,
-    nil
-  ) == 0:
-    handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
-    return
-
-  block: # Read Content-Length if present
-    var
-      buf = newString(32)
-      bufLen = buf.len.DWORD
-    if WinHttpQueryHeaders(
-      state.hRequest,
-      WINHTTP_QUERY_CONTENT_LENGTH,
-      nil,
-      buf[0].addr,
-      bufLen.addr,
-      nil
-    ) == 0:
-      if GetLastError() != ERROR_WINHTTP_HEADER_NOT_FOUND:
-        handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
-        return
-
-    state.responseContentLength = -1 # Unkonwn length
-
-    try:
-      state.responseContentLength = parseInt($cast[ptr WCHAR](buf[0].addr))
-    except:
       discard
 
-  var
-    responseHeadersLen: DWORD
-    responseHeadersBuf: string
+    if wParam > 0:
+      discard PostMessageW(
+        helperWindow,
+        WM_HTTP,
+        wParam,
+        dwContext.LPARAM
+      )
 
-  # Determine how big the header buffer needs to be
-  discard WinHttpQueryHeaders(
-    state.hRequest,
-    WINHTTP_QUERY_RAW_HEADERS_CRLF,
-    nil,
-    nil,
-    responseHeadersLen.addr,
-    nil
-  )
-  if GetLastError() == ERROR_INSUFFICIENT_BUFFER: # Expected!
-    # Set the header buffer to the correct size and inclue a null terminator
-    responseHeadersBuf.setLen(responseHeadersLen)
-  else:
-    handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
-    return
+    {.pop.}
 
-  # Read the headers into the buffer
-  if WinHttpQueryHeaders(
-    state.hRequest,
-    WINHTTP_QUERY_RAW_HEADERS_CRLF,
-    nil,
-    responseHeadersBuf[0].addr,
-    responseHeadersLen.addr,
-    nil
-  ) == 0:
-    handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
-    return
+  proc webSocketCallback(
+    hWebSocket: HINTERNET,
+    dwContext: DWORD_PTR,
+    dwInternetStatus: DWORD,
+    lpvStatusInformation: LPVOID,
+    dwStatusInformationLength: DWORD
+  ): void {.stdcall, raises: [].} =
+    {.push stackTrace: off.}
 
-  state.responseHeaders = $cast[ptr WCHAR](responseHeadersBuf[0].addr)
+    var wParam: WPARAM
 
-  if state.responseHeaders.len == 0:
-    handle.onHttpError("Error parsing response headers")
-    return
+    case dwInternetStatus:
+    of WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
+      wParam = HTTP_REQUEST_ERROR
+    of WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
+      wParam = HTTP_SECURE_ERROR
+    of WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
+      let socketStatus =
+        cast[ptr WINHTTP_WEB_SOCKET_STATUS](lpvStatusInformation)[]
+      wParam = socketStatus.dwBytesTransferred shl 16
+      wParam = wParam or (socketStatus.eBufferType.DWORD shl 8)
+      wparam = wparam or HTTP_READ_COMPLETE
+    of WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING:
+      wParam = HTTP_HANDLE_CLOSING
+    else:
+      discard
 
-  state.responseBodyCap = 16384
-  state.responseBody = allocShared0(state.responseBodyCap)
+    if wParam > 0:
+      discard PostMessageW(
+        helperWindow,
+        WM_HTTP,
+        wParam,
+        dwContext.LPARAM
+      )
 
-  if WinHttpReadData(
-    state.hRequest,
-    state.responseBody,
-    state.responseBodyCap.DWORD,
-    nil
-  ) == 0:
-    handle.onHttpError("WinHttpReadData error: " & $GetLastError())
-    return
+    {.pop.}
 
-proc onWriteComplete(handle: HttpRequestHandle, bytesWritten: int) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
+  proc onStartRequest(handle: HttpRequestHandle) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
 
-  if state.canceled or state.closed:
-    return
+    if state.canceled:
+      return
 
-  if state.deadline > 0 and state.deadline <= epochTime():
-    handle.onDeadlineExceeded()
-    return
+    if state.deadline > 0 and state.deadline <= epochTime():
+      handle.onDeadlineExceeded()
+      return
 
-  state.requestBodyBytesWritten += bytesWritten
+    let url =
+      try:
+        parseUrl(state.url)
+      except:
+        handle.onHttpError("Parsing URL failed: " & getCurrentExceptionMsg())
+        return
 
-  if state.onUploadProgress != nil:
-    state.onUploadProgress(state.requestBodyBytesWritten, state.requestBodyLen)
+    if state.onWebSocketUpgrade != nil: # WebSocket request
+      # WinHttp does not like ws:// or wss:// so convert internally
+      let scheme = url.scheme.toLowerAscii()
+      if scheme == "ws":
+        url.scheme = "http"
+      elif scheme == "wss":
+        url.scheme = "https"
+      else:
+        handle.onHttpError("Invalid URL scheme: " & url.scheme)
+        return
+    else:
+      if url.scheme.toLowerAscii() notin ["http", "https"]:
+        handle.onHttpError("Invalid URL scheme: " & url.scheme)
+        return
 
-  if state.requestBodyBytesWritten == state.requestBodyLen:
-    if WinHttpReceiveResponse(state.hRequest, nil) == 0:
-      handle.onHttpError("WinHttpReceiveResponse error " & $GetLastError())
-  else:
-    let requestBody = cast[ptr UncheckedArray[uint8]](state.requestBody)
-    if WinHttpWriteData(
+    var port: INTERNET_PORT
+    if url.port == "":
+      case url.scheme.toLowerAscii():
+      of "http":
+        port = 80
+      of "https":
+        port = 443
+      else:
+        discard # Scheme is validated above
+    else:
+      try:
+        let parsedPort = parseInt(url.port)
+        if parsedPort < 0 or parsedPort > uint16.high.int:
+          handle.onHttpError("Invalid port: " & url.port)
+          return
+        port = parsedPort.uint16
+      except:
+        handle.onHttpError("Parsing port failed")
+        return
+
+    block:
+      var wideUserAgent = state.headers["user-agent"].wstr()
+      state.wideUserAgent = cast[ptr WCHAR](allocShared0(wideUserAgent.len + 2))
+      copyMem(
+        state.wideUserAgent,
+        wideUserAgent[0].addr,
+        wideUserAgent.len
+      )
+
+    state.hOpen = WinHttpOpen(
+      state.wideUserAgent,
+      WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+      nil,
+      nil,
+      WINHTTP_FLAG_ASYNC
+    )
+    if state.hOpen == 0:
+      handle.onHttpError("WinHttpOpen error: " & $GetLastError())
+      return
+
+    # Set timeouts to 0, we handle deadline ourselves
+    if WinHttpSetTimeouts(state.hOpen, 0, 0, 0, 0) == 0:
+      handle.onHttpError("WinHttpSetTimeouts error: " & $GetLastError())
+      return
+
+    let prevCallback = WinHttpSetStatusCallback(
+      state.hOpen,
+      httpCallback,
+      cast[DWORD](WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS),
+      0
+    )
+
+    if prevCallback == WINHTTP_INVALID_STATUS_CALLBACK:
+      handle.onHttpError("WinHttpSetStatusCallback error")
+      return
+
+    block:
+      var wideHostname = url.hostname.wstr()
+      state.wideHostname = cast[ptr WCHAR](allocShared0(wideHostname.len + 2))
+      copyMem(
+        state.wideHostname,
+        wideHostname[0].addr,
+        wideHostname.len
+      )
+
+    state.hConnect = WinHttpConnect(
+      state.hOpen,
+      state.wideHostname,
+      port,
+      0
+    )
+    if state.hConnect == 0:
+      handle.onHttpError("WinHttpConnect error: " & $GetLastError())
+      return
+
+    block:
+      var wideVerb = state.verb.toUpperAscii().wstr()
+      state.wideVerb = cast[ptr WCHAR](allocShared0(wideVerb.len + 2))
+      copyMem(
+        state.wideVerb,
+        wideVerb[0].addr,
+        wideVerb.len
+      )
+
+    block:
+      var objectName = url.path
+      if url.search != "":
+        objectName &= "?" & url.search
+
+      var wideObjectName = objectName.wstr()
+      state.wideObjectName = cast[ptr WCHAR](allocShared0(wideObjectName.len + 2))
+      copyMem(
+        state.wideObjectName,
+        wideObjectName[0].addr,
+        wideObjectName.len
+      )
+
+    block:
+      var wideDefaultAcceptType = "*/*".wstr()
+      state.wideDefaultAcceptType =
+        cast[ptr WCHAR](allocShared0(wideDefaultAcceptType.len + 2))
+      copyMem(
+        state.wideDefaultAcceptType,
+        wideDefaultAcceptType[0].addr,
+        wideDefaultAcceptType.len
+      )
+
+    state.defaultAcceptTypes = [
+      state.wideDefaultAcceptType,
+      nil
+    ]
+
+    state.hRequest = WinHttpOpenRequest(
+      state.hConnect,
+      state.wideVerb,
+      state.wideObjectName,
+      nil,
+      nil,
+      cast[ptr ptr WCHAR](state.defaultAcceptTypes.addr),
+      if url.scheme.toLowerAscii() == "https": WINHTTP_FLAG_SECURE.DWORD else: 0
+    )
+    if state.hRequest == 0:
+      handle.onHttpError("WinHttpOpenRequest error: " & $GetLastError())
+      return
+
+    block:
+      if state.requestBodyLen > 0:
+        state.headers["Content-Length"] = $state.requestBodyLen
+
+      var requestHeaders: string
+      for header in state.headers:
+        requestHeaders &= header.key & ": " & header.value & CRLF
+
+      var wideRequestHeaders = requestHeaders.wstr()
+      state.wideRequestHeaders =
+        cast[ptr WCHAR](allocShared0(wideRequestHeaders.len + 2))
+      copyMem(
+        state.wideRequestHeaders,
+        wideRequestHeaders[0].addr,
+        wideRequestHeaders.len
+      )
+
+    if WinHttpAddRequestHeaders(
       state.hRequest,
-      requestBody[state.requestBodyBytesWritten].addr,
-      min(
-        state.requestBodyLen - state.requestBodyBytesWritten,
-        int16.high # Never read more than HIWORD
-      ).DWORD,
+      cast[ptr WCHAR](state.wideRequestHeaders),
+      -1,
+      (WINHTTP_ADDREQ_FLAG_ADD or WINHTTP_ADDREQ_FLAG_REPLACE).DWORD
+    ) == 0:
+      handle.onHttpError("WinHttpAddRequestHeaders error: " & $GetLastError())
+      return
+
+    if state.onWebSocketUpgrade != nil: # WebSocket request
+      if WinHttpSetOption(
+        state.hRequest,
+        WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET,
+        nil,
+        0
+      ) == 0:
+        handle.onHttpError("WinHttpSetOption error: " & $GetLastError())
+        return
+
+    # WinHttpSendRequest starts triggering callbacks
+
+    if WinHttpSendRequest(
+      state.hRequest,
+      nil,
+      0,
+      nil,
+      0,
+      0,
+      cast[DWORD_PTR](handle)
+    ) == 0:
+      handle.onHttpError("WinHttpSendRequest error: " & $GetLastError())
+      return
+
+  proc onSendRequestComplete(handle: HttpRequestHandle) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+
+    if state.canceled or state.closed:
+      return
+
+    if state.deadline > 0 and state.deadline <= epochTime():
+      handle.onDeadlineExceeded()
+      return
+
+    if state.requestBodyLen > 0:
+      if WinHttpWriteData(
+        state.hRequest,
+        state.requestBody,
+        min(
+          state.requestBodyLen,
+          int16.high # Never read more than HIWORD
+        ).DWORD,
+        nil
+      ) == 0:
+        handle.onHttpError("WinHttpWriteData error " & $GetLastError())
+    else:
+      if WinHttpReceiveResponse(state.hRequest, nil) == 0:
+        handle.onHttpError("WinHttpReceiveResponse error " & $GetLastError())
+
+  proc onHeadersAvailable(handle: HttpRequestHandle) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+
+    if state.canceled or state.closed:
+      return
+
+    if state.deadline > 0 and state.deadline <= epochTime():
+      handle.onDeadlineExceeded()
+      return
+
+    if state.onWebSocketUpgrade != nil: # WebSocket request
+      state.onWebSocketUpgrade()
+      return
+
+    var dwSize = sizeof(DWORD).DWORD
+    if WinHttpQueryHeaders(
+      state.hRequest,
+      WINHTTP_QUERY_STATUS_CODE or WINHTTP_QUERY_FLAG_NUMBER,
+      nil,
+      state.responseCode.addr,
+      dwSize.addr,
       nil
     ) == 0:
-      handle.onHttpError("WinHttpWriteData error " & $GetLastError())
+      handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
+      return
 
-proc onReadComplete(handle: HttpRequestHandle, bytesRead: int) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-
-  if state.canceled or state.closed:
-    return
-
-  if state.deadline > 0 and state.deadline <= epochTime():
-    handle.onDeadlineExceeded()
-    return
-
-  if bytesRead == 0: # This request is complete
-    let response = HttpResponse()
-    response.code = state.responseCode
-
-    let responseHeaders = state.responseHeaders.split(CRLF)
-    for i, line in responseHeaders:
-      if i == 0: # HTTP/1.1 200 OK
-        continue
-      if line != "":
-        let parts = line.split(":", 1)
-        if parts.len == 2:
-          response.headers.add(HttpHeader(
-            key: strutils.strip(parts[0]),
-            value: strutils.strip(parts[1])
-          ))
-
-    if state.responseBodyLen > 0:
-      let contentEncoding = response.headers["content-encoding"]
-      if contentEncoding.toLowerAscii() == "gzip":
-        try:
-          response.body = uncompress(
-            state.responseBody,
-            state.responseBodyLen
-          )
-        except:
-          handle.onHttpError("Error uncompressing response")
+    block: # Read Content-Length if present
+      var
+        buf = newString(32)
+        bufLen = buf.len.DWORD
+      if WinHttpQueryHeaders(
+        state.hRequest,
+        WINHTTP_QUERY_CONTENT_LENGTH,
+        nil,
+        buf[0].addr,
+        bufLen.addr,
+        nil
+      ) == 0:
+        if GetLastError() != ERROR_WINHTTP_HEADER_NOT_FOUND:
+          handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
           return
-      else:
-        response.body.setLen(state.responseBodyLen)
-        copyMem(
-          response.body[0].addr,
-          state.responseBody,
-          state.responseBodyLen
-        )
 
-    handle.close()
+      state.responseContentLength = -1 # Unkonwn length
 
-    if state.onResponse != nil:
-      state.onResponse(response)
+      try:
+        state.responseContentLength = parseInt($cast[ptr WCHAR](buf[0].addr))
+      except:
+        discard
 
-  else: # Continue reading
-    state.responseBodyLen += bytesRead
+    var
+      responseHeadersLen: DWORD
+      responseHeadersBuf: string
 
-    if state.onDownloadProgress != nil:
-      state.onDownloadProgress(state.responseBodyLen, state.responseContentLength)
+    # Determine how big the header buffer needs to be
+    discard WinHttpQueryHeaders(
+      state.hRequest,
+      WINHTTP_QUERY_RAW_HEADERS_CRLF,
+      nil,
+      nil,
+      responseHeadersLen.addr,
+      nil
+    )
+    if GetLastError() == ERROR_INSUFFICIENT_BUFFER: # Expected!
+      # Set the header buffer to the correct size and inclue a null terminator
+      responseHeadersBuf.setLen(responseHeadersLen)
+    else:
+      handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
+      return
 
-    if state.responseBodyCap - state.responseBodyLen < 8192:
-      let newCap = state.responseBodyCap * 2
-      state.responseBody =
-        reallocShared0(state.responseBody, state.responseBodyCap, newCap)
-      state.responseBodyCap = newCap
+    # Read the headers into the buffer
+    if WinHttpQueryHeaders(
+      state.hRequest,
+      WINHTTP_QUERY_RAW_HEADERS_CRLF,
+      nil,
+      responseHeadersBuf[0].addr,
+      responseHeadersLen.addr,
+      nil
+    ) == 0:
+      handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
+      return
 
-    let responseBody = cast[ptr UncheckedArray[uint8]](state.responseBody)
+    state.responseHeaders = $cast[ptr WCHAR](responseHeadersBuf[0].addr)
+
+    if state.responseHeaders.len == 0:
+      handle.onHttpError("Error parsing response headers")
+      return
+
+    state.responseBodyCap = 16384
+    state.responseBody = allocShared0(state.responseBodyCap)
+
     if WinHttpReadData(
       state.hRequest,
-      responseBody[state.responseBodyLen].addr,
-      min(
-        state.responseBodyCap - state.responseBodyLen,
-        int16.high # Never read more than HIWORD
-      ).DWORD,
+      state.responseBody,
+      state.responseBodyCap.DWORD,
       nil
     ) == 0:
       handle.onHttpError("WinHttpReadData error: " & $GetLastError())
       return
 
-proc close*(handle: WebSocketHandle) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
+  proc onWriteComplete(handle: HttpRequestHandle, bytesWritten: int) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
 
-  state.closed = true
+    if state.canceled or state.closed:
+      return
 
-  state.httpRequest.cancel()
+    if state.deadline > 0 and state.deadline <= epochTime():
+      handle.onDeadlineExceeded()
+      return
 
-  discard PostMessageW(
-    helperWindow,
-    WM_HTTP,
-    HTTP_WEBSOCKET_CLOSE,
-    handle.LPARAM
-  )
+    state.requestBodyBytesWritten += bytesWritten
 
-proc destroy(handle: WebSocketHandle) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
+    if state.onUploadProgress != nil:
+      state.onUploadProgress(state.requestBodyBytesWritten, state.requestBodyLen)
 
-  webSockets.del(handle.int)
+    if state.requestBodyBytesWritten == state.requestBodyLen:
+      if WinHttpReceiveResponse(state.hRequest, nil) == 0:
+        handle.onHttpError("WinHttpReceiveResponse error " & $GetLastError())
+    else:
+      let requestBody = cast[ptr UncheckedArray[uint8]](state.requestBody)
+      if WinHttpWriteData(
+        state.hRequest,
+        requestBody[state.requestBodyBytesWritten].addr,
+        min(
+          state.requestBodyLen - state.requestBodyBytesWritten,
+          int16.high # Never read more than HIWORD
+        ).DWORD,
+        nil
+      ) == 0:
+        handle.onHttpError("WinHttpWriteData error " & $GetLastError())
 
-  if state.buffer != nil:
-    deallocShared(state.buffer)
-  deallocShared(state)
+  proc onReadComplete(handle: HttpRequestHandle, bytesRead: int) =
+    let state = httpRequests.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
 
-proc onWebSocketError(handle: WebSocketHandle, msg: string) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
+    if state.canceled or state.closed:
+      return
 
-  if state.closed:
-    return
+    if state.deadline > 0 and state.deadline <= epochTime():
+      handle.onDeadlineExceeded()
+      return
 
-  if state.onError != nil:
-    state.onError(msg)
+    if bytesRead == 0: # This request is complete
+      let response = HttpResponse()
+      response.code = state.responseCode
 
-  handle.close()
+      let responseHeaders = state.responseHeaders.split(CRLF)
+      for i, line in responseHeaders:
+        if i == 0: # HTTP/1.1 200 OK
+          continue
+        if line != "":
+          let parts = line.split(":", 1)
+          if parts.len == 2:
+            response.headers.add(HttpHeader(
+              key: strutils.strip(parts[0]),
+              value: strutils.strip(parts[1])
+            ))
 
-proc openWebSocket*(
-  url: string,
-  headers = newSeq[HttpHeader](),
-  deadline = defaultHttpDeadline
-): WebSocketHandle {.raises: [].} =
-  when not compileOption("threads"):
-    {.error: "openWebSocket requires --threads:on option.".}
+      if state.responseBodyLen > 0:
+        let contentEncoding = response.headers["content-encoding"]
+        if contentEncoding.toLowerAscii() == "gzip":
+          try:
+            response.body = uncompress(
+              state.responseBody,
+              state.responseBodyLen
+            )
+          except:
+            handle.onHttpError("Error uncompressing response")
+            return
+        else:
+          response.body.setLen(state.responseBodyLen)
+          copyMem(
+            response.body[0].addr,
+            state.responseBody,
+            state.responseBodyLen
+          )
 
-  init()
+      handle.close()
 
-  let state = cast[ptr WebSocketState](allocShared0(sizeof(WebSocketState)))
-  state.httpRequest = startHttpRequest(url)
+      if state.onResponse != nil:
+        state.onResponse(response)
 
-  var handle: WebSocketHandle
-  while true:
-    handle = windyRand.rand(int.high).WebSocketHandle
-    if handle.int notin httpRequests:
-      webSockets[handle.int] = state
-      break
+    else: # Continue reading
+      state.responseBodyLen += bytesRead
 
-  let requestState = httpRequests.getOrDefault(state.httpRequest.int)
+      if state.onDownloadProgress != nil:
+        state.onDownloadProgress(state.responseBodyLen, state.responseContentLength)
 
-  requestState.onWebSocketUpgrade = proc() =
+      if state.responseBodyCap - state.responseBodyLen < 8192:
+        let newCap = state.responseBodyCap * 2
+        state.responseBody =
+          reallocShared0(state.responseBody, state.responseBodyCap, newCap)
+        state.responseBodyCap = newCap
+
+      let responseBody = cast[ptr UncheckedArray[uint8]](state.responseBody)
+      if WinHttpReadData(
+        state.hRequest,
+        responseBody[state.responseBodyLen].addr,
+        min(
+          state.responseBodyCap - state.responseBodyLen,
+          int16.high # Never read more than HIWORD
+        ).DWORD,
+        nil
+      ) == 0:
+        handle.onHttpError("WinHttpReadData error: " & $GetLastError())
+        return
+
+  proc close*(handle: WebSocketHandle) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+
+    state.closed = true
+
+    state.httpRequest.cancel()
+
+    discard PostMessageW(
+      helperWindow,
+      WM_HTTP,
+      HTTP_WEBSOCKET_CLOSE,
+      handle.LPARAM
+    )
+
+  proc destroy(handle: WebSocketHandle) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+
+    webSockets.del(handle.int)
+
+    if state.buffer != nil:
+      deallocShared(state.buffer)
+    deallocShared(state)
+
+  proc onWebSocketError(handle: WebSocketHandle, msg: string) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+
     if state.closed:
       return
 
-    state.hWebSocket = WinHttpWebSocketCompleteUpgrade(
-      requestState.hRequest,
-      cast[DWORD_PTR](handle)
-    )
-    if state.hWebSocket == 0:
-      state.httpRequest.onHttpError(
-        "WinHttpWebSocketCompleteUpgrade error: " & $GetLastError()
-      )
-    else:
-      requestState.deadline = 0
-      requestState.onError = nil
+    if state.onError != nil:
+      state.onError(msg)
 
-      state.httpRequest.close()
+    handle.close()
 
-      let prevCallback = WinHttpSetStatusCallback(
-        state.hWebSocket,
-        webSocketCallback,
-        cast[DWORD](WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS),
-        0
-      )
+  proc openWebSocket*(
+    url: string,
+    headers = newSeq[HttpHeader](),
+    deadline = defaultHttpDeadline
+  ): WebSocketHandle {.raises: [].} =
+    when not compileOption("threads"):
+      {.error: "openWebSocket requires --threads:on option.".}
 
-      if prevCallback == WINHTTP_INVALID_STATUS_CALLBACK:
-        handle.onWebSocketError("WinHttpSetStatusCallback error")
+    init()
+
+    let state = cast[ptr WebSocketState](allocShared0(sizeof(WebSocketState)))
+    state.httpRequest = startHttpRequest(url)
+
+    var handle: WebSocketHandle
+    while true:
+      handle = windyRand.rand(int.high).WebSocketHandle
+      if handle.int notin httpRequests:
+        webSockets[handle.int] = state
+        break
+
+    let requestState = httpRequests.getOrDefault(state.httpRequest.int)
+
+    requestState.onWebSocketUpgrade = proc() =
+      if state.closed:
         return
 
-      if state.onOpen != nil:
-        state.onOpen()
+      state.hWebSocket = WinHttpWebSocketCompleteUpgrade(
+        requestState.hRequest,
+        cast[DWORD_PTR](handle)
+      )
+      if state.hWebSocket == 0:
+        state.httpRequest.onHttpError(
+          "WinHttpWebSocketCompleteUpgrade error: " & $GetLastError()
+        )
+      else:
+        requestState.deadline = 0
+        requestState.onError = nil
 
-      state.bufferCap = 16384
-      state.buffer = allocShared0(state.bufferCap)
+        state.httpRequest.close()
 
+        let prevCallback = WinHttpSetStatusCallback(
+          state.hWebSocket,
+          webSocketCallback,
+          cast[DWORD](WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS),
+          0
+        )
+
+        if prevCallback == WINHTTP_INVALID_STATUS_CALLBACK:
+          handle.onWebSocketError("WinHttpSetStatusCallback error")
+          return
+
+        if state.onOpen != nil:
+          state.onOpen()
+
+        state.bufferCap = 16384
+        state.buffer = allocShared0(state.bufferCap)
+
+        discard WinHttpWebSocketReceive(
+          state.hWebSocket,
+          state.buffer,
+          state.bufferCap.DWORD,
+          nil,
+          nil
+        )
+
+    requestState.onError = proc(msg: string) =
+      if state.onError != nil:
+        state.onError(msg)
+
+    handle
+
+  proc `onError=`*(
+    handle: WebSocketHandle,
+    callback: HttpErrorCallback
+  ) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onError = callback
+
+  proc `onOpen=`*(
+    handle: WebSocketHandle,
+    callback: Callback
+  ) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onOpen = callback
+
+  proc `onClose=`*(
+    handle: WebSocketHandle,
+    callback: Callback
+  ) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onClose = callback
+
+  proc `onMessage=`*(
+    handle: WebSocketHandle,
+    callback: WebSocketMessageCallback
+  ) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+    state.onMessage = callback
+
+  proc send*(msg: string, kind = Utf8Message) =
+    discard
+
+  proc onReadComplete*(
+    handle: WebSocketHandle,
+    bytesRead: int,
+    bufferKind: WINHTTP_WEB_SOCKET_BUFFER_TYPE
+  ) =
+    let state = webSockets.getOrDefault(handle.int, nil)
+    if state == nil:
+      return
+
+    if state.closed:
+      return
+
+    state.bufferLen += bytesRead
+
+    proc resetBuffer() =
+      zeroMem(state.buffer, state.bufferCap)
+      state.bufferLen = 0
+
+    proc webSocketReceive() =
+      if state.bufferCap - state.bufferLen < 8192:
+        let newCap = state.bufferCap * 2
+        state.buffer =
+          reallocShared0(state.buffer, state.bufferCap, newCap)
+        state.bufferCap = newCap
+
+      let buffer = cast[ptr UncheckedArray[uint8]](state.buffer)
       discard WinHttpWebSocketReceive(
         state.hWebSocket,
-        state.buffer,
-        state.bufferCap.DWORD,
+        buffer[state.bufferLen].addr,
+        min(
+          state.bufferCap - state.bufferLen,
+          int16.high # Never read more than HIWORD
+        ).DWORD,
         nil,
         nil
       )
 
-  requestState.onError = proc(msg: string) =
-    if state.onError != nil:
-      state.onError(msg)
+    case bufferKind:
+    of WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE:
+      if state.onMessage != nil:
+        var msg = newString(state.bufferLen)
+        copyMem(msg[0].addr, state.buffer, state.bufferLen)
+        state.onMessage(msg, BinaryMessage)
 
-  handle
+      resetBuffer()
+      webSocketReceive()
 
-proc `onError=`*(
-  handle: WebSocketHandle,
-  callback: HttpErrorCallback
-) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onError = callback
+    of WINHTTP_WEB_SOCKET_BINARY_FRAGMENT_BUFFER_TYPE:
+      webSocketReceive()
 
-proc `onOpen=`*(
-  handle: WebSocketHandle,
-  callback: Callback
-) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onOpen = callback
+    of WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE:
+      if state.onMessage != nil:
+        var msg = newString(state.bufferLen)
+        copyMem(msg[0].addr, state.buffer, state.bufferLen)
+        state.onMessage(msg, Utf8Message)
 
-proc `onClose=`*(
-  handle: WebSocketHandle,
-  callback: Callback
-) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onClose = callback
+      resetBuffer()
+      webSocketReceive()
 
-proc `onMessage=`*(
-  handle: WebSocketHandle,
-  callback: WebSocketMessageCallback
-) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-  state.onMessage = callback
+    of WINHTTP_WEB_SOCKET_UTF8_FRAGMENT_BUFFER_TYPE:
+      webSocketReceive()
 
-proc send*(msg: string, kind = Utf8Message) =
-  discard
-
-proc onReadComplete*(
-  handle: WebSocketHandle,
-  bytesRead: int,
-  bufferKind: WINHTTP_WEB_SOCKET_BUFFER_TYPE
-) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
-
-  if state.closed:
-    return
-
-  state.bufferLen += bytesRead
-
-  proc resetBuffer() =
-    zeroMem(state.buffer, state.bufferCap)
-    state.bufferLen = 0
-
-  proc webSocketReceive() =
-    if state.bufferCap - state.bufferLen < 8192:
-      let newCap = state.bufferCap * 2
-      state.buffer =
-        reallocShared0(state.buffer, state.bufferCap, newCap)
-      state.bufferCap = newCap
-
-    let buffer = cast[ptr UncheckedArray[uint8]](state.buffer)
-    discard WinHttpWebSocketReceive(
-      state.hWebSocket,
-      buffer[state.bufferLen].addr,
-      min(
-        state.bufferCap - state.bufferLen,
-        int16.high # Never read more than HIWORD
-      ).DWORD,
-      nil,
-      nil
-    )
-
-  case bufferKind:
-  of WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE:
-    if state.onMessage != nil:
-      var msg = newString(state.bufferLen)
-      copyMem(msg[0].addr, state.buffer, state.bufferLen)
-      state.onMessage(msg, BinaryMessage)
-
-    resetBuffer()
-    webSocketReceive()
-
-  of WINHTTP_WEB_SOCKET_BINARY_FRAGMENT_BUFFER_TYPE:
-    webSocketReceive()
-
-  of WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE:
-    if state.onMessage != nil:
-      var msg = newString(state.bufferLen)
-      copyMem(msg[0].addr, state.buffer, state.bufferLen)
-      state.onMessage(msg, Utf8Message)
-
-    resetBuffer()
-    webSocketReceive()
-
-  of WINHTTP_WEB_SOCKET_UTF8_FRAGMENT_BUFFER_TYPE:
-    webSocketReceive()
-
-  of WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE:
-    handle.close()
+    of WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE:
+      handle.close()
 
 proc onWebSocketClose(handle: WebSocketHandle) =
   let state = webSockets.getOrDefault(handle.int, nil)
@@ -2219,49 +2218,50 @@ proc pollEvents*() =
       for window in windows:
         discard wndProc(window.hwnd, WM_CLOSE, 0, 0)
     of WM_HTTP:
-      let handle = msg.lParam
-      if handle.int in webSockets:
-        case msg.wParam.uint8.int:
-        of HTTP_REQUEST_ERROR:
-          handle.WebSocketHandle.onWebSocketError("WinHttp request error")
-        of HTTP_SECURE_ERROR:
-          handle.WebSocketHandle.onWebSocketError("WinHttp secure error")
-        of HTTP_READ_COMPLETE:
-          let
-            bytesRead = HIWORD(msg.wParam)
-            bufferKind = (cast[uint](msg.wParam shr 8) and uint8.high).int
-          handle.WebSocketHandle.onReadComplete(
-            bytesRead,
-            bufferKind.WINHTTP_WEB_SOCKET_BUFFER_TYPE
-          )
-        of HTTP_WEBSOCKET_CLOSE:
-          handle.WebSocketHandle.onWebSocketClose()
-        of HTTP_HANDLE_CLOSING:
-          handle.WebSocketHandle.destroy()
+      when compileOption("threads"):
+        let handle = msg.lParam
+        if handle.int in webSockets:
+          case msg.wParam.uint8.int:
+          of HTTP_REQUEST_ERROR:
+            handle.WebSocketHandle.onWebSocketError("WinHttp request error")
+          of HTTP_SECURE_ERROR:
+            handle.WebSocketHandle.onWebSocketError("WinHttp secure error")
+          of HTTP_READ_COMPLETE:
+            let
+              bytesRead = HIWORD(msg.wParam)
+              bufferKind = (cast[uint](msg.wParam shr 8) and uint8.high).int
+            handle.WebSocketHandle.onReadComplete(
+              bytesRead,
+              bufferKind.WINHTTP_WEB_SOCKET_BUFFER_TYPE
+            )
+          of HTTP_WEBSOCKET_CLOSE:
+            handle.WebSocketHandle.onWebSocketClose()
+          of HTTP_HANDLE_CLOSING:
+            handle.WebSocketHandle.destroy()
+          else:
+            discard
         else:
-          discard
-      else:
-        case LOWORD(msg.wParam):
-        of HTTP_REQUEST_START:
-          handle.HttpRequestHandle.onStartRequest()
-        of HTTP_REQUEST_ERROR:
-          handle.HttpRequestHandle.onHttpError("WinHttp request error")
-        of HTTP_SECURE_ERROR:
-          handle.HttpRequestHandle.onHttpError("WinHttp secure error")
-        of HTTP_SENDREQUEST_COMPLETE:
-          handle.HttpRequestHandle.onSendRequestComplete()
-        of HTTP_HEADERS_AVAILABLE:
-          handle.HttpRequestHandle.onHeadersAvailable()
-        of HTTP_READ_COMPLETE:
-          handle.HttpRequestHandle.onReadComplete(HIWORD(msg.wParam))
-        of HTTP_WRITE_COMPLETE:
-          handle.HttpRequestHandle.onWriteComplete(HIWORD(msg.wParam))
-        of HTTP_REQUEST_CANCEL:
-          handle.HttpRequestHandle.close()
-        of HTTP_HANDLE_CLOSING:
-          handle.HttpRequestHandle.destroy()
-        else:
-          discard
+          case LOWORD(msg.wParam):
+          of HTTP_REQUEST_START:
+            handle.HttpRequestHandle.onStartRequest()
+          of HTTP_REQUEST_ERROR:
+            handle.HttpRequestHandle.onHttpError("WinHttp request error")
+          of HTTP_SECURE_ERROR:
+            handle.HttpRequestHandle.onHttpError("WinHttp secure error")
+          of HTTP_SENDREQUEST_COMPLETE:
+            handle.HttpRequestHandle.onSendRequestComplete()
+          of HTTP_HEADERS_AVAILABLE:
+            handle.HttpRequestHandle.onHeadersAvailable()
+          of HTTP_READ_COMPLETE:
+            handle.HttpRequestHandle.onReadComplete(HIWORD(msg.wParam))
+          of HTTP_WRITE_COMPLETE:
+            handle.HttpRequestHandle.onWriteComplete(HIWORD(msg.wParam))
+          of HTTP_REQUEST_CANCEL:
+            handle.HttpRequestHandle.close()
+          of HTTP_HANDLE_CLOSING:
+            handle.HttpRequestHandle.destroy()
+          else:
+            discard
     else:
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
