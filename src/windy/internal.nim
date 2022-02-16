@@ -1,7 +1,5 @@
 import common, pixie, std/random
 
-export random
-
 const
   multiClickRadius = 4
   CRLF* = "\r\n"

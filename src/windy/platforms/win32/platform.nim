@@ -1,6 +1,6 @@
 import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
     pixie/fileformats/bmp, pixie/images, std/times, std/unicode, utils, vmath, windefs,
-    std/tables, urlly, zippy, std/strutils
+    std/tables, urlly, zippy, std/strutils, std/random
 
 const
   windowClassName = "WINDY0"
@@ -104,7 +104,7 @@ type
     wideHostname: ptr WCHAR
     wideVerb, wideObjectName: ptr WCHAR
     wideDefaultAcceptType: ptr WCHAR
-    defaultacceptTypes: array[2, ptr WCHAR]
+    defaultAcceptTypes: array[2, ptr WCHAR]
     wideRequestHeaders: ptr WCHAR
 
     requestBodyBytesWritten: int
@@ -1487,6 +1487,10 @@ proc onStartRequest(handle: HttpRequestHandle) =
   if state.canceled:
     return
 
+  if state.deadline > 0 and state.deadline <= epochTime():
+    handle.onDeadlineExceeded()
+    return
+
   let url =
     try:
       parseUrl(state.url)
@@ -1513,10 +1517,6 @@ proc onStartRequest(handle: HttpRequestHandle) =
     except:
       handle.onHttpError("Parsing port failed")
       return
-
-  if state.deadline > 0 and state.deadline <= epochTime():
-    handle.onDeadlineExceeded()
-    return
 
   block:
     var wideUserAgent = state.headers["user-agent"].wstr()
@@ -1605,7 +1605,7 @@ proc onStartRequest(handle: HttpRequestHandle) =
       wideDefaultAcceptType.len
     )
 
-  state.defaultacceptTypes = [
+  state.defaultAcceptTypes = [
     state.wideDefaultAcceptType,
     nil
   ]
@@ -1616,7 +1616,7 @@ proc onStartRequest(handle: HttpRequestHandle) =
     state.wideObjectName,
     nil,
     nil,
-    cast[ptr ptr WCHAR](state.defaultacceptTypes.addr),
+    cast[ptr ptr WCHAR](state.defaultAcceptTypes.addr),
     if url.scheme.toLowerAscii() == "https": WINHTTP_FLAG_SECURE.DWORD else: 0
   )
   if state.hRequest == 0:
@@ -1867,12 +1867,10 @@ proc onReadComplete(handle: HttpRequestHandle, bytesRead: int) =
           state.responseBodyLen
         )
 
-    let onResponse = state.onResponse
-
     handle.close()
 
-    if onResponse != nil:
-      onResponse(response)
+    if state.onResponse != nil:
+      state.onResponse(response)
 
   else: # Continue reading
     state.responseBodyLen += bytesRead
@@ -1936,6 +1934,11 @@ proc pollEvents*() =
     else:
       discard TranslateMessage(msg.addr)
       discard DispatchMessageW(msg.addr)
+
+  let now = epochTime()
+  for handle, state in httpRequests:
+    if state.deadline > 0 and state.deadline <= now:
+      handle.HttpRequestHandle.onDeadlineExceeded()
 
   let activeWindow = windows.forHandle(GetActiveWindow())
   if activeWindow != nil:
