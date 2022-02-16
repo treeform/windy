@@ -1344,6 +1344,9 @@ proc startHttpRequest*(
   body = "",
   deadline = defaultHttpDeadline
 ): HttpRequestHandle {.raises: [].} =
+  when not compileOption("threads"):
+    {.error: "startHttpRequest requires --threads:on option.".}
+
   init()
 
   var headers = headers
