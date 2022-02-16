@@ -875,14 +875,11 @@ proc getClipboardContentKinds*(): set[ClipboardContentKind] =
   init()
   autoreleasepool:
     let
-      pboard = NSPasteboard.generalPasteboard
+      pboard = NSPasteboard.generalPasteboard()
       types = pboard.types
 
     if types.int == 0:
       return
-
-    for i in 0 ..< types.count:
-      echo $types[i.int].NSString
 
     if types.containsObject(NSPasteboardTypeString.ID):
       result.incl TextContent
@@ -891,10 +888,9 @@ proc getClipboardContentKinds*(): set[ClipboardContentKind] =
 
 proc getClipboardImage*(): Image =
   init()
-
   autoreleasepool:
     let
-      pboard = NSPasteboard.generalPasteboard
+      pboard = NSPasteboard.generalPasteboard()
       types = pboard.types
 
     if types.int == 0:
@@ -932,7 +928,7 @@ proc getClipboardString*(): string =
   init()
   autoreleasepool:
     let
-      pboard = NSPasteboard.generalPasteboard
+      pboard = NSPasteboard.generalPasteboard()
       types = pboard.types
 
     if types.int == 0:
