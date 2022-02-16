@@ -1,5 +1,6 @@
 import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
-    pixie/fileformats/bmp, pixie/images, times, unicode, utils, vmath, windefs
+    pixie/fileformats/bmp, pixie/images, std/times, std/unicode, utils, vmath, windefs,
+    std/tables, urlly, zippy, std/strutils
 
 const
   windowClassName = "WINDY0"
@@ -32,6 +33,17 @@ const
   WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB = 0x0002
 
   WM_TRAY_ICON = WM_APP + 0
+  WM_HTTP = WM_APP + 1
+
+  HTTP_REQUEST_START = 10
+  HTTP_REQUEST_ERROR = 11
+  HTTP_SECURE_ERROR = 12
+  HTTP_SENDREQUEST_COMPLETE = 13
+  HTTP_HEADERS_AVAILABLE = 14
+  HTTP_READ_COMPLETE = 15
+  HTTP_WRITE_COMPLETE = 16
+  HTTP_REQUEST_CANCEL = 17
+  HTTP_HANDLE_CLOSING = 18
 
 type
   Window* = ref object
@@ -73,6 +85,35 @@ type
     of TrayMenuSeparator:
       discard
 
+  HttpRequestState = object
+    url, verb: string
+    headers: seq[HttpHeader]
+    requestBodyLen: int
+    requestBody: pointer
+    deadline: float64
+
+    canceled, closed: bool
+
+    onError: HttpErrorCallback
+    onResponse: HttpResponseCallback
+    onUploadProgress: HttpProgressCallback
+    onDownloadProgress: HttpProgressCallback
+
+    hOpen, hConnect, hRequest: HINTERNET
+    wideUserAgent: ptr WCHAR
+    wideHostname: ptr WCHAR
+    wideVerb, wideObjectName: ptr WCHAR
+    wideDefaultAcceptType: ptr WCHAR
+    defaultacceptTypes: array[2, ptr WCHAR]
+    wideRequestHeaders: ptr WCHAR
+
+    requestBodyBytesWritten: int
+    responseCode: DWORD
+    responseHeaders: string
+    responseContentLength: int # From Content-Length header, if present
+    responseBodyCap, responseBodyLen: int
+    responseBody: pointer
+
 var
   wglCreateContext: wglCreateContext
   wglDeleteContext: wglDeleteContext
@@ -95,6 +136,7 @@ var
   trayIconHandle: HICON
   trayMenuHandle: HMENU
   trayMenuEntries: seq[TrayMenuEntry]
+  httpRequests: Table[int, ptr HttpRequestState]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
   ## Returns the window for this handle, else -1
@@ -870,31 +912,6 @@ proc init() {.raises: [].} =
   platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
   initialized = true
 
-proc pollEvents*() =
-  # Clear all per-frame data
-  for window in windows:
-    window.state.perFrame = PerFrame()
-
-  var msg: MSG
-  while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
-    if msg.message == WM_QUIT:
-      for window in windows:
-        discard wndProc(window.hwnd, WM_CLOSE, 0, 0)
-    else:
-      discard TranslateMessage(msg.addr)
-      discard DispatchMessageW(msg.addr)
-
-  let activeWindow = windows.forHandle(GetActiveWindow())
-  if activeWindow != nil:
-    # When both shift keys are down the first one released does not trigger a
-    # key up event so we fake it here.
-    if KeyLeftShift in activeWindow.state.buttonDown:
-      if (GetKeyState(VK_LSHIFT) and KF_UP) == 0:
-        activeWindow.handleButtonRelease(KeyLeftShift)
-    if KeyRightShift in activeWindow.state.buttonDown:
-      if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
-        activeWindow.handleButtonRelease(KeyRightShift)
-
 proc makeContextCurrent*(window: Window) =
   makeContextCurrent(window.hdc, window.hglrc)
 
@@ -1265,3 +1282,665 @@ proc getScreens*(): seq[Screen] =
   discard EnumDisplayMonitors(0, nil, callback, cast[LPARAM](h.addr))
 
   h.screens
+
+proc close(handle: HttpRequestHandle) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  state.closed = true
+
+  discard WinHttpCloseHandle(state.hRequest)
+  discard WinHttpCloseHandle(state.hConnect)
+  discard WinHttpCloseHandle(state.hOpen)
+
+proc destroy(handle: HttpRequestHandle) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  httpRequests.del(handle.int)
+
+  if state.wideUserAgent != nil:
+    deallocShared(state.wideUserAgent)
+  if state.wideHostname != nil:
+    deallocShared(state.wideHostname)
+  if state.wideVerb != nil:
+    deallocShared(state.wideVerb)
+  if state.wideObjectName != nil:
+    deallocShared(state.wideObjectName)
+  if state.wideDefaultAcceptType != nil:
+    deallocShared(state.wideDefaultAcceptType)
+  if state.wideRequestHeaders != nil:
+    deallocShared(state.wideRequestHeaders)
+  if state.responseBody != nil:
+    deallocShared(state.responseBody)
+  deallocShared(state)
+
+proc onHttpError(handle: HttpRequestHandle, msg: string) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  if not state.canceled and state.onError != nil:
+    state.onError(msg)
+
+  handle.close() # Must come after onError for WebSockets
+
+proc onDeadlineExceeded(handle: HttpRequestHandle) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  let
+    now = epochTime()
+    msg = "Deadline of " & $state.deadline & " exceeded, time is " & $now
+  handle.onHttpError(msg)
+
+proc startHttpRequest*(
+  url: string,
+  verb = "GET",
+  headers = newSeq[HttpHeader](),
+  body = "",
+  deadline = defaultHttpDeadline
+): HttpRequestHandle {.raises: [].} =
+  init()
+
+  var headers = headers
+  headers.addDefaultHeaders()
+
+  let state = cast[ptr HttpRequestState](allocShared0(sizeof(HttpRequestState)))
+  state.url = url
+  state.verb = verb
+  state.headers = headers
+
+  if body.len > 0:
+    state.requestBody = allocShared0(body.len)
+    state.requestBodyLen = body.len
+    copyMem(state.requestBody, body[0].unsafeAddr, body.len)
+
+  if deadline >= 0:
+    state.deadline = deadline
+  else:
+    state.deadline = epochTime() + 60 # Default deadline
+
+  while true:
+    result = windyRand.rand(int.high).HttpRequestHandle
+    if result.int notin httpRequests:
+      httpRequests[result.int] = state
+      break
+
+  discard PostMessageW(helperWindow, WM_HTTP, HTTP_REQUEST_START, result.LPARAM)
+
+proc deadline*(handle: HttpRequestHandle): float64 =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+  state.deadline
+
+proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+  state.deadline = deadline
+
+proc `onError=`*(
+  handle: HttpRequestHandle,
+  callback: HttpErrorCallback
+) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+  state.onError = callback
+
+proc `onResponse=`*(
+  handle: HttpRequestHandle,
+  callback: HttpResponseCallback
+) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+  state.onResponse = callback
+
+proc `onUploadProgress=`*(
+  handle: HttpRequestHandle,
+  callback: HttpProgressCallback
+) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+  state.onUploadProgress = callback
+
+proc `onDownloadProgress=`*(
+  handle: HttpRequestHandle,
+  callback: HttpProgressCallback
+) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+  state.onDownloadProgress = callback
+
+proc cancel*(handle: HttpRequestHandle) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  state.canceled = true
+
+  discard PostMessageW(
+    helperWindow,
+    WM_HTTP,
+    HTTP_REQUEST_CANCEL,
+    handle.LPARAM
+  )
+
+proc httpCallback(
+  hInternet: HINTERNET,
+  dwContext: DWORD_PTR,
+  dwInternetStatus: DWORD,
+  lpvStatusInformation: LPVOID,
+  dwStatusInformationLength: DWORD
+): void {.stdcall, raises: [].} =
+  {.push stackTrace: off.}
+
+  var wParam: WPARAM
+
+  case dwInternetStatus:
+  of WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
+    wParam = HTTP_REQUEST_ERROR
+  of WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
+    wParam = HTTP_SECURE_ERROR
+  of WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE:
+    let bytesWritten = cast[ptr DWORD](lpvStatusInformation)[]
+    wParam = bytesWritten shl 16 # HIWORD
+    wParam = wParam or HTTP_WRITE_COMPLETE
+  of WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE:
+    wParam = HTTP_SENDREQUEST_COMPLETE
+  of WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
+    wParam = HTTP_HEADERS_AVAILABLE
+  of WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
+    wParam = dwStatusInformationLength shl 16 # HIWORD
+    wParam = wParam or HTTP_READ_COMPLETE
+  of WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING:
+    wParam = HTTP_HANDLE_CLOSING
+  else:
+    discard
+
+  if wParam > 0:
+    discard PostMessageW(
+      helperWindow,
+      WM_HTTP,
+      wParam,
+      dwContext.LPARAM
+    )
+
+  {.pop.}
+
+proc onStartRequest(handle: HttpRequestHandle) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  if state.canceled:
+    return
+
+  let url =
+    try:
+      parseUrl(state.url)
+    except:
+      handle.onHttpError("Parsing URL failed: " & getCurrentExceptionMsg())
+      return
+
+  var port: INTERNET_PORT
+  if url.port == "":
+    case url.scheme.toLowerAscii():
+    of "http":
+      port = 80
+    of "https":
+      port = 443
+    else:
+      discard # Scheme is validated above
+  else:
+    try:
+      let parsedPort = parseInt(url.port)
+      if parsedPort < 0 or parsedPort > uint16.high.int:
+        handle.onHttpError("Invalid port: " & url.port)
+        return
+      port = parsedPort.uint16
+    except:
+      handle.onHttpError("Parsing port failed")
+      return
+
+  if state.deadline > 0 and state.deadline <= epochTime():
+    handle.onDeadlineExceeded()
+    return
+
+  block:
+    var wideUserAgent = state.headers["user-agent"].wstr()
+    state.wideUserAgent = cast[ptr WCHAR](allocShared0(wideUserAgent.len + 2))
+    copyMem(
+      state.wideUserAgent,
+      wideUserAgent[0].addr,
+      wideUserAgent.len
+    )
+
+  state.hOpen = WinHttpOpen(
+    state.wideUserAgent,
+    WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+    nil,
+    nil,
+    WINHTTP_FLAG_ASYNC
+  )
+  if state.hOpen == 0:
+    handle.onHttpError("WinHttpOpen error: " & $GetLastError())
+    return
+
+  # Set timeouts to 0, we handle deadline ourselves
+  if WinHttpSetTimeouts(state.hOpen, 0, 0, 0, 0) == 0:
+    handle.onHttpError("WinHttpSetTimeouts error: " & $GetLastError())
+    return
+
+  let prevCallback = WinHttpSetStatusCallback(
+    state.hOpen,
+    httpCallback,
+    cast[DWORD](WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS),
+    0
+  )
+
+  if prevCallback == WINHTTP_INVALID_STATUS_CALLBACK:
+    handle.onHttpError("WinHttpSetStatusCallback error")
+    return
+
+  block:
+    var wideHostname = url.hostname.wstr()
+    state.wideHostname = cast[ptr WCHAR](allocShared0(wideHostname.len + 2))
+    copyMem(
+      state.wideHostname,
+      wideHostname[0].addr,
+      wideHostname.len
+    )
+
+  state.hConnect = WinHttpConnect(
+    state.hOpen,
+    state.wideHostname,
+    port,
+    0
+  )
+  if state.hConnect == 0:
+    handle.onHttpError("WinHttpConnect error: " & $GetLastError())
+    return
+
+  block:
+    var wideVerb = state.verb.toUpperAscii().wstr()
+    state.wideVerb = cast[ptr WCHAR](allocShared0(wideVerb.len + 2))
+    copyMem(
+      state.wideVerb,
+      wideVerb[0].addr,
+      wideVerb.len
+    )
+
+  block:
+    var objectName = url.path
+    if url.search != "":
+      objectName &= "?" & url.search
+
+    var wideObjectName = objectName.wstr()
+    state.wideObjectName = cast[ptr WCHAR](allocShared0(wideObjectName.len + 2))
+    copyMem(
+      state.wideObjectName,
+      wideObjectName[0].addr,
+      wideObjectName.len
+    )
+
+  block:
+    var wideDefaultAcceptType = "*/*".wstr()
+    state.wideDefaultAcceptType =
+      cast[ptr WCHAR](allocShared0(wideDefaultAcceptType.len + 2))
+    copyMem(
+      state.wideDefaultAcceptType,
+      wideDefaultAcceptType[0].addr,
+      wideDefaultAcceptType.len
+    )
+
+  state.defaultacceptTypes = [
+    state.wideDefaultAcceptType,
+    nil
+  ]
+
+  state.hRequest = WinHttpOpenRequest(
+    state.hConnect,
+    state.wideVerb,
+    state.wideObjectName,
+    nil,
+    nil,
+    cast[ptr ptr WCHAR](state.defaultacceptTypes.addr),
+    if url.scheme.toLowerAscii() == "https": WINHTTP_FLAG_SECURE.DWORD else: 0
+  )
+  if state.hRequest == 0:
+    handle.onHttpError("WinHttpOpenRequest error: " & $GetLastError())
+    return
+
+  block:
+    if state.requestBodyLen > 0:
+      state.headers["Content-Length"] = $state.requestBodyLen
+
+    var requestHeaders: string
+    for header in state.headers:
+      requestHeaders &= header.key & ": " & header.value & CRLF
+
+    var wideRequestHeaders = requestHeaders.wstr()
+    state.wideRequestHeaders =
+      cast[ptr WCHAR](allocShared0(wideRequestHeaders.len + 2))
+    copyMem(
+      state.wideRequestHeaders,
+      wideRequestHeaders[0].addr,
+      wideRequestHeaders.len
+    )
+
+  if WinHttpAddRequestHeaders(
+    state.hRequest,
+    cast[ptr WCHAR](state.wideRequestHeaders),
+    -1,
+    (WINHTTP_ADDREQ_FLAG_ADD or WINHTTP_ADDREQ_FLAG_REPLACE).DWORD
+  ) == 0:
+    handle.onHttpError("WinHttpAddRequestHeaders error: " & $GetLastError())
+    return
+
+  # WinHttpSendRequest starts triggering callbacks
+
+  if WinHttpSendRequest(
+    state.hRequest,
+    nil,
+    0,
+    nil,
+    0,
+    0,
+    cast[DWORD_PTR](handle)
+  ) == 0:
+    handle.onHttpError("WinHttpSendRequest error: " & $GetLastError())
+    return
+
+proc onSendRequestComplete(handle: HttpRequestHandle) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  if state.canceled or state.closed:
+    return
+
+  if state.deadline > 0 and state.deadline <= epochTime():
+    handle.onDeadlineExceeded()
+    return
+
+  if state.requestBodyLen > 0:
+    if WinHttpWriteData(
+      state.hRequest,
+      state.requestBody,
+      min(
+        state.requestBodyLen,
+        int16.high # Never read more than HIWORD
+      ).DWORD,
+      nil
+    ) == 0:
+      handle.onHttpError("WinHttpWriteData error " & $GetLastError())
+  else:
+    if WinHttpReceiveResponse(state.hRequest, nil) == 0:
+      handle.onHttpError("WinHttpReceiveResponse error " & $GetLastError())
+
+proc onHeadersAvailable(handle: HttpRequestHandle) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  if state.canceled or state.closed:
+    return
+
+  if state.deadline > 0 and state.deadline <= epochTime():
+    handle.onDeadlineExceeded()
+    return
+
+  var dwSize = sizeof(DWORD).DWORD
+  if WinHttpQueryHeaders(
+    state.hRequest,
+    WINHTTP_QUERY_STATUS_CODE or WINHTTP_QUERY_FLAG_NUMBER,
+    nil,
+    state.responseCode.addr,
+    dwSize.addr,
+    nil
+  ) == 0:
+    handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
+    return
+
+  block: # Read Content-Length if present
+    var
+      buf = newString(32)
+      bufLen = buf.len.DWORD
+    if WinHttpQueryHeaders(
+      state.hRequest,
+      WINHTTP_QUERY_CONTENT_LENGTH,
+      nil,
+      buf[0].addr,
+      bufLen.addr,
+      nil
+    ) == 0:
+      if GetLastError() != ERROR_WINHTTP_HEADER_NOT_FOUND:
+        handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
+        return
+
+    state.responseContentLength = -1 # Unkonwn length
+
+    try:
+      state.responseContentLength = parseInt($cast[ptr WCHAR](buf[0].addr))
+    except:
+      discard
+
+  var
+    responseHeadersLen: DWORD
+    responseHeadersBuf: string
+
+  # Determine how big the header buffer needs to be
+  discard WinHttpQueryHeaders(
+    state.hRequest,
+    WINHTTP_QUERY_RAW_HEADERS_CRLF,
+    nil,
+    nil,
+    responseHeadersLen.addr,
+    nil
+  )
+  if GetLastError() == ERROR_INSUFFICIENT_BUFFER: # Expected!
+    # Set the header buffer to the correct size and inclue a null terminator
+    responseHeadersBuf.setLen(responseHeadersLen)
+  else:
+    handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
+    return
+
+  # Read the headers into the buffer
+  if WinHttpQueryHeaders(
+    state.hRequest,
+    WINHTTP_QUERY_RAW_HEADERS_CRLF,
+    nil,
+    responseHeadersBuf[0].addr,
+    responseHeadersLen.addr,
+    nil
+  ) == 0:
+    handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
+    return
+
+  state.responseHeaders = $cast[ptr WCHAR](responseHeadersBuf[0].addr)
+
+  if state.responseHeaders.len == 0:
+    handle.onHttpError("Error parsing response headers")
+    return
+
+  state.responseBodyCap = 16384
+  state.responseBody = allocShared0(state.responseBodyCap)
+
+  if WinHttpReadData(
+    state.hRequest,
+    state.responseBody,
+    state.responseBodyCap.DWORD,
+    nil
+  ) == 0:
+    handle.onHttpError("WinHttpReadData error: " & $GetLastError())
+    return
+
+proc onWriteComplete(handle: HttpRequestHandle, bytesWritten: int) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  if state.canceled or state.closed:
+    return
+
+  if state.deadline > 0 and state.deadline <= epochTime():
+    handle.onDeadlineExceeded()
+    return
+
+  state.requestBodyBytesWritten += bytesWritten
+
+  if state.onUploadProgress != nil:
+    state.onUploadProgress(state.requestBodyBytesWritten, state.requestBodyLen)
+
+  if state.requestBodyBytesWritten == state.requestBodyLen:
+    if WinHttpReceiveResponse(state.hRequest, nil) == 0:
+      handle.onHttpError("WinHttpReceiveResponse error " & $GetLastError())
+  else:
+    let requestBody = cast[ptr UncheckedArray[uint8]](state.requestBody)
+    if WinHttpWriteData(
+      state.hRequest,
+      requestBody[state.requestBodyBytesWritten].addr,
+      min(
+        state.requestBodyLen - state.requestBodyBytesWritten,
+        int16.high # Never read more than HIWORD
+      ).DWORD,
+      nil
+    ) == 0:
+      handle.onHttpError("WinHttpWriteData error " & $GetLastError())
+
+proc onReadComplete(handle: HttpRequestHandle, bytesRead: int) =
+  let state = httpRequests.getOrDefault(handle.int, nil)
+  if state == nil:
+    return
+
+  if state.canceled or state.closed:
+    return
+
+  if state.deadline > 0 and state.deadline <= epochTime():
+    handle.onDeadlineExceeded()
+    return
+
+  if bytesRead == 0: # This request is complete
+    let response = HttpResponse()
+    response.code = state.responseCode
+
+    let responseHeaders = state.responseHeaders.split(CRLF)
+    for i, line in responseHeaders:
+      if i == 0: # HTTP/1.1 200 OK
+        continue
+      if line != "":
+        let parts = line.split(":", 1)
+        if parts.len == 2:
+          response.headers.add(HttpHeader(
+            key: strutils.strip(parts[0]),
+            value: strutils.strip(parts[1])
+          ))
+
+    if state.responseBodyLen > 0:
+      let contentEncoding = response.headers["content-encoding"]
+      if contentEncoding.toLowerAscii() == "gzip":
+        try:
+          response.body = uncompress(
+            state.responseBody,
+            state.responseBodyLen
+          )
+        except:
+          handle.onHttpError("Error uncompressing response")
+          return
+      else:
+        response.body.setLen(state.responseBodyLen)
+        copyMem(
+          response.body[0].addr,
+          state.responseBody,
+          state.responseBodyLen
+        )
+
+    let onResponse = state.onResponse
+
+    handle.close()
+
+    if onResponse != nil:
+      onResponse(response)
+
+  else: # Continue reading
+    state.responseBodyLen += bytesRead
+
+    if state.onDownloadProgress != nil:
+      state.onDownloadProgress(state.responseBodyLen, state.responseContentLength)
+
+    if state.responseBodyCap - state.responseBodyLen < 8192:
+      let newCap = state.responseBodyCap * 2
+      state.responseBody =
+        reallocShared0(state.responseBody, state.responseBodyCap, newCap)
+      state.responseBodyCap = newCap
+
+    let responseBody = cast[ptr UncheckedArray[uint8]](state.responseBody)
+    if WinHttpReadData(
+      state.hRequest,
+      responseBody[state.responseBodyLen].addr,
+      min(
+        state.responseBodyCap - state.responseBodyLen,
+        int16.high # Never read more than HIWORD
+      ).DWORD,
+      nil
+    ) == 0:
+      handle.onHttpError("WinHttpReadData error: " & $GetLastError())
+      return
+
+proc pollEvents*() =
+  # Clear all per-frame data
+  for window in windows:
+    window.state.perFrame = PerFrame()
+
+  var msg: MSG
+  while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
+    case msg.message
+    of WM_QUIT:
+      for window in windows:
+        discard wndProc(window.hwnd, WM_CLOSE, 0, 0)
+    of WM_HTTP:
+      let handle = msg.lParam
+      case LOWORD(msg.wParam):
+      of HTTP_REQUEST_START:
+        handle.HttpRequestHandle.onStartRequest()
+      of HTTP_REQUEST_ERROR:
+        handle.HttpRequestHandle.onHttpError("WinHttp request error")
+      of HTTP_SECURE_ERROR:
+        handle.HttpRequestHandle.onHttpError("WinHttp secure error")
+      of HTTP_SENDREQUEST_COMPLETE:
+        handle.HttpRequestHandle.onSendRequestComplete()
+      of HTTP_HEADERS_AVAILABLE:
+        handle.HttpRequestHandle.onHeadersAvailable()
+      of HTTP_READ_COMPLETE:
+        handle.HttpRequestHandle.onReadComplete(HIWORD(msg.wParam))
+      of HTTP_WRITE_COMPLETE:
+        handle.HttpRequestHandle.onWriteComplete(HIWORD(msg.wParam))
+      of HTTP_REQUEST_CANCEL:
+        handle.HttpRequestHandle.close()
+      of HTTP_HANDLE_CLOSING:
+        handle.HttpRequestHandle.destroy()
+      else:
+        discard
+    else:
+      discard TranslateMessage(msg.addr)
+      discard DispatchMessageW(msg.addr)
+
+  let activeWindow = windows.forHandle(GetActiveWindow())
+  if activeWindow != nil:
+    # When both shift keys are down the first one released does not trigger a
+    # key up event so we fake it here.
+    if KeyLeftShift in activeWindow.state.buttonDown:
+      if (GetKeyState(VK_LSHIFT) and KF_UP) == 0:
+        activeWindow.handleButtonRelease(KeyLeftShift)
+    if KeyRightShift in activeWindow.state.buttonDown:
+      if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
+        activeWindow.handleButtonRelease(KeyRightShift)
