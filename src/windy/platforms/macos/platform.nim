@@ -233,12 +233,11 @@ proc createMenuBar() =
     appMenu = NSMenu.new()
     processName = NSProcessInfo.processinfo.processName
     quitTitle = @("Quit " & $processName)
-    quitMenuitem = NSMenuItem.alloc()
-  quitMenuitem.initWithTitle(
-    quitTitle,
-    s"terminate:",
-    @"q"
-  )
+    quitMenuitem = NSMenuItem.alloc().initWithTitle(
+      quitTitle,
+      s"terminate:",
+      @"q"
+    )
   appMenu.addItem(quitMenuItem)
   appMenuItem.setSubmenu(appMenu)
 
@@ -349,8 +348,7 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
     NSTrackingInVisibleRect or
     NSTrackingAssumeInside
 
-  window.trackingArea = NSTrackingArea.alloc()
-  window.trackingArea.initWithRect(
+  window.trackingArea = NSTrackingArea.alloc().initWithRect(
     NSMakeRect(0, 0, 0, 0),
     options,
     self,
@@ -629,17 +627,15 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
   else:
     let
       encodedPng = window.state.cursor.image.encodePng()
-      image = NSImage.alloc()
-      cursor = NSCursor.alloc()
+      image = NSImage.alloc().initWithData(NSData.dataWithBytes(
+        encodedPng[0].unsafeAddr,
+        encodedPng.len
+      ))
       hotspot = NSMakePoint(
         window.state.cursor.hotspot.x.float,
         window.state.cursor.hotspot.y.float
       )
-    image.initWithData(NSData.dataWithBytes(
-      encodedPng[0].unsafeAddr,
-      encodedPng.len
-    ))
-    cursor.initWithImage(image, hotspot)
+      cursor = NSCursor.alloc().initWithImage(image, hotspot)
     self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
 proc init() =
@@ -766,8 +762,7 @@ proc newWindow*(
   init()
 
   autoreleasepool:
-    result.inner = WindyWindow.alloc().NSWindow
-    result.inner.initWithContentRect(
+    result.inner = WindyWindow.alloc().NSWindow.initWithContentRect(
       NSMakeRect(0, 0, 400, 400),
       decoratedResizableWindowMask,
       NSBackingStoreBuffered,
@@ -775,7 +770,6 @@ proc newWindow*(
     )
 
     let
-      pixelFormat = NSOpenGLPixelFormat.alloc()
       pixelFormatAttribs = [
         NSOpenGLPFADoubleBuffer,
         NSOpenGLPFASampleBuffers, if msaa != msaaDisabled: 1 else: 0,
@@ -797,10 +791,11 @@ proc newWindow*(
         ),
         0
       ]
-    pixelFormat.initWithAttributes(pixelFormatAttribs[0].unsafeAddr)
+      pixelFormat = NSOpenGLPixelFormat.alloc().initWithAttributes(
+        pixelFormatAttribs[0].unsafeAddr
+      )
 
-    let openglView = WindyView.alloc().NSOpenGLView
-    openglView.initWithFrame(
+    let openglView = WindyView.alloc().NSOpenGLView.initWithFrame(
       result.inner.contentView.frame,
       pixelFormat
     )
@@ -875,6 +870,63 @@ proc buttonReleased*(window: Window): ButtonView =
 
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
+
+proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  init()
+  autoreleasepool:
+    let
+      pboard = NSPasteboard.generalPasteboard
+      types = pboard.types
+
+    if types.int == 0:
+      return
+
+    for i in 0 ..< types.count:
+      echo $types[i.int].NSString
+
+    if types.containsObject(NSPasteboardTypeString.ID):
+      result.incl TextContent
+    if types.containsObject(NSPasteboardTypeTIFF.ID):
+      result.incl ImageContent
+
+proc getClipboardImage*(): Image =
+  init()
+
+  autoreleasepool:
+    let
+      pboard = NSPasteboard.generalPasteboard
+      types = pboard.types
+
+    if types.int == 0:
+      return
+
+    if not types.containsObject(NSPasteboardTypeTIFF.ID):
+      return
+
+    let data = pboard.dataForType(NSPasteboardTypeTIFF)
+    if data.int == 0:
+      return
+
+    let bitmap = NSBitmapImageRep.alloc().initWithData(data)
+    if bitmap.int == 0:
+      return
+
+    let pngData = bitmap.representationUsingType(
+      NSBitmapImageFileTypePNG,
+      0.NSDictionary
+    )
+    if pngData.int == 0:
+      return
+
+    # Pixie needs a decodePng for ptr + len, copy into string for now
+
+    var copiedData = newString(pngData.length)
+    copyMem(copiedData[0].addr, pngData.bytes, pngData.length)
+
+    try:
+      result = decodePng(copiedData)
+    except:
+      return
 
 proc getClipboardString*(): string =
   init()
