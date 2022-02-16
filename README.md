@@ -23,6 +23,7 @@ Features:
 * IME support (for Chinese, Japanese etc text input)
 * System clipboard (copy and paste) support
 * Show a system tray icon and menu (Windows only)
+* Non-blocking HTTP requests and WebSockets
 
 ### Documentation
 
