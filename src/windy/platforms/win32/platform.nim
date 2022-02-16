@@ -2032,7 +2032,6 @@ when compileOption("threads"):
     state.httpRequest = startHttpRequest(
       url,
       "GET",
-      body = "",
       deadline = deadline
     )
 
