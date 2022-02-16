@@ -4,7 +4,7 @@ const
   multiClickRadius = 4
 
 type
-  State* = object
+  WindowState* = object
     title*: string
     icon*: Image
     cursor*: Cursor

@@ -47,7 +47,7 @@ type
     onImeChange*: Callback
     imePos*: IVec2
 
-    state: State
+    state: WindowState
     trackMouseEventRegistered: bool
     exitFullscreenInfo: ExitFullscreenInfo
 
@@ -506,7 +506,7 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")
   if opengl == 0:
-    raise newException(WindyError, "Loading opengl32.dll failed")
+    quit("Loading opengl32.dll failed")
 
   wglCreateContext =
     cast[wglCreateContext](GetProcAddress(opengl, "wglCreateContext"))
@@ -535,11 +535,22 @@ proc loadOpenGL() =
   ): LRESULT {.stdcall.} =
     DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-  registerWindowClass(dummyWindowClassName, dummyWndProc)
+  try:
+    registerWindowClass(dummyWindowClassName, dummyWndProc)
+  except:
+    quit("Error registering dummy window class")
 
   let
-    hWnd = createWindow(dummyWindowClassName, dummyWindowClassName)
-    hdc = getDC(hWnd)
+    hWnd =
+      try:
+        createWindow(dummyWindowClassName, dummyWindowClassName)
+      except:
+        quit("Error creating dummy window")
+    hdc =
+      try:
+        getDC(hWnd)
+      except:
+        quit("Erro getting dummy window DC")
 
   var pfd: PIXELFORMATDESCRIPTOR
   pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR).WORD
@@ -553,16 +564,19 @@ proc loadOpenGL() =
 
   let pixelFormat = ChoosePixelFormat(hdc, pfd.addr)
   if pixelFormat == 0:
-    raise newException(WindyError, "Error choosing pixel format")
+    quit("Error choosing dummy window pixel format")
 
   if SetPixelFormat(hdc, pixelFormat, pfd.addr) == 0:
-    raise newException(WindyError, "Error setting pixel format")
+    quit("Error setting dummy window pixel format")
 
   let hglrc = wglCreateContext(hdc)
   if hglrc == 0:
-    raise newException(WindyError, "Error creating rendering context")
+    quit("Error creating dummy window rendering context")
 
-  makeContextCurrent(hdc, hglrc)
+  try:
+    makeContextCurrent(hdc, hglrc)
+  except:
+    quit("Error making dummy window context current")
 
   wglCreateContextAttribsARB =
     cast[wglCreateContextAttribsARB](
@@ -585,7 +599,7 @@ proc loadOpenGL() =
 proc loadLibraries() =
   let user32 = LoadLibraryA("user32.dll")
   if user32 == 0:
-    raise newException(WindyError, "Error loading user32.dll")
+    quit("Error loading user32.dll")
 
   SetProcessDpiAwarenessContext = cast[SetProcessDpiAwarenessContext](
     GetProcAddress(user32, "SetProcessDpiAwarenessContext")
@@ -841,15 +855,18 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-proc init() =
+proc init() {.raises: [].} =
   if initialized:
     return
   windowPropKey = "Windy".wstr()
   loadLibraries()
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
   loadOpenGL()
-  helperWindow = createHelperWindow()
-  registerWindowClass(windowClassName, wndProc)
+  try:
+    helperWindow = createHelperWindow()
+    registerWindowClass(windowClassName, wndProc)
+  except:
+    quit("Error creating helper window")
   platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
   initialized = true
 
@@ -1056,6 +1073,8 @@ proc getAvailableClipboardFormats(): seq[UINT] =
     result.add(format)
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  init()
+
   let availableFormats = getAvailableClipboardFormats()
   if CF_UNICODETEXT in availableFormats:
     result.incl TextContent

@@ -15,7 +15,7 @@ type
     onImeChange*: Callback
     imePos*: IVec2
 
-    state: State
+    state: WindowState
 
     inner: NSWindow
     trackingArea: NSTrackingArea
