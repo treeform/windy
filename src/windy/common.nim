@@ -1,4 +1,4 @@
-import pixie, unicode
+import pixie, std/strutils, std/unicode
 
 type
   WindyError* = object of ValueError
@@ -18,6 +18,20 @@ type
       image*: Image
       hotspot*: IVec2
 
+  HttpHeader* = object
+    key*, value*: string
+
+  HttpRequestHandle* = distinct int
+  WebSocketHandle* = distinct int
+
+  HttpResponse* = ref object
+    code*: int
+    headers*: seq[HttpHeader]
+    body*: string
+
+  WebSocketMessageKind* = enum
+    Utf8Message, BinaryMessage
+
   ClipboardContentKind* = enum
     TextContent, ImageContent
 
@@ -30,6 +44,10 @@ type
   Callback* = proc()
   ButtonCallback* = proc(button: Button)
   RuneCallback* = proc(rune: Rune)
+  HttpErrorCallback* = proc(msg: string)
+  HttpResponseCallback* = proc(response: HttpResponse)
+  HttpProgressCallback* = proc(completed, total: int)
+  WebSocketMessageCallback* = proc(msg: string, kind: WebSocketMessageKind)
 
   Button* = enum
     ButtonUnknown
@@ -149,8 +167,27 @@ type
 
   ButtonView* = distinct set[Button]
 
+const
+  defaultHttpDeadline*: float32 = -1
+
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
   button in set[Button](buttonView)
 
 proc len*(buttonView: ButtonView): int =
   set[Button](buttonView).len
+
+proc `[]`*(headers: seq[HttpHeader], key: string): string =
+  ## Get a key out of headers. Not case sensitive.
+  ## Use a for loop to get duplicate keys.
+  for header in headers:
+    if header.key.toLowerAscii() == key.toLowerAscii():
+      return header.value
+
+proc `[]=`*(headers: var seq[HttpHeader], key, value: string) =
+  ## Sets a key in the headers. Not case sensitive.
+  ## Overwrites the existing header for key if it exists else adds a new header.
+  for header in headers.mitems:
+    if header.key.toLowerAscii() == key.toLowerAscii():
+      header.value = value
+      return
+  headers.add(HttpHeader(key: key, value: value))

@@ -21,7 +21,10 @@ type
   WORD* = uint16
   ATOM* = WORD
   DWORD* = int32
+  LPDWORD* = ptr DWORD
+  DWORD_PTR* = ULONG_PTR
   SIZE_T* = ULONG_PTR
+  INTERNET_PORT* = WORD
   LPCSTR* = cstring
   LPSTR* = cstring
   WCHAR* = uint16
@@ -43,7 +46,9 @@ type
   HGLOBAL* = HANDLE
   HIMC* = HANDLE
   HBITMAP* = HANDLE
+  HINTERNET* = HANDLE
   LPVOID* = pointer
+  LPCVOID* = pointer
   UINT* = uint32
   WPARAM* = UINT_PTR
   LPARAM* = LONG_PTR
@@ -171,6 +176,22 @@ type
     guidItem*: GUID
     hBalloonIcon*: HICON
   PNOTIFYICONDATAW* = ptr NOTIFYICONDATAW
+  WINHTTP_STATUS_CALLBACK* = proc(
+    hInternet: HINTERNET,
+    dwContext: DWORD_PTR,
+    dwInternetStatus: DWORD,
+    lpvStatusInformation: LPVOID,
+    dwStatusInformationLength: DWORD
+  ): void {.stdcall.}
+  WINHTTP_WEB_SOCKET_BUFFER_TYPE* = enum
+    WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE = 0,
+    WINHTTP_WEB_SOCKET_BINARY_FRAGMENT_BUFFER_TYPE = 1,
+    WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE = 2,
+    WINHTTP_WEB_SOCKET_UTF8_FRAGMENT_BUFFER_TYPE = 3,
+    WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE = 4
+  WINHTTP_WEB_SOCKET_STATUS* {.pure.} = object
+    dwBytesTransferred*: DWORD
+    eBufferType*: WINHTTP_WEB_SOCKET_BUFFER_TYPE
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -452,6 +473,44 @@ const
   ICON_SMALL* = 0
   ICON_BIG* = 1
   MONITORINFOF_PRIMARY* = 0x00000001
+  ERROR_INSUFFICIENT_BUFFER* = 122
+  WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY* = 4
+  WINHTTP_FLAG_ASYNC* = 0x10000000
+  WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS* = 0xffffffff
+  WINHTTP_INVALID_STATUS_CALLBACK* = cast[WINHTTP_STATUS_CALLBACK](-1)
+  WINHTTP_FLAG_SECURE* = 0x00800000
+  WINHTTP_ADDREQ_FLAG_ADD* = 0x20000000
+  WINHTTP_ADDREQ_FLAG_REPLACE* = 0x80000000'i32
+  WINHTTP_CALLBACK_STATUS_RESOLVING_NAME* = 0x00000001
+  WINHTTP_CALLBACK_STATUS_NAME_RESOLVED* = 0x00000002
+  WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER* = 0x00000004
+  WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER* = 0x00000008
+  WINHTTP_CALLBACK_STATUS_SENDING_REQUEST* = 0x00000010
+  WINHTTP_CALLBACK_STATUS_REQUEST_SENT* = 0x00000020
+  WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE* = 0x00000040
+  WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED* = 0x00000080
+  WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION* = 0x00000100
+  WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED* = 0x00000200
+  WINHTTP_CALLBACK_STATUS_HANDLE_CREATED* = 0x00000400
+  WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING* = 0x00000800
+  WINHTTP_CALLBACK_STATUS_REDIRECT* = 0x00004000
+  WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE* = 0x00008000
+  WINHTTP_CALLBACK_STATUS_SECURE_FAILURE* = 0x00010000
+  WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE* = 0x00020000
+  WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE* = 0x00040000
+  WINHTTP_CALLBACK_STATUS_READ_COMPLETE* = 0x00080000
+  WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE* = 0x00100000
+  WINHTTP_CALLBACK_STATUS_REQUEST_ERROR* = 0x00200000
+  WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE* = 0x00400000
+  WINHTTP_CALLBACK_STATUS_CLOSE_COMPLETE* = 0x02000000
+  WINHTTP_CALLBACK_STATUS_SHUTDOWN_COMPLETE* = 0x04000000
+  WINHTTP_QUERY_STATUS_CODE* = 19
+  WINHTTP_QUERY_CONTENT_LENGTH* = 5
+  WINHTTP_QUERY_FLAG_NUMBER* = 0x20000000
+  WINHTTP_QUERY_RAW_HEADERS_CRLF* = 22
+  WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET* = 114
+  WINHTTP_ERROR_BASE* = 12000
+  ERROR_WINHTTP_HEADER_NOT_FOUND* = WINHTTP_ERROR_BASE + 150
 
 {.push importc, stdcall.}
 
@@ -795,6 +854,13 @@ proc SetCursor*(hCursor: HCURSOR): HCURSOR {.dynlib: "User32".}
 
 proc DestroyCursor*(hCursor: HCURSOR): BOOL {.dynlib: "User32".}
 
+proc PostMessageW*(
+  hWnd: HWND,
+  uMsg: UINT,
+  wParam: WPARAM,
+  lParam: LPARAM
+): BOOL {. dynlib: "User32".}
+
 proc ChoosePixelFormat*(
   hdc: HDC,
   ppfd: ptr PIXELFORMATDESCRIPTOR
@@ -860,5 +926,116 @@ proc Shell_NotifyIconW*(
   dwMessage: DWORD,
   lpData: PNOTIFYICONDATAW
 ): BOOL {.dynlib: "shell32".}
+
+proc WinHttpOpen*(
+  lpszAgent: LPCWSTR,
+  dwAccessType: DWORD,
+  lpszProxy: LPCWSTR,
+  lpszProxyBypass: LPCWSTR,
+  dwFlags: DWORD
+): HINTERNET {.dynlib: "winhttp".}
+
+proc WinHttpSetTimeouts*(
+  hSession: HINTERNET,
+  nResolveTimeout, nConnectTimeout, nSendTimeout, nReceiveTimeout: int32
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpConnect*(
+  hSession: HINTERNET,
+  lpszServerName: LPCWSTR,
+  nServerPort: INTERNET_PORT,
+  dwFlags: DWORD
+): HINTERNET {.dynlib: "winhttp".}
+
+proc WinHttpOpenRequest*(
+  hConnect: HINTERNET,
+  lpszVerb: LPCWSTR,
+  lpszObjectName: LPCWSTR,
+  lpszVersion: LPCWSTR,
+  lpszReferrer: LPCWSTR,
+  lplpszAcceptTypes: ptr LPCWSTR,
+  dwFlags: DWORD
+): HINTERNET {.dynlib: "winhttp".}
+
+proc WinHttpAddRequestHeaders*(
+  hRequest: HINTERNET,
+  lpszHeaders: LPCWSTR,
+  dwHeadersLength: DWORD,
+  dwModifiers: DWORD
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpSendRequest*(
+  hRequest: HINTERNET,
+  lpszHeaders: LPCWSTR,
+  dwHeadersLength: DWORD,
+  lpOptional: LPVOID,
+  dwOptionalLength: DWORD,
+  dwTotalLength: DWORD,
+  dwContext: DWORD_PTR
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpReceiveResponse*(
+  hRequest: HINTERNET,
+  lpReserved: LPVOID
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpQueryHeaders*(
+  hRequest: HINTERNET,
+  dwInfoLevel: DWORD,
+  pwszName: LPCWSTR,
+  lpBuffer: LPVOID,
+  lpdwBufferLength: LPDWORD,
+  lpdwIndex: LPDWORD
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpReadData*(
+  hFile: HINTERNET,
+  lpBuffer: LPVOID,
+  dwNumberOfBytesToRead: DWORD,
+  lpdwNumberOfBytesRead: LPDWORD
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpCloseHandle*(hInternet: HINTERNET): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpSetStatusCallback*(
+  hInternet: HINTERNET,
+  lpfnInternetCallback: WINHTTP_STATUS_CALLBACK,
+  dwNotificationFlags: DWORD,
+  dwReserved: DWORD_PTR
+): WINHTTP_STATUS_CALLBACK {.dynlib: "winhttp".}
+
+proc WinHttpWriteData*(
+  hInternet: HINTERNET,
+  lpBuffer: LPCVOID,
+  dwNumberOfBytesToWrite: DWORD,
+  lpdwNumberOfBytesWritten: LPDWORD
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpWebSocketCompleteUpgrade*(
+  hRequest: HINTERNET,
+  pContext: DWORD_PTR
+): HINTERNET {.dynlib: "winhttp".}
+
+proc WinHttpSetOption*(
+  hInternet: HINTERNET,
+  dwOption: DWORD,
+  lpBuffer: LPVOID,
+  dwBufferLength: DWORD
+): BOOL {.dynlib: "winhttp".}
+
+proc WinHttpWebSocketReceive*(
+  hWebSocket: HINTERNET,
+  pvBuffer: pointer,
+  dwBufferLength: DWORD,
+  pdwBytesRead: ptr DWORD,
+  peBufferType: ptr WINHTTP_WEB_SOCKET_BUFFER_TYPE
+): DWORD {.dynlib: "winhttp".}
+
+proc WinHttpWebSocketClose*(
+  hWebSocket: HINTERNET,
+  usStatus: USHORT,
+  pvReason: pointer,
+  dwReasonLength: DWORD
+): DWORD {.dynlib: "winhttp".}
 
 {.pop.}
