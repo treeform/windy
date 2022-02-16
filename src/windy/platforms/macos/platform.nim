@@ -638,7 +638,7 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
       cursor = NSCursor.alloc().initWithImage(image, hotspot)
     self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
-proc init() =
+proc init() {.raises: [].} =
   if initialized:
     return
 
