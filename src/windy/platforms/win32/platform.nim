@@ -2023,9 +2023,6 @@ when compileOption("threads"):
     url: string,
     deadline = defaultHttpDeadline
   ): WebSocketHandle {.raises: [].} =
-    when not compileOption("threads"):
-      {.error: "openWebSocket requires --threads:on option.".}
-
     init()
 
     let state = cast[ptr WebSocketState](allocShared0(sizeof(WebSocketState)))
