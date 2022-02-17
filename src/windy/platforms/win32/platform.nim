@@ -103,12 +103,6 @@ type
     onWebSocketUpgrade: proc()
 
     hOpen, hConnect, hRequest: HINTERNET
-    wideUserAgent: ptr WCHAR
-    wideHostname: ptr WCHAR
-    wideVerb, wideObjectName: ptr WCHAR
-    wideDefaultAcceptType: ptr WCHAR
-    defaultAcceptTypes: array[2, ptr WCHAR]
-    wideRequestHeaders: ptr WCHAR
 
     requestBodyBytesWritten: int
     responseCode: DWORD
@@ -1318,18 +1312,6 @@ proc destroy(handle: HttpRequestHandle) =
 
   httpRequests.del(handle.int)
 
-  if state.wideUserAgent != nil:
-    deallocShared(state.wideUserAgent)
-  if state.wideHostname != nil:
-    deallocShared(state.wideHostname)
-  if state.wideVerb != nil:
-    deallocShared(state.wideVerb)
-  if state.wideObjectName != nil:
-    deallocShared(state.wideObjectName)
-  if state.wideDefaultAcceptType != nil:
-    deallocShared(state.wideDefaultAcceptType)
-  if state.wideRequestHeaders != nil:
-    deallocShared(state.wideRequestHeaders)
   if state.responseBody != nil:
     deallocShared(state.responseBody)
   deallocShared(state)
@@ -1586,17 +1568,10 @@ when compileOption("threads"):
         handle.onHttpError("Parsing port failed")
         return
 
-    block:
-      var wideUserAgent = state.headers["user-agent"].wstr()
-      state.wideUserAgent = cast[ptr WCHAR](allocShared0(wideUserAgent.len + 2))
-      copyMem(
-        state.wideUserAgent,
-        wideUserAgent[0].addr,
-        wideUserAgent.len
-      )
+    var wideUserAgent = state.headers["user-agent"].wstr()
 
     state.hOpen = WinHttpOpen(
-      state.wideUserAgent,
+      cast[ptr WCHAR](wideUserAgent[0].addr),
       WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
       nil,
       nil,
@@ -1622,18 +1597,11 @@ when compileOption("threads"):
       handle.onHttpError("WinHttpSetStatusCallback error")
       return
 
-    block:
-      var wideHostname = url.hostname.wstr()
-      state.wideHostname = cast[ptr WCHAR](allocShared0(wideHostname.len + 2))
-      copyMem(
-        state.wideHostname,
-        wideHostname[0].addr,
-        wideHostname.len
-      )
+    var wideHostname = url.hostname.wstr()
 
     state.hConnect = WinHttpConnect(
       state.hOpen,
-      state.wideHostname,
+      cast[ptr WCHAR](wideHostname[0].addr),
       port,
       0
     )
@@ -1641,76 +1609,46 @@ when compileOption("threads"):
       handle.onHttpError("WinHttpConnect error: " & $GetLastError())
       return
 
-    block:
-      var wideVerb = state.verb.toUpperAscii().wstr()
-      state.wideVerb = cast[ptr WCHAR](allocShared0(wideVerb.len + 2))
-      copyMem(
-        state.wideVerb,
-        wideVerb[0].addr,
-        wideVerb.len
-      )
+    var wideVerb = state.verb.toUpperAscii().wstr()
 
-    block:
-      var objectName = url.path
-      if url.search != "":
-        objectName &= "?" & url.search
+    var objectName = url.path
+    if url.search != "":
+      objectName &= "?" & url.search
 
-      var wideObjectName = objectName.wstr()
-      state.wideObjectName = cast[ptr WCHAR](allocShared0(wideObjectName.len + 2))
-      copyMem(
-        state.wideObjectName,
-        wideObjectName[0].addr,
-        wideObjectName.len
-      )
+    var wideObjectName = objectName.wstr()
 
-    block:
-      var wideDefaultAcceptType = "*/*".wstr()
-      state.wideDefaultAcceptType =
-        cast[ptr WCHAR](allocShared0(wideDefaultAcceptType.len + 2))
-      copyMem(
-        state.wideDefaultAcceptType,
-        wideDefaultAcceptType[0].addr,
-        wideDefaultAcceptType.len
-      )
-
-    state.defaultAcceptTypes = [
-      state.wideDefaultAcceptType,
-      nil
-    ]
+    var
+      wideDefaultAcceptType = "*/*".wstr()
+      defaultAcceptTypes = [
+        cast[ptr WCHAR](wideDefaultAcceptType[0].addr),
+        nil
+      ]
 
     state.hRequest = WinHttpOpenRequest(
       state.hConnect,
-      state.wideVerb,
-      state.wideObjectName,
+      cast[ptr WCHAR](wideVerb[0].addr),
+      cast[ptr WCHAR](wideObjectName[0].addr),
       nil,
       nil,
-      cast[ptr ptr WCHAR](state.defaultAcceptTypes.addr),
+      cast[ptr ptr WCHAR](defaultAcceptTypes.addr),
       if url.scheme.toLowerAscii() == "https": WINHTTP_FLAG_SECURE.DWORD else: 0
     )
     if state.hRequest == 0:
       handle.onHttpError("WinHttpOpenRequest error: " & $GetLastError())
       return
 
-    block:
-      if state.requestBodyLen > 0:
-        state.headers["Content-Length"] = $state.requestBodyLen
+    if state.requestBodyLen > 0:
+      state.headers["Content-Length"] = $state.requestBodyLen
 
-      var requestHeaders: string
-      for header in state.headers:
-        requestHeaders &= header.key & ": " & header.value & CRLF
+    var requestHeaders: string
+    for header in state.headers:
+      requestHeaders &= header.key & ": " & header.value & CRLF
 
-      var wideRequestHeaders = requestHeaders.wstr()
-      state.wideRequestHeaders =
-        cast[ptr WCHAR](allocShared0(wideRequestHeaders.len + 2))
-      copyMem(
-        state.wideRequestHeaders,
-        wideRequestHeaders[0].addr,
-        wideRequestHeaders.len
-      )
+    var wideRequestHeaders = requestHeaders.wstr()
 
     if WinHttpAddRequestHeaders(
       state.hRequest,
-      cast[ptr WCHAR](state.wideRequestHeaders),
+      cast[ptr WCHAR](wideRequestHeaders[0].addr),
       -1,
       (WINHTTP_ADDREQ_FLAG_ADD or WINHTTP_ADDREQ_FLAG_REPLACE).DWORD
     ) == 0:
@@ -2023,9 +1961,6 @@ when compileOption("threads"):
     url: string,
     deadline = defaultHttpDeadline
   ): WebSocketHandle {.raises: [].} =
-    when not compileOption("threads"):
-      {.error: "openWebSocket requires --threads:on option.".}
-
     init()
 
     let state = cast[ptr WebSocketState](allocShared0(sizeof(WebSocketState)))
