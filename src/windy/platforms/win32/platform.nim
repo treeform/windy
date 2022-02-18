@@ -1367,7 +1367,7 @@ when compileOption("threads"):
 
     while true:
       result = windyRand.rand(int.high).HttpRequestHandle
-      if result.int notin httpRequests:
+      if result.int notin httpRequests and result.int notin webSockets:
         httpRequests[result.int] = state
         break
 
