@@ -9,6 +9,7 @@ type
   WebSocketState = ref object
     url: string
     webSocket: WebSocket
+    closed: bool
     onError: proc(msg: string)
     onOpen: proc()
     onMessage: proc(msg: string, kind: WebSocketMessageKind)
@@ -17,7 +18,12 @@ type
 var
   webSockets: Table[Handle, WebSocketState]
 
-proc wsTasklet(state: WebSocketState) {.async.} =
+proc wsTasklet(handle: Handle, state: WebSocketState) {.async.} =
+  await sleepAsync(0) # Sleep until next poll.
+  echo "wsTasklet"
+  if state.closed:
+    echo "exit before start"
+    return
   try:
     state.webSocket = await newWebSocket(state.url)
     while true:
@@ -41,8 +47,9 @@ proc wsTasklet(state: WebSocketState) {.async.} =
             state.onClose()
           break
   except:
-    if state.onError != nil:
+    if not state.closed and state.onError != nil:
       state.onError(getCurrentExceptionMsg())
+  webSockets.del(handle)
 
 proc openWebSocket(url: string): Handle {.raises:[].} =
   var state = WebSocketState()
@@ -50,7 +57,7 @@ proc openWebSocket(url: string): Handle {.raises:[].} =
   result = rand(int.high)
   webSockets[result] = state
   try:
-    asyncCheck wsTasklet(state)
+    asyncCheck wsTasklet(result, state)
   except:
     echo getCurrentExceptionMsg()
 
@@ -69,6 +76,12 @@ proc `onMessage=`(handle: Handle, callback: proc(msg: string, kind: WebSocketMes
 proc `onClose=`(handle: Handle, callback: proc()) =
   if handle in webSockets:
     webSockets[handle].onClose = callback
+
+proc close(handle: Handle) =
+  if handle in webSockets:
+    webSockets[handle].closed = true
+    if webSockets[handle].webSocket != nil:
+      webSockets[handle].webSocket.close()
 
 proc pollHttp() {.raises:[].} =
   try:
@@ -98,9 +111,12 @@ proc pollHttp() {.raises:[].} =
 # the next pollEvents (or later).
 
 let webSocket = openWebSocket("wss://stream.pushbullet.com/websocket/test")
+webSocket.close()
 
 webSocket.onError = proc(msg: string) =
-  echo "onError: " & msg
+  echo "onError: --------"
+  echo msg
+  echo "-----------------"
 
 webSocket.onOpen = proc() =
   echo "onOpen"
@@ -110,6 +126,8 @@ webSocket.onMessage = proc(msg: string, kind: WebSocketMessageKind) =
 
 webSocket.onClose = proc() =
   echo "onClose"
+
+echo "handles set"
 
 # Closing the window exits the demo
 let window = newWindow("Windy Basic", ivec2(1280, 800))
