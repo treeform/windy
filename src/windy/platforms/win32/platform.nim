@@ -146,8 +146,8 @@ var
   trayIconHandle: HICON
   trayMenuHandle: HMENU
   trayMenuEntries: seq[TrayMenuEntry]
-  httpRequests: Table[int, ptr HttpRequestState]
-  webSockets: Table[int, ptr WebSocketState]
+  httpRequests: Table[HttpRequestHandle, ptr HttpRequestState]
+  webSockets: Table[WebSocketHandle, ptr WebSocketState]
 
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
   ## Returns the window for this handle, else -1
@@ -1295,7 +1295,7 @@ proc getScreens*(): seq[Screen] =
   h.screens
 
 proc close(handle: HttpRequestHandle) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
+  let state = httpRequests.getOrDefault(handle, nil)
   if state == nil:
     return
 
@@ -1306,18 +1306,18 @@ proc close(handle: HttpRequestHandle) =
   discard WinHttpCloseHandle(state.hOpen)
 
 proc destroy(handle: HttpRequestHandle) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
+  let state = httpRequests.getOrDefault(handle, nil)
   if state == nil:
     return
 
-  httpRequests.del(handle.int)
+  httpRequests.del(handle)
 
   if state.responseBody != nil:
     deallocShared(state.responseBody)
   deallocShared(state)
 
 proc onHttpError(handle: HttpRequestHandle, msg: string) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
+  let state = httpRequests.getOrDefault(handle, nil)
   if state == nil:
     return
 
@@ -1327,7 +1327,7 @@ proc onHttpError(handle: HttpRequestHandle, msg: string) =
   handle.close() # Must come after onError for WebSockets
 
 proc onDeadlineExceeded(handle: HttpRequestHandle) =
-  let state = httpRequests.getOrDefault(handle.int, nil)
+  let state = httpRequests.getOrDefault(handle, nil)
   if state == nil:
     return
 
@@ -1367,20 +1367,20 @@ when compileOption("threads"):
 
     while true:
       result = windyRand.rand(int.high).HttpRequestHandle
-      if result.int notin httpRequests and result.int notin webSockets:
-        httpRequests[result.int] = state
+      if result notin httpRequests and result.WebSocketHandle notin webSockets:
+        httpRequests[result] = state
         break
 
     discard PostMessageW(helperWindow, WM_HTTP, HTTP_REQUEST_START, result.LPARAM)
 
   proc deadline*(handle: HttpRequestHandle): float64 =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
     state.deadline
 
   proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
     state.deadline = deadline
@@ -1389,7 +1389,7 @@ when compileOption("threads"):
     handle: HttpRequestHandle,
     callback: HttpErrorCallback
   ) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onError = callback
@@ -1398,7 +1398,7 @@ when compileOption("threads"):
     handle: HttpRequestHandle,
     callback: HttpResponseCallback
   ) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onResponse = callback
@@ -1407,7 +1407,7 @@ when compileOption("threads"):
     handle: HttpRequestHandle,
     callback: HttpProgressCallback
   ) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onUploadProgress = callback
@@ -1416,13 +1416,13 @@ when compileOption("threads"):
     handle: HttpRequestHandle,
     callback: HttpProgressCallback
   ) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onDownloadProgress = callback
 
   proc cancel*(handle: HttpRequestHandle) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1515,7 +1515,7 @@ when compileOption("threads"):
     {.pop.}
 
   proc onStartRequest(handle: HttpRequestHandle) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1680,7 +1680,7 @@ when compileOption("threads"):
       return
 
   proc onSendRequestComplete(handle: HttpRequestHandle) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1707,7 +1707,7 @@ when compileOption("threads"):
         handle.onHttpError("WinHttpReceiveResponse error " & $GetLastError())
 
   proc onHeadersAvailable(handle: HttpRequestHandle) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1808,7 +1808,7 @@ when compileOption("threads"):
       return
 
   proc onWriteComplete(handle: HttpRequestHandle, bytesWritten: int) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1841,7 +1841,7 @@ when compileOption("threads"):
         handle.onHttpError("WinHttpWriteData error " & $GetLastError())
 
   proc onReadComplete(handle: HttpRequestHandle, bytesRead: int) =
-    let state = httpRequests.getOrDefault(handle.int, nil)
+    let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1918,7 +1918,7 @@ when compileOption("threads"):
         return
 
   proc close*(handle: WebSocketHandle) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1934,18 +1934,18 @@ when compileOption("threads"):
     )
 
   proc destroy(handle: WebSocketHandle) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
 
-    webSockets.del(handle.int)
+    webSockets.del(handle)
 
     if state.buffer != nil:
       deallocShared(state.buffer)
     deallocShared(state)
 
   proc onWebSocketError(handle: WebSocketHandle, msg: string) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -1973,11 +1973,11 @@ when compileOption("threads"):
     var handle: WebSocketHandle
     while true:
       handle = windyRand.rand(int.high).WebSocketHandle
-      if handle.int notin httpRequests and handle.int notin webSockets:
-        webSockets[handle.int] = state
+      if handle.HttpRequestHandle notin httpRequests and handle notin webSockets:
+        webSockets[handle] = state
         break
 
-    let requestState = httpRequests.getOrDefault(state.httpRequest.int)
+    let requestState = httpRequests.getOrDefault(state.httpRequest)
 
     requestState.onWebSocketUpgrade = proc() =
       if state.closed:
@@ -2032,7 +2032,7 @@ when compileOption("threads"):
     handle: WebSocketHandle,
     callback: HttpErrorCallback
   ) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onError = callback
@@ -2041,7 +2041,7 @@ when compileOption("threads"):
     handle: WebSocketHandle,
     callback: Callback
   ) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onOpen = callback
@@ -2050,7 +2050,7 @@ when compileOption("threads"):
     handle: WebSocketHandle,
     callback: Callback
   ) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onClose = callback
@@ -2059,7 +2059,7 @@ when compileOption("threads"):
     handle: WebSocketHandle,
     callback: WebSocketMessageCallback
   ) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
     state.onMessage = callback
@@ -2072,7 +2072,7 @@ when compileOption("threads"):
     bytesRead: int,
     bufferKind: WINHTTP_WEB_SOCKET_BUFFER_TYPE
   ) =
-    let state = webSockets.getOrDefault(handle.int, nil)
+    let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
 
@@ -2132,17 +2132,17 @@ when compileOption("threads"):
     of WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE:
       handle.close()
 
-proc onWebSocketClose(handle: WebSocketHandle) =
-  let state = webSockets.getOrDefault(handle.int, nil)
-  if state == nil:
-    return
+  proc onWebSocketClose(handle: WebSocketHandle) =
+    let state = webSockets.getOrDefault(handle, nil)
+    if state == nil:
+      return
 
-  state.closed = true
+    state.closed = true
 
-  if state.onClose != nil:
-    state.onClose()
+    if state.onClose != nil:
+      state.onClose()
 
-  discard WinHttpCloseHandle(state.hWebSocket)
+    discard WinHttpCloseHandle(state.hWebSocket)
 
 proc pollEvents*() =
   # Clear all per-frame data
@@ -2158,7 +2158,7 @@ proc pollEvents*() =
     of WM_HTTP:
       when compileOption("threads"):
         let handle = msg.lParam
-        if handle.int in webSockets:
+        if handle.WebSocketHandle in webSockets:
           case msg.wParam.uint8.int:
           of HTTP_REQUEST_ERROR:
             handle.WebSocketHandle.onWebSocketError("WinHttp request error")
@@ -2207,7 +2207,7 @@ proc pollEvents*() =
   let now = epochTime()
   for handle, state in httpRequests:
     if state.deadline > 0 and state.deadline <= now:
-      handle.HttpRequestHandle.onDeadlineExceeded()
+      handle.onDeadlineExceeded()
 
   let activeWindow = windows.forHandle(GetActiveWindow())
   if activeWindow != nil:
