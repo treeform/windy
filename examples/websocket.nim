@@ -10,18 +10,18 @@ import windy
 # If there is any error, onError will be called during
 # the next pollEvents (or later).
 
-let req = openWebSocket("wss://stream.pushbullet.com/websocket/test")
+let ws = openWebSocket("wss://stream.pushbullet.com/websocket/test")
 
-req.onError = proc(msg: string) =
+ws.onError = proc(msg: string) =
   echo "onError: " & msg
 
-req.onOpen = proc() =
+ws.onOpen = proc() =
   echo "onOpen"
 
-req.onMessage = proc(msg: string, kind: WebSocketMessageKind) =
+ws.onMessage = proc(msg: string, kind: WebSocketMessageKind) =
   echo "onMessage: ", msg
 
-req.onClose = proc() =
+ws.onClose = proc() =
   echo "onClose"
 
 # Closing the window exits the demo

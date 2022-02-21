@@ -170,6 +170,12 @@ type
 const
   defaultHttpDeadline*: float32 = -1
 
+proc `==`*(a, b: HttpRequestHandle): bool =
+  a.int == b.int
+
+proc `==`*(a, b: WebSocketHandle): bool =
+  a.int == b.int
+
 proc `[]`*(buttonView: ButtonView, button: Button): bool =
   button in set[Button](buttonView)
 

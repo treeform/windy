@@ -1,4 +1,4 @@
-import ../../common, ../../internal, macdefs, opengl, pixie/fileformats/png,
+import ../../common, ../../http, ../../internal, macdefs, opengl, pixie/fileformats/png,
     pixie/images, times, unicode, utils, vmath
 
 type
@@ -717,6 +717,8 @@ proc pollEvents*() =
         break
       NSApp.sendEvent(event)
 
+  pollHttp()
+
 proc makeContextCurrent*(window: Window) =
   window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
 
@@ -966,3 +968,130 @@ proc getScreens*(): seq[Screen] =
         bottom: frame.origin.y.int + frame.size.height.int,
         primary: i == 0
       ))
+
+proc startHttpRequest*(
+  url: string,
+  verb = "GET",
+  headers = newSeq[HttpHeader](),
+  body = "",
+  deadline = defaultHttpDeadline
+): HttpRequestHandle {.raises: [].} =
+  init()
+
+  result = newHttpRequestHandle()
+
+  var headers = headers
+  headers.addDefaultHeaders()
+
+  let state = result.getState()
+  state.url = url
+  state.verb = verb
+  state.headers = headers
+  state.requestBody = body
+  state.deadline = deadline
+
+  result.startTasklet()
+
+proc deadline*(handle: HttpRequestHandle): float64 =
+    let state = handle.getState()
+    if state == nil:
+      return
+    state.deadline
+
+proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.deadline = deadline
+
+proc `onError=`*(
+  handle: HttpRequestHandle,
+  callback: HttpErrorCallback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onError = callback
+
+proc `onResponse=`*(
+  handle: HttpRequestHandle,
+  callback: HttpResponseCallback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onResponse = callback
+
+proc `onUploadProgress=`*(
+  handle: HttpRequestHandle,
+  callback: HttpProgressCallback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onUploadProgress = callback
+
+proc `onDownloadProgress=`*(
+  handle: HttpRequestHandle,
+  callback: HttpProgressCallback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onDownloadProgress = callback
+
+proc cancel*(handle: HttpRequestHandle) =
+  http.cancel(handle)
+
+proc openWebSocket*(
+  url: string,
+  deadline = defaultHttpDeadline
+): WebSocketHandle {.raises: [].} =
+  init()
+
+  result = newWebSocketHandle()
+
+  let state = result.getState()
+  state.url = url
+  state.deadline = deadline
+
+  result.startTasklet()
+
+proc `onError=`*(
+  handle: WebSocketHandle,
+  callback: HttpErrorCallback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onError = callback
+
+proc `onOpen=`*(
+  handle: WebSocketHandle,
+  callback: Callback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onOpen = callback
+
+proc `onMessage=`*(
+  handle: WebSocketHandle,
+  callback: WebSocketMessageCallback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onMessage = callback
+
+proc `onClose=`*(
+  handle: WebSocketHandle,
+  callback: Callback
+) =
+  let state = handle.getState()
+  if state == nil:
+    return
+  state.onClose = callback
+
+proc close*(handle: WebSocketHandle) =
+  http.close(handle)
