@@ -13,3 +13,4 @@ nimcache
 *.dll
 __pycache__
 bindings/generated
+cacert.pem

@@ -1336,7 +1336,13 @@ proc onDeadlineExceeded(handle: HttpRequestHandle) =
     msg = "Deadline of " & $state.deadline & " exceeded, time is " & $now
   handle.onHttpError(msg)
 
-when compileOption("threads"):
+when defined(windyUseStdHttp):
+  # For debugging, use Nim's std/httpclient on Windows
+  import ../../http
+  export http
+
+elif compileOption("threads"):
+  # --threads:on is required by the callback procs provided to WinHttp
 
   proc startHttpRequest*(
     url: string,
@@ -2219,3 +2225,6 @@ proc pollEvents*() =
     if KeyRightShift in activeWindow.state.buttonDown:
       if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyRightShift)
+
+  when defined(windyUseStdHttp):
+    pollHttp()
