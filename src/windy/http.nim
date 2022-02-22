@@ -1,28 +1,28 @@
-import common, internal, std/asyncdispatch, std/httpclient, std/random, std/strutils, std/tables, ws, std/times
+import common, internal, std/asyncdispatch, std/httpclient, std/random, std/strutils, std/tables, ws, std/times, zippy
 
 type
-  HttpRequestState* = ref object
-    url*, verb*: string
-    headers*: seq[HttpHeader]
-    requestBody*: string
-    deadline*: float64
-    canceled*: bool
+  HttpRequestState = ref object
+    url, verb: string
+    headers: seq[HttpHeader]
+    requestBody: string
+    deadline: float64
+    canceled: bool
 
-    onError*: HttpErrorCallback
-    onResponse*: HttpResponseCallback
-    onUploadProgress*: HttpProgressCallback
-    onDownloadProgress*: HttpProgressCallback
+    onError: HttpErrorCallback
+    onResponse: HttpResponseCallback
+    onUploadProgress: HttpProgressCallback
+    onDownloadProgress: HttpProgressCallback
 
     client: AsyncHttpClient
 
-  WebSocketState* = ref object
-    url*: string
-    deadline*: float64
-    closed*: bool
+  WebSocketState = ref object
+    url: string
+    deadline: float64
+    closed: bool
 
-    onError*: HttpErrorCallback
-    onOpen*, onClose*: common.Callback
-    onMessage*: WebSocketMessageCallback
+    onError: HttpErrorCallback
+    onOpen, onClose: common.Callback
+    onMessage: WebSocketMessageCallback
 
     webSocket: WebSocket
 
@@ -40,7 +40,7 @@ template usingHttpDispatcher(body: untyped) =
   finally:
     setGlobalDispatcher(prevDispatcher)
 
-proc newHttpRequestHandle*(): HttpRequestHandle =
+proc newHttpRequestHandle(): HttpRequestHandle =
   let state = HttpRequestState()
 
   while true:
@@ -49,7 +49,7 @@ proc newHttpRequestHandle*(): HttpRequestHandle =
       httpRequests[result] = state
       break
 
-proc newWebSocketHandle*(): WebSocketHandle =
+proc newWebSocketHandle(): WebSocketHandle =
   let state = WebSocketState()
 
   while true:
@@ -58,21 +58,15 @@ proc newWebSocketHandle*(): WebSocketHandle =
       webSockets[result] = state
       break
 
-proc getState*(handle: HttpRequestHandle): HttpRequestState =
-  httpRequests.getOrDefault(handle, nil)
-
-proc getState*(handle: WebSocketHandle): WebSocketState =
-  webSockets.getOrDefault(handle, nil)
-
 proc cancel*(handle: HttpRequestHandle) =
-  let state = handle.getState()
+  let state = httpRequests.getOrDefault(handle, nil)
   if state == nil:
     return
   state.canceled = true
   state.client.close()
 
 proc close*(handle: WebSocketHandle) =
-  let state = handle.getState()
+  let state = webSockets.getOrDefault(handle, nil)
   if state == nil:
     return
   state.closed = true
@@ -85,7 +79,7 @@ proc close*(handle: WebSocketHandle) =
 proc httpRequestTasklet(handle: HttpRequestHandle) {.async.} =
   await sleepAsync(0) # Sleep until next poll
 
-  let state = handle.getState()
+  let state = httpRequests.getOrDefault(handle, nil)
   if state.canceled:
     return
 
@@ -118,6 +112,12 @@ proc httpRequestTasklet(handle: HttpRequestHandle) {.async.} =
     else:
       httpResponse.code = response.code.int
       httpResponse.body = await response.body
+
+      for key, value in response.headers:
+        httpResponse.headers[key] = value
+
+      if httpResponse.headers["content-encoding"].toLowerAscii() == "gzip":
+        httpResponse.body = uncompress(httpResponse.body, dfGzip)
   except:
     if not state.canceled and state.onError != nil:
       state.onError(getCurrentExceptionMsg())
@@ -134,7 +134,7 @@ proc httpRequestTasklet(handle: HttpRequestHandle) {.async.} =
 proc webSocketTasklet(handle: WebSocketHandle) {.async.} =
   await sleepAsync(0) # Sleep until next poll
 
-  let state = handle.getState()
+  let state = webSockets.getOrDefault(handle, nil)
   if state.closed:
     return
 
@@ -180,14 +180,14 @@ proc webSocketTasklet(handle: WebSocketHandle) {.async.} =
 
   webSockets.del(handle)
 
-proc startTasklet*(handle: HttpRequestHandle) =
+proc startTasklet(handle: HttpRequestHandle) =
   try:
     usingHttpDispatcher:
       asyncCheck handle.httpRequestTasklet()
   except:
     quit("Failed to start HTTP request tasklet")
 
-proc startTasklet*(handle: WebSocketHandle) =
+proc startTasklet(handle: WebSocketHandle) =
   try:
     usingHttpDispatcher:
       asyncCheck handle.webSocketTasklet()
@@ -214,3 +214,120 @@ proc pollHttp*() =
       handle.close()
       if state.onError != nil:
         state.onError(msg)
+
+proc startHttpRequest*(
+  url: string,
+  verb = "GET",
+  headers = newSeq[HttpHeader](),
+  body = "",
+  deadline = defaultHttpDeadline
+): HttpRequestHandle {.raises: [].} =
+  result = newHttpRequestHandle()
+
+  var headers = headers
+  headers.addDefaultHeaders()
+
+  let state = httpRequests.getOrDefault(result, nil)
+  state.url = url
+  state.verb = verb
+  state.headers = headers
+  state.requestBody = body
+  state.deadline = deadline
+
+  result.startTasklet()
+
+proc deadline*(handle: HttpRequestHandle): float64 =
+    let state = httpRequests.getOrDefault(handle, nil)
+    if state == nil:
+      return
+    state.deadline
+
+proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.deadline = deadline
+
+proc `onError=`*(
+  handle: HttpRequestHandle,
+  callback: HttpErrorCallback
+) =
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onError = callback
+
+proc `onResponse=`*(
+  handle: HttpRequestHandle,
+  callback: HttpResponseCallback
+) =
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onResponse = callback
+
+proc `onUploadProgress=`*(
+  handle: HttpRequestHandle,
+  callback: HttpProgressCallback
+) =
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onUploadProgress = callback
+
+proc `onDownloadProgress=`*(
+  handle: HttpRequestHandle,
+  callback: HttpProgressCallback
+) =
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onDownloadProgress = callback
+
+proc openWebSocket*(
+  url: string,
+  deadline = defaultHttpDeadline
+): WebSocketHandle {.raises: [].} =
+  result = newWebSocketHandle()
+
+  let state = webSockets.getOrDefault(result, nil)
+  state.url = url
+  state.deadline = deadline
+
+  result.startTasklet()
+
+proc `onError=`*(
+  handle: WebSocketHandle,
+  callback: HttpErrorCallback
+) =
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onError = callback
+
+proc `onOpen=`*(
+  handle: WebSocketHandle,
+  callback: common.Callback
+) =
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onOpen = callback
+
+proc `onMessage=`*(
+  handle: WebSocketHandle,
+  callback: WebSocketMessageCallback
+) =
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onMessage = callback
+
+proc `onClose=`*(
+  handle: WebSocketHandle,
+  callback: common.Callback
+) =
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onClose = callback
