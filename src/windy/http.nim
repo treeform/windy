@@ -58,14 +58,17 @@ proc newWebSocketHandle(): WebSocketHandle =
       webSockets[result] = state
       break
 
-proc cancel*(handle: HttpRequestHandle) =
+proc cancel*(handle: HttpRequestHandle) {.raises: [].} =
   let state = httpRequests.getOrDefault(handle, nil)
   if state == nil:
     return
   state.canceled = true
-  state.client.close()
+  try:
+    state.client.close()
+  except:
+    discard
 
-proc close*(handle: WebSocketHandle) =
+proc close*(handle: WebSocketHandle) {.raises: [].} =
   let state = webSockets.getOrDefault(handle, nil)
   if state == nil:
     return
@@ -86,9 +89,15 @@ proc httpRequestTasklet(handle: HttpRequestHandle) {.async.} =
   state.client = newAsyncHttpClient()
 
   let onProgressChanged = proc(total, progress, speed: BiggestInt) {.async.} =
-    if state.onDownloadProgress != nil:
+    if not state.canceled and state.onDownloadProgress != nil:
       let total = if total == 0: -1 else: total.int
-      state.onDownloadProgress(progress.int, total.int)
+      try:
+        state.onDownloadProgress(progress.int, total.int)
+      except:
+        handle.cancel()
+        httpRequests.del(handle)
+        if state.onError != nil:
+          state.onError(getCurrentExceptionMsg())
 
   state.client.onProgressChanged =
     cast[ProgressChangedProc[Future[void]]](onProgressChanged)
@@ -118,18 +127,18 @@ proc httpRequestTasklet(handle: HttpRequestHandle) {.async.} =
 
       if httpResponse.headers["content-encoding"].toLowerAscii() == "gzip":
         httpResponse.body = uncompress(httpResponse.body, dfGzip)
+
+      if not state.canceled and state.onDownloadProgress != nil:
+        state.onDownloadProgress(httpResponse.body.len, httpResponse.body.len)
+      if not state.canceled and state.onResponse != nil:
+        state.onResponse(httpResponse)
+
+    # Handle is always removed after all callbacks (but before onError)
+    httpRequests.del(handle)
   except:
+    httpRequests.del(handle)
     if not state.canceled and state.onError != nil:
       state.onError(getCurrentExceptionMsg())
-    httpRequests.del(handle)
-    return
-
-  if not state.canceled and state.onDownloadProgress != nil:
-    state.onDownloadProgress(httpResponse.body.len, httpResponse.body.len)
-  if not state.canceled and state.onResponse != nil:
-    state.onResponse(httpResponse)
-
-  httpRequests.del(handle)
 
 proc webSocketTasklet(handle: WebSocketHandle) {.async.} =
   await sleepAsync(0) # Sleep until next poll
@@ -138,13 +147,13 @@ proc webSocketTasklet(handle: WebSocketHandle) {.async.} =
   if state.closed:
     return
 
-  var skipOnClose: bool
+  var onOpenCalled: bool
   try:
     state.webSocket = await newWebSocket(state.url)
     if state.closed:
-      skipOnClose = true
       state.webSocket.hangup()
     else:
+      onOpenCalled = true
       if state.onOpen != nil:
         state.onOpen()
       while not state.closed:
@@ -166,19 +175,20 @@ proc webSocketTasklet(handle: WebSocketHandle) {.async.} =
           state.webSocket.hangup()
           break
   except:
+    webSockets.del(handle)
     if not state.closed and state.onError != nil:
       state.onError(getCurrentExceptionMsg())
 
-  try:
-    if state.webSocket.readyState != Closed:
-      state.webSocket.hangup()
-  except:
-    discard
-
-  if not skipOnClose and state.onClose != nil:
-    state.onClose()
-
   webSockets.del(handle)
+
+  if state.webSocket != nil and state.webSocket.readyState != Closed:
+    try:
+        state.webSocket.hangup()
+    except:
+      discard
+
+  if onOpenCalled and state.onClose != nil:
+    state.onClose()
 
 proc startTasklet(handle: HttpRequestHandle) =
   try:
