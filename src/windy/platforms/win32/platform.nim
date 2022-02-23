@@ -115,6 +115,7 @@ type
     httpRequest: HttpRequestHandle
     hWebSocket: HINTERNET
 
+    onOpenCalled: bool
     closed: bool
 
     onError: HttpErrorCallback
@@ -1321,10 +1322,10 @@ proc onHttpError(handle: HttpRequestHandle, msg: string) =
   if state == nil:
     return
 
+  handle.close()
+
   if not state.canceled and state.onError != nil:
     state.onError(msg)
-
-  handle.close() # Must come after onError for WebSockets
 
 proc onDeadlineExceeded(handle: HttpRequestHandle) =
   let state = httpRequests.getOrDefault(handle, nil)
@@ -1427,7 +1428,7 @@ elif compileOption("threads"):
       return
     state.onDownloadProgress = callback
 
-  proc cancel*(handle: HttpRequestHandle) =
+  proc cancel*(handle: HttpRequestHandle) {.raises: [].} =
     let state = httpRequests.getOrDefault(handle, nil)
     if state == nil:
       return
@@ -1827,8 +1828,15 @@ elif compileOption("threads"):
 
     state.requestBodyBytesWritten += bytesWritten
 
-    if state.onUploadProgress != nil:
-      state.onUploadProgress(state.requestBodyBytesWritten, state.requestBodyLen)
+    try:
+      if state.onUploadProgress != nil:
+        state.onUploadProgress(
+          state.requestBodyBytesWritten,
+          state.requestBodyLen
+        )
+    except:
+      handle.onHttpError(getCurrentExceptionMsg())
+      return
 
     if state.requestBodyBytesWritten == state.requestBodyLen:
       if WinHttpReceiveResponse(state.hRequest, nil) == 0:
@@ -1895,14 +1903,25 @@ elif compileOption("threads"):
 
       handle.close()
 
-      if state.onResponse != nil:
-        state.onResponse(response)
+      try:
+        if state.onResponse != nil:
+          state.onResponse(response)
+      except:
+        handle.onHttpError(getCurrentExceptionMsg())
+        return
 
     else: # Continue reading
       state.responseBodyLen += bytesRead
 
-      if state.onDownloadProgress != nil:
-        state.onDownloadProgress(state.responseBodyLen, state.responseContentLength)
+      try:
+        if state.onDownloadProgress != nil:
+          state.onDownloadProgress(
+            state.responseBodyLen,
+            state.responseContentLength
+          )
+      except:
+        handle.onHttpError(getCurrentExceptionMsg())
+        return
 
       if state.responseBodyCap - state.responseBodyLen < 8192:
         let newCap = state.responseBodyCap * 2
@@ -1923,7 +1942,7 @@ elif compileOption("threads"):
         handle.onHttpError("WinHttpReadData error: " & $GetLastError())
         return
 
-  proc close*(handle: WebSocketHandle) =
+  proc close*(handle: WebSocketHandle) {.raises: [].} =
     let state = webSockets.getOrDefault(handle, nil)
     if state == nil:
       return
@@ -1958,10 +1977,10 @@ elif compileOption("threads"):
     if state.closed:
       return
 
+    handle.close()
+
     if state.onError != nil:
       state.onError(msg)
-
-    handle.close()
 
   proc openWebSocket*(
     url: string,
@@ -1997,36 +2016,43 @@ elif compileOption("threads"):
         state.httpRequest.onHttpError(
           "WinHttpWebSocketCompleteUpgrade error: " & $GetLastError()
         )
-      else:
-        requestState.deadline = 0
-        requestState.onError = nil
+        return
 
-        state.httpRequest.close()
+      requestState.deadline = 0
+      requestState.onError = nil
 
-        let prevCallback = WinHttpSetStatusCallback(
-          state.hWebSocket,
-          webSocketCallback,
-          cast[DWORD](WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS),
-          0
-        )
+      state.httpRequest.close()
 
-        if prevCallback == WINHTTP_INVALID_STATUS_CALLBACK:
-          handle.onWebSocketError("WinHttpSetStatusCallback error")
-          return
+      let prevCallback = WinHttpSetStatusCallback(
+        state.hWebSocket,
+        webSocketCallback,
+        cast[DWORD](WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS),
+        0
+      )
 
+      if prevCallback == WINHTTP_INVALID_STATUS_CALLBACK:
+        handle.onWebSocketError("WinHttpSetStatusCallback error")
+        return
+
+      state.onOpenCalled = true
+
+      try:
         if state.onOpen != nil:
           state.onOpen()
+      except:
+        handle.onWebSocketError(getCurrentExceptionMsg())
+        return
 
-        state.bufferCap = 16384
-        state.buffer = allocShared0(state.bufferCap)
+      state.bufferCap = 16384
+      state.buffer = allocShared0(state.bufferCap)
 
-        discard WinHttpWebSocketReceive(
-          state.hWebSocket,
-          state.buffer,
-          state.bufferCap.DWORD,
-          nil,
-          nil
-        )
+      discard WinHttpWebSocketReceive(
+        state.hWebSocket,
+        state.buffer,
+        state.bufferCap.DWORD,
+        nil,
+        nil
+      )
 
     requestState.onError = proc(msg: string) =
       if state.onError != nil:
@@ -2115,7 +2141,11 @@ elif compileOption("threads"):
       if state.onMessage != nil:
         var msg = newString(state.bufferLen)
         copyMem(msg[0].addr, state.buffer, state.bufferLen)
-        state.onMessage(msg, BinaryMessage)
+        try:
+          state.onMessage(msg, BinaryMessage)
+        except:
+          handle.onWebSocketError(getCurrentExceptionMsg())
+          return
 
       resetBuffer()
       webSocketReceive()
@@ -2127,7 +2157,11 @@ elif compileOption("threads"):
       if state.onMessage != nil:
         var msg = newString(state.bufferLen)
         copyMem(msg[0].addr, state.buffer, state.bufferLen)
-        state.onMessage(msg, Utf8Message)
+        try:
+          state.onMessage(msg, Utf8Message)
+        except:
+          handle.onWebSocketError(getCurrentExceptionMsg())
+          return
 
       resetBuffer()
       webSocketReceive()
@@ -2145,10 +2179,10 @@ elif compileOption("threads"):
 
     state.closed = true
 
-    if state.onClose != nil:
-      state.onClose()
-
     discard WinHttpCloseHandle(state.hWebSocket)
+
+    if state.onOpenCalled and state.onClose != nil:
+      state.onClose()
 
 proc pollEvents*() =
   # Clear all per-frame data
