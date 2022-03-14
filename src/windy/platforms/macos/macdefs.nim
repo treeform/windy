@@ -31,6 +31,7 @@ type
   NSStringEncoding* = uint
   NSStringEncodingConversionOptions* = uint
   NSBitmapImageFileType* = uint
+  NSWindowLevel* = int
 
   NSRect* = CGRect
   NSPoint* = CGPoint
@@ -104,6 +105,8 @@ const
   NSTrackingEnabledDuringMouseDrag* = 0x400.NSTrackingAreaOptions
   NSUTF32StringEncoding* = 0x8c000100.NSStringEncoding
   NSBitmapImageFileTypePNG* = 4.NSBitmapImageFileType
+  NSNormalWindowLevel* = 0.NSWindowLevel
+  NSFloatingWindowLevel* = 3.NSWindowLevel
 
 var
   NSApp* {.importc.}: NSApplication
@@ -218,6 +221,8 @@ objc:
   proc toggleFullscreen*(self: NSWindow, _: ID)
   proc invalidateCursorRectsForView*(self: NSWindow, _: NSView)
   proc mouseLocationOutsideOfEventStream*(self: NSWindow): NSPoint
+  proc level*(self: NSWindow): NSWindowLevel
+  proc setLevel*(self: NSWindow, _: NSWindowLevel)
   proc convertRectToBacking*(self: NSView, _: NSRect): NSRect
   proc window*(self: NSView): NSWindow
   proc bounds*(self: NSView): NSRect

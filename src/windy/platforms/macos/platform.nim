@@ -67,6 +67,9 @@ proc style*(window: Window): WindowStyle =
 proc fullscreen*(window: Window): bool =
   (window.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
 
+proc floating*(window: Window): bool =
+  window.inner.level == NSFloatingWindowLevel
+
 proc contentScale*(window: Window): float32 =
   autoreleasepool:
     let
@@ -150,6 +153,17 @@ proc `fullscreen=`*(window: Window, fullscreen: bool) =
     return
   autoreleasepool:
     window.inner.toggleFullscreen(0.ID)
+
+proc `floating=`*(window: Window, floating: bool) =
+  if window.floating == floating:
+    return
+  autoreleasepool:
+    let level =
+      if floating:
+        NSFloatingWindowLevel
+      else:
+        NSNormalWindowLevel
+    window.inner.setLevel(level)
 
 proc `size=`*(window: Window, size: IVec2) =
   autoreleasepool:
