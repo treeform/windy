@@ -478,11 +478,11 @@ proc `floating=`*(window: Window, floating: bool) =
   if window.floating == floating:
     return
 
-  window.isFloating = true
+  window.isFloating = floating
 
   discard SetWindowPos(
     window.hWnd,
-    HWND_TOPMOST,
+    if floating: HWND_TOPMOST else: HWND_TOP,
     0,
     0,
     0,
