@@ -482,7 +482,7 @@ proc `floating=`*(window: Window, floating: bool) =
 
   discard SetWindowPos(
     window.hWnd,
-    if floating: HWND_TOPMOST else: HWND_TOP,
+    if floating: HWND_TOPMOST else: HWND_NOTOPMOST,
     0,
     0,
     0,
