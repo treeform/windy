@@ -63,6 +63,7 @@ type
     state: WindowState
     trackMouseEventRegistered: bool
     exitFullscreenInfo: ExitFullscreenInfo
+    isFloating: bool
 
     hWnd: HWND
     hdc: HDC
@@ -328,6 +329,9 @@ proc style*(window: Window): WindowStyle =
 proc fullscreen*(window: Window): bool =
   window.exitFullscreenInfo != nil
 
+proc floating*(window: Window): bool =
+  window.isFloating
+
 proc contentScale*(window: Window): float32 =
   let dpi = GetDpiForWindow(window.hWnd)
   result = dpi.float32 / defaultScreenDpi
@@ -469,6 +473,22 @@ proc `fullscreen=`*(window: Window, fullscreen: bool) =
 
     if maximized:
       discard SendMessageW(window.hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0)
+
+proc `floating=`*(window: Window, floating: bool) =
+  if window.floating == floating:
+    return
+
+  window.isFloating = true
+
+  discard SetWindowPos(
+    window.hWnd,
+    HWND_TOPMOST,
+    0,
+    0,
+    0,
+    0,
+    SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE
+  )
 
 proc `size=`*(window: Window, size: IVec2) =
   if window.fullscreen:
