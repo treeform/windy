@@ -432,7 +432,7 @@ proc `fullscreen=`*(window: Window, fullscreen: bool) =
     let mi = window.monitorInfo
     discard SetWindowPos(
       window.hWnd,
-      HWND_TOPMOST,
+      HWND_TOP,
       mi.rcMonitor.left,
       mi.rcMonitor.top,
       mi.rcMonitor.right - mi.rcMonitor.left,
