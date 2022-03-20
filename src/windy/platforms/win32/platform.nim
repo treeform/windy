@@ -1462,6 +1462,8 @@ elif compileOption("threads"):
       handle.LPARAM
     )
 
+  {.push stackTrace: off.}
+
   proc httpCallback(
     hInternet: HINTERNET,
     dwContext: DWORD_PTR,
@@ -1469,8 +1471,6 @@ elif compileOption("threads"):
     lpvStatusInformation: LPVOID,
     dwStatusInformationLength: DWORD
   ): void {.stdcall, raises: [].} =
-    {.push stackTrace: off.}
-
     var wParam: WPARAM
 
     case dwInternetStatus:
@@ -1502,8 +1502,6 @@ elif compileOption("threads"):
         dwContext.LPARAM
       )
 
-    {.pop.}
-
   proc webSocketCallback(
     hWebSocket: HINTERNET,
     dwContext: DWORD_PTR,
@@ -1511,8 +1509,6 @@ elif compileOption("threads"):
     lpvStatusInformation: LPVOID,
     dwStatusInformationLength: DWORD
   ): void {.stdcall, raises: [].} =
-    {.push stackTrace: off.}
-
     var wParam: WPARAM
 
     case dwInternetStatus:
@@ -1539,7 +1535,7 @@ elif compileOption("threads"):
         dwContext.LPARAM
       )
 
-    {.pop.}
+  {.pop.}
 
   proc onStartRequest(handle: HttpRequestHandle) =
     let state = httpRequests.getOrDefault(handle, nil)
