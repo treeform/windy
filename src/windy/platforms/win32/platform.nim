@@ -278,6 +278,9 @@ proc getDC(hWnd: HWND): HDC =
 proc getWindowStyle(hWnd: HWND): LONG =
   GetWindowLongW(hWnd, GWL_STYLE)
 
+proc getWindowExStyle(hWnd: HWND): LONG =
+  GetWindowLongW(hWnd, GWL_EXSTYLE)
+
 proc updateWindowStyle(hWnd: HWND, style: LONG) =
   var rect: RECT
   discard GetClientRect(hWnd, rect.addr)
