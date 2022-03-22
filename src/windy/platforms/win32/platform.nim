@@ -1290,6 +1290,8 @@ proc getScreens*(): seq[Screen] =
 
   var h = Holder()
 
+  {.push stackTrace: off.}
+
   proc callback(
     hMonitor: HMONITOR,
     hdc: HDC,
@@ -1310,6 +1312,8 @@ proc getScreens*(): seq[Screen] =
     ))
 
     return TRUE
+
+  {.pop.}
 
   discard EnumDisplayMonitors(0, nil, callback, cast[LPARAM](h.addr))
 
