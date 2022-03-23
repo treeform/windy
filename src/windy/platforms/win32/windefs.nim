@@ -47,6 +47,8 @@ type
   HIMC* = HANDLE
   HBITMAP* = HANDLE
   HINTERNET* = HANDLE
+  HRGN* = HANDLE
+  HGDIOBJ* = HANDLE
   LPVOID* = pointer
   LPCVOID* = pointer
   UINT* = uint32
@@ -192,6 +194,11 @@ type
   WINHTTP_WEB_SOCKET_STATUS* {.pure.} = object
     dwBytesTransferred*: DWORD
     eBufferType*: WINHTTP_WEB_SOCKET_BUFFER_TYPE
+  DWM_BLURBEHIND* {.pure.} = object
+    dwFlags*: DWORD
+    fEnable*: BOOL
+    hRgnBlur*: HRGN
+    fTransitionOnMaximized*: BOOL
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -280,6 +287,8 @@ const
   WS_CHILDWINDOW* = WS_CHILD
   WS_EX_APPWINDOW* = 0x00040000
   WS_EX_TOPMOST* = 0x00000008
+  WS_EX_LAYERED* = 0x00080000
+  WS_EX_TRANSPARENT* = 0x00000020
   WM_NULL* = 0x0000
   WM_CREATE* = 0x0001
   WM_DESTROY* = 0x0002
@@ -511,6 +520,8 @@ const
   WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET* = 114
   WINHTTP_ERROR_BASE* = 12000
   ERROR_WINHTTP_HEADER_NOT_FOUND* = WINHTTP_ERROR_BASE + 150
+  DWM_BB_ENABLE* = 0x00000001
+  DWM_BB_BLURREGION* = 0x00000002
 
 {.push importc, stdcall.}
 
@@ -882,6 +893,20 @@ proc DescribePixelFormat*(
 ): int32 {.dynlib: "Gdi32".}
 
 proc SwapBuffers*(hdc: HDC): BOOL {.dynlib: "Gdi32".}
+
+proc CreateRectRgn*(
+  x1: int32,
+  y1: int32,
+  x2: int32,
+  y2: int32
+): HRGN {.dynlib: "Gdi32".}
+
+proc DeleteObject*(ho: HGDIOBJ): BOOL {.dynlib: "Gdi32".}
+
+proc DwmEnableBlurBehindWindow*(
+  hWnd: HWND,
+  pBlurBehind: ptr DWM_BLURBEHIND
+): HRESULT {.dynlib: "Dwmapi"}
 
 proc ImmGetContext*(
   hWnd: HWND
