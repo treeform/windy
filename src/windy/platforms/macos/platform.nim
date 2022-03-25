@@ -70,6 +70,14 @@ proc fullscreen*(window: Window): bool =
 proc floating*(window: Window): bool =
   window.inner.level == NSFloatingWindowLevel
 
+proc transparent*(window: Window): bool =
+  var opaque: GLint
+  window.inner.contentView.NSOpenGLView.openGLContext.getValues(
+    opaque.addr,
+    NSOpenGLContextParameterSurfaceOpacity
+  )
+  opaque == 0
+
 proc contentScale*(window: Window): float32 =
   autoreleasepool:
     let
@@ -164,6 +172,18 @@ proc `floating=`*(window: Window, floating: bool) =
       else:
         NSNormalWindowLevel
     window.inner.setLevel(level)
+
+proc `transparent=`*(window: Window, transparent: bool) =
+  var opaque: GLint =
+    if transparent:
+      0
+    else:
+      1
+  autoreleasepool:
+    window.inner.contentView.NSOpenGLView.openGLContext.setValues(
+      opaque.addr,
+      NSOpenGLContextParameterSurfaceOpacity
+    )
 
 proc `size=`*(window: Window, size: IVec2) =
   autoreleasepool:

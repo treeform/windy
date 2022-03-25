@@ -93,6 +93,7 @@ const
   NSOpenGLProfileVersion3_2Core* = 0x3200
   NSOpenGLProfileVersion4_1Core* = 0x4100
   NSOpenGLContextParameterSwapInterval* = 222
+  NSOpenGLContextParameterSurfaceOpacity* = 236
   NSTrackingMouseEnteredAndExited* = 0x01.NSTrackingAreaOptions
   NSTrackingMouseMoved* = 0x02.NSTrackingAreaOptions
   NSTrackingCursorUpdate* = 0x04.NSTrackingAreaOptions
@@ -246,6 +247,11 @@ objc:
   proc openGLContext*(self: NSOpenGLView): NSOpenGLContext
   proc makeCurrentContext*(self: NSOpenGLContext)
   proc setValues*(
+    self: NSOpenGLContext,
+    _: ptr GLint,
+    forParameter: NSOpenGLContextParameter
+  )
+  proc getValues*(
     self: NSOpenGLContext,
     _: ptr GLint,
     forParameter: NSOpenGLContextParameter

@@ -9,6 +9,7 @@ const
   wheelDelta = 120
   decoratedWindowStyle = WS_OVERLAPPEDWINDOW
   undecoratedWindowStyle = WS_POPUP
+  windowExStyle = WS_EX_APPWINDOW
 
   WGL_DRAW_TO_WINDOW_ARB = 0x2001
   WGL_ACCELERATION_ARB = 0x2003
@@ -63,7 +64,7 @@ type
     state: WindowState
     trackMouseEventRegistered: bool
     exitFullscreenInfo: ExitFullscreenInfo
-    isFloating: bool
+    isFloating, isTransparent: bool
 
     hWnd: HWND
     hdc: HDC
@@ -193,7 +194,7 @@ proc createWindow(windowClassName, title: string): HWND =
     wideTitle = title.wstr()
 
   result = CreateWindowExW(
-    WS_EX_APPWINDOW,
+    windowExStyle,
     cast[ptr WCHAR](wideWindowClassName[0].unsafeAddr),
     cast[ptr WCHAR](wideTitle[0].unsafeAddr),
     decoratedWindowStyle,
@@ -278,6 +279,9 @@ proc getDC(hWnd: HWND): HDC =
 proc getWindowStyle(hWnd: HWND): LONG =
   GetWindowLongW(hWnd, GWL_STYLE)
 
+proc getWindowExStyle(hWnd: HWND): LONG =
+  GetWindowLongW(hWnd, GWL_EXSTYLE)
+
 proc updateWindowStyle(hWnd: HWND, style: LONG) =
   var rect: RECT
   discard GetClientRect(hWnd, rect.addr)
@@ -285,7 +289,7 @@ proc updateWindowStyle(hWnd: HWND, style: LONG) =
     rect.addr,
     style,
     0,
-    WS_EX_APPWINDOW,
+    windowExStyle,
     GetDpiForWindow(hWnd)
   )
 
@@ -331,6 +335,9 @@ proc fullscreen*(window: Window): bool =
 
 proc floating*(window: Window): bool =
   window.isFloating
+
+proc transparent*(window: Window): bool =
+  window.isTransparent
 
 proc contentScale*(window: Window): float32 =
   let dpi = GetDpiForWindow(window.hWnd)
@@ -490,6 +497,33 @@ proc `floating=`*(window: Window, floating: bool) =
     SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE
   )
 
+proc `transparent=`*(window: Window, transparent: bool) =
+  if window.transparent == transparent:
+    return
+
+  window.isTransparent = transparent
+
+  if transparent:
+    let region = CreateRectRgn(0, 0, -1, -1)
+
+    var bb = DWM_BLURBEHIND()
+    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
+    bb.hRgnBlur = region
+    bb.fEnable = TRUE
+
+    try:
+      if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
+        raise newException(WindyError, "Error enabling window transparency")
+    finally:
+      discard DeleteObject(region)
+  else:
+    var bb = DWM_BLURBEHIND()
+    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
+    bb.fEnable = FALSE
+
+    if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
+      raise newException(WindyError, "Error disabling window transparency")
+
 proc `size=`*(window: Window, size: IVec2) =
   if window.fullscreen:
     return
@@ -499,7 +533,7 @@ proc `size=`*(window: Window, size: IVec2) =
     rect.addr,
     getWindowStyle(window.hWnd),
     0,
-    WS_EX_APPWINDOW,
+    windowExStyle,
     GetDpiForWindow(window.hWnd)
   )
   discard SetWindowPos(
@@ -521,7 +555,7 @@ proc `pos=`*(window: Window, pos: IVec2) =
     rect.addr,
     getWindowStyle(window.hWnd),
     0,
-    WS_EX_APPWINDOW,
+    windowExStyle,
     GetDpiForWindow(window.hWnd)
   )
   discard SetWindowPos(
@@ -1290,6 +1324,8 @@ proc getScreens*(): seq[Screen] =
 
   var h = Holder()
 
+  {.push stackTrace: off.}
+
   proc callback(
     hMonitor: HMONITOR,
     hdc: HDC,
@@ -1310,6 +1346,8 @@ proc getScreens*(): seq[Screen] =
     ))
 
     return TRUE
+
+  {.pop.}
 
   discard EnumDisplayMonitors(0, nil, callback, cast[LPARAM](h.addr))
 
