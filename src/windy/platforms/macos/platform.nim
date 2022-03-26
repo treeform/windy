@@ -62,21 +62,21 @@ proc style*(window: Window): WindowStyle =
     else:
       Decorated
   else:
-    Undecorated
+    var opaque: GLint
+    window.inner.contentView.NSOpenGLView.openGLContext.getValues(
+      opaque.addr,
+      NSOpenGLContextParameterSurfaceOpacity
+    )
+    if opaque == 0:
+      Transparent
+    else:
+      Undecorated
 
 proc fullscreen*(window: Window): bool =
   (window.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
 
 proc floating*(window: Window): bool =
   window.inner.level == NSFloatingWindowLevel
-
-proc transparent*(window: Window): bool =
-  var opaque: GLint
-  window.inner.contentView.NSOpenGLView.openGLContext.getValues(
-    opaque.addr,
-    NSOpenGLContextParameterSurfaceOpacity
-  )
-  opaque == 0
 
 proc contentScale*(window: Window): float32 =
   autoreleasepool:
@@ -153,8 +153,15 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
       window.inner.setStyleMask(decoratedResizableWindowMask)
     of Decorated:
       window.inner.setStyleMask(decoratedWindowMask)
-    of Undecorated:
+    of Undecorated, Transparent:
       window.inner.setStyleMask(undecoratedWindowMask)
+
+    var opaque: GLint = if windowStyle == Transparent: 0 else: 1
+    autoreleasepool:
+      window.inner.contentView.NSOpenGLView.openGLContext.setValues(
+        opaque.addr,
+        NSOpenGLContextParameterSurfaceOpacity
+      )
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
   if window.fullscreen == fullscreen:
@@ -172,18 +179,6 @@ proc `floating=`*(window: Window, floating: bool) =
       else:
         NSNormalWindowLevel
     window.inner.setLevel(level)
-
-proc `transparent=`*(window: Window, transparent: bool) =
-  var opaque: GLint =
-    if transparent:
-      0
-    else:
-      1
-  autoreleasepool:
-    window.inner.contentView.NSOpenGLView.openGLContext.setValues(
-      opaque.addr,
-      NSOpenGLContextParameterSurfaceOpacity
-    )
 
 proc `size=`*(window: Window, size: IVec2) =
   autoreleasepool:
