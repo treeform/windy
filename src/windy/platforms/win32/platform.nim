@@ -328,16 +328,15 @@ proc style*(window: Window): WindowStyle =
     return DecoratedResizable
   if (style and WS_BORDER) != 0:
     return Decorated
-  Undecorated
+  if window.isTransparent:
+    return Transparent
+  return Undecorated
 
 proc fullscreen*(window: Window): bool =
   window.exitFullscreenInfo != nil
 
 proc floating*(window: Window): bool =
   window.isFloating
-
-proc transparent*(window: Window): bool =
-  window.isTransparent
 
 proc contentScale*(window: Window): float32 =
   let dpi = GetDpiForWindow(window.hWnd)
@@ -412,13 +411,39 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
     style = decoratedWindowStyle or (WS_MAXIMIZEBOX or WS_THICKFRAME)
   of Decorated:
     style = decoratedWindowStyle and not (WS_MAXIMIZEBOX or WS_THICKFRAME)
-  of Undecorated:
+  of Undecorated, Transparent:
     style = undecoratedWindowStyle
 
   if window.visible:
     style = style or WS_VISIBLE
 
   updateWindowStyle(window.hWnd, style)
+
+  if window.isTransparent == (windowStyle == Transparent):
+    return
+
+  window.isTransparent = windowStyle == Transparent
+
+  if windowStyle == Transparent:
+    let region = CreateRectRgn(0, 0, -1, -1)
+
+    var bb = DWM_BLURBEHIND()
+    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
+    bb.hRgnBlur = region
+    bb.fEnable = TRUE
+
+    try:
+      if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
+        raise newException(WindyError, "Error enabling window transparency")
+    finally:
+      discard DeleteObject(region)
+  else:
+    var bb = DWM_BLURBEHIND()
+    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
+    bb.fEnable = FALSE
+
+    if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
+      raise newException(WindyError, "Error disabling window transparency")
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
   if window.fullscreen == fullscreen:
@@ -496,33 +521,6 @@ proc `floating=`*(window: Window, floating: bool) =
     0,
     SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE
   )
-
-proc `transparent=`*(window: Window, transparent: bool) =
-  if window.transparent == transparent:
-    return
-
-  window.isTransparent = transparent
-
-  if transparent:
-    let region = CreateRectRgn(0, 0, -1, -1)
-
-    var bb = DWM_BLURBEHIND()
-    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
-    bb.hRgnBlur = region
-    bb.fEnable = TRUE
-
-    try:
-      if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
-        raise newException(WindyError, "Error enabling window transparency")
-    finally:
-      discard DeleteObject(region)
-  else:
-    var bb = DWM_BLURBEHIND()
-    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
-    bb.fEnable = FALSE
-
-    if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
-      raise newException(WindyError, "Error disabling window transparency")
 
 proc `size=`*(window: Window, size: IVec2) =
   if window.fullscreen:
