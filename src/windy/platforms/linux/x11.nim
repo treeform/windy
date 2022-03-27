@@ -499,7 +499,7 @@ proc `style=`*(window: Window, v: WindowStyle) =
       discard
 
   case v
-  of WindowStyle.Undecorated:
+  of WindowStyle.Undecorated, WindowStyle.Transparent:
     window.innerDecorated = false
     let size = window.size # save current window size
 
