@@ -419,31 +419,31 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
 
   updateWindowStyle(window.hWnd, style)
 
-  if window.isTransparent == (windowStyle == Transparent):
-    return
+  if window.isTransparent != (windowStyle == Transparent):
+    if windowStyle == Transparent:
+      window.isTransparent = true
 
-  window.isTransparent = windowStyle == Transparent
+      let region = CreateRectRgn(0, 0, -1, -1)
 
-  if windowStyle == Transparent:
-    let region = CreateRectRgn(0, 0, -1, -1)
+      var bb = DWM_BLURBEHIND()
+      bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
+      bb.hRgnBlur = region
+      bb.fEnable = TRUE
 
-    var bb = DWM_BLURBEHIND()
-    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
-    bb.hRgnBlur = region
-    bb.fEnable = TRUE
+      try:
+        if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
+          raise newException(WindyError, "Error enabling window transparency")
+      finally:
+        discard DeleteObject(region)
+    else:
+      window.isTransparent = false
 
-    try:
+      var bb = DWM_BLURBEHIND()
+      bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
+      bb.fEnable = FALSE
+
       if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
-        raise newException(WindyError, "Error enabling window transparency")
-    finally:
-      discard DeleteObject(region)
-  else:
-    var bb = DWM_BLURBEHIND()
-    bb.dwFlags = DWM_BB_ENABLE or DWM_BB_BLURREGION
-    bb.fEnable = FALSE
-
-    if DwmEnableBlurBehindWindow(window.hWnd, bb.addr) != S_OK:
-      raise newException(WindyError, "Error disabling window transparency")
+        raise newException(WindyError, "Error disabling window transparency")
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
   if window.fullscreen == fullscreen:
