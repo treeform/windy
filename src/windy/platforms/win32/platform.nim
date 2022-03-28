@@ -50,6 +50,7 @@ const
 type
   Window* = ref object
     onCloseRequest*: Callback
+    onFrame*: Callback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -795,6 +796,8 @@ proc wndProc(
   of WM_SIZE:
     if window.onResize != nil:
       window.onResize()
+    if window.onFrame != nil:
+      window.onFrame()
     return 0
   of WM_SETFOCUS, WM_KILLFOCUS:
     if window.onFocusChange != nil:
@@ -2237,6 +2240,11 @@ elif compileOption("threads"):
       state.onClose()
 
 proc pollEvents*() =
+  # Draw first (in case a message closes a window or similar)
+  for window in windows:
+    if window.onFrame != nil:
+      window.onFrame()
+
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
