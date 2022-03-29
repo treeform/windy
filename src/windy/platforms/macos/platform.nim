@@ -6,6 +6,7 @@ export http
 type
   Window* = ref object
     onCloseRequest*: Callback
+    onFrame*: Callback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -294,8 +295,12 @@ proc windowDidResize(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window != nil and window.onResize != nil:
+  if window == nil:
+    return
+  if window.onResize != nil:
     window.onResize()
+  if window.onFrame != nil:
+    window.onFrame()
 
 proc windowDidMove(
   self: ID,
@@ -358,8 +363,12 @@ proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
   callSuper(self, cmd)
 
   let window = windows.forNSWindow(self.NSview.window)
-  if window != nil and window.onResize != nil:
+  if window == nil:
+    return
+  if window.onResize != nil:
     window.onResize()
+  if window.onFrame != nil:
+    window.onFrame()
 
 proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
@@ -732,6 +741,11 @@ proc init() {.raises: [].} =
   initialized = true
 
 proc pollEvents*() =
+  # Draw first (in case a message closes a window or similar)
+  for window in windows:
+    if window.onFrame != nil:
+      window.onFrame()
+
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
@@ -758,6 +772,7 @@ proc swapBuffers*(window: Window) =
 
 proc close*(window: Window) =
   window.onCloseRequest = nil
+  window.onFrame = nil
   window.onMove = nil
   window.onResize = nil
   window.onFocusChange = nil
