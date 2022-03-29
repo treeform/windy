@@ -994,6 +994,7 @@ proc close*(window: Window) =
 proc newWindow*(
   title: string,
   size: IVec2,
+  style = DecoratedResizable,
   visible = true,
   vsync = true,
   openglMajorVersion = 4,
