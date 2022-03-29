@@ -1097,6 +1097,7 @@ proc newWindow*(
 
     windows.add(result)
 
+    result.style = style
     result.visible = visible
   except WindyError as e:
     destroy result
