@@ -7,7 +7,7 @@ loadExtensions()
 
 let bxy = newBoxy()
 
-proc display() =
+window.onFrame = proc() =
   bxy.beginFrame(window.size)
   bxy.drawRect(rect(vec2(0, 0), window.size.vec2), color(1, 1, 1, 1))
   bxy.drawRect(
@@ -22,5 +22,4 @@ window.onButtonPress = proc(button: Button) =
     window.fullscreen = window.buttonToggle[MouseLeft]
 
 while not window.closeRequested:
-  display()
   pollEvents()

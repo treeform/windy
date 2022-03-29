@@ -6,11 +6,10 @@ window.style = Decorated
 window.makeContextCurrent()
 loadExtensions()
 
-proc display() =
+window.onFrame = proc() =
   glClear(GL_COLOR_BUFFER_BIT)
   # Your OpenGL display code here
   window.swapBuffers()
 
 while not window.closeRequested:
-  display()
   pollEvents()

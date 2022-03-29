@@ -6,7 +6,7 @@ window.runeInputEnabled = true
 window.makeContextCurrent()
 loadExtensions()
 
-proc display() =
+window.onFrame = proc() =
   glClear(GL_COLOR_BUFFER_BIT)
   # Your OpenGL display code here
   window.swapBuffers()
@@ -23,7 +23,6 @@ window.onResize = proc() =
     echo "(minimized)"
   if window.maximized:
     echo "(maximized)"
-  display()
 
 window.onFocusChange = proc() =
   echo "onFocusChange ", window.focused
@@ -56,6 +55,4 @@ window.onRune = proc(rune: Rune) =
 while not window.closeRequested:
   if window.minimized or not window.visible:
     sleep(10)
-  else:
-    display()
   pollEvents()

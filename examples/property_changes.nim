@@ -5,14 +5,12 @@ let window = newWindow("Windy Properties", ivec2(1280, 800))
 window.makeContextCurrent()
 loadExtensions()
 
-proc display() =
+window.onFrame = proc() =
   glClear(GL_COLOR_BUFFER_BIT)
   # Your OpenGL display code here
   window.swapBuffers()
 
 while not window.closeRequested:
-  display()
-
   sleep(100)
 
   pollEvents()
