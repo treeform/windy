@@ -994,6 +994,7 @@ proc close*(window: Window) =
 proc newWindow*(
   title: string,
   size: IVec2,
+  style = DecoratedResizable,
   visible = true,
   vsync = true,
   openglMajorVersion = 4,
@@ -1096,6 +1097,7 @@ proc newWindow*(
 
     windows.add(result)
 
+    result.style = style
     result.visible = visible
   except WindyError as e:
     destroy result
