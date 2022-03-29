@@ -213,6 +213,7 @@ proc createWindow(windowClassName, title: string): HWND =
 
 proc destroy(window: Window) =
   window.onCloseRequest = nil
+  window.onFrame = nil
   window.onMove = nil
   window.onResize = nil
   window.onFocusChange = nil
