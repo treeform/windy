@@ -442,4 +442,6 @@ proc XSetErrorHandler*(handler: ErrorHandleProc)
 
 proc XLookupKeysym*(e: ptr XKeyEvent, i: cint): KeySym
 
+proc XNextEvent*(d: Display, event: ptr XEvent)
+
 {.pop.}
