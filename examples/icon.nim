@@ -1,6 +1,6 @@
 import pixie, windy
 
-when defined(windows):
+when defined(windows) or defined(linux):
   # Window icon API only currently supported on Windows
 
   let window = newWindow("Windy Cursor", ivec2(1280, 800))
