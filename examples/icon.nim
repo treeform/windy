@@ -1,9 +1,9 @@
 import pixie, windy
 
 when defined(windows) or defined(linux):
-  # Window icon API only currently supported on Windows
+  # Window icon API only currently supported on Windows and Linux
 
-  let window = newWindow("Windy Cursor", ivec2(1280, 800))
+  let window = newWindow("Windy Icon", ivec2(1280, 800))
   window.makeContextCurrent()
 
   let
