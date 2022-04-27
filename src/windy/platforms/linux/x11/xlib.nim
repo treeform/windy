@@ -237,6 +237,9 @@ proc XCreateWindow*(
 ): Window
 proc XDestroyWindow*(d: Display, window: Window)
 
+proc DefaultScreen*(d: Display): Window
+proc RootWindow*(d: Display, window: Window): Window
+
 proc XCreateSimpleWindow*(
   d: Display,
   root: Window;
@@ -265,6 +268,10 @@ proc XGetWindowProperty*(
 proc XChangeProperty*(
   d: Display, window: Window; property: Atom; kind: Atom;
   format: cint; mode: PropMode; data: cstring; len: cint
+)
+proc XChangeProperty*(
+  d: Display, window: Window; property: Atom; kind: Atom;
+  format: cint; mode: PropMode; data: pointer; len: cint
 )
 proc XDeleteProperty*(d: Display, window: Window; property: Atom)
 

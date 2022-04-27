@@ -417,6 +417,7 @@ var
   xaNetWMStateMaximizedHorz*: Atom
   xaNetWMStateMaximizedVert*: Atom
   xaWMState*: Atom
+  xaNetWMIcon*: Atom
   xaNetWMStateHiden*: Atom
   xaNetWMStateFullscreen*: Atom
   xaNetWMName*: Atom

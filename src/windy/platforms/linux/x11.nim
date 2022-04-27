@@ -1,10 +1,11 @@
 import ../../common, ../../internal, os, sequtils, sets, strformat, times,
-    unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib
+    unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, pixie
 type
   XWindow = x.Window
 
   Window* = ref object
     onCloseRequest*: Callback
+    onFrame*: Callback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -69,6 +70,7 @@ proc initConstants(display: Display) =
   xaNetWMStateFullscreen = display.XInternAtom("_NET_WM_STATE_FULLSCREEN", 0)
   xaNetWMName = display.XInternAtom("_NET_WM_NAME", 0)
   xaUTF8String = display.XInternAtom("UTF8_STRING", 0)
+  xaNetWMIcon = display.XInternAtom("_NET_WM_ICON", 0)
   xaNetWMIconName = display.XInternAtom("_NET_WM_ICON_NAME", 0)
   xaWMDeleteWindow = display.XInternAtom("WM_DELETE_WINDOW", 0)
   xaNetWMSyncRequest = display.XInternAtom("_NET_WM_SYNC_REQUEST", 0)
@@ -782,6 +784,8 @@ proc pollEvents(window: Window) =
         window.prevSize = ev.configure.size
         if window.onResize != nil:
           window.onResize()
+        if window.onFrame != nil:
+          window.onFrame()
 
     of xeMotion:
       window.mousePrevPos = window.mousePos
@@ -989,6 +993,10 @@ proc setClipboardString*(s: string) =
   display.XSetSelectionOwner(xaClipboard, clipboardWindow)
 
 proc pollEvents* =
+  for window in windows:
+    if window.onFrame != nil:
+      window.onFrame()
+
   let ws = windows
   windows = @[]
 
@@ -1001,7 +1009,7 @@ proc pollEvents* =
   if clipboardWindow != 0:
     discard processClipboardEvents()
   for window in windows:
-    pollEvents window
+    pollEvents(window)
 
 proc closeIme*(window: Window) =
   discard
@@ -1011,3 +1019,20 @@ proc imeCursorIndex*(window: Window): int =
 
 proc imeCompositionString*(window: Window): string =
   discard
+
+proc `icon=`*(window: Window, icon: Image) =
+  var data: seq[uint64]
+  data.add icon.width.uint64
+  data.add icon.height.uint64
+  for c in icon.data:
+    data.add (cast[uint32](c)).uint64
+
+  display.XChangeProperty(
+    window.handle,
+    xaNetWMIcon,
+    xaCardinal,
+    32,
+    pmReplace,
+    cast[cstring](data[0].addr),
+    (data.len).cint
+  )
