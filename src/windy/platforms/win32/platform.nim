@@ -997,8 +997,7 @@ proc newWindow*(
   style = DecoratedResizable,
   visible = true,
   vsync = true,
-  openglMajorVersion = 4,
-  openglMinorVersion = 1,
+  openglVersion = OpenGL4Dot1,
   msaa = msaaDisabled,
   depthBits = 24,
   stencilBits = 8
@@ -1068,9 +1067,9 @@ proc newWindow*(
 
     let contextAttribs = [
       WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
-      openglMajorVersion.int32,
+      openglVersion.major.int32,
       WGL_CONTEXT_MINOR_VERSION_ARB,
-      openglMinorVersion.int32,
+      openglVersion.minor.int32,
       WGL_CONTEXT_PROFILE_MASK_ARB,
       WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
       WGL_CONTEXT_FLAGS_ARB,

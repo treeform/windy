@@ -3,6 +3,19 @@ import pixie, std/strutils, std/unicode
 type
   WindyError* = object of ValueError
 
+  OpenGLVersion* = enum
+    OpenGL3Dot0
+    OpenGL3Dot1
+    OpenGL3Dot2
+    OpenGL3Dot3
+    OpenGL4Dot0
+    OpenGL4Dot1
+    OpenGL4Dot2
+    OpenGL4Dot3
+    OpenGL4Dot4
+    OpenGL4Dot5
+    OpenGL4Dot6
+
   Screen* = object
     left*, right*, top*, bottom*: int
     primary*: bool

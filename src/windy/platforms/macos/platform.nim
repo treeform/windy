@@ -799,8 +799,7 @@ proc newWindow*(
   size: IVec2,
   visible = true,
   vsync = true,
-  openglMajorVersion = 4,
-  openglMinorVersion = 1,
+  openglVersion = OpenGL4Dot1,
   msaa = msaaDisabled,
   depthBits = 24,
   stencilBits = 8
@@ -808,6 +807,12 @@ proc newWindow*(
   result = Window()
 
   init()
+
+  let openGlProfile: uint32 = case openglVersion:
+    of OpenGL4Dot1:
+      NSOpenGLProfileVersion4_1Core
+    else:
+      raise newException(WindyError, "Unsupported OpenGL version")
 
   autoreleasepool:
     result.inner = WindyWindow.alloc().NSWindow.initWithContentRect(
@@ -828,15 +833,7 @@ proc newWindow*(
         NSOpenGLPFAAlphaSize, 8,
         NSOpenGLPFADepthSize, depthBits.uint32,
         NSOpenGLPFAStencilSize, stencilBits.uint32,
-        NSOpenGLPFAOpenGLProfile, (
-          case openglMajorVersion:
-          of 4:
-            NSOpenGLProfileVersion4_1Core
-          of 3:
-            NSOpenGLProfileVersion3_2Core
-          else:
-            NSOpenGLProfileVersionLegacy
-        ),
+        NSOpenGLPFAOpenGLProfile, openGlProfile,
         0
       ]
       pixelFormat = NSOpenGLPixelFormat.alloc().initWithAttributes(
