@@ -5,8 +5,7 @@ import opengl, os, windy
 let window = newWindow(
   "Windy",
   ivec2(1280, 800),
-  openglMajorVersion = 3,
-  openglMinorVersion = 3
+  openglVersion = OpenGL3Dot3
 )
 
 window.makeContextCurrent()

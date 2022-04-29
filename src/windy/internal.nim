@@ -33,6 +33,35 @@ var
   platformDoubleClickInterval*: float64
   windyRand* = initRand(2022)
 
+proc major*(openglVersion: OpenGLVersion): int =
+  case openglVersion:
+  of OpenGL3Dot0: 3
+  of OpenGL3Dot1: 3
+  of OpenGL3Dot2: 3
+  of OpenGL3Dot3: 3
+  of OpenGL4Dot0: 4
+  of OpenGL4Dot1: 4
+  of OpenGL4Dot2: 4
+  of OpenGL4Dot3: 4
+  of OpenGL4Dot4: 4
+  of OpenGL4Dot5: 4
+  of OpenGL4Dot6: 4
+
+
+proc minor*(openglVersion: OpenGLVersion): int =
+  case openglVersion:
+  of OpenGL3Dot0: 0
+  of OpenGL3Dot1: 1
+  of OpenGL3Dot2: 2
+  of OpenGL3Dot3: 3
+  of OpenGL4Dot0: 0
+  of OpenGL4Dot1: 1
+  of OpenGL4Dot2: 2
+  of OpenGL4Dot3: 3
+  of OpenGL4Dot4: 4
+  of OpenGL4Dot5: 5
+  of OpenGL4Dot6: 6
+
 template handleButtonPressTemplate*() =
   window.state.buttonDown.incl button
   window.state.perFrame.buttonPressed.incl button
