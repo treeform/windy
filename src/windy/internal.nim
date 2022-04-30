@@ -33,6 +33,9 @@ var
   platformDoubleClickInterval*: float64
   windyRand* = initRand(2022)
 
+proc next*(rand: Rand): int =
+  windyRand.rand(int.high)
+
 proc major*(openglVersion: OpenGLVersion): int =
   case openglVersion:
   of OpenGL3Dot0: 3
@@ -46,7 +49,6 @@ proc major*(openglVersion: OpenGLVersion): int =
   of OpenGL4Dot4: 4
   of OpenGL4Dot5: 4
   of OpenGL4Dot6: 4
-
 
 proc minor*(openglVersion: OpenGLVersion): int =
   case openglVersion:

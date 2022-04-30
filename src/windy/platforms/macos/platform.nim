@@ -866,7 +866,7 @@ proc newWindow*(
     result.pos = ivec2(0, 0)
     result.visible = visible
 
-  pollEvents()
+  pollEvents() # This can cause lots of issues, workaround?
 
 proc title*(window: Window): string =
   window.state.title
