@@ -1,5 +1,5 @@
 import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
-    pixie/fileformats/bmp, pixie/images, std/tables, std/random,
+    pixie/fileformats/bmp, pixie/images, std/tables,
     std/strutils, std/times, std/unicode, urlly, utils, vmath, windefs, zippy
 
 const
@@ -1434,7 +1434,7 @@ elif compileOption("threads"):
       state.deadline = epochTime() + 60 # Default deadline
 
     while true:
-      result = windyRand.rand(int.high).HttpRequestHandle
+      result = windyRand.next().HttpRequestHandle
       if result notin httpRequests and result.WebSocketHandle notin webSockets:
         httpRequests[result] = state
         break
@@ -2054,7 +2054,7 @@ elif compileOption("threads"):
 
     var handle: WebSocketHandle
     while true:
-      handle = windyRand.rand(int.high).WebSocketHandle
+      handle = windyRand.next().WebSocketHandle
       if handle.HttpRequestHandle notin httpRequests and handle notin webSockets:
         webSockets[handle] = state
         break
