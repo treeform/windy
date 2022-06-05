@@ -8,6 +8,8 @@ Windy is a windowing library for Nim that uses OS native APIs to manage windows,
 
 ![Github Actions](https://github.com/treeform/windy/workflows/Github%20Actions/badge.svg)
 
+[API reference](https://nimdocs.com/treeform/windy)
+
 Windy will work great for 2D and 3D OpenGL games as well as GUI apps using OpenGL. Using this library should feel similar to GLFW or SDL.
 
 Features:
@@ -24,10 +26,6 @@ Features:
 * System clipboard (copy and paste) support
 * Show a system tray icon and menu (Windows only)
 * Non-blocking HTTP requests and WebSockets
-
-### Documentation
-
-API reference: https://nimdocs.com/treeform/windy/windy.html
 
 ## Basic Example
 
