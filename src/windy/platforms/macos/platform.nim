@@ -965,7 +965,7 @@ proc getClipboardImage*(): Image =
     copyMem(copiedData[0].addr, pngData.bytes, pngData.length)
 
     try:
-      result = decodePng(copiedData).newImage
+      result = newImage(decodePng(copiedData))
     except:
       return
 
