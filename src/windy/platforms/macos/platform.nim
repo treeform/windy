@@ -960,7 +960,7 @@ proc getClipboardImage*(): Image =
       return
 
     try:
-      result = newImage(decodePng(pngData.bytes, pngData.length.int))
+      result = decodePng(pngData.bytes, pngData.length.int).convertToImage()
     except:
       return
 
