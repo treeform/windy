@@ -959,13 +959,8 @@ proc getClipboardImage*(): Image =
     if pngData.int == 0:
       return
 
-    # Pixie needs a decodePng for ptr + len, copy into string for now
-
-    var copiedData = newString(pngData.length)
-    copyMem(copiedData[0].addr, pngData.bytes, pngData.length)
-
     try:
-      result = newImage(decodePng(copiedData))
+      result = decodePng(pngData.bytes, pngData.length.int).convertToImage()
     except:
       return
 
