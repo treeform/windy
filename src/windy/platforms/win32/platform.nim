@@ -794,7 +794,7 @@ proc wndProc(
     if window.onMove != nil:
       window.onMove()
     return 0
-  of WM_SIZE:
+  of WM_SIZE, WM_SIZING:
     if window.onResize != nil:
       window.onResize()
     if window.onFrame != nil:
