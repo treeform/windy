@@ -747,7 +747,7 @@ proc pollEvents(window: Window) =
 
       # press currently pressed keys
       for k in queryKeyboardState().mapit(
-          keysymToButton display.XKeycodeToKeysym(it.cuchar, 0
+          keysymToButton display.XKeycodeToKeysym(it.char, 0
         )):
         if k == ButtonUnknown:
           continue
