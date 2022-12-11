@@ -93,7 +93,7 @@ proc init =
 
   XSetErrorHandler handleXError
 
-  display = XOpenDisplay(getEnv("DISPLAY"))
+  display = XOpenDisplay(cstring(getEnv("DISPLAY")))
   if display == nil:
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
 
