@@ -93,7 +93,7 @@ proc init =
 
   XSetErrorHandler handleXError
 
-  display = XOpenDisplay(getEnv("DISPLAY"))
+  display = XOpenDisplay(cstring(getEnv("DISPLAY")))
   if display == nil:
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
 
@@ -287,7 +287,7 @@ proc keysymToButton(sym: KeySym): Button =
   of xk_b: KeyB
   of xk_c: KeyC
   of xk_d: KeyD
-  of xk_e: KeyR
+  of xk_e: KeyE
   of xk_f: KeyF
   of xk_g: KeyG
   of xk_h: KeyH
@@ -747,7 +747,7 @@ proc pollEvents(window: Window) =
 
       # press currently pressed keys
       for k in queryKeyboardState().mapit(
-          keysymToButton display.XKeycodeToKeysym(it.cuchar, 0
+          keysymToButton display.XKeycodeToKeysym(it.char, 0
         )):
         if k == ButtonUnknown:
           continue
