@@ -1,0 +1,13 @@
+GlxContext	windy/platforms/linux/x11/glx.html#GlxContext	glx: GlxContext	
+GlxRgba	windy/platforms/linux/x11/glx.html#GlxRgba	glx: GlxRgba	
+GlxDoublebuffer	windy/platforms/linux/x11/glx.html#GlxDoublebuffer	glx: GlxDoublebuffer	
+GlxDepthSize	windy/platforms/linux/x11/glx.html#GlxDepthSize	glx: GlxDepthSize	
+glXChooseVisual	windy/platforms/linux/x11/glx.html#glXChooseVisual,Display,cint,ptr.int32	glx: glXChooseVisual(d: Display; screen: cint; attribList: ptr int32): ptr XVisualInfo	
+glXCreateContext	windy/platforms/linux/x11/glx.html#glXCreateContext,Display,ptr.XVisualInfo,GlxContext,cint	glx: glXCreateContext(d: Display; vis: ptr XVisualInfo; shareList: GlxContext;\n                 direct: cint): GlxContext	
+glXDestroyContext	windy/platforms/linux/x11/glx.html#glXDestroyContext,Display,GlxContext	glx: glXDestroyContext(d: Display; this: GlxContext)	
+glXMakeCurrent	windy/platforms/linux/x11/glx.html#glXMakeCurrent,Display,Drawable,GlxContext	glx: glXMakeCurrent(d: Display; drawable: Drawable; ctx: GlxContext)	
+glXGetCurrentContext	windy/platforms/linux/x11/glx.html#glXGetCurrentContext	glx: glXGetCurrentContext(): GlxContext	
+glXSwapBuffers	windy/platforms/linux/x11/glx.html#glXSwapBuffers,Display,Drawable	glx: glXSwapBuffers(d: Display; drawable: Drawable)	
+glXSwapIntervalEXT	windy/platforms/linux/x11/glx.html#glXSwapIntervalEXT,Display,Drawable,cint	glx: glXSwapIntervalEXT(d: Display; drawable: Drawable; interval: cint)	
+glXSwapIntervalMESA	windy/platforms/linux/x11/glx.html#glXSwapIntervalMESA,cint	glx: glXSwapIntervalMESA(interval: cint)	
+glXSwapIntervalSGI	windy/platforms/linux/x11/glx.html#glXSwapIntervalSGI,cint	glx: glXSwapIntervalSGI(interval: cint)	

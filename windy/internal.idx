@@ -1,0 +1,13 @@
+CRLF	windy/internal.html#CRLF	internal: CRLF	
+WindowState	windy/internal.html#WindowState	internal: WindowState	
+PerFrame	windy/internal.html#PerFrame	internal: PerFrame	
+initialized	windy/internal.html#initialized	internal: initialized	
+platformDoubleClickInterval	windy/internal.html#platformDoubleClickInterval	internal: platformDoubleClickInterval	
+windyRand	windy/internal.html#windyRand	internal: windyRand	
+next	windy/internal.html#next,Rand	internal: next(rand: Rand): int	
+major	windy/internal.html#major,OpenGLVersion	internal: major(openglVersion: OpenGLVersion): int	
+minor	windy/internal.html#minor,OpenGLVersion	internal: minor(openglVersion: OpenGLVersion): int	
+handleButtonPressTemplate	windy/internal.html#handleButtonPressTemplate.t	internal: handleButtonPressTemplate()	
+handleButtonReleaseTemplate	windy/internal.html#handleButtonReleaseTemplate.t	internal: handleButtonReleaseTemplate()	
+handleRuneTemplate	windy/internal.html#handleRuneTemplate.t	internal: handleRuneTemplate()	
+addDefaultHeaders	windy/internal.html#addDefaultHeaders,seq[HttpHeader]	internal: addDefaultHeaders(headers: var seq[HttpHeader])	

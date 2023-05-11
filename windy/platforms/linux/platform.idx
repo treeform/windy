@@ -1,0 +1,49 @@
+Window	windy/platforms/linux/platform.html#Window	platform: Window	
+quitRequested	windy/platforms/linux/platform.html#quitRequested	platform: quitRequested	
+onQuitRequest	windy/platforms/linux/platform.html#onQuitRequest	platform: onQuitRequest	
+multiClickInterval	windy/platforms/linux/platform.html#multiClickInterval	platform: multiClickInterval	
+multiClickRadius	windy/platforms/linux/platform.html#multiClickRadius	platform: multiClickRadius	
+closed	windy/platforms/linux/platform.html#closed,Window	platform: closed(window: Window): bool	
+close	windy/platforms/linux/platform.html#close,Window	platform: close(window: Window)	
+makeContextCurrent	windy/platforms/linux/platform.html#makeContextCurrent,Window	platform: makeContextCurrent(window: Window)	
+swapBuffers	windy/platforms/linux/platform.html#swapBuffers,Window	platform: swapBuffers(window: Window)	
+visible	windy/platforms/linux/platform.html#visible,Window	platform: visible(window: Window): bool	
+visible=	windy/platforms/linux/platform.html#visible=,Window,bool	platform: visible=(window: Window; v: bool)	
+pos	windy/platforms/linux/platform.html#pos,Window	platform: pos(window: Window): IVec2	
+pos=	windy/platforms/linux/platform.html#pos=,Window,IVec2	platform: pos=(window: Window; v: IVec2)	
+size	windy/platforms/linux/platform.html#size,Window	platform: size(window: Window): IVec2	
+framebufferSize	windy/platforms/linux/platform.html#framebufferSize,Window	platform: framebufferSize(window: Window): IVec2	
+size=	windy/platforms/linux/platform.html#size=,Window,IVec2	platform: size=(window: Window; v: IVec2)	
+maximized	windy/platforms/linux/platform.html#maximized,Window	platform: maximized(window: Window): bool	
+maximized=	windy/platforms/linux/platform.html#maximized=,Window,bool	platform: maximized=(window: Window; v: bool)	
+minimized	windy/platforms/linux/platform.html#minimized,Window	platform: minimized(window: Window): bool	
+minimized=	windy/platforms/linux/platform.html#minimized=,Window,bool	platform: minimized=(window: Window; v: bool)	
+focused	windy/platforms/linux/platform.html#focused,Window	platform: focused(window: Window): bool	
+focus	windy/platforms/linux/platform.html#focus,Window	platform: focus(window: Window)	
+fullscreen	windy/platforms/linux/platform.html#fullscreen,Window	platform: fullscreen(window: Window): bool	
+fullscreen=	windy/platforms/linux/platform.html#fullscreen=,Window,bool	platform: fullscreen=(window: Window; v: bool)	
+style	windy/platforms/linux/platform.html#style,Window	platform: style(window: Window): WindowStyle	
+style=	windy/platforms/linux/platform.html#style=,Window,WindowStyle	platform: style=(window: Window; v: WindowStyle)	
+title	windy/platforms/linux/platform.html#title,Window	platform: title(window: Window): string	
+title=	windy/platforms/linux/platform.html#title=,Window,string	platform: title=(window: Window; v: string)	
+contentScale	windy/platforms/linux/platform.html#contentScale,Window	platform: contentScale(window: Window): float32	
+runeInputEnabled	windy/platforms/linux/platform.html#runeInputEnabled,Window	platform: runeInputEnabled(window: Window): bool	
+runeInputEnabled=	windy/platforms/linux/platform.html#runeInputEnabled=,Window,bool	platform: runeInputEnabled=(window: Window; v: bool)	
+newWindow	windy/platforms/linux/platform.html#newWindow,string,IVec2,int,int,int,int	platform: newWindow(title: string; size: IVec2; visible = true; vsync = true;\n          openglMajorVersion = 4; openglMinorVersion = 1; msaa = msaaDisabled;\n          depthBits = 24; stencilBits = 8; transparent = false): Window	
+mousePos	windy/platforms/linux/platform.html#mousePos,Window	platform: mousePos(window: Window): IVec2	
+mousePrevPos	windy/platforms/linux/platform.html#mousePrevPos,Window	platform: mousePrevPos(window: Window): IVec2	
+mouseDelta	windy/platforms/linux/platform.html#mouseDelta,Window	platform: mouseDelta(window: Window): IVec2	
+scrollDelta	windy/platforms/linux/platform.html#scrollDelta,Window	platform: scrollDelta(window: Window): Vec2	
+buttonDown	windy/platforms/linux/platform.html#buttonDown,Window	platform: buttonDown(window: Window): ButtonView	
+buttonPressed	windy/platforms/linux/platform.html#buttonPressed,Window	platform: buttonPressed(window: Window): ButtonView	
+buttonReleased	windy/platforms/linux/platform.html#buttonReleased,Window	platform: buttonReleased(window: Window): ButtonView	
+buttonToggle	windy/platforms/linux/platform.html#buttonToggle,Window	platform: buttonToggle(window: Window): ButtonView	
+closeRequested	windy/platforms/linux/platform.html#closeRequested,Window	platform: closeRequested(window: Window): bool	
+closeRequested=	windy/platforms/linux/platform.html#closeRequested=,Window,bool	platform: closeRequested=(window: Window; v: bool)	
+getClipboardString	windy/platforms/linux/platform.html#getClipboardString	platform: getClipboardString(): string	
+setClipboardString	windy/platforms/linux/platform.html#setClipboardString,string	platform: setClipboardString(s: string)	
+pollEvents	windy/platforms/linux/platform.html#pollEvents	platform: pollEvents()	
+closeIme	windy/platforms/linux/platform.html#closeIme,Window	platform: closeIme(window: Window)	
+imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	platform: imeCursorIndex(window: Window): int	
+imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	platform: imeCompositionString(window: Window): string	
+icon=	windy/platforms/linux/platform.html#icon=,Window,Image	platform: icon=(window: Window; icon: Image)	

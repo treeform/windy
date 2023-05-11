@@ -1,0 +1,85 @@
+libX11	windy/platforms/linux/x11/xlib.html#libX11	xlib: libX11	
+libXExt	windy/platforms/linux/x11/xlib.html#libXExt	xlib: libXExt	
+Display	windy/platforms/linux/x11/xlib.html#Display	xlib: Display	
+GC	windy/platforms/linux/x11/xlib.html#GC	xlib: GC	
+XIM	windy/platforms/linux/x11/xlib.html#XIM	xlib: XIM	
+XIC	windy/platforms/linux/x11/xlib.html#XIC	xlib: XIC	
+XExtData	windy/platforms/linux/x11/xlib.html#XExtData	xlib: XExtData	
+Visual	windy/platforms/linux/x11/xlib.html#Visual	xlib: Visual	
+XVisualInfo	windy/platforms/linux/x11/xlib.html#XVisualInfo	xlib: XVisualInfo	
+Depth	windy/platforms/linux/x11/xlib.html#Depth	xlib: Depth	
+Screen	windy/platforms/linux/x11/xlib.html#Screen	xlib: Screen	
+XSetWindowAttributes	windy/platforms/linux/x11/xlib.html#XSetWindowAttributes	xlib: XSetWindowAttributes	
+XWindowAttributes	windy/platforms/linux/x11/xlib.html#XWindowAttributes	xlib: XWindowAttributes	
+XGCValues	windy/platforms/linux/x11/xlib.html#XGCValues	xlib: XGCValues	
+XSizeHints	windy/platforms/linux/x11/xlib.html#XSizeHints	xlib: XSizeHints	
+XSyncValue	windy/platforms/linux/x11/xlib.html#XSyncValue	xlib: XSyncValue	
+XIMPreeditArea	windy/platforms/linux/x11/xlib.html#XIMPreeditArea	xlib: XIMPreeditArea	
+XIMPreeditCallbacks	windy/platforms/linux/x11/xlib.html#XIMPreeditCallbacks	xlib: XIMPreeditCallbacks	
+XIMPreeditPosition	windy/platforms/linux/x11/xlib.html#XIMPreeditPosition	xlib: XIMPreeditPosition	
+XIMPreeditNothing	windy/platforms/linux/x11/xlib.html#XIMPreeditNothing	xlib: XIMPreeditNothing	
+XIMPreeditNone	windy/platforms/linux/x11/xlib.html#XIMPreeditNone	xlib: XIMPreeditNone	
+XIMStatusArea	windy/platforms/linux/x11/xlib.html#XIMStatusArea	xlib: XIMStatusArea	
+XIMStatusCallbacks	windy/platforms/linux/x11/xlib.html#XIMStatusCallbacks	xlib: XIMStatusCallbacks	
+XIMStatusNothing	windy/platforms/linux/x11/xlib.html#XIMStatusNothing	xlib: XIMStatusNothing	
+XIMStatusNone	windy/platforms/linux/x11/xlib.html#XIMStatusNone	xlib: XIMStatusNone	
+XBufferOverflow	windy/platforms/linux/x11/xlib.html#XBufferOverflow	xlib: XBufferOverflow	
+XLookupNone	windy/platforms/linux/x11/xlib.html#XLookupNone	xlib: XLookupNone	
+XLookupChars	windy/platforms/linux/x11/xlib.html#XLookupChars	xlib: XLookupChars	
+XLookupKeySymVal	windy/platforms/linux/x11/xlib.html#XLookupKeySymVal	xlib: XLookupKeySymVal	
+XLookupBoth	windy/platforms/linux/x11/xlib.html#XLookupBoth	xlib: XLookupBoth	
+screen	windy/platforms/linux/x11/xlib.html#screen,Display,cint	xlib: screen(d: Display; id: cint): ptr Screen	
+defaultScreen	windy/platforms/linux/x11/xlib.html#defaultScreen,Display	xlib: defaultScreen(d: Display): cint	
+defaultRootWindow	windy/platforms/linux/x11/xlib.html#defaultRootWindow,Display	xlib: defaultRootWindow(d: Display): Window	
+XOpenDisplay	windy/platforms/linux/x11/xlib.html#XOpenDisplay,cstring	xlib: XOpenDisplay(displayName: cstring): Display	
+XSync	windy/platforms/linux/x11/xlib.html#XSync,Display	xlib: XSync(d: Display; disc = false)	
+XFlush	windy/platforms/linux/x11/xlib.html#XFlush,Display	xlib: XFlush(d: Display)	
+XFree	windy/platforms/linux/x11/xlib.html#XFree,pointer	xlib: XFree(x: pointer)	
+XInternAtom	windy/platforms/linux/x11/xlib.html#XInternAtom,Display,cstring,cint	xlib: XInternAtom(d: Display; name: cstring; onlyIfExist: cint): Atom	
+XCreateColormap	windy/platforms/linux/x11/xlib.html#XCreateColormap,Display,Window,ptr.Visual,cint	xlib: XCreateColormap(d: Display; root: Window; visual: ptr Visual; flags: cint): Colormap	
+XCreateWindow	windy/platforms/linux/x11/xlib.html#XCreateWindow,Display,Window,cint,cint,cuint,cuint,cuint,cuint,cuint,ptr.Visual,culong,ptr.XSetWindowAttributes	xlib: XCreateWindow(d: Display; root: Window; x, y: cint; w, h: cuint;\n              borderWidth: cuint; depth: cuint; class: cuint;\n              visual: ptr Visual; valueMask: culong;\n              attributes: ptr XSetWindowAttributes): Window	
+XDestroyWindow	windy/platforms/linux/x11/xlib.html#XDestroyWindow,Display,Window	xlib: XDestroyWindow(d: Display; window: Window)	
+DefaultScreen	windy/platforms/linux/x11/xlib.html#DefaultScreen,Display_2	xlib: DefaultScreen(d: Display): Window	
+RootWindow	windy/platforms/linux/x11/xlib.html#RootWindow,Display,Window	xlib: RootWindow(d: Display; window: Window): Window	
+XCreateSimpleWindow	windy/platforms/linux/x11/xlib.html#XCreateSimpleWindow,Display,Window,cint,cint,cuint,cuint,cuint,culong,culong	xlib: XCreateSimpleWindow(d: Display; root: Window; x, y: cint; w, h: cuint;\n                    borderW: cuint; border, background: culong): Window	
+XMapWindow	windy/platforms/linux/x11/xlib.html#XMapWindow,Display,Window	xlib: XMapWindow(d: Display; window: Window)	
+XUnmapWindow	windy/platforms/linux/x11/xlib.html#XUnmapWindow,Display,Window	xlib: XUnmapWindow(d: Display; window: Window)	
+XRaiseWindow	windy/platforms/linux/x11/xlib.html#XRaiseWindow,Display,Window	xlib: XRaiseWindow(d: Display; window: Window)	
+XLowerWindow	windy/platforms/linux/x11/xlib.html#XLowerWindow,Display,Window	xlib: XLowerWindow(d: Display; window: Window)	
+XIconifyWindow	windy/platforms/linux/x11/xlib.html#XIconifyWindow,Display,Window,cint	xlib: XIconifyWindow(d: Display; window: Window; screen: cint)	
+XSetWMProtocols	windy/platforms/linux/x11/xlib.html#XSetWMProtocols,Display,Window,ptr.Atom,cint	xlib: XSetWMProtocols(d: Display; window: Window; wmProtocols: ptr Atom; len: cint)	
+XSelectInput	windy/platforms/linux/x11/xlib.html#XSelectInput,Display,Window,clong	xlib: XSelectInput(d: Display; window: Window; inputs: clong)	
+XGetWindowProperty	windy/platforms/linux/x11/xlib.html#XGetWindowProperty,Display,Window,Atom,clong,clong,bool,Atom,ptr.Atom,ptr.cint,ptr.culong,ptr.culong,ptr.cstring	xlib: XGetWindowProperty(d: Display; window: Window; property: Atom; offset: clong;\n                   len: clong; delete: bool; requiredKind: Atom;\n                   kindReturn: ptr Atom; formatReturn: ptr cint;\n                   lenReturn: ptr culong; bytesAfterReturn: ptr culong;\n                   dataReturn: ptr cstring)	
+XChangeProperty	windy/platforms/linux/x11/xlib.html#XChangeProperty,Display,Window,Atom,Atom,cint,PropMode,cstring,cint	xlib: XChangeProperty(d: Display; window: Window; property: Atom; kind: Atom;\n                format: cint; mode: PropMode; data: cstring; len: cint)	
+XChangeProperty	windy/platforms/linux/x11/xlib.html#XChangeProperty,Display,Window,Atom,Atom,cint,PropMode,pointer,cint	xlib: XChangeProperty(d: Display; window: Window; property: Atom; kind: Atom;\n                format: cint; mode: PropMode; data: pointer; len: cint)	
+XDeleteProperty	windy/platforms/linux/x11/xlib.html#XDeleteProperty,Display,Window,Atom	xlib: XDeleteProperty(d: Display; window: Window; property: Atom)	
+Xutf8SetWMProperties	windy/platforms/linux/x11/xlib.html#Xutf8SetWMProperties,Display,Window,cstring,cstring,ptr.cstring,cint,pointer,pointer,pointer	xlib: Xutf8SetWMProperties(d: Display; window: Window; name: cstring;\n                     iconName: cstring; argv: ptr cstring; argc: cint;\n                     normalHints: pointer; wmHints: pointer; classHints: pointer)	
+XTranslateCoordinates	windy/platforms/linux/x11/xlib.html#XTranslateCoordinates,Display,Window,Window,int32,int32,ptr.int32,ptr.int32,ptr.Window	xlib: XTranslateCoordinates(d: Display; window: Window; root: Window; x, y: int32;\n                      xReturn, yReturn: ptr int32; childReturn: ptr Window)	
+XGetWindowAttributes	windy/platforms/linux/x11/xlib.html#XGetWindowAttributes,Display,Window,ptr.XWindowAttributes	xlib: XGetWindowAttributes(d: Display; window: Window; res: ptr XWindowAttributes)	
+XOpenIM	windy/platforms/linux/x11/xlib.html#XOpenIM,Display,pointer,cstring,cstring	xlib: XOpenIM(d: Display; db: pointer = nil; resName: cstring = nil;\n        resClass: cstring = nil): XIM	
+XCloseIM	windy/platforms/linux/x11/xlib.html#XCloseIM,XIM	xlib: XCloseIM(im: XIM)	
+XCreateIC	windy/platforms/linux/x11/xlib.html#XCreateIC,XIM	xlib: XCreateIC(im: XIM): XIC	
+XDestroyIC	windy/platforms/linux/x11/xlib.html#XDestroyIC,XIC	xlib: XDestroyIC(ic: XIC)	
+XSetICFocus	windy/platforms/linux/x11/xlib.html#XSetICFocus,XIC	xlib: XSetICFocus(ic: XIC)	
+XUnsetICFocus	windy/platforms/linux/x11/xlib.html#XUnsetICFocus,XIC	xlib: XUnsetICFocus(ic: XIC)	
+XCreateGC	windy/platforms/linux/x11/xlib.html#XCreateGC,Display,Drawable,culong,ptr.XGCValues	xlib: XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC	
+XFreeGC	windy/platforms/linux/x11/xlib.html#XFreeGC,Display,GC	xlib: XFreeGC(d: Display; gc: GC)	
+XMatchVisualInfo	windy/platforms/linux/x11/xlib.html#XMatchVisualInfo,Display,cint,cint,cint,ptr.XVisualInfo	xlib: XMatchVisualInfo(d: Display; screen: cint; depth: cint; flags: cint;\n                 result: ptr XVisualInfo)	
+XSetTransientForHint	windy/platforms/linux/x11/xlib.html#XSetTransientForHint,Display,Window,Window	xlib: XSetTransientForHint(d: Display; window: Window; root: Window)	
+XSetNormalHints	windy/platforms/linux/x11/xlib.html#XSetNormalHints,Display,Window,ptr.XSizeHints	xlib: XSetNormalHints(d: Display; window: Window; hints: ptr XSizeHints)	
+XGetNormalHints	windy/platforms/linux/x11/xlib.html#XGetNormalHints,Display,Window,ptr.XSizeHints	xlib: XGetNormalHints(d: Display; window: Window; res: ptr XSizeHints)	
+XGetGeometry	windy/platforms/linux/x11/xlib.html#XGetGeometry,Display,Drawable,ptr.Window,ptr.int32,ptr.int32,ptr.uint32,ptr.uint32,ptr.uint32,ptr.uint32	xlib: XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;\n             w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)	
+XResizeWindow	windy/platforms/linux/x11/xlib.html#XResizeWindow,Display,Window,uint32,uint32	xlib: XResizeWindow(d: Display; window: Window; w, h: uint32)	
+XMoveWindow	windy/platforms/linux/x11/xlib.html#XMoveWindow,Display,Window,int32,int32	xlib: XMoveWindow(d: Display; window: Window; x, y: int32)	
+XGetInputFocus	windy/platforms/linux/x11/xlib.html#XGetInputFocus,Display,ptr.Window,ptr.RevertTo	xlib: XGetInputFocus(d: Display; window: ptr Window; revertTo: ptr RevertTo)	
+XSetInputFocus	windy/platforms/linux/x11/xlib.html#XSetInputFocus,Display,Window,RevertTo,int32	xlib: XSetInputFocus(d: Display; window: Window; revertTo: RevertTo;\n               time: int32 = CurrentTime)	
+XQueryKeymap	windy/platforms/linux/x11/xlib.html#XQueryKeymap,Display,array[,char]	xlib: XQueryKeymap(d: Display; res: var array[32, char])	
+XKeycodeToKeysym	windy/platforms/linux/x11/xlib.html#XKeycodeToKeysym,Display,KeyCode,cint	xlib: XKeycodeToKeysym(d: Display; code: KeyCode; i: cint): KeySym	
+XGetSelectionOwner	windy/platforms/linux/x11/xlib.html#XGetSelectionOwner,Display,Atom	xlib: XGetSelectionOwner(d: Display; kind: Atom): Window	
+XSetSelectionOwner	windy/platforms/linux/x11/xlib.html#XSetSelectionOwner,Display,Atom,Window,int32	xlib: XSetSelectionOwner(d: Display; kind: Atom; window: Window;\n                   time: int32 = CurrentTime)	
+XConvertSelection	windy/platforms/linux/x11/xlib.html#XConvertSelection,Display,Atom,Atom,Atom,Window,int32	xlib: XConvertSelection(d: Display; kind: Atom; to: Atom; resultProperty: Atom;\n                  window: Window; time: int32 = CurrentTime)	
+XSyncQueryExtension	windy/platforms/linux/x11/xlib.html#XSyncQueryExtension,Display,ptr.cint,ptr.cint	xlib: XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool	
+XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,ptr.cint,ptr.cint	xlib: XSyncInitialize(d: Display; verMaj, verMin: ptr cint)	
+XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	xlib: XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter	
+XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	xlib: XSyncDestroyCounter(d: Display; c: XSyncCounter)	
+XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	xlib: XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)	
