@@ -869,7 +869,7 @@ proc wndProc(
           MouseButton5
       else:
         MouseMiddle
-    if uMsg in {WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
+    if uMsg in {WM_LBUTTONDOWN.UINT, WM_RBUTTONDOWN, WM_MBUTTONDOWN}:
       window.handleButtonPress(button)
       if button == MouseLeft:
         discard SetCapture(window.hWnd)
