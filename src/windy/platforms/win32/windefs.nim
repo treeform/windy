@@ -789,6 +789,8 @@ proc SendMessageW*(
 
 proc GetDoubleClickTime*(): UINT {.dynlib: "User32".}
 
+proc MessageBoxW*(hWnd: HWND, lpText: LPCSTR, lpCaption: LPCSTR, uType: UINT): UINT {.dynlib: "User32".}
+
 proc OpenClipboard*(
   hWndNewOwner: HWND
 ): BOOL {.dynlib: "User32".}

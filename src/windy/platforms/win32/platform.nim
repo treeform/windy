@@ -1150,6 +1150,15 @@ proc buttonReleased*(window: Window): ButtonView =
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
+proc alertDialog*(title, message: string) =
+  ## Pops a blocking alert dialog. Only Ascii supported.
+  discard MessageBoxW(
+    0,
+    message.wstr().cstring,
+    title.wstr().cstring,
+    0
+  )
+
 proc getAvailableClipboardFormats(): seq[UINT] =
   var format = 0.UINT
   while true:
