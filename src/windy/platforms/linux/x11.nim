@@ -1,5 +1,10 @@
 import ../../common, ../../internal, os, sequtils, sets, strformat, times,
     unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, pixie
+
+when not defined(windyNoHttp):
+  import ../../http
+  export http
+
 type
   XWindow = x.Window
 
@@ -992,7 +997,7 @@ proc setClipboardString*(s: string) =
   clipboardContent = s
   display.XSetSelectionOwner(xaClipboard, clipboardWindow)
 
-proc pollEvents* =
+proc pollEvents*() =
   for window in windows:
     if window.onFrame != nil:
       window.onFrame()
@@ -1010,6 +1015,9 @@ proc pollEvents* =
     discard processClipboardEvents()
   for window in windows:
     pollEvents(window)
+
+  when not defined(windyNoHttp):
+    pollHttp()
 
 proc closeIme*(window: Window) =
   discard

@@ -2250,16 +2250,7 @@ elif compileOption("threads"):
     if state.onOpenCalled and state.onClose != nil:
       state.onClose()
 
-proc pollEvents*() =
-  # Draw first (in case a message closes a window or similar)
-  for window in windows:
-    if window.onFrame != nil:
-      window.onFrame()
-
-  # Clear all per-frame data
-  for window in windows:
-    window.state.perFrame = PerFrame()
-
+proc pollHttpWindows() =
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
     case msg.message:
@@ -2331,5 +2322,17 @@ proc pollEvents*() =
       if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyRightShift)
 
-  when defined(windyUseStdHttp):
-    pollHttp()
+proc pollEvents*() =
+  # Draw first (in case a message closes a window or similar)
+  for window in windows:
+    if window.onFrame != nil:
+      window.onFrame()
+
+  # Clear all per-frame data
+  for window in windows:
+    window.state.perFrame = PerFrame()
+
+  when not defined(windyNoHttp):
+    pollHttpWindows()
+    when defined(windyUseStdHttp):
+      pollHttp()
