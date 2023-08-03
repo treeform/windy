@@ -1,7 +1,9 @@
-import ../../common, ../../http, ../../internal, macdefs, opengl, pixie/fileformats/png,
+import ../../common, ../../internal, macdefs, opengl, pixie/fileformats/png,
     pixie/images, times, unicode, utils, vmath
 
-export http
+when defined(windyUseStdHttp):
+  import ../../http
+  export http
 
 type
   Window* = ref object

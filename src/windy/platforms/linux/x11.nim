@@ -1,5 +1,10 @@
 import ../../common, ../../internal, os, sequtils, sets, strformat, times,
     unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, pixie
+
+when defined(windyUseStdHttp):
+  import ../../http
+  export http
+
 type
   XWindow = x.Window
 
