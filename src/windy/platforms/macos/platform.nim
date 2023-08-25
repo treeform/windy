@@ -764,7 +764,8 @@ proc pollEvents*() =
         break
       NSApp.sendEvent(event)
 
-  pollHttp()
+  when defined(windyUseStdHttp):
+    pollHttp()
 
 proc makeContextCurrent*(window: Window) =
   window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
