@@ -997,7 +997,7 @@ proc setClipboardString*(s: string) =
   clipboardContent = s
   display.XSetSelectionOwner(xaClipboard, clipboardWindow)
 
-proc pollEvents* =
+proc pollEvents*() =
   for window in windows:
     if window.onFrame != nil:
       window.onFrame()
@@ -1013,8 +1013,12 @@ proc pollEvents* =
 
   if clipboardWindow != 0:
     discard processClipboardEvents()
+
   for window in windows:
     pollEvents(window)
+
+  when defined(windyUseStdHttp):
+    pollHttp()
 
 proc closeIme*(window: Window) =
   discard
