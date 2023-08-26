@@ -1,44 +1,45 @@
-IfEventProc	windy/platforms/linux/x11/xevent.html#IfEventProc	xevent: IfEventProc	
-ErrorHandleProc	windy/platforms/linux/x11/xevent.html#ErrorHandleProc	xevent: ErrorHandleProc	
-XEventKind	windy/platforms/linux/x11/xevent.html#XEventKind	xevent: XEventKind	
-XKeyEvent	windy/platforms/linux/x11/xevent.html#XKeyEvent	xevent: XKeyEvent	
-XButtonEvent	windy/platforms/linux/x11/xevent.html#XButtonEvent	xevent: XButtonEvent	
-XMotionEvent	windy/platforms/linux/x11/xevent.html#XMotionEvent	xevent: XMotionEvent	
-XCrossingEvent	windy/platforms/linux/x11/xevent.html#XCrossingEvent	xevent: XCrossingEvent	
-XFocusChangeEvent	windy/platforms/linux/x11/xevent.html#XFocusChangeEvent	xevent: XFocusChangeEvent	
-XKeymapEvent	windy/platforms/linux/x11/xevent.html#XKeymapEvent	xevent: XKeymapEvent	
-XExposeEvent	windy/platforms/linux/x11/xevent.html#XExposeEvent	xevent: XExposeEvent	
-XGraphicsExposeEvent	windy/platforms/linux/x11/xevent.html#XGraphicsExposeEvent	xevent: XGraphicsExposeEvent	
-XNoExposeEvent	windy/platforms/linux/x11/xevent.html#XNoExposeEvent	xevent: XNoExposeEvent	
-XVisibilityEvent	windy/platforms/linux/x11/xevent.html#XVisibilityEvent	xevent: XVisibilityEvent	
-XCreateWindowEvent	windy/platforms/linux/x11/xevent.html#XCreateWindowEvent	xevent: XCreateWindowEvent	
-XDestroyWindowEvent	windy/platforms/linux/x11/xevent.html#XDestroyWindowEvent	xevent: XDestroyWindowEvent	
-XUnmapEvent	windy/platforms/linux/x11/xevent.html#XUnmapEvent	xevent: XUnmapEvent	
-XMapEvent	windy/platforms/linux/x11/xevent.html#XMapEvent	xevent: XMapEvent	
-XMapRequestEvent	windy/platforms/linux/x11/xevent.html#XMapRequestEvent	xevent: XMapRequestEvent	
-XReparentEvent	windy/platforms/linux/x11/xevent.html#XReparentEvent	xevent: XReparentEvent	
-XConfigureEvent	windy/platforms/linux/x11/xevent.html#XConfigureEvent	xevent: XConfigureEvent	
-XGravityEvent	windy/platforms/linux/x11/xevent.html#XGravityEvent	xevent: XGravityEvent	
-XResizeRequestEvent	windy/platforms/linux/x11/xevent.html#XResizeRequestEvent	xevent: XResizeRequestEvent	
-XConfigureRequestEvent	windy/platforms/linux/x11/xevent.html#XConfigureRequestEvent	xevent: XConfigureRequestEvent	
-XCirculateEvent	windy/platforms/linux/x11/xevent.html#XCirculateEvent	xevent: XCirculateEvent	
-XCirculateRequestEvent	windy/platforms/linux/x11/xevent.html#XCirculateRequestEvent	xevent: XCirculateRequestEvent	
-XPropertyEvent	windy/platforms/linux/x11/xevent.html#XPropertyEvent	xevent: XPropertyEvent	
-XSelectionClearEvent	windy/platforms/linux/x11/xevent.html#XSelectionClearEvent	xevent: XSelectionClearEvent	
-XSelectionRequestEvent	windy/platforms/linux/x11/xevent.html#XSelectionRequestEvent	xevent: XSelectionRequestEvent	
-XSelectionEvent	windy/platforms/linux/x11/xevent.html#XSelectionEvent	xevent: XSelectionEvent	
-XColormapEvent	windy/platforms/linux/x11/xevent.html#XColormapEvent	xevent: XColormapEvent	
-XClientMessageData	windy/platforms/linux/x11/xevent.html#XClientMessageData	xevent: XClientMessageData	
-XClientMessageEvent	windy/platforms/linux/x11/xevent.html#XClientMessageEvent	xevent: XClientMessageEvent	
-XMappingEvent	windy/platforms/linux/x11/xevent.html#XMappingEvent	xevent: XMappingEvent	
-XErrorEvent	windy/platforms/linux/x11/xevent.html#XErrorEvent	xevent: XErrorEvent	
-XAnyEvent	windy/platforms/linux/x11/xevent.html#XAnyEvent	xevent: XAnyEvent	
-XGenericEvent	windy/platforms/linux/x11/xevent.html#XGenericEvent	xevent: XGenericEvent	
-XGenericEventCookie	windy/platforms/linux/x11/xevent.html#XGenericEventCookie	xevent: XGenericEventCookie	
-XEvent	windy/platforms/linux/x11/xevent.html#XEvent	xevent: XEvent	
-XCheckIfEvent	windy/platforms/linux/x11/xevent.html#XCheckIfEvent,Display,ptr.XEvent,IfEventProc,pointer	xevent: XCheckIfEvent(d: Display; e: ptr XEvent; cb: IfEventProc; userData: pointer): bool	
-XSendEvent	windy/platforms/linux/x11/xevent.html#XSendEvent,Display,Window,bool,clong,ptr.XEvent	xevent: XSendEvent(d: Display; window: Window; propogate: bool; mask: clong;\n           e: ptr XEvent)	
-Xutf8LookupString	windy/platforms/linux/x11/xevent.html#Xutf8LookupString,XIC,ptr.XKeyEvent,cstring,cint,ptr.KeySym,ptr.cint	xevent: Xutf8LookupString(ic: XIC; e: ptr XKeyEvent; buffer: cstring; len: cint;\n                  ks: ptr KeySym; status: ptr cint): cint	
-XSetErrorHandler	windy/platforms/linux/x11/xevent.html#XSetErrorHandler,ErrorHandleProc	xevent: XSetErrorHandler(handler: ErrorHandleProc)	
-XLookupKeysym	windy/platforms/linux/x11/xevent.html#XLookupKeysym,ptr.XKeyEvent,cint	xevent: XLookupKeysym(e: ptr XKeyEvent; i: cint): KeySym	
-XNextEvent	windy/platforms/linux/x11/xevent.html#XNextEvent,Display,ptr.XEvent	xevent: XNextEvent(d: Display; event: ptr XEvent)	
+nimTitle	xevent	windy/platforms/linux/x11/xevent.html	module src/windy/platforms/linux/x11/xevent		0
+nim	IfEventProc	windy/platforms/linux/x11/xevent.html#IfEventProc	type IfEventProc		4
+nim	ErrorHandleProc	windy/platforms/linux/x11/xevent.html#ErrorHandleProc	type ErrorHandleProc		9
+nim	XEventKind	windy/platforms/linux/x11/xevent.html#XEventKind	enum XEventKind		11
+nim	XKeyEvent	windy/platforms/linux/x11/xevent.html#XKeyEvent	object XKeyEvent		47
+nim	XButtonEvent	windy/platforms/linux/x11/xevent.html#XButtonEvent	object XButtonEvent		62
+nim	XMotionEvent	windy/platforms/linux/x11/xevent.html#XMotionEvent	object XMotionEvent		77
+nim	XCrossingEvent	windy/platforms/linux/x11/xevent.html#XCrossingEvent	object XCrossingEvent		92
+nim	XFocusChangeEvent	windy/platforms/linux/x11/xevent.html#XFocusChangeEvent	object XFocusChangeEvent		109
+nim	XKeymapEvent	windy/platforms/linux/x11/xevent.html#XKeymapEvent	object XKeymapEvent		118
+nim	XExposeEvent	windy/platforms/linux/x11/xevent.html#XExposeEvent	object XExposeEvent		126
+nim	XGraphicsExposeEvent	windy/platforms/linux/x11/xevent.html#XGraphicsExposeEvent	object XGraphicsExposeEvent		136
+nim	XNoExposeEvent	windy/platforms/linux/x11/xevent.html#XNoExposeEvent	object XNoExposeEvent		148
+nim	XVisibilityEvent	windy/platforms/linux/x11/xevent.html#XVisibilityEvent	object XVisibilityEvent		157
+nim	XCreateWindowEvent	windy/platforms/linux/x11/xevent.html#XCreateWindowEvent	object XCreateWindowEvent		165
+nim	XDestroyWindowEvent	windy/platforms/linux/x11/xevent.html#XDestroyWindowEvent	object XDestroyWindowEvent		177
+nim	XUnmapEvent	windy/platforms/linux/x11/xevent.html#XUnmapEvent	object XUnmapEvent		185
+nim	XMapEvent	windy/platforms/linux/x11/xevent.html#XMapEvent	object XMapEvent		194
+nim	XMapRequestEvent	windy/platforms/linux/x11/xevent.html#XMapRequestEvent	object XMapRequestEvent		203
+nim	XReparentEvent	windy/platforms/linux/x11/xevent.html#XReparentEvent	object XReparentEvent		211
+nim	XConfigureEvent	windy/platforms/linux/x11/xevent.html#XConfigureEvent	object XConfigureEvent		222
+nim	XGravityEvent	windy/platforms/linux/x11/xevent.html#XGravityEvent	object XGravityEvent		235
+nim	XResizeRequestEvent	windy/platforms/linux/x11/xevent.html#XResizeRequestEvent	object XResizeRequestEvent		244
+nim	XConfigureRequestEvent	windy/platforms/linux/x11/xevent.html#XConfigureRequestEvent	object XConfigureRequestEvent		252
+nim	XCirculateEvent	windy/platforms/linux/x11/xevent.html#XCirculateEvent	object XCirculateEvent		266
+nim	XCirculateRequestEvent	windy/platforms/linux/x11/xevent.html#XCirculateRequestEvent	object XCirculateRequestEvent		275
+nim	XPropertyEvent	windy/platforms/linux/x11/xevent.html#XPropertyEvent	object XPropertyEvent		284
+nim	XSelectionClearEvent	windy/platforms/linux/x11/xevent.html#XSelectionClearEvent	object XSelectionClearEvent		294
+nim	XSelectionRequestEvent	windy/platforms/linux/x11/xevent.html#XSelectionRequestEvent	object XSelectionRequestEvent		303
+nim	XSelectionEvent	windy/platforms/linux/x11/xevent.html#XSelectionEvent	object XSelectionEvent		315
+nim	XColormapEvent	windy/platforms/linux/x11/xevent.html#XColormapEvent	object XColormapEvent		326
+nim	XClientMessageData	windy/platforms/linux/x11/xevent.html#XClientMessageData	object XClientMessageData		336
+nim	XClientMessageEvent	windy/platforms/linux/x11/xevent.html#XClientMessageEvent	object XClientMessageEvent		341
+nim	XMappingEvent	windy/platforms/linux/x11/xevent.html#XMappingEvent	object XMappingEvent		351
+nim	XErrorEvent	windy/platforms/linux/x11/xevent.html#XErrorEvent	object XErrorEvent		361
+nim	XAnyEvent	windy/platforms/linux/x11/xevent.html#XAnyEvent	object XAnyEvent		370
+nim	XGenericEvent	windy/platforms/linux/x11/xevent.html#XGenericEvent	object XGenericEvent		377
+nim	XGenericEventCookie	windy/platforms/linux/x11/xevent.html#XGenericEventCookie	object XGenericEventCookie		385
+nim	XEvent	windy/platforms/linux/x11/xevent.html#XEvent	object XEvent		395
+nim	XCheckIfEvent	windy/platforms/linux/x11/xevent.html#XCheckIfEvent,Display,ptr.XEvent,IfEventProc,pointer	proc XCheckIfEvent(d: Display; e: ptr XEvent; cb: IfEventProc; userData: pointer): bool		434
+nim	XSendEvent	windy/platforms/linux/x11/xevent.html#XSendEvent,Display,Window,bool,clong,ptr.XEvent	proc XSendEvent(d: Display; window: Window; propogate: bool; mask: clong;\n           e: ptr XEvent)		436
+nim	Xutf8LookupString	windy/platforms/linux/x11/xevent.html#Xutf8LookupString,XIC,ptr.XKeyEvent,cstring,cint,ptr.KeySym,ptr.cint	proc Xutf8LookupString(ic: XIC; e: ptr XKeyEvent; buffer: cstring; len: cint;\n                  ks: ptr KeySym; status: ptr cint): cint		438
+nim	XSetErrorHandler	windy/platforms/linux/x11/xevent.html#XSetErrorHandler,ErrorHandleProc	proc XSetErrorHandler(handler: ErrorHandleProc)		441
+nim	XLookupKeysym	windy/platforms/linux/x11/xevent.html#XLookupKeysym,ptr.XKeyEvent,cint	proc XLookupKeysym(e: ptr XKeyEvent; i: cint): KeySym		443
+nim	XNextEvent	windy/platforms/linux/x11/xevent.html#XNextEvent,Display,ptr.XEvent	proc XNextEvent(d: Display; event: ptr XEvent)		445

@@ -1,410 +1,411 @@
-XID	windy/platforms/linux/x11/x.html#XID	x: XID	
-Mask	windy/platforms/linux/x11/x.html#Mask	x: Mask	
-Atom	windy/platforms/linux/x11/x.html#Atom	x: Atom	
-VisualID	windy/platforms/linux/x11/x.html#VisualID	x: VisualID	
-Time	windy/platforms/linux/x11/x.html#Time	x: Time	
-Drawable	windy/platforms/linux/x11/x.html#Drawable	x: Drawable	
-Window	windy/platforms/linux/x11/x.html#Window	x: Window	
-Font	windy/platforms/linux/x11/x.html#Font	x: Font	
-Pixmap	windy/platforms/linux/x11/x.html#Pixmap	x: Pixmap	
-Cursor	windy/platforms/linux/x11/x.html#Cursor	x: Cursor	
-Colormap	windy/platforms/linux/x11/x.html#Colormap	x: Colormap	
-GContext	windy/platforms/linux/x11/x.html#GContext	x: GContext	
-KeySym	windy/platforms/linux/x11/x.html#KeySym	x: KeySym	
-XSyncCounter	windy/platforms/linux/x11/x.html#XSyncCounter	x: XSyncCounter	
-KeyCode	windy/platforms/linux/x11/x.html#KeyCode	x: KeyCode	
-PropMode	windy/platforms/linux/x11/x.html#PropMode	x: PropMode	
-success	windy/platforms/linux/x11/x.html#success	Status.success	
-badRequest	windy/platforms/linux/x11/x.html#badRequest	Status.badRequest	
-badValue	windy/platforms/linux/x11/x.html#badValue	Status.badValue	
-badWindow	windy/platforms/linux/x11/x.html#badWindow	Status.badWindow	
-badPixmap	windy/platforms/linux/x11/x.html#badPixmap	Status.badPixmap	
-badAtom	windy/platforms/linux/x11/x.html#badAtom	Status.badAtom	
-badCursor	windy/platforms/linux/x11/x.html#badCursor	Status.badCursor	
-badFont	windy/platforms/linux/x11/x.html#badFont	Status.badFont	
-badMatch	windy/platforms/linux/x11/x.html#badMatch	Status.badMatch	
-badDrawable	windy/platforms/linux/x11/x.html#badDrawable	Status.badDrawable	
-badAccess	windy/platforms/linux/x11/x.html#badAccess	Status.badAccess	
-badAlloc	windy/platforms/linux/x11/x.html#badAlloc	Status.badAlloc	
-badColor	windy/platforms/linux/x11/x.html#badColor	Status.badColor	
-badGC	windy/platforms/linux/x11/x.html#badGC	Status.badGC	
-badIDChoice	windy/platforms/linux/x11/x.html#badIDChoice	Status.badIDChoice	
-badName	windy/platforms/linux/x11/x.html#badName	Status.badName	
-badLength	windy/platforms/linux/x11/x.html#badLength	Status.badLength	
-badImplementation	windy/platforms/linux/x11/x.html#badImplementation	Status.badImplementation	
-Status	windy/platforms/linux/x11/x.html#Status	x: Status	
-leftToRight	windy/platforms/linux/x11/x.html#leftToRight	ByteOrder.leftToRight	
-rightToLeft	windy/platforms/linux/x11/x.html#rightToLeft	ByteOrder.rightToLeft	
-ByteOrder	windy/platforms/linux/x11/x.html#ByteOrder	x: ByteOrder	
-RevertTo	windy/platforms/linux/x11/x.html#RevertTo	x: RevertTo	
-ParentRelative	windy/platforms/linux/x11/x.html#ParentRelative	x: ParentRelative	
-CopyFromParent	windy/platforms/linux/x11/x.html#CopyFromParent	x: CopyFromParent	
-PointerWindow	windy/platforms/linux/x11/x.html#PointerWindow	x: PointerWindow	
-InputFocus	windy/platforms/linux/x11/x.html#InputFocus	x: InputFocus	
-PointerRoot	windy/platforms/linux/x11/x.html#PointerRoot	x: PointerRoot	
-AnyPropertyType	windy/platforms/linux/x11/x.html#AnyPropertyType	x: AnyPropertyType	
-AnyKey	windy/platforms/linux/x11/x.html#AnyKey	x: AnyKey	
-AnyButton	windy/platforms/linux/x11/x.html#AnyButton	x: AnyButton	
-AllTemporary	windy/platforms/linux/x11/x.html#AllTemporary	x: AllTemporary	
-CurrentTime	windy/platforms/linux/x11/x.html#CurrentTime	x: CurrentTime	
-NoSymbol	windy/platforms/linux/x11/x.html#NoSymbol	x: NoSymbol	
-NoEventMask	windy/platforms/linux/x11/x.html#NoEventMask	x: NoEventMask	
-KeyPressMask	windy/platforms/linux/x11/x.html#KeyPressMask	x: KeyPressMask	
-KeyReleaseMask	windy/platforms/linux/x11/x.html#KeyReleaseMask	x: KeyReleaseMask	
-ButtonPressMask	windy/platforms/linux/x11/x.html#ButtonPressMask	x: ButtonPressMask	
-ButtonReleaseMask	windy/platforms/linux/x11/x.html#ButtonReleaseMask	x: ButtonReleaseMask	
-EnterWindowMask	windy/platforms/linux/x11/x.html#EnterWindowMask	x: EnterWindowMask	
-LeaveWindowMask	windy/platforms/linux/x11/x.html#LeaveWindowMask	x: LeaveWindowMask	
-PointerMotionMask	windy/platforms/linux/x11/x.html#PointerMotionMask	x: PointerMotionMask	
-PointerMotionHintMask	windy/platforms/linux/x11/x.html#PointerMotionHintMask	x: PointerMotionHintMask	
-Button1MotionMask	windy/platforms/linux/x11/x.html#Button1MotionMask	x: Button1MotionMask	
-Button2MotionMask	windy/platforms/linux/x11/x.html#Button2MotionMask	x: Button2MotionMask	
-Button3MotionMask	windy/platforms/linux/x11/x.html#Button3MotionMask	x: Button3MotionMask	
-Button4MotionMask	windy/platforms/linux/x11/x.html#Button4MotionMask	x: Button4MotionMask	
-Button5MotionMask	windy/platforms/linux/x11/x.html#Button5MotionMask	x: Button5MotionMask	
-ButtonMotionMask	windy/platforms/linux/x11/x.html#ButtonMotionMask	x: ButtonMotionMask	
-KeymapStateMask	windy/platforms/linux/x11/x.html#KeymapStateMask	x: KeymapStateMask	
-ExposureMask	windy/platforms/linux/x11/x.html#ExposureMask	x: ExposureMask	
-VisibilityChangeMask	windy/platforms/linux/x11/x.html#VisibilityChangeMask	x: VisibilityChangeMask	
-StructureNotifyMask	windy/platforms/linux/x11/x.html#StructureNotifyMask	x: StructureNotifyMask	
-ResizeRedirectMask	windy/platforms/linux/x11/x.html#ResizeRedirectMask	x: ResizeRedirectMask	
-SubstructureNotifyMask	windy/platforms/linux/x11/x.html#SubstructureNotifyMask	x: SubstructureNotifyMask	
-SubstructureRedirectMask	windy/platforms/linux/x11/x.html#SubstructureRedirectMask	x: SubstructureRedirectMask	
-FocusChangeMask	windy/platforms/linux/x11/x.html#FocusChangeMask	x: FocusChangeMask	
-PropertyChangeMask	windy/platforms/linux/x11/x.html#PropertyChangeMask	x: PropertyChangeMask	
-ColormapChangeMask	windy/platforms/linux/x11/x.html#ColormapChangeMask	x: ColormapChangeMask	
-OwnerGrabButtonMask	windy/platforms/linux/x11/x.html#OwnerGrabButtonMask	x: OwnerGrabButtonMask	
-LASTEvent	windy/platforms/linux/x11/x.html#LASTEvent	x: LASTEvent	
-ShiftMask	windy/platforms/linux/x11/x.html#ShiftMask	x: ShiftMask	
-LockMask	windy/platforms/linux/x11/x.html#LockMask	x: LockMask	
-ControlMask	windy/platforms/linux/x11/x.html#ControlMask	x: ControlMask	
-Mod1Mask	windy/platforms/linux/x11/x.html#Mod1Mask	x: Mod1Mask	
-Mod2Mask	windy/platforms/linux/x11/x.html#Mod2Mask	x: Mod2Mask	
-Mod3Mask	windy/platforms/linux/x11/x.html#Mod3Mask	x: Mod3Mask	
-Mod4Mask	windy/platforms/linux/x11/x.html#Mod4Mask	x: Mod4Mask	
-Mod5Mask	windy/platforms/linux/x11/x.html#Mod5Mask	x: Mod5Mask	
-ShiftMapIndex	windy/platforms/linux/x11/x.html#ShiftMapIndex	x: ShiftMapIndex	
-LockMapIndex	windy/platforms/linux/x11/x.html#LockMapIndex	x: LockMapIndex	
-ControlMapIndex	windy/platforms/linux/x11/x.html#ControlMapIndex	x: ControlMapIndex	
-Mod1MapIndex	windy/platforms/linux/x11/x.html#Mod1MapIndex	x: Mod1MapIndex	
-Mod2MapIndex	windy/platforms/linux/x11/x.html#Mod2MapIndex	x: Mod2MapIndex	
-Mod3MapIndex	windy/platforms/linux/x11/x.html#Mod3MapIndex	x: Mod3MapIndex	
-Mod4MapIndex	windy/platforms/linux/x11/x.html#Mod4MapIndex	x: Mod4MapIndex	
-Mod5MapIndex	windy/platforms/linux/x11/x.html#Mod5MapIndex	x: Mod5MapIndex	
-Button1Mask	windy/platforms/linux/x11/x.html#Button1Mask	x: Button1Mask	
-Button2Mask	windy/platforms/linux/x11/x.html#Button2Mask	x: Button2Mask	
-Button3Mask	windy/platforms/linux/x11/x.html#Button3Mask	x: Button3Mask	
-Button4Mask	windy/platforms/linux/x11/x.html#Button4Mask	x: Button4Mask	
-Button5Mask	windy/platforms/linux/x11/x.html#Button5Mask	x: Button5Mask	
-AnyModifier	windy/platforms/linux/x11/x.html#AnyModifier	x: AnyModifier	
-Button1	windy/platforms/linux/x11/x.html#Button1	x: Button1	
-Button2	windy/platforms/linux/x11/x.html#Button2	x: Button2	
-Button3	windy/platforms/linux/x11/x.html#Button3	x: Button3	
-Button4	windy/platforms/linux/x11/x.html#Button4	x: Button4	
-Button5	windy/platforms/linux/x11/x.html#Button5	x: Button5	
-NotifyNormal	windy/platforms/linux/x11/x.html#NotifyNormal	x: NotifyNormal	
-NotifyGrab	windy/platforms/linux/x11/x.html#NotifyGrab	x: NotifyGrab	
-NotifyUngrab	windy/platforms/linux/x11/x.html#NotifyUngrab	x: NotifyUngrab	
-NotifyWhileGrabbed	windy/platforms/linux/x11/x.html#NotifyWhileGrabbed	x: NotifyWhileGrabbed	
-NotifyHint	windy/platforms/linux/x11/x.html#NotifyHint	x: NotifyHint	
-NotifyAncestor	windy/platforms/linux/x11/x.html#NotifyAncestor	x: NotifyAncestor	
-NotifyVirtual	windy/platforms/linux/x11/x.html#NotifyVirtual	x: NotifyVirtual	
-NotifyInferior	windy/platforms/linux/x11/x.html#NotifyInferior	x: NotifyInferior	
-NotifyNonlinear	windy/platforms/linux/x11/x.html#NotifyNonlinear	x: NotifyNonlinear	
-NotifyNonlinearVirtual	windy/platforms/linux/x11/x.html#NotifyNonlinearVirtual	x: NotifyNonlinearVirtual	
-NotifyPointer	windy/platforms/linux/x11/x.html#NotifyPointer	x: NotifyPointer	
-NotifyPointerRoot	windy/platforms/linux/x11/x.html#NotifyPointerRoot	x: NotifyPointerRoot	
-NotifyDetailNone	windy/platforms/linux/x11/x.html#NotifyDetailNone	x: NotifyDetailNone	
-VisibilityUnobscured	windy/platforms/linux/x11/x.html#VisibilityUnobscured	x: VisibilityUnobscured	
-VisibilityPartiallyObscured	windy/platforms/linux/x11/x.html#VisibilityPartiallyObscured	x: VisibilityPartiallyObscured	
-VisibilityFullyObscured	windy/platforms/linux/x11/x.html#VisibilityFullyObscured	x: VisibilityFullyObscured	
-PlaceOnTop	windy/platforms/linux/x11/x.html#PlaceOnTop	x: PlaceOnTop	
-PlaceOnBottom	windy/platforms/linux/x11/x.html#PlaceOnBottom	x: PlaceOnBottom	
-FamilyInternet	windy/platforms/linux/x11/x.html#FamilyInternet	x: FamilyInternet	
-FamilyDECnet	windy/platforms/linux/x11/x.html#FamilyDECnet	x: FamilyDECnet	
-FamilyChaos	windy/platforms/linux/x11/x.html#FamilyChaos	x: FamilyChaos	
-FamilyInternet6	windy/platforms/linux/x11/x.html#FamilyInternet6	x: FamilyInternet6	
-FamilyServerInterpreted	windy/platforms/linux/x11/x.html#FamilyServerInterpreted	x: FamilyServerInterpreted	
-PropertyNewValue	windy/platforms/linux/x11/x.html#PropertyNewValue	x: PropertyNewValue	
-PropertyDelete	windy/platforms/linux/x11/x.html#PropertyDelete	x: PropertyDelete	
-ColormapUninstalled	windy/platforms/linux/x11/x.html#ColormapUninstalled	x: ColormapUninstalled	
-ColormapInstalled	windy/platforms/linux/x11/x.html#ColormapInstalled	x: ColormapInstalled	
-GrabModeSync	windy/platforms/linux/x11/x.html#GrabModeSync	x: GrabModeSync	
-GrabModeAsync	windy/platforms/linux/x11/x.html#GrabModeAsync	x: GrabModeAsync	
-GrabSuccess	windy/platforms/linux/x11/x.html#GrabSuccess	x: GrabSuccess	
-AlreadyGrabbed	windy/platforms/linux/x11/x.html#AlreadyGrabbed	x: AlreadyGrabbed	
-GrabInvalidTime	windy/platforms/linux/x11/x.html#GrabInvalidTime	x: GrabInvalidTime	
-GrabNotViewable	windy/platforms/linux/x11/x.html#GrabNotViewable	x: GrabNotViewable	
-GrabFrozen	windy/platforms/linux/x11/x.html#GrabFrozen	x: GrabFrozen	
-AsyncPointer	windy/platforms/linux/x11/x.html#AsyncPointer	x: AsyncPointer	
-SyncPointer	windy/platforms/linux/x11/x.html#SyncPointer	x: SyncPointer	
-ReplayPointer	windy/platforms/linux/x11/x.html#ReplayPointer	x: ReplayPointer	
-AsyncKeyboard	windy/platforms/linux/x11/x.html#AsyncKeyboard	x: AsyncKeyboard	
-SyncKeyboard	windy/platforms/linux/x11/x.html#SyncKeyboard	x: SyncKeyboard	
-ReplayKeyboard	windy/platforms/linux/x11/x.html#ReplayKeyboard	x: ReplayKeyboard	
-AsyncBoth	windy/platforms/linux/x11/x.html#AsyncBoth	x: AsyncBoth	
-SyncBoth	windy/platforms/linux/x11/x.html#SyncBoth	x: SyncBoth	
-FirstExtensionError	windy/platforms/linux/x11/x.html#FirstExtensionError	x: FirstExtensionError	
-LastExtensionError	windy/platforms/linux/x11/x.html#LastExtensionError	x: LastExtensionError	
-InputOutput	windy/platforms/linux/x11/x.html#InputOutput	x: InputOutput	
-InputOnly	windy/platforms/linux/x11/x.html#InputOnly	x: InputOnly	
-CwBackPixmap	windy/platforms/linux/x11/x.html#CwBackPixmap	x: CwBackPixmap	
-CwBackPixel	windy/platforms/linux/x11/x.html#CwBackPixel	x: CwBackPixel	
-CwBorderPixmap	windy/platforms/linux/x11/x.html#CwBorderPixmap	x: CwBorderPixmap	
-CwBorderPixel	windy/platforms/linux/x11/x.html#CwBorderPixel	x: CwBorderPixel	
-CwBitGravity	windy/platforms/linux/x11/x.html#CwBitGravity	x: CwBitGravity	
-CwWinGravity	windy/platforms/linux/x11/x.html#CwWinGravity	x: CwWinGravity	
-CwBackingStore	windy/platforms/linux/x11/x.html#CwBackingStore	x: CwBackingStore	
-CwBackingPlanes	windy/platforms/linux/x11/x.html#CwBackingPlanes	x: CwBackingPlanes	
-CwBackingPixel	windy/platforms/linux/x11/x.html#CwBackingPixel	x: CwBackingPixel	
-CwOverrideRedirect	windy/platforms/linux/x11/x.html#CwOverrideRedirect	x: CwOverrideRedirect	
-CwSaveUnder	windy/platforms/linux/x11/x.html#CwSaveUnder	x: CwSaveUnder	
-CwEventMask	windy/platforms/linux/x11/x.html#CwEventMask	x: CwEventMask	
-CwDontPropagate	windy/platforms/linux/x11/x.html#CwDontPropagate	x: CwDontPropagate	
-CwColormap	windy/platforms/linux/x11/x.html#CwColormap	x: CwColormap	
-CwCursor	windy/platforms/linux/x11/x.html#CwCursor	x: CwCursor	
-CwX	windy/platforms/linux/x11/x.html#CwX	x: CwX	
-CwY	windy/platforms/linux/x11/x.html#CwY	x: CwY	
-CwWidth	windy/platforms/linux/x11/x.html#CwWidth	x: CwWidth	
-CwHeight	windy/platforms/linux/x11/x.html#CwHeight	x: CwHeight	
-CwBorderWidth	windy/platforms/linux/x11/x.html#CwBorderWidth	x: CwBorderWidth	
-CwSibling	windy/platforms/linux/x11/x.html#CwSibling	x: CwSibling	
-CwStackMode	windy/platforms/linux/x11/x.html#CwStackMode	x: CwStackMode	
-ForgetGravity	windy/platforms/linux/x11/x.html#ForgetGravity	x: ForgetGravity	
-NorthWestGravity	windy/platforms/linux/x11/x.html#NorthWestGravity	x: NorthWestGravity	
-NorthGravity	windy/platforms/linux/x11/x.html#NorthGravity	x: NorthGravity	
-NorthEastGravity	windy/platforms/linux/x11/x.html#NorthEastGravity	x: NorthEastGravity	
-WestGravity	windy/platforms/linux/x11/x.html#WestGravity	x: WestGravity	
-CenterGravity	windy/platforms/linux/x11/x.html#CenterGravity	x: CenterGravity	
-EastGravity	windy/platforms/linux/x11/x.html#EastGravity	x: EastGravity	
-SouthWestGravity	windy/platforms/linux/x11/x.html#SouthWestGravity	x: SouthWestGravity	
-SouthGravity	windy/platforms/linux/x11/x.html#SouthGravity	x: SouthGravity	
-SouthEastGravity	windy/platforms/linux/x11/x.html#SouthEastGravity	x: SouthEastGravity	
-StaticGravity	windy/platforms/linux/x11/x.html#StaticGravity	x: StaticGravity	
-UnmapGravity	windy/platforms/linux/x11/x.html#UnmapGravity	x: UnmapGravity	
-NotUseful	windy/platforms/linux/x11/x.html#NotUseful	x: NotUseful	
-WhenMapped	windy/platforms/linux/x11/x.html#WhenMapped	x: WhenMapped	
-Always	windy/platforms/linux/x11/x.html#Always	x: Always	
-IsUnmapped	windy/platforms/linux/x11/x.html#IsUnmapped	x: IsUnmapped	
-IsUnviewable	windy/platforms/linux/x11/x.html#IsUnviewable	x: IsUnviewable	
-IsViewable	windy/platforms/linux/x11/x.html#IsViewable	x: IsViewable	
-SetModeInsert	windy/platforms/linux/x11/x.html#SetModeInsert	x: SetModeInsert	
-SetModeDelete	windy/platforms/linux/x11/x.html#SetModeDelete	x: SetModeDelete	
-DestroyAll	windy/platforms/linux/x11/x.html#DestroyAll	x: DestroyAll	
-RetainPermanent	windy/platforms/linux/x11/x.html#RetainPermanent	x: RetainPermanent	
-RetainTemporary	windy/platforms/linux/x11/x.html#RetainTemporary	x: RetainTemporary	
-Above	windy/platforms/linux/x11/x.html#Above	x: Above	
-Below	windy/platforms/linux/x11/x.html#Below	x: Below	
-TopIf	windy/platforms/linux/x11/x.html#TopIf	x: TopIf	
-BottomIf	windy/platforms/linux/x11/x.html#BottomIf	x: BottomIf	
-Opposite	windy/platforms/linux/x11/x.html#Opposite	x: Opposite	
-RaiseLowest	windy/platforms/linux/x11/x.html#RaiseLowest	x: RaiseLowest	
-LowerHighest	windy/platforms/linux/x11/x.html#LowerHighest	x: LowerHighest	
-GXclear	windy/platforms/linux/x11/x.html#GXclear	x: GXclear	
-GXand	windy/platforms/linux/x11/x.html#GXand	x: GXand	
-GXandReverse	windy/platforms/linux/x11/x.html#GXandReverse	x: GXandReverse	
-GXcopy	windy/platforms/linux/x11/x.html#GXcopy	x: GXcopy	
-GXandInverted	windy/platforms/linux/x11/x.html#GXandInverted	x: GXandInverted	
-GXnoop	windy/platforms/linux/x11/x.html#GXnoop	x: GXnoop	
-GXxor	windy/platforms/linux/x11/x.html#GXxor	x: GXxor	
-GXor	windy/platforms/linux/x11/x.html#GXor	x: GXor	
-GXnor	windy/platforms/linux/x11/x.html#GXnor	x: GXnor	
-GXequiv	windy/platforms/linux/x11/x.html#GXequiv	x: GXequiv	
-GXinvert	windy/platforms/linux/x11/x.html#GXinvert	x: GXinvert	
-GXorReverse	windy/platforms/linux/x11/x.html#GXorReverse	x: GXorReverse	
-GXcopyInverted	windy/platforms/linux/x11/x.html#GXcopyInverted	x: GXcopyInverted	
-GXorInverted	windy/platforms/linux/x11/x.html#GXorInverted	x: GXorInverted	
-GXnand	windy/platforms/linux/x11/x.html#GXnand	x: GXnand	
-GXset	windy/platforms/linux/x11/x.html#GXset	x: GXset	
-LineSolid	windy/platforms/linux/x11/x.html#LineSolid	x: LineSolid	
-LineOnOffDash	windy/platforms/linux/x11/x.html#LineOnOffDash	x: LineOnOffDash	
-LineDoubleDash	windy/platforms/linux/x11/x.html#LineDoubleDash	x: LineDoubleDash	
-CapNotLast	windy/platforms/linux/x11/x.html#CapNotLast	x: CapNotLast	
-CapButt	windy/platforms/linux/x11/x.html#CapButt	x: CapButt	
-CapRound	windy/platforms/linux/x11/x.html#CapRound	x: CapRound	
-CapProjecting	windy/platforms/linux/x11/x.html#CapProjecting	x: CapProjecting	
-JoinMiter	windy/platforms/linux/x11/x.html#JoinMiter	x: JoinMiter	
-JoinRound	windy/platforms/linux/x11/x.html#JoinRound	x: JoinRound	
-JoinBevel	windy/platforms/linux/x11/x.html#JoinBevel	x: JoinBevel	
-FillSolid	windy/platforms/linux/x11/x.html#FillSolid	x: FillSolid	
-FillTiled	windy/platforms/linux/x11/x.html#FillTiled	x: FillTiled	
-FillStippled	windy/platforms/linux/x11/x.html#FillStippled	x: FillStippled	
-FillOpaqueStippled	windy/platforms/linux/x11/x.html#FillOpaqueStippled	x: FillOpaqueStippled	
-EvenOddRule	windy/platforms/linux/x11/x.html#EvenOddRule	x: EvenOddRule	
-WindingRule	windy/platforms/linux/x11/x.html#WindingRule	x: WindingRule	
-ClipByChildren	windy/platforms/linux/x11/x.html#ClipByChildren	x: ClipByChildren	
-IncludeInferiors	windy/platforms/linux/x11/x.html#IncludeInferiors	x: IncludeInferiors	
-Unsorted	windy/platforms/linux/x11/x.html#Unsorted	x: Unsorted	
-YSorted	windy/platforms/linux/x11/x.html#YSorted	x: YSorted	
-YXSorted	windy/platforms/linux/x11/x.html#YXSorted	x: YXSorted	
-YXBanded	windy/platforms/linux/x11/x.html#YXBanded	x: YXBanded	
-CoordModeOrigin	windy/platforms/linux/x11/x.html#CoordModeOrigin	x: CoordModeOrigin	
-CoordModePrevious	windy/platforms/linux/x11/x.html#CoordModePrevious	x: CoordModePrevious	
-Complex	windy/platforms/linux/x11/x.html#Complex	x: Complex	
-Nonconvex	windy/platforms/linux/x11/x.html#Nonconvex	x: Nonconvex	
-Convex	windy/platforms/linux/x11/x.html#Convex	x: Convex	
-ArcChord	windy/platforms/linux/x11/x.html#ArcChord	x: ArcChord	
-ArcPieSlice	windy/platforms/linux/x11/x.html#ArcPieSlice	x: ArcPieSlice	
-GCFunction	windy/platforms/linux/x11/x.html#GCFunction	x: GCFunction	
-GCPlaneMask	windy/platforms/linux/x11/x.html#GCPlaneMask	x: GCPlaneMask	
-GCForeground	windy/platforms/linux/x11/x.html#GCForeground	x: GCForeground	
-GCBackground	windy/platforms/linux/x11/x.html#GCBackground	x: GCBackground	
-GCLineWidth	windy/platforms/linux/x11/x.html#GCLineWidth	x: GCLineWidth	
-GCLineStyle	windy/platforms/linux/x11/x.html#GCLineStyle	x: GCLineStyle	
-GCCapStyle	windy/platforms/linux/x11/x.html#GCCapStyle	x: GCCapStyle	
-GCJoinStyle	windy/platforms/linux/x11/x.html#GCJoinStyle	x: GCJoinStyle	
-GCFillStyle	windy/platforms/linux/x11/x.html#GCFillStyle	x: GCFillStyle	
-GCFillRule	windy/platforms/linux/x11/x.html#GCFillRule	x: GCFillRule	
-GCTile	windy/platforms/linux/x11/x.html#GCTile	x: GCTile	
-GCStipple	windy/platforms/linux/x11/x.html#GCStipple	x: GCStipple	
-GCTileStipXOrigin	windy/platforms/linux/x11/x.html#GCTileStipXOrigin	x: GCTileStipXOrigin	
-GCTileStipYOrigin	windy/platforms/linux/x11/x.html#GCTileStipYOrigin	x: GCTileStipYOrigin	
-GCFont	windy/platforms/linux/x11/x.html#GCFont	x: GCFont	
-GCSubwindowMode	windy/platforms/linux/x11/x.html#GCSubwindowMode	x: GCSubwindowMode	
-GCGraphicsExposures	windy/platforms/linux/x11/x.html#GCGraphicsExposures	x: GCGraphicsExposures	
-GCClipXOrigin	windy/platforms/linux/x11/x.html#GCClipXOrigin	x: GCClipXOrigin	
-GCClipYOrigin	windy/platforms/linux/x11/x.html#GCClipYOrigin	x: GCClipYOrigin	
-GCClipMask	windy/platforms/linux/x11/x.html#GCClipMask	x: GCClipMask	
-GCDashOffset	windy/platforms/linux/x11/x.html#GCDashOffset	x: GCDashOffset	
-GCDashList	windy/platforms/linux/x11/x.html#GCDashList	x: GCDashList	
-GCArcMode	windy/platforms/linux/x11/x.html#GCArcMode	x: GCArcMode	
-GCLastBit	windy/platforms/linux/x11/x.html#GCLastBit	x: GCLastBit	
-FontLeftToRight	windy/platforms/linux/x11/x.html#FontLeftToRight	x: FontLeftToRight	
-FontRightToLeft	windy/platforms/linux/x11/x.html#FontRightToLeft	x: FontRightToLeft	
-FontChange	windy/platforms/linux/x11/x.html#FontChange	x: FontChange	
-XYBitmap	windy/platforms/linux/x11/x.html#XYBitmap	x: XYBitmap	
-XYPixmap	windy/platforms/linux/x11/x.html#XYPixmap	x: XYPixmap	
-ZPixmap	windy/platforms/linux/x11/x.html#ZPixmap	x: ZPixmap	
-AllocNone	windy/platforms/linux/x11/x.html#AllocNone	x: AllocNone	
-AllocAll	windy/platforms/linux/x11/x.html#AllocAll	x: AllocAll	
-DoRed	windy/platforms/linux/x11/x.html#DoRed	x: DoRed	
-DoGreen	windy/platforms/linux/x11/x.html#DoGreen	x: DoGreen	
-DoBlue	windy/platforms/linux/x11/x.html#DoBlue	x: DoBlue	
-CursorShape	windy/platforms/linux/x11/x.html#CursorShape	x: CursorShape	
-TileShape	windy/platforms/linux/x11/x.html#TileShape	x: TileShape	
-StippleShape	windy/platforms/linux/x11/x.html#StippleShape	x: StippleShape	
-AutoRepeatModeOff	windy/platforms/linux/x11/x.html#AutoRepeatModeOff	x: AutoRepeatModeOff	
-AutoRepeatModeOn	windy/platforms/linux/x11/x.html#AutoRepeatModeOn	x: AutoRepeatModeOn	
-AutoRepeatModeDefault	windy/platforms/linux/x11/x.html#AutoRepeatModeDefault	x: AutoRepeatModeDefault	
-LedModeOff	windy/platforms/linux/x11/x.html#LedModeOff	x: LedModeOff	
-LedModeOn	windy/platforms/linux/x11/x.html#LedModeOn	x: LedModeOn	
-KBKeyClickPercent	windy/platforms/linux/x11/x.html#KBKeyClickPercent	x: KBKeyClickPercent	
-KBBellPercent	windy/platforms/linux/x11/x.html#KBBellPercent	x: KBBellPercent	
-KBBellPitch	windy/platforms/linux/x11/x.html#KBBellPitch	x: KBBellPitch	
-KBBellDuration	windy/platforms/linux/x11/x.html#KBBellDuration	x: KBBellDuration	
-KBLed	windy/platforms/linux/x11/x.html#KBLed	x: KBLed	
-KBLedMode	windy/platforms/linux/x11/x.html#KBLedMode	x: KBLedMode	
-KBKey	windy/platforms/linux/x11/x.html#KBKey	x: KBKey	
-KBAutoRepeatMode	windy/platforms/linux/x11/x.html#KBAutoRepeatMode	x: KBAutoRepeatMode	
-MappingSuccess	windy/platforms/linux/x11/x.html#MappingSuccess	x: MappingSuccess	
-MappingBusy	windy/platforms/linux/x11/x.html#MappingBusy	x: MappingBusy	
-MappingFailed	windy/platforms/linux/x11/x.html#MappingFailed	x: MappingFailed	
-MappingModifier	windy/platforms/linux/x11/x.html#MappingModifier	x: MappingModifier	
-MappingKeyboard	windy/platforms/linux/x11/x.html#MappingKeyboard	x: MappingKeyboard	
-MappingPointer	windy/platforms/linux/x11/x.html#MappingPointer	x: MappingPointer	
-DontPreferBlanking	windy/platforms/linux/x11/x.html#DontPreferBlanking	x: DontPreferBlanking	
-PreferBlanking	windy/platforms/linux/x11/x.html#PreferBlanking	x: PreferBlanking	
-DefaultBlanking	windy/platforms/linux/x11/x.html#DefaultBlanking	x: DefaultBlanking	
-DisableScreenSaver	windy/platforms/linux/x11/x.html#DisableScreenSaver	x: DisableScreenSaver	
-DisableScreenInterval	windy/platforms/linux/x11/x.html#DisableScreenInterval	x: DisableScreenInterval	
-DontAllowExposures	windy/platforms/linux/x11/x.html#DontAllowExposures	x: DontAllowExposures	
-AllowExposures	windy/platforms/linux/x11/x.html#AllowExposures	x: AllowExposures	
-DefaultExposures	windy/platforms/linux/x11/x.html#DefaultExposures	x: DefaultExposures	
-ScreenSaverReset	windy/platforms/linux/x11/x.html#ScreenSaverReset	x: ScreenSaverReset	
-ScreenSaverActive	windy/platforms/linux/x11/x.html#ScreenSaverActive	x: ScreenSaverActive	
-HostInsert	windy/platforms/linux/x11/x.html#HostInsert	x: HostInsert	
-HostDelete	windy/platforms/linux/x11/x.html#HostDelete	x: HostDelete	
-EnableAccess	windy/platforms/linux/x11/x.html#EnableAccess	x: EnableAccess	
-DisableAccess	windy/platforms/linux/x11/x.html#DisableAccess	x: DisableAccess	
-StaticGray	windy/platforms/linux/x11/x.html#StaticGray	x: StaticGray	
-GrayScale	windy/platforms/linux/x11/x.html#GrayScale	x: GrayScale	
-StaticColor	windy/platforms/linux/x11/x.html#StaticColor	x: StaticColor	
-PseudoColor	windy/platforms/linux/x11/x.html#PseudoColor	x: PseudoColor	
-TrueColor	windy/platforms/linux/x11/x.html#TrueColor	x: TrueColor	
-DirectColor	windy/platforms/linux/x11/x.html#DirectColor	x: DirectColor	
-xaPrimary	windy/platforms/linux/x11/x.html#xaPrimary	x: xaPrimary	
-xaSecondary	windy/platforms/linux/x11/x.html#xaSecondary	x: xaSecondary	
-xaArc	windy/platforms/linux/x11/x.html#xaArc	x: xaArc	
-xaAtom	windy/platforms/linux/x11/x.html#xaAtom	x: xaAtom	
-xaBitmap	windy/platforms/linux/x11/x.html#xaBitmap	x: xaBitmap	
-xaCardinal	windy/platforms/linux/x11/x.html#xaCardinal	x: xaCardinal	
-xaColormap	windy/platforms/linux/x11/x.html#xaColormap	x: xaColormap	
-xaCursor	windy/platforms/linux/x11/x.html#xaCursor	x: xaCursor	
-xaCutBuffer0	windy/platforms/linux/x11/x.html#xaCutBuffer0	x: xaCutBuffer0	
-xaCutBuffer1	windy/platforms/linux/x11/x.html#xaCutBuffer1	x: xaCutBuffer1	
-xaCutBuffer2	windy/platforms/linux/x11/x.html#xaCutBuffer2	x: xaCutBuffer2	
-xaCutBuffer3	windy/platforms/linux/x11/x.html#xaCutBuffer3	x: xaCutBuffer3	
-xaCutBuffer4	windy/platforms/linux/x11/x.html#xaCutBuffer4	x: xaCutBuffer4	
-xaCutBuffer5	windy/platforms/linux/x11/x.html#xaCutBuffer5	x: xaCutBuffer5	
-xaCutBuffer6	windy/platforms/linux/x11/x.html#xaCutBuffer6	x: xaCutBuffer6	
-xaCutBuffer7	windy/platforms/linux/x11/x.html#xaCutBuffer7	x: xaCutBuffer7	
-xaDrawable	windy/platforms/linux/x11/x.html#xaDrawable	x: xaDrawable	
-xaFont	windy/platforms/linux/x11/x.html#xaFont	x: xaFont	
-xaInteger	windy/platforms/linux/x11/x.html#xaInteger	x: xaInteger	
-xaPixmap	windy/platforms/linux/x11/x.html#xaPixmap	x: xaPixmap	
-xaPoint	windy/platforms/linux/x11/x.html#xaPoint	x: xaPoint	
-xaRectangle	windy/platforms/linux/x11/x.html#xaRectangle	x: xaRectangle	
-xaResourceManager	windy/platforms/linux/x11/x.html#xaResourceManager	x: xaResourceManager	
-xaRgbColorMap	windy/platforms/linux/x11/x.html#xaRgbColorMap	x: xaRgbColorMap	
-xaRgbBestMap	windy/platforms/linux/x11/x.html#xaRgbBestMap	x: xaRgbBestMap	
-xaRgbBlueMap	windy/platforms/linux/x11/x.html#xaRgbBlueMap	x: xaRgbBlueMap	
-xaRgbDefaultMap	windy/platforms/linux/x11/x.html#xaRgbDefaultMap	x: xaRgbDefaultMap	
-xaRgbGrayMap	windy/platforms/linux/x11/x.html#xaRgbGrayMap	x: xaRgbGrayMap	
-xaRgbGreenMap	windy/platforms/linux/x11/x.html#xaRgbGreenMap	x: xaRgbGreenMap	
-xaRgbRedMap	windy/platforms/linux/x11/x.html#xaRgbRedMap	x: xaRgbRedMap	
-xaString	windy/platforms/linux/x11/x.html#xaString	x: xaString	
-xaVisualid	windy/platforms/linux/x11/x.html#xaVisualid	x: xaVisualid	
-xaWindow	windy/platforms/linux/x11/x.html#xaWindow	x: xaWindow	
-xaWmCommand	windy/platforms/linux/x11/x.html#xaWmCommand	x: xaWmCommand	
-xaWmHints	windy/platforms/linux/x11/x.html#xaWmHints	x: xaWmHints	
-xaWmClientMachine	windy/platforms/linux/x11/x.html#xaWmClientMachine	x: xaWmClientMachine	
-xaWmIconName	windy/platforms/linux/x11/x.html#xaWmIconName	x: xaWmIconName	
-xaWmIconSize	windy/platforms/linux/x11/x.html#xaWmIconSize	x: xaWmIconSize	
-xaWmName	windy/platforms/linux/x11/x.html#xaWmName	x: xaWmName	
-xaWmNormalHints	windy/platforms/linux/x11/x.html#xaWmNormalHints	x: xaWmNormalHints	
-xaWmSizeHints	windy/platforms/linux/x11/x.html#xaWmSizeHints	x: xaWmSizeHints	
-xaWmZoomHints	windy/platforms/linux/x11/x.html#xaWmZoomHints	x: xaWmZoomHints	
-xaMinSpace	windy/platforms/linux/x11/x.html#xaMinSpace	x: xaMinSpace	
-xaNormSpace	windy/platforms/linux/x11/x.html#xaNormSpace	x: xaNormSpace	
-xaMaxSpace	windy/platforms/linux/x11/x.html#xaMaxSpace	x: xaMaxSpace	
-xaEndSpace	windy/platforms/linux/x11/x.html#xaEndSpace	x: xaEndSpace	
-xaSuperscriptX	windy/platforms/linux/x11/x.html#xaSuperscriptX	x: xaSuperscriptX	
-xaSuperscriptY	windy/platforms/linux/x11/x.html#xaSuperscriptY	x: xaSuperscriptY	
-xaSubscriptX	windy/platforms/linux/x11/x.html#xaSubscriptX	x: xaSubscriptX	
-xaSubscriptY	windy/platforms/linux/x11/x.html#xaSubscriptY	x: xaSubscriptY	
-xaUnderlinePosition	windy/platforms/linux/x11/x.html#xaUnderlinePosition	x: xaUnderlinePosition	
-xaUnderlineThickness	windy/platforms/linux/x11/x.html#xaUnderlineThickness	x: xaUnderlineThickness	
-xaStrikeoutAscent	windy/platforms/linux/x11/x.html#xaStrikeoutAscent	x: xaStrikeoutAscent	
-xaStrikeoutDescent	windy/platforms/linux/x11/x.html#xaStrikeoutDescent	x: xaStrikeoutDescent	
-xaItalicAngle	windy/platforms/linux/x11/x.html#xaItalicAngle	x: xaItalicAngle	
-xaXHeight	windy/platforms/linux/x11/x.html#xaXHeight	x: xaXHeight	
-xaQuadWidth	windy/platforms/linux/x11/x.html#xaQuadWidth	x: xaQuadWidth	
-xaWeight	windy/platforms/linux/x11/x.html#xaWeight	x: xaWeight	
-xaPointSize	windy/platforms/linux/x11/x.html#xaPointSize	x: xaPointSize	
-xaResolution	windy/platforms/linux/x11/x.html#xaResolution	x: xaResolution	
-xaCopyright	windy/platforms/linux/x11/x.html#xaCopyright	x: xaCopyright	
-xaNotice	windy/platforms/linux/x11/x.html#xaNotice	x: xaNotice	
-xaFontName	windy/platforms/linux/x11/x.html#xaFontName	x: xaFontName	
-xaFamilyName	windy/platforms/linux/x11/x.html#xaFamilyName	x: xaFamilyName	
-xaFullName	windy/platforms/linux/x11/x.html#xaFullName	x: xaFullName	
-xaCapHeight	windy/platforms/linux/x11/x.html#xaCapHeight	x: xaCapHeight	
-xaWmClass	windy/platforms/linux/x11/x.html#xaWmClass	x: xaWmClass	
-xaWmTransientFor	windy/platforms/linux/x11/x.html#xaWmTransientFor	x: xaWmTransientFor	
-xaLastPredefined	windy/platforms/linux/x11/x.html#xaLastPredefined	x: xaLastPredefined	
-xaNetWMState	windy/platforms/linux/x11/x.html#xaNetWMState	x: xaNetWMState	
-xaNetWMStateMaximizedHorz	windy/platforms/linux/x11/x.html#xaNetWMStateMaximizedHorz	x: xaNetWMStateMaximizedHorz	
-xaNetWMStateMaximizedVert	windy/platforms/linux/x11/x.html#xaNetWMStateMaximizedVert	x: xaNetWMStateMaximizedVert	
-xaWMState	windy/platforms/linux/x11/x.html#xaWMState	x: xaWMState	
-xaNetWMIcon	windy/platforms/linux/x11/x.html#xaNetWMIcon	x: xaNetWMIcon	
-xaNetWMStateHiden	windy/platforms/linux/x11/x.html#xaNetWMStateHiden	x: xaNetWMStateHiden	
-xaNetWMStateFullscreen	windy/platforms/linux/x11/x.html#xaNetWMStateFullscreen	x: xaNetWMStateFullscreen	
-xaNetWMName	windy/platforms/linux/x11/x.html#xaNetWMName	x: xaNetWMName	
-xaUTF8String	windy/platforms/linux/x11/x.html#xaUTF8String	x: xaUTF8String	
-xaNetWMIconName	windy/platforms/linux/x11/x.html#xaNetWMIconName	x: xaNetWMIconName	
-xaWMDeleteWindow	windy/platforms/linux/x11/x.html#xaWMDeleteWindow	x: xaWMDeleteWindow	
-xaNetWMSyncRequest	windy/platforms/linux/x11/x.html#xaNetWMSyncRequest	x: xaNetWMSyncRequest	
-xaNetWMSyncRequestCounter	windy/platforms/linux/x11/x.html#xaNetWMSyncRequestCounter	x: xaNetWMSyncRequestCounter	
-xaClipboard	windy/platforms/linux/x11/x.html#xaClipboard	x: xaClipboard	
-xaWindyClipboardTargetProperty	windy/platforms/linux/x11/x.html#xaWindyClipboardTargetProperty	x: xaWindyClipboardTargetProperty	
-xaTargets	windy/platforms/linux/x11/x.html#xaTargets	x: xaTargets	
-xaText	windy/platforms/linux/x11/x.html#xaText	x: xaText	
+nimTitle	x	windy/platforms/linux/x11/x.html	module src/windy/platforms/linux/x11/x		0
+nim	XID	windy/platforms/linux/x11/x.html#XID	type XID		3
+nim	Mask	windy/platforms/linux/x11/x.html#Mask	type Mask		4
+nim	Atom	windy/platforms/linux/x11/x.html#Atom	type Atom		5
+nim	VisualID	windy/platforms/linux/x11/x.html#VisualID	type VisualID		6
+nim	Time	windy/platforms/linux/x11/x.html#Time	type Time		7
+nim	Drawable	windy/platforms/linux/x11/x.html#Drawable	type Drawable		9
+nim	Window	windy/platforms/linux/x11/x.html#Window	type Window		10
+nim	Font	windy/platforms/linux/x11/x.html#Font	type Font		11
+nim	Pixmap	windy/platforms/linux/x11/x.html#Pixmap	type Pixmap		12
+nim	Cursor	windy/platforms/linux/x11/x.html#Cursor	type Cursor		13
+nim	Colormap	windy/platforms/linux/x11/x.html#Colormap	type Colormap		14
+nim	GContext	windy/platforms/linux/x11/x.html#GContext	type GContext		15
+nim	KeySym	windy/platforms/linux/x11/x.html#KeySym	type KeySym		16
+nim	XSyncCounter	windy/platforms/linux/x11/x.html#XSyncCounter	type XSyncCounter		17
+nim	KeyCode	windy/platforms/linux/x11/x.html#KeyCode	type KeyCode		19
+nim	PropMode	windy/platforms/linux/x11/x.html#PropMode	enum PropMode		21
+nim	success	windy/platforms/linux/x11/x.html#success	Status.success		26
+nim	badRequest	windy/platforms/linux/x11/x.html#badRequest	Status.badRequest		26
+nim	badValue	windy/platforms/linux/x11/x.html#badValue	Status.badValue		26
+nim	badWindow	windy/platforms/linux/x11/x.html#badWindow	Status.badWindow		26
+nim	badPixmap	windy/platforms/linux/x11/x.html#badPixmap	Status.badPixmap		26
+nim	badAtom	windy/platforms/linux/x11/x.html#badAtom	Status.badAtom		26
+nim	badCursor	windy/platforms/linux/x11/x.html#badCursor	Status.badCursor		26
+nim	badFont	windy/platforms/linux/x11/x.html#badFont	Status.badFont		26
+nim	badMatch	windy/platforms/linux/x11/x.html#badMatch	Status.badMatch		26
+nim	badDrawable	windy/platforms/linux/x11/x.html#badDrawable	Status.badDrawable		26
+nim	badAccess	windy/platforms/linux/x11/x.html#badAccess	Status.badAccess		26
+nim	badAlloc	windy/platforms/linux/x11/x.html#badAlloc	Status.badAlloc		26
+nim	badColor	windy/platforms/linux/x11/x.html#badColor	Status.badColor		26
+nim	badGC	windy/platforms/linux/x11/x.html#badGC	Status.badGC		26
+nim	badIDChoice	windy/platforms/linux/x11/x.html#badIDChoice	Status.badIDChoice		26
+nim	badName	windy/platforms/linux/x11/x.html#badName	Status.badName		26
+nim	badLength	windy/platforms/linux/x11/x.html#badLength	Status.badLength		26
+nim	badImplementation	windy/platforms/linux/x11/x.html#badImplementation	Status.badImplementation		26
+nim	Status	windy/platforms/linux/x11/x.html#Status	enum Status		26
+nim	leftToRight	windy/platforms/linux/x11/x.html#leftToRight	ByteOrder.leftToRight		46
+nim	rightToLeft	windy/platforms/linux/x11/x.html#rightToLeft	ByteOrder.rightToLeft		46
+nim	ByteOrder	windy/platforms/linux/x11/x.html#ByteOrder	enum ByteOrder		46
+nim	RevertTo	windy/platforms/linux/x11/x.html#RevertTo	enum RevertTo		50
+nim	ParentRelative	windy/platforms/linux/x11/x.html#ParentRelative	const ParentRelative		56
+nim	CopyFromParent	windy/platforms/linux/x11/x.html#CopyFromParent	const CopyFromParent		57
+nim	PointerWindow	windy/platforms/linux/x11/x.html#PointerWindow	const PointerWindow		58
+nim	InputFocus	windy/platforms/linux/x11/x.html#InputFocus	const InputFocus		59
+nim	PointerRoot	windy/platforms/linux/x11/x.html#PointerRoot	const PointerRoot		60
+nim	AnyPropertyType	windy/platforms/linux/x11/x.html#AnyPropertyType	const AnyPropertyType		61
+nim	AnyKey	windy/platforms/linux/x11/x.html#AnyKey	const AnyKey		62
+nim	AnyButton	windy/platforms/linux/x11/x.html#AnyButton	const AnyButton		63
+nim	AllTemporary	windy/platforms/linux/x11/x.html#AllTemporary	const AllTemporary		64
+nim	CurrentTime	windy/platforms/linux/x11/x.html#CurrentTime	const CurrentTime		65
+nim	NoSymbol	windy/platforms/linux/x11/x.html#NoSymbol	const NoSymbol		66
+nim	NoEventMask	windy/platforms/linux/x11/x.html#NoEventMask	const NoEventMask		67
+nim	KeyPressMask	windy/platforms/linux/x11/x.html#KeyPressMask	const KeyPressMask		68
+nim	KeyReleaseMask	windy/platforms/linux/x11/x.html#KeyReleaseMask	const KeyReleaseMask		69
+nim	ButtonPressMask	windy/platforms/linux/x11/x.html#ButtonPressMask	const ButtonPressMask		70
+nim	ButtonReleaseMask	windy/platforms/linux/x11/x.html#ButtonReleaseMask	const ButtonReleaseMask		71
+nim	EnterWindowMask	windy/platforms/linux/x11/x.html#EnterWindowMask	const EnterWindowMask		72
+nim	LeaveWindowMask	windy/platforms/linux/x11/x.html#LeaveWindowMask	const LeaveWindowMask		73
+nim	PointerMotionMask	windy/platforms/linux/x11/x.html#PointerMotionMask	const PointerMotionMask		74
+nim	PointerMotionHintMask	windy/platforms/linux/x11/x.html#PointerMotionHintMask	const PointerMotionHintMask		75
+nim	Button1MotionMask	windy/platforms/linux/x11/x.html#Button1MotionMask	const Button1MotionMask		76
+nim	Button2MotionMask	windy/platforms/linux/x11/x.html#Button2MotionMask	const Button2MotionMask		77
+nim	Button3MotionMask	windy/platforms/linux/x11/x.html#Button3MotionMask	const Button3MotionMask		78
+nim	Button4MotionMask	windy/platforms/linux/x11/x.html#Button4MotionMask	const Button4MotionMask		79
+nim	Button5MotionMask	windy/platforms/linux/x11/x.html#Button5MotionMask	const Button5MotionMask		80
+nim	ButtonMotionMask	windy/platforms/linux/x11/x.html#ButtonMotionMask	const ButtonMotionMask		81
+nim	KeymapStateMask	windy/platforms/linux/x11/x.html#KeymapStateMask	const KeymapStateMask		82
+nim	ExposureMask	windy/platforms/linux/x11/x.html#ExposureMask	const ExposureMask		83
+nim	VisibilityChangeMask	windy/platforms/linux/x11/x.html#VisibilityChangeMask	const VisibilityChangeMask		84
+nim	StructureNotifyMask	windy/platforms/linux/x11/x.html#StructureNotifyMask	const StructureNotifyMask		85
+nim	ResizeRedirectMask	windy/platforms/linux/x11/x.html#ResizeRedirectMask	const ResizeRedirectMask		86
+nim	SubstructureNotifyMask	windy/platforms/linux/x11/x.html#SubstructureNotifyMask	const SubstructureNotifyMask		87
+nim	SubstructureRedirectMask	windy/platforms/linux/x11/x.html#SubstructureRedirectMask	const SubstructureRedirectMask		88
+nim	FocusChangeMask	windy/platforms/linux/x11/x.html#FocusChangeMask	const FocusChangeMask		89
+nim	PropertyChangeMask	windy/platforms/linux/x11/x.html#PropertyChangeMask	const PropertyChangeMask		90
+nim	ColormapChangeMask	windy/platforms/linux/x11/x.html#ColormapChangeMask	const ColormapChangeMask		91
+nim	OwnerGrabButtonMask	windy/platforms/linux/x11/x.html#OwnerGrabButtonMask	const OwnerGrabButtonMask		92
+nim	LASTEvent	windy/platforms/linux/x11/x.html#LASTEvent	const LASTEvent		93
+nim	ShiftMask	windy/platforms/linux/x11/x.html#ShiftMask	const ShiftMask		94
+nim	LockMask	windy/platforms/linux/x11/x.html#LockMask	const LockMask		95
+nim	ControlMask	windy/platforms/linux/x11/x.html#ControlMask	const ControlMask		96
+nim	Mod1Mask	windy/platforms/linux/x11/x.html#Mod1Mask	const Mod1Mask		97
+nim	Mod2Mask	windy/platforms/linux/x11/x.html#Mod2Mask	const Mod2Mask		98
+nim	Mod3Mask	windy/platforms/linux/x11/x.html#Mod3Mask	const Mod3Mask		99
+nim	Mod4Mask	windy/platforms/linux/x11/x.html#Mod4Mask	const Mod4Mask		100
+nim	Mod5Mask	windy/platforms/linux/x11/x.html#Mod5Mask	const Mod5Mask		101
+nim	ShiftMapIndex	windy/platforms/linux/x11/x.html#ShiftMapIndex	const ShiftMapIndex		102
+nim	LockMapIndex	windy/platforms/linux/x11/x.html#LockMapIndex	const LockMapIndex		103
+nim	ControlMapIndex	windy/platforms/linux/x11/x.html#ControlMapIndex	const ControlMapIndex		104
+nim	Mod1MapIndex	windy/platforms/linux/x11/x.html#Mod1MapIndex	const Mod1MapIndex		105
+nim	Mod2MapIndex	windy/platforms/linux/x11/x.html#Mod2MapIndex	const Mod2MapIndex		106
+nim	Mod3MapIndex	windy/platforms/linux/x11/x.html#Mod3MapIndex	const Mod3MapIndex		107
+nim	Mod4MapIndex	windy/platforms/linux/x11/x.html#Mod4MapIndex	const Mod4MapIndex		108
+nim	Mod5MapIndex	windy/platforms/linux/x11/x.html#Mod5MapIndex	const Mod5MapIndex		109
+nim	Button1Mask	windy/platforms/linux/x11/x.html#Button1Mask	const Button1Mask		110
+nim	Button2Mask	windy/platforms/linux/x11/x.html#Button2Mask	const Button2Mask		111
+nim	Button3Mask	windy/platforms/linux/x11/x.html#Button3Mask	const Button3Mask		112
+nim	Button4Mask	windy/platforms/linux/x11/x.html#Button4Mask	const Button4Mask		113
+nim	Button5Mask	windy/platforms/linux/x11/x.html#Button5Mask	const Button5Mask		114
+nim	AnyModifier	windy/platforms/linux/x11/x.html#AnyModifier	const AnyModifier		115
+nim	Button1	windy/platforms/linux/x11/x.html#Button1	const Button1		116
+nim	Button2	windy/platforms/linux/x11/x.html#Button2	const Button2		117
+nim	Button3	windy/platforms/linux/x11/x.html#Button3	const Button3		118
+nim	Button4	windy/platforms/linux/x11/x.html#Button4	const Button4		119
+nim	Button5	windy/platforms/linux/x11/x.html#Button5	const Button5		120
+nim	NotifyNormal	windy/platforms/linux/x11/x.html#NotifyNormal	const NotifyNormal		121
+nim	NotifyGrab	windy/platforms/linux/x11/x.html#NotifyGrab	const NotifyGrab		122
+nim	NotifyUngrab	windy/platforms/linux/x11/x.html#NotifyUngrab	const NotifyUngrab		123
+nim	NotifyWhileGrabbed	windy/platforms/linux/x11/x.html#NotifyWhileGrabbed	const NotifyWhileGrabbed		124
+nim	NotifyHint	windy/platforms/linux/x11/x.html#NotifyHint	const NotifyHint		125
+nim	NotifyAncestor	windy/platforms/linux/x11/x.html#NotifyAncestor	const NotifyAncestor		126
+nim	NotifyVirtual	windy/platforms/linux/x11/x.html#NotifyVirtual	const NotifyVirtual		127
+nim	NotifyInferior	windy/platforms/linux/x11/x.html#NotifyInferior	const NotifyInferior		128
+nim	NotifyNonlinear	windy/platforms/linux/x11/x.html#NotifyNonlinear	const NotifyNonlinear		129
+nim	NotifyNonlinearVirtual	windy/platforms/linux/x11/x.html#NotifyNonlinearVirtual	const NotifyNonlinearVirtual		130
+nim	NotifyPointer	windy/platforms/linux/x11/x.html#NotifyPointer	const NotifyPointer		131
+nim	NotifyPointerRoot	windy/platforms/linux/x11/x.html#NotifyPointerRoot	const NotifyPointerRoot		132
+nim	NotifyDetailNone	windy/platforms/linux/x11/x.html#NotifyDetailNone	const NotifyDetailNone		133
+nim	VisibilityUnobscured	windy/platforms/linux/x11/x.html#VisibilityUnobscured	const VisibilityUnobscured		134
+nim	VisibilityPartiallyObscured	windy/platforms/linux/x11/x.html#VisibilityPartiallyObscured	const VisibilityPartiallyObscured		135
+nim	VisibilityFullyObscured	windy/platforms/linux/x11/x.html#VisibilityFullyObscured	const VisibilityFullyObscured		136
+nim	PlaceOnTop	windy/platforms/linux/x11/x.html#PlaceOnTop	const PlaceOnTop		137
+nim	PlaceOnBottom	windy/platforms/linux/x11/x.html#PlaceOnBottom	const PlaceOnBottom		138
+nim	FamilyInternet	windy/platforms/linux/x11/x.html#FamilyInternet	const FamilyInternet		139
+nim	FamilyDECnet	windy/platforms/linux/x11/x.html#FamilyDECnet	const FamilyDECnet		140
+nim	FamilyChaos	windy/platforms/linux/x11/x.html#FamilyChaos	const FamilyChaos		141
+nim	FamilyInternet6	windy/platforms/linux/x11/x.html#FamilyInternet6	const FamilyInternet6		142
+nim	FamilyServerInterpreted	windy/platforms/linux/x11/x.html#FamilyServerInterpreted	const FamilyServerInterpreted		143
+nim	PropertyNewValue	windy/platforms/linux/x11/x.html#PropertyNewValue	const PropertyNewValue		144
+nim	PropertyDelete	windy/platforms/linux/x11/x.html#PropertyDelete	const PropertyDelete		145
+nim	ColormapUninstalled	windy/platforms/linux/x11/x.html#ColormapUninstalled	const ColormapUninstalled		146
+nim	ColormapInstalled	windy/platforms/linux/x11/x.html#ColormapInstalled	const ColormapInstalled		147
+nim	GrabModeSync	windy/platforms/linux/x11/x.html#GrabModeSync	const GrabModeSync		148
+nim	GrabModeAsync	windy/platforms/linux/x11/x.html#GrabModeAsync	const GrabModeAsync		149
+nim	GrabSuccess	windy/platforms/linux/x11/x.html#GrabSuccess	const GrabSuccess		150
+nim	AlreadyGrabbed	windy/platforms/linux/x11/x.html#AlreadyGrabbed	const AlreadyGrabbed		151
+nim	GrabInvalidTime	windy/platforms/linux/x11/x.html#GrabInvalidTime	const GrabInvalidTime		152
+nim	GrabNotViewable	windy/platforms/linux/x11/x.html#GrabNotViewable	const GrabNotViewable		153
+nim	GrabFrozen	windy/platforms/linux/x11/x.html#GrabFrozen	const GrabFrozen		154
+nim	AsyncPointer	windy/platforms/linux/x11/x.html#AsyncPointer	const AsyncPointer		155
+nim	SyncPointer	windy/platforms/linux/x11/x.html#SyncPointer	const SyncPointer		156
+nim	ReplayPointer	windy/platforms/linux/x11/x.html#ReplayPointer	const ReplayPointer		157
+nim	AsyncKeyboard	windy/platforms/linux/x11/x.html#AsyncKeyboard	const AsyncKeyboard		158
+nim	SyncKeyboard	windy/platforms/linux/x11/x.html#SyncKeyboard	const SyncKeyboard		159
+nim	ReplayKeyboard	windy/platforms/linux/x11/x.html#ReplayKeyboard	const ReplayKeyboard		160
+nim	AsyncBoth	windy/platforms/linux/x11/x.html#AsyncBoth	const AsyncBoth		161
+nim	SyncBoth	windy/platforms/linux/x11/x.html#SyncBoth	const SyncBoth		162
+nim	FirstExtensionError	windy/platforms/linux/x11/x.html#FirstExtensionError	const FirstExtensionError		163
+nim	LastExtensionError	windy/platforms/linux/x11/x.html#LastExtensionError	const LastExtensionError		164
+nim	InputOutput	windy/platforms/linux/x11/x.html#InputOutput	const InputOutput		165
+nim	InputOnly	windy/platforms/linux/x11/x.html#InputOnly	const InputOnly		166
+nim	CwBackPixmap	windy/platforms/linux/x11/x.html#CwBackPixmap	const CwBackPixmap		167
+nim	CwBackPixel	windy/platforms/linux/x11/x.html#CwBackPixel	const CwBackPixel		168
+nim	CwBorderPixmap	windy/platforms/linux/x11/x.html#CwBorderPixmap	const CwBorderPixmap		169
+nim	CwBorderPixel	windy/platforms/linux/x11/x.html#CwBorderPixel	const CwBorderPixel		170
+nim	CwBitGravity	windy/platforms/linux/x11/x.html#CwBitGravity	const CwBitGravity		171
+nim	CwWinGravity	windy/platforms/linux/x11/x.html#CwWinGravity	const CwWinGravity		172
+nim	CwBackingStore	windy/platforms/linux/x11/x.html#CwBackingStore	const CwBackingStore		173
+nim	CwBackingPlanes	windy/platforms/linux/x11/x.html#CwBackingPlanes	const CwBackingPlanes		174
+nim	CwBackingPixel	windy/platforms/linux/x11/x.html#CwBackingPixel	const CwBackingPixel		175
+nim	CwOverrideRedirect	windy/platforms/linux/x11/x.html#CwOverrideRedirect	const CwOverrideRedirect		176
+nim	CwSaveUnder	windy/platforms/linux/x11/x.html#CwSaveUnder	const CwSaveUnder		177
+nim	CwEventMask	windy/platforms/linux/x11/x.html#CwEventMask	const CwEventMask		178
+nim	CwDontPropagate	windy/platforms/linux/x11/x.html#CwDontPropagate	const CwDontPropagate		179
+nim	CwColormap	windy/platforms/linux/x11/x.html#CwColormap	const CwColormap		180
+nim	CwCursor	windy/platforms/linux/x11/x.html#CwCursor	const CwCursor		181
+nim	CwX	windy/platforms/linux/x11/x.html#CwX	const CwX		182
+nim	CwY	windy/platforms/linux/x11/x.html#CwY	const CwY		183
+nim	CwWidth	windy/platforms/linux/x11/x.html#CwWidth	const CwWidth		184
+nim	CwHeight	windy/platforms/linux/x11/x.html#CwHeight	const CwHeight		185
+nim	CwBorderWidth	windy/platforms/linux/x11/x.html#CwBorderWidth	const CwBorderWidth		186
+nim	CwSibling	windy/platforms/linux/x11/x.html#CwSibling	const CwSibling		187
+nim	CwStackMode	windy/platforms/linux/x11/x.html#CwStackMode	const CwStackMode		188
+nim	ForgetGravity	windy/platforms/linux/x11/x.html#ForgetGravity	const ForgetGravity		189
+nim	NorthWestGravity	windy/platforms/linux/x11/x.html#NorthWestGravity	const NorthWestGravity		190
+nim	NorthGravity	windy/platforms/linux/x11/x.html#NorthGravity	const NorthGravity		191
+nim	NorthEastGravity	windy/platforms/linux/x11/x.html#NorthEastGravity	const NorthEastGravity		192
+nim	WestGravity	windy/platforms/linux/x11/x.html#WestGravity	const WestGravity		193
+nim	CenterGravity	windy/platforms/linux/x11/x.html#CenterGravity	const CenterGravity		194
+nim	EastGravity	windy/platforms/linux/x11/x.html#EastGravity	const EastGravity		195
+nim	SouthWestGravity	windy/platforms/linux/x11/x.html#SouthWestGravity	const SouthWestGravity		196
+nim	SouthGravity	windy/platforms/linux/x11/x.html#SouthGravity	const SouthGravity		197
+nim	SouthEastGravity	windy/platforms/linux/x11/x.html#SouthEastGravity	const SouthEastGravity		198
+nim	StaticGravity	windy/platforms/linux/x11/x.html#StaticGravity	const StaticGravity		199
+nim	UnmapGravity	windy/platforms/linux/x11/x.html#UnmapGravity	const UnmapGravity		200
+nim	NotUseful	windy/platforms/linux/x11/x.html#NotUseful	const NotUseful		201
+nim	WhenMapped	windy/platforms/linux/x11/x.html#WhenMapped	const WhenMapped		202
+nim	Always	windy/platforms/linux/x11/x.html#Always	const Always		203
+nim	IsUnmapped	windy/platforms/linux/x11/x.html#IsUnmapped	const IsUnmapped		204
+nim	IsUnviewable	windy/platforms/linux/x11/x.html#IsUnviewable	const IsUnviewable		205
+nim	IsViewable	windy/platforms/linux/x11/x.html#IsViewable	const IsViewable		206
+nim	SetModeInsert	windy/platforms/linux/x11/x.html#SetModeInsert	const SetModeInsert		207
+nim	SetModeDelete	windy/platforms/linux/x11/x.html#SetModeDelete	const SetModeDelete		208
+nim	DestroyAll	windy/platforms/linux/x11/x.html#DestroyAll	const DestroyAll		209
+nim	RetainPermanent	windy/platforms/linux/x11/x.html#RetainPermanent	const RetainPermanent		210
+nim	RetainTemporary	windy/platforms/linux/x11/x.html#RetainTemporary	const RetainTemporary		211
+nim	Above	windy/platforms/linux/x11/x.html#Above	const Above		212
+nim	Below	windy/platforms/linux/x11/x.html#Below	const Below		213
+nim	TopIf	windy/platforms/linux/x11/x.html#TopIf	const TopIf		214
+nim	BottomIf	windy/platforms/linux/x11/x.html#BottomIf	const BottomIf		215
+nim	Opposite	windy/platforms/linux/x11/x.html#Opposite	const Opposite		216
+nim	RaiseLowest	windy/platforms/linux/x11/x.html#RaiseLowest	const RaiseLowest		217
+nim	LowerHighest	windy/platforms/linux/x11/x.html#LowerHighest	const LowerHighest		218
+nim	GXclear	windy/platforms/linux/x11/x.html#GXclear	const GXclear		219
+nim	GXand	windy/platforms/linux/x11/x.html#GXand	const GXand		220
+nim	GXandReverse	windy/platforms/linux/x11/x.html#GXandReverse	const GXandReverse		221
+nim	GXcopy	windy/platforms/linux/x11/x.html#GXcopy	const GXcopy		222
+nim	GXandInverted	windy/platforms/linux/x11/x.html#GXandInverted	const GXandInverted		223
+nim	GXnoop	windy/platforms/linux/x11/x.html#GXnoop	const GXnoop		224
+nim	GXxor	windy/platforms/linux/x11/x.html#GXxor	const GXxor		225
+nim	GXor	windy/platforms/linux/x11/x.html#GXor	const GXor		226
+nim	GXnor	windy/platforms/linux/x11/x.html#GXnor	const GXnor		227
+nim	GXequiv	windy/platforms/linux/x11/x.html#GXequiv	const GXequiv		228
+nim	GXinvert	windy/platforms/linux/x11/x.html#GXinvert	const GXinvert		229
+nim	GXorReverse	windy/platforms/linux/x11/x.html#GXorReverse	const GXorReverse		230
+nim	GXcopyInverted	windy/platforms/linux/x11/x.html#GXcopyInverted	const GXcopyInverted		231
+nim	GXorInverted	windy/platforms/linux/x11/x.html#GXorInverted	const GXorInverted		232
+nim	GXnand	windy/platforms/linux/x11/x.html#GXnand	const GXnand		233
+nim	GXset	windy/platforms/linux/x11/x.html#GXset	const GXset		234
+nim	LineSolid	windy/platforms/linux/x11/x.html#LineSolid	const LineSolid		235
+nim	LineOnOffDash	windy/platforms/linux/x11/x.html#LineOnOffDash	const LineOnOffDash		236
+nim	LineDoubleDash	windy/platforms/linux/x11/x.html#LineDoubleDash	const LineDoubleDash		237
+nim	CapNotLast	windy/platforms/linux/x11/x.html#CapNotLast	const CapNotLast		238
+nim	CapButt	windy/platforms/linux/x11/x.html#CapButt	const CapButt		239
+nim	CapRound	windy/platforms/linux/x11/x.html#CapRound	const CapRound		240
+nim	CapProjecting	windy/platforms/linux/x11/x.html#CapProjecting	const CapProjecting		241
+nim	JoinMiter	windy/platforms/linux/x11/x.html#JoinMiter	const JoinMiter		242
+nim	JoinRound	windy/platforms/linux/x11/x.html#JoinRound	const JoinRound		243
+nim	JoinBevel	windy/platforms/linux/x11/x.html#JoinBevel	const JoinBevel		244
+nim	FillSolid	windy/platforms/linux/x11/x.html#FillSolid	const FillSolid		245
+nim	FillTiled	windy/platforms/linux/x11/x.html#FillTiled	const FillTiled		246
+nim	FillStippled	windy/platforms/linux/x11/x.html#FillStippled	const FillStippled		247
+nim	FillOpaqueStippled	windy/platforms/linux/x11/x.html#FillOpaqueStippled	const FillOpaqueStippled		248
+nim	EvenOddRule	windy/platforms/linux/x11/x.html#EvenOddRule	const EvenOddRule		249
+nim	WindingRule	windy/platforms/linux/x11/x.html#WindingRule	const WindingRule		250
+nim	ClipByChildren	windy/platforms/linux/x11/x.html#ClipByChildren	const ClipByChildren		251
+nim	IncludeInferiors	windy/platforms/linux/x11/x.html#IncludeInferiors	const IncludeInferiors		252
+nim	Unsorted	windy/platforms/linux/x11/x.html#Unsorted	const Unsorted		253
+nim	YSorted	windy/platforms/linux/x11/x.html#YSorted	const YSorted		254
+nim	YXSorted	windy/platforms/linux/x11/x.html#YXSorted	const YXSorted		255
+nim	YXBanded	windy/platforms/linux/x11/x.html#YXBanded	const YXBanded		256
+nim	CoordModeOrigin	windy/platforms/linux/x11/x.html#CoordModeOrigin	const CoordModeOrigin		257
+nim	CoordModePrevious	windy/platforms/linux/x11/x.html#CoordModePrevious	const CoordModePrevious		258
+nim	Complex	windy/platforms/linux/x11/x.html#Complex	const Complex		259
+nim	Nonconvex	windy/platforms/linux/x11/x.html#Nonconvex	const Nonconvex		260
+nim	Convex	windy/platforms/linux/x11/x.html#Convex	const Convex		261
+nim	ArcChord	windy/platforms/linux/x11/x.html#ArcChord	const ArcChord		262
+nim	ArcPieSlice	windy/platforms/linux/x11/x.html#ArcPieSlice	const ArcPieSlice		263
+nim	GCFunction	windy/platforms/linux/x11/x.html#GCFunction	const GCFunction		264
+nim	GCPlaneMask	windy/platforms/linux/x11/x.html#GCPlaneMask	const GCPlaneMask		265
+nim	GCForeground	windy/platforms/linux/x11/x.html#GCForeground	const GCForeground		266
+nim	GCBackground	windy/platforms/linux/x11/x.html#GCBackground	const GCBackground		267
+nim	GCLineWidth	windy/platforms/linux/x11/x.html#GCLineWidth	const GCLineWidth		268
+nim	GCLineStyle	windy/platforms/linux/x11/x.html#GCLineStyle	const GCLineStyle		269
+nim	GCCapStyle	windy/platforms/linux/x11/x.html#GCCapStyle	const GCCapStyle		270
+nim	GCJoinStyle	windy/platforms/linux/x11/x.html#GCJoinStyle	const GCJoinStyle		271
+nim	GCFillStyle	windy/platforms/linux/x11/x.html#GCFillStyle	const GCFillStyle		272
+nim	GCFillRule	windy/platforms/linux/x11/x.html#GCFillRule	const GCFillRule		273
+nim	GCTile	windy/platforms/linux/x11/x.html#GCTile	const GCTile		274
+nim	GCStipple	windy/platforms/linux/x11/x.html#GCStipple	const GCStipple		275
+nim	GCTileStipXOrigin	windy/platforms/linux/x11/x.html#GCTileStipXOrigin	const GCTileStipXOrigin		276
+nim	GCTileStipYOrigin	windy/platforms/linux/x11/x.html#GCTileStipYOrigin	const GCTileStipYOrigin		277
+nim	GCFont	windy/platforms/linux/x11/x.html#GCFont	const GCFont		278
+nim	GCSubwindowMode	windy/platforms/linux/x11/x.html#GCSubwindowMode	const GCSubwindowMode		279
+nim	GCGraphicsExposures	windy/platforms/linux/x11/x.html#GCGraphicsExposures	const GCGraphicsExposures		280
+nim	GCClipXOrigin	windy/platforms/linux/x11/x.html#GCClipXOrigin	const GCClipXOrigin		281
+nim	GCClipYOrigin	windy/platforms/linux/x11/x.html#GCClipYOrigin	const GCClipYOrigin		282
+nim	GCClipMask	windy/platforms/linux/x11/x.html#GCClipMask	const GCClipMask		283
+nim	GCDashOffset	windy/platforms/linux/x11/x.html#GCDashOffset	const GCDashOffset		284
+nim	GCDashList	windy/platforms/linux/x11/x.html#GCDashList	const GCDashList		285
+nim	GCArcMode	windy/platforms/linux/x11/x.html#GCArcMode	const GCArcMode		286
+nim	GCLastBit	windy/platforms/linux/x11/x.html#GCLastBit	const GCLastBit		287
+nim	FontLeftToRight	windy/platforms/linux/x11/x.html#FontLeftToRight	const FontLeftToRight		288
+nim	FontRightToLeft	windy/platforms/linux/x11/x.html#FontRightToLeft	const FontRightToLeft		289
+nim	FontChange	windy/platforms/linux/x11/x.html#FontChange	const FontChange		290
+nim	XYBitmap	windy/platforms/linux/x11/x.html#XYBitmap	const XYBitmap		291
+nim	XYPixmap	windy/platforms/linux/x11/x.html#XYPixmap	const XYPixmap		292
+nim	ZPixmap	windy/platforms/linux/x11/x.html#ZPixmap	const ZPixmap		293
+nim	AllocNone	windy/platforms/linux/x11/x.html#AllocNone	const AllocNone		294
+nim	AllocAll	windy/platforms/linux/x11/x.html#AllocAll	const AllocAll		295
+nim	DoRed	windy/platforms/linux/x11/x.html#DoRed	const DoRed		296
+nim	DoGreen	windy/platforms/linux/x11/x.html#DoGreen	const DoGreen		297
+nim	DoBlue	windy/platforms/linux/x11/x.html#DoBlue	const DoBlue		298
+nim	CursorShape	windy/platforms/linux/x11/x.html#CursorShape	const CursorShape		299
+nim	TileShape	windy/platforms/linux/x11/x.html#TileShape	const TileShape		300
+nim	StippleShape	windy/platforms/linux/x11/x.html#StippleShape	const StippleShape		301
+nim	AutoRepeatModeOff	windy/platforms/linux/x11/x.html#AutoRepeatModeOff	const AutoRepeatModeOff		302
+nim	AutoRepeatModeOn	windy/platforms/linux/x11/x.html#AutoRepeatModeOn	const AutoRepeatModeOn		303
+nim	AutoRepeatModeDefault	windy/platforms/linux/x11/x.html#AutoRepeatModeDefault	const AutoRepeatModeDefault		304
+nim	LedModeOff	windy/platforms/linux/x11/x.html#LedModeOff	const LedModeOff		305
+nim	LedModeOn	windy/platforms/linux/x11/x.html#LedModeOn	const LedModeOn		306
+nim	KBKeyClickPercent	windy/platforms/linux/x11/x.html#KBKeyClickPercent	const KBKeyClickPercent		307
+nim	KBBellPercent	windy/platforms/linux/x11/x.html#KBBellPercent	const KBBellPercent		308
+nim	KBBellPitch	windy/platforms/linux/x11/x.html#KBBellPitch	const KBBellPitch		309
+nim	KBBellDuration	windy/platforms/linux/x11/x.html#KBBellDuration	const KBBellDuration		310
+nim	KBLed	windy/platforms/linux/x11/x.html#KBLed	const KBLed		311
+nim	KBLedMode	windy/platforms/linux/x11/x.html#KBLedMode	const KBLedMode		312
+nim	KBKey	windy/platforms/linux/x11/x.html#KBKey	const KBKey		313
+nim	KBAutoRepeatMode	windy/platforms/linux/x11/x.html#KBAutoRepeatMode	const KBAutoRepeatMode		314
+nim	MappingSuccess	windy/platforms/linux/x11/x.html#MappingSuccess	const MappingSuccess		315
+nim	MappingBusy	windy/platforms/linux/x11/x.html#MappingBusy	const MappingBusy		316
+nim	MappingFailed	windy/platforms/linux/x11/x.html#MappingFailed	const MappingFailed		317
+nim	MappingModifier	windy/platforms/linux/x11/x.html#MappingModifier	const MappingModifier		318
+nim	MappingKeyboard	windy/platforms/linux/x11/x.html#MappingKeyboard	const MappingKeyboard		319
+nim	MappingPointer	windy/platforms/linux/x11/x.html#MappingPointer	const MappingPointer		320
+nim	DontPreferBlanking	windy/platforms/linux/x11/x.html#DontPreferBlanking	const DontPreferBlanking		321
+nim	PreferBlanking	windy/platforms/linux/x11/x.html#PreferBlanking	const PreferBlanking		322
+nim	DefaultBlanking	windy/platforms/linux/x11/x.html#DefaultBlanking	const DefaultBlanking		323
+nim	DisableScreenSaver	windy/platforms/linux/x11/x.html#DisableScreenSaver	const DisableScreenSaver		324
+nim	DisableScreenInterval	windy/platforms/linux/x11/x.html#DisableScreenInterval	const DisableScreenInterval		325
+nim	DontAllowExposures	windy/platforms/linux/x11/x.html#DontAllowExposures	const DontAllowExposures		326
+nim	AllowExposures	windy/platforms/linux/x11/x.html#AllowExposures	const AllowExposures		327
+nim	DefaultExposures	windy/platforms/linux/x11/x.html#DefaultExposures	const DefaultExposures		328
+nim	ScreenSaverReset	windy/platforms/linux/x11/x.html#ScreenSaverReset	const ScreenSaverReset		329
+nim	ScreenSaverActive	windy/platforms/linux/x11/x.html#ScreenSaverActive	const ScreenSaverActive		330
+nim	HostInsert	windy/platforms/linux/x11/x.html#HostInsert	const HostInsert		331
+nim	HostDelete	windy/platforms/linux/x11/x.html#HostDelete	const HostDelete		332
+nim	EnableAccess	windy/platforms/linux/x11/x.html#EnableAccess	const EnableAccess		333
+nim	DisableAccess	windy/platforms/linux/x11/x.html#DisableAccess	const DisableAccess		334
+nim	StaticGray	windy/platforms/linux/x11/x.html#StaticGray	const StaticGray		335
+nim	GrayScale	windy/platforms/linux/x11/x.html#GrayScale	const GrayScale		336
+nim	StaticColor	windy/platforms/linux/x11/x.html#StaticColor	const StaticColor		337
+nim	PseudoColor	windy/platforms/linux/x11/x.html#PseudoColor	const PseudoColor		338
+nim	TrueColor	windy/platforms/linux/x11/x.html#TrueColor	const TrueColor		339
+nim	DirectColor	windy/platforms/linux/x11/x.html#DirectColor	const DirectColor		340
+nim	xaPrimary	windy/platforms/linux/x11/x.html#xaPrimary	const xaPrimary		343
+nim	xaSecondary	windy/platforms/linux/x11/x.html#xaSecondary	const xaSecondary		344
+nim	xaArc	windy/platforms/linux/x11/x.html#xaArc	const xaArc		345
+nim	xaAtom	windy/platforms/linux/x11/x.html#xaAtom	const xaAtom		346
+nim	xaBitmap	windy/platforms/linux/x11/x.html#xaBitmap	const xaBitmap		347
+nim	xaCardinal	windy/platforms/linux/x11/x.html#xaCardinal	const xaCardinal		348
+nim	xaColormap	windy/platforms/linux/x11/x.html#xaColormap	const xaColormap		349
+nim	xaCursor	windy/platforms/linux/x11/x.html#xaCursor	const xaCursor		350
+nim	xaCutBuffer0	windy/platforms/linux/x11/x.html#xaCutBuffer0	const xaCutBuffer0		351
+nim	xaCutBuffer1	windy/platforms/linux/x11/x.html#xaCutBuffer1	const xaCutBuffer1		352
+nim	xaCutBuffer2	windy/platforms/linux/x11/x.html#xaCutBuffer2	const xaCutBuffer2		353
+nim	xaCutBuffer3	windy/platforms/linux/x11/x.html#xaCutBuffer3	const xaCutBuffer3		354
+nim	xaCutBuffer4	windy/platforms/linux/x11/x.html#xaCutBuffer4	const xaCutBuffer4		355
+nim	xaCutBuffer5	windy/platforms/linux/x11/x.html#xaCutBuffer5	const xaCutBuffer5		356
+nim	xaCutBuffer6	windy/platforms/linux/x11/x.html#xaCutBuffer6	const xaCutBuffer6		357
+nim	xaCutBuffer7	windy/platforms/linux/x11/x.html#xaCutBuffer7	const xaCutBuffer7		358
+nim	xaDrawable	windy/platforms/linux/x11/x.html#xaDrawable	const xaDrawable		359
+nim	xaFont	windy/platforms/linux/x11/x.html#xaFont	const xaFont		360
+nim	xaInteger	windy/platforms/linux/x11/x.html#xaInteger	const xaInteger		361
+nim	xaPixmap	windy/platforms/linux/x11/x.html#xaPixmap	const xaPixmap		362
+nim	xaPoint	windy/platforms/linux/x11/x.html#xaPoint	const xaPoint		363
+nim	xaRectangle	windy/platforms/linux/x11/x.html#xaRectangle	const xaRectangle		364
+nim	xaResourceManager	windy/platforms/linux/x11/x.html#xaResourceManager	const xaResourceManager		365
+nim	xaRgbColorMap	windy/platforms/linux/x11/x.html#xaRgbColorMap	const xaRgbColorMap		366
+nim	xaRgbBestMap	windy/platforms/linux/x11/x.html#xaRgbBestMap	const xaRgbBestMap		367
+nim	xaRgbBlueMap	windy/platforms/linux/x11/x.html#xaRgbBlueMap	const xaRgbBlueMap		368
+nim	xaRgbDefaultMap	windy/platforms/linux/x11/x.html#xaRgbDefaultMap	const xaRgbDefaultMap		369
+nim	xaRgbGrayMap	windy/platforms/linux/x11/x.html#xaRgbGrayMap	const xaRgbGrayMap		370
+nim	xaRgbGreenMap	windy/platforms/linux/x11/x.html#xaRgbGreenMap	const xaRgbGreenMap		371
+nim	xaRgbRedMap	windy/platforms/linux/x11/x.html#xaRgbRedMap	const xaRgbRedMap		372
+nim	xaString	windy/platforms/linux/x11/x.html#xaString	const xaString		373
+nim	xaVisualid	windy/platforms/linux/x11/x.html#xaVisualid	const xaVisualid		374
+nim	xaWindow	windy/platforms/linux/x11/x.html#xaWindow	const xaWindow		375
+nim	xaWmCommand	windy/platforms/linux/x11/x.html#xaWmCommand	const xaWmCommand		376
+nim	xaWmHints	windy/platforms/linux/x11/x.html#xaWmHints	const xaWmHints		377
+nim	xaWmClientMachine	windy/platforms/linux/x11/x.html#xaWmClientMachine	const xaWmClientMachine		378
+nim	xaWmIconName	windy/platforms/linux/x11/x.html#xaWmIconName	const xaWmIconName		379
+nim	xaWmIconSize	windy/platforms/linux/x11/x.html#xaWmIconSize	const xaWmIconSize		380
+nim	xaWmName	windy/platforms/linux/x11/x.html#xaWmName	const xaWmName		381
+nim	xaWmNormalHints	windy/platforms/linux/x11/x.html#xaWmNormalHints	const xaWmNormalHints		382
+nim	xaWmSizeHints	windy/platforms/linux/x11/x.html#xaWmSizeHints	const xaWmSizeHints		383
+nim	xaWmZoomHints	windy/platforms/linux/x11/x.html#xaWmZoomHints	const xaWmZoomHints		384
+nim	xaMinSpace	windy/platforms/linux/x11/x.html#xaMinSpace	const xaMinSpace		385
+nim	xaNormSpace	windy/platforms/linux/x11/x.html#xaNormSpace	const xaNormSpace		386
+nim	xaMaxSpace	windy/platforms/linux/x11/x.html#xaMaxSpace	const xaMaxSpace		387
+nim	xaEndSpace	windy/platforms/linux/x11/x.html#xaEndSpace	const xaEndSpace		388
+nim	xaSuperscriptX	windy/platforms/linux/x11/x.html#xaSuperscriptX	const xaSuperscriptX		389
+nim	xaSuperscriptY	windy/platforms/linux/x11/x.html#xaSuperscriptY	const xaSuperscriptY		390
+nim	xaSubscriptX	windy/platforms/linux/x11/x.html#xaSubscriptX	const xaSubscriptX		391
+nim	xaSubscriptY	windy/platforms/linux/x11/x.html#xaSubscriptY	const xaSubscriptY		392
+nim	xaUnderlinePosition	windy/platforms/linux/x11/x.html#xaUnderlinePosition	const xaUnderlinePosition		393
+nim	xaUnderlineThickness	windy/platforms/linux/x11/x.html#xaUnderlineThickness	const xaUnderlineThickness		394
+nim	xaStrikeoutAscent	windy/platforms/linux/x11/x.html#xaStrikeoutAscent	const xaStrikeoutAscent		395
+nim	xaStrikeoutDescent	windy/platforms/linux/x11/x.html#xaStrikeoutDescent	const xaStrikeoutDescent		396
+nim	xaItalicAngle	windy/platforms/linux/x11/x.html#xaItalicAngle	const xaItalicAngle		397
+nim	xaXHeight	windy/platforms/linux/x11/x.html#xaXHeight	const xaXHeight		398
+nim	xaQuadWidth	windy/platforms/linux/x11/x.html#xaQuadWidth	const xaQuadWidth		399
+nim	xaWeight	windy/platforms/linux/x11/x.html#xaWeight	const xaWeight		400
+nim	xaPointSize	windy/platforms/linux/x11/x.html#xaPointSize	const xaPointSize		401
+nim	xaResolution	windy/platforms/linux/x11/x.html#xaResolution	const xaResolution		402
+nim	xaCopyright	windy/platforms/linux/x11/x.html#xaCopyright	const xaCopyright		403
+nim	xaNotice	windy/platforms/linux/x11/x.html#xaNotice	const xaNotice		404
+nim	xaFontName	windy/platforms/linux/x11/x.html#xaFontName	const xaFontName		405
+nim	xaFamilyName	windy/platforms/linux/x11/x.html#xaFamilyName	const xaFamilyName		406
+nim	xaFullName	windy/platforms/linux/x11/x.html#xaFullName	const xaFullName		407
+nim	xaCapHeight	windy/platforms/linux/x11/x.html#xaCapHeight	const xaCapHeight		408
+nim	xaWmClass	windy/platforms/linux/x11/x.html#xaWmClass	const xaWmClass		409
+nim	xaWmTransientFor	windy/platforms/linux/x11/x.html#xaWmTransientFor	const xaWmTransientFor		410
+nim	xaLastPredefined	windy/platforms/linux/x11/x.html#xaLastPredefined	const xaLastPredefined		411
+nim	xaNetWMState	windy/platforms/linux/x11/x.html#xaNetWMState	var xaNetWMState		416
+nim	xaNetWMStateMaximizedHorz	windy/platforms/linux/x11/x.html#xaNetWMStateMaximizedHorz	var xaNetWMStateMaximizedHorz		417
+nim	xaNetWMStateMaximizedVert	windy/platforms/linux/x11/x.html#xaNetWMStateMaximizedVert	var xaNetWMStateMaximizedVert		418
+nim	xaWMState	windy/platforms/linux/x11/x.html#xaWMState	var xaWMState		419
+nim	xaNetWMIcon	windy/platforms/linux/x11/x.html#xaNetWMIcon	var xaNetWMIcon		420
+nim	xaNetWMStateHiden	windy/platforms/linux/x11/x.html#xaNetWMStateHiden	var xaNetWMStateHiden		421
+nim	xaNetWMStateFullscreen	windy/platforms/linux/x11/x.html#xaNetWMStateFullscreen	var xaNetWMStateFullscreen		422
+nim	xaNetWMName	windy/platforms/linux/x11/x.html#xaNetWMName	var xaNetWMName		423
+nim	xaUTF8String	windy/platforms/linux/x11/x.html#xaUTF8String	var xaUTF8String		424
+nim	xaNetWMIconName	windy/platforms/linux/x11/x.html#xaNetWMIconName	var xaNetWMIconName		425
+nim	xaWMDeleteWindow	windy/platforms/linux/x11/x.html#xaWMDeleteWindow	var xaWMDeleteWindow		426
+nim	xaNetWMSyncRequest	windy/platforms/linux/x11/x.html#xaNetWMSyncRequest	var xaNetWMSyncRequest		427
+nim	xaNetWMSyncRequestCounter	windy/platforms/linux/x11/x.html#xaNetWMSyncRequestCounter	var xaNetWMSyncRequestCounter		428
+nim	xaClipboard	windy/platforms/linux/x11/x.html#xaClipboard	var xaClipboard		429
+nim	xaWindyClipboardTargetProperty	windy/platforms/linux/x11/x.html#xaWindyClipboardTargetProperty	var xaWindyClipboardTargetProperty		430
+nim	xaTargets	windy/platforms/linux/x11/x.html#xaTargets	var xaTargets		431
+nim	xaText	windy/platforms/linux/x11/x.html#xaText	var xaText		432

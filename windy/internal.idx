@@ -1,13 +1,14 @@
-CRLF	windy/internal.html#CRLF	internal: CRLF	
-WindowState	windy/internal.html#WindowState	internal: WindowState	
-PerFrame	windy/internal.html#PerFrame	internal: PerFrame	
-initialized	windy/internal.html#initialized	internal: initialized	
-platformDoubleClickInterval	windy/internal.html#platformDoubleClickInterval	internal: platformDoubleClickInterval	
-windyRand	windy/internal.html#windyRand	internal: windyRand	
-next	windy/internal.html#next,Rand	internal: next(rand: Rand): int	
-major	windy/internal.html#major,OpenGLVersion	internal: major(openglVersion: OpenGLVersion): int	
-minor	windy/internal.html#minor,OpenGLVersion	internal: minor(openglVersion: OpenGLVersion): int	
-handleButtonPressTemplate	windy/internal.html#handleButtonPressTemplate.t	internal: handleButtonPressTemplate()	
-handleButtonReleaseTemplate	windy/internal.html#handleButtonReleaseTemplate.t	internal: handleButtonReleaseTemplate()	
-handleRuneTemplate	windy/internal.html#handleRuneTemplate.t	internal: handleRuneTemplate()	
-addDefaultHeaders	windy/internal.html#addDefaultHeaders,seq[HttpHeader]	internal: addDefaultHeaders(headers: var seq[HttpHeader])	
+nimTitle	internal	windy/internal.html	module src/windy/internal		0
+nim	CRLF	windy/internal.html#CRLF	const CRLF		5
+nim	WindowState	windy/internal.html#WindowState	object WindowState		8
+nim	PerFrame	windy/internal.html#PerFrame	object PerFrame		26
+nim	initialized	windy/internal.html#initialized	var initialized		32
+nim	platformDoubleClickInterval	windy/internal.html#platformDoubleClickInterval	var platformDoubleClickInterval		33
+nim	windyRand	windy/internal.html#windyRand	var windyRand		34
+nim	next	windy/internal.html#next,Rand	proc next(rand: Rand): int		36
+nim	major	windy/internal.html#major,OpenGLVersion	proc major(openglVersion: OpenGLVersion): int		39
+nim	minor	windy/internal.html#minor,OpenGLVersion	proc minor(openglVersion: OpenGLVersion): int		53
+nim	handleButtonPressTemplate	windy/internal.html#handleButtonPressTemplate.t	template handleButtonPressTemplate()		67
+nim	handleButtonReleaseTemplate	windy/internal.html#handleButtonReleaseTemplate.t	template handleButtonReleaseTemplate()		137
+nim	handleRuneTemplate	windy/internal.html#handleRuneTemplate.t	template handleRuneTemplate()		151
+nim	addDefaultHeaders	windy/internal.html#addDefaultHeaders,seq[HttpHeader]	proc addDefaultHeaders(headers: var seq[HttpHeader])		159
