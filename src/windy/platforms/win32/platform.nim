@@ -1062,7 +1062,6 @@ proc newWindow*(
     var
       pixelFormat: int32
       numFormats: UINT
-
     if wglChoosePixelFormatARB(
       result.hdc,
       pixelFormatAttribs[0].unsafeAddr,
