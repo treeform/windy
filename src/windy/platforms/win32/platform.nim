@@ -619,27 +619,27 @@ proc loadOpenGL() =
   wglCreateContext =
     cast[wglCreateContext](GetProcAddress(opengl, "wglCreateContext"))
   if wglCreateContext == nil:
-    quit("wglCreateContext not fond in opengl32.dll")
+    quit("wglCreateContext not found in opengl32.dll")
   wglDeleteContext =
     cast[wglDeleteContext](GetProcAddress(opengl, "wglDeleteContext"))
   if wglDeleteContext == nil:
-    quit("wglDeleteContext not fond in opengl32.dll")
+    quit("wglDeleteContext not found in opengl32.dll")
   wglGetProcAddress =
     cast[wglGetProcAddress](GetProcAddress(opengl, "wglGetProcAddress"))
   if wglGetProcAddress == nil:
-    quit("wglGetProcAddress not fond in opengl32.dll")
+    quit("wglGetProcAddress not found in opengl32.dll")
   wglGetCurrentDC =
     cast[wglGetCurrentDC](GetProcAddress(opengl, "wglGetCurrentDC"))
   if wglGetCurrentDC == nil:
-    quit("wglGetCurrentDC not fond in opengl32.dll")
+    quit("wglGetCurrentDC not found in opengl32.dll")
   wglGetCurrentContext =
     cast[wglGetCurrentContext](GetProcAddress(opengl, "wglGetCurrentContext"))
   if wglGetCurrentContext == nil:
-    quit("wglGetCurrentContext not fond in opengl32.dll")
+    quit("wglGetCurrentContext not found in opengl32.dll")
   wglMakeCurrent =
     cast[wglMakeCurrent](GetProcAddress(opengl, "wglMakeCurrent"))
   if wglMakeCurrent == nil:
-    quit("wglMakeCurrent not fond in opengl32.dll")
+    quit("wglMakeCurrent not found in opengl32.dll")
 
   # Before we can load extensions, we need a dummy OpenGL context, created using
   # a dummy window. We use a dummy window because you can only set the pixel
@@ -1032,6 +1032,9 @@ proc newWindow*(
   try:
     result.hdc = getDC(result.hWnd)
 
+    if result.hdc == 0:
+      raise newException(WindyError, "result.hdc is 0")
+
     let pixelFormatAttribs = [
       WGL_DRAW_TO_WINDOW_ARB.int32,
       1,
@@ -1059,11 +1062,6 @@ proc newWindow*(
     var
       pixelFormat: int32
       numFormats: UINT
-
-    if wglChoosePixelFormatARB == nil:
-      raise newException(WindyError, "wglChoosePixelFormatARB is null")
-    if result.hdc == 0:
-      raise newException(WindyError, "result.hdc is 0")
 
     if wglChoosePixelFormatARB(
       result.hdc,
