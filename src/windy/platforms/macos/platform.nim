@@ -1,7 +1,9 @@
-import ../../common, ../../http, ../../internal, macdefs, opengl, pixie/fileformats/png,
+import ../../common, ../../internal, macdefs, opengl, pixie/fileformats/png,
     pixie/images, times, unicode, utils, vmath
 
-export http
+when defined(windyUseStdHttp):
+  import ../../http
+  export http
 
 type
   Window* = ref object
@@ -762,7 +764,8 @@ proc pollEvents*() =
         break
       NSApp.sendEvent(event)
 
-  pollHttp()
+  when defined(windyUseStdHttp):
+    pollHttp()
 
 proc makeContextCurrent*(window: Window) =
   window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
