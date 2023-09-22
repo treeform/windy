@@ -496,32 +496,6 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   else:
     discard
 
-proc keyDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
-  let window = windows.forNSWindow(self.NSView.window)
-  if window == nil:
-    return
-
-  window.handleButtonPress(keyCodeToButton[event.keyCode.int])
-  if window.state.runeInputEnabled:
-    discard self.NSView.inputContext.handleEvent(event)
-
-proc keyUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
-  let window = windows.forNSWindow(self.NSView.window)
-  if window == nil:
-    return
-  window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
-
-proc flagsChanged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
-  let window = windows.forNSWindow(self.NSView.window)
-  if window == nil:
-    return
-
-  let button = keyCodeToButton[event.keyCode]
-  if button in window.state.buttonDown:
-    window.handleButtonRelease(button)
-  else:
-    window.handleButtonPress(button)
-
 proc hasMarkedText(self: ID, cmd: SEL): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window != nil and window.markedText.int != 0:
@@ -717,9 +691,9 @@ proc init() {.raises: [].} =
       addMethod "rightMouseUp:", rightMouseUp
       addMethod "otherMouseDown:", otherMouseDown
       addMethod "otherMouseUp:", otherMouseUp
-      addMethod "keyDown:", keyDown
-      addMethod "keyUp:", keyUp
-      addMethod "flagsChanged:", flagsChanged
+      # addMethod "keyDown:", keyDown
+      # addMethod "keyUp:", keyUp
+      # addMethod "flagsChanged:", flagsChanged
       addMethod "hasMarkedText", hasMarkedText
       addMethod "markedRange", markedRange
       addMethod "selectedRange", selectedRange
@@ -742,6 +716,33 @@ proc init() {.raises: [].} =
 
   initialized = true
 
+proc keyDown(event: NSEvent) =
+  let nsWindow = event.window()
+  let window = windows.forNSWindow(nsWindow)
+  if window == nil:
+    return
+
+  window.handleButtonPress(keyCodeToButton[event.keyCode.int])
+  if window.state.runeInputEnabled:
+    discard nsWindow.contentView().inputContext.handleEvent(event)
+
+proc keyUp(event: NSEvent) =
+  let window = windows.forNSWindow(event.window())
+  if window == nil:
+    return
+  window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
+
+proc flagsChanged(event: NSEvent) =
+  let window = windows.forNSWindow(event.window())
+  if window == nil:
+    return
+
+  let button = keyCodeToButton[event.keyCode]
+  if button in window.state.buttonDown:
+    window.handleButtonRelease(button)
+  else:
+    window.handleButtonPress(button)
+
 proc pollEvents*() =
   # Draw first (in case a message closes a window or similar)
   for window in windows:
@@ -762,6 +763,24 @@ proc pollEvents*() =
       )
       if event.int == 0:
         break
+
+      # we skip NSApplication keys here as the normal
+      # NSApplication misses keyUp events when
+      # command et al are held down
+      #
+      # see:
+      # - https://stackoverflow.com/questions/24099063/how-do-i-detect-keyup-in-my-nsview-with-the-command-key-held
+      # - https://lists.apple.com/archives/cocoa-dev/2003/Oct/msg00442.html
+      # - https://github.com/andlabs/ui/blob/bc848f5c4078b999dbe6ef1cd90e16290a0d1c3a/delegateuitask_darwin.m#L46
+      #
+      if event.`type`() == NSEventTypeKeyDown:
+        keyDown(event)
+      elif event.`type`() == NSEventTypeKeyUp:
+        keyUp(event)
+      elif event.`type`() == NSEventTypeFlagsChanged:
+        flagsChanged(event)
+
+      # forward event for app to handle
       NSApp.sendEvent(event)
 
   when defined(windyUseStdHttp):
