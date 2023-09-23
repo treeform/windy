@@ -331,6 +331,7 @@ proc windowDidBecomeKey(
   if window.onFocusChange != nil:
     window.onFocusChange()
   handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
+  window.state.buttonDown = {}
 
 proc windowDidResignKey(
   self: ID,
@@ -340,6 +341,7 @@ proc windowDidResignKey(
   let window = windows.forNSWindow(self.NSWindow)
   if window != nil and window.onFocusChange != nil:
     window.onFocusChange()
+    window.state.buttonDown = {}
 
 proc windowShouldClose(
   self: ID,
