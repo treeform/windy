@@ -496,6 +496,16 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   else:
     discard
 
+
+proc keyDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
+  discard
+
+proc keyUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
+  discard
+
+proc flagsChanged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
+  discard
+
 proc hasMarkedText(self: ID, cmd: SEL): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window != nil and window.markedText.int != 0:
@@ -691,9 +701,9 @@ proc init() {.raises: [].} =
       addMethod "rightMouseUp:", rightMouseUp
       addMethod "otherMouseDown:", otherMouseDown
       addMethod "otherMouseUp:", otherMouseUp
-      # addMethod "keyDown:", keyDown
-      # addMethod "keyUp:", keyUp
-      # addMethod "flagsChanged:", flagsChanged
+      addMethod "keyDown:", keyDown
+      addMethod "keyUp:", keyUp
+      addMethod "flagsChanged:", flagsChanged
       addMethod "hasMarkedText", hasMarkedText
       addMethod "markedRange", markedRange
       addMethod "selectedRange", selectedRange
@@ -716,7 +726,7 @@ proc init() {.raises: [].} =
 
   initialized = true
 
-proc keyDown(event: NSEvent) =
+proc processKeyDown(event: NSEvent) =
   let nsWindow = event.window()
   let window = windows.forNSWindow(nsWindow)
   if window == nil:
@@ -726,13 +736,13 @@ proc keyDown(event: NSEvent) =
   if window.state.runeInputEnabled:
     discard nsWindow.contentView().inputContext.handleEvent(event)
 
-proc keyUp(event: NSEvent) =
+proc processKeyUp(event: NSEvent) =
   let window = windows.forNSWindow(event.window())
   if window == nil:
     return
   window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
 
-proc flagsChanged(event: NSEvent) =
+proc processFlagsChanged(event: NSEvent) =
   let window = windows.forNSWindow(event.window())
   if window == nil:
     return
@@ -774,11 +784,11 @@ proc pollEvents*() =
       # - https://github.com/andlabs/ui/blob/bc848f5c4078b999dbe6ef1cd90e16290a0d1c3a/delegateuitask_darwin.m#L46
       #
       if event.`type`() == NSEventTypeKeyDown:
-        keyDown(event)
+        processKeyDown(event)
       elif event.`type`() == NSEventTypeKeyUp:
-        keyUp(event)
+        processKeyUp(event)
       elif event.`type`() == NSEventTypeFlagsChanged:
-        flagsChanged(event)
+        processFlagsChanged(event)
 
       # forward event for app to handle
       NSApp.sendEvent(event)
