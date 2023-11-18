@@ -2354,3 +2354,18 @@ proc pollEvents*() =
 
   when defined(windyUseStdHttp):
     pollHttp()
+
+proc forceMousePos*(window: Window, mousePos: IVec2) =
+  ## Forces mouse position to a place.
+  ## This is used for simulating UI tests.
+  window.state.mousePos = mousePos
+
+proc forceButtonPress*(window: Window, button: Button) =
+  ## Forces button press.
+  ## This is used for simulating UI tests.
+  window.handleButtonPress(button)
+
+proc forceButtonReleased*(window: Window, button: Button) =
+  ## Forces button release.
+  ## This is used for simulating UI tests.
+  window.handleButtonRelease(button)
