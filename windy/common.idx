@@ -167,5 +167,6 @@ nim	`[]`	windy/common.html#[],ButtonView,Button	proc `[]`(buttonView: ButtonView
 nim	len	windy/common.html#len,ButtonView	proc len(buttonView: ButtonView): int		195
 nim	`[]`	windy/common.html#[],seq[HttpHeader],string	proc `[]`(headers: seq[HttpHeader]; key: string): string		198
 nim	`[]=`	windy/common.html#[]=,seq[HttpHeader],string,string	proc `[]=`(headers: var seq[HttpHeader]; key, value: string)		205
+nim	size	windy/common.html#size,Screen	proc size(screen: Screen): IVec2		214
 nimgrp	==	windy/common.html#==-procs-all	proc		186
 nimgrp	[]	windy/common.html#[]-procs-all	proc		192
