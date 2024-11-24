@@ -210,3 +210,10 @@ proc `[]=`*(headers: var seq[HttpHeader], key, value: string) =
       header.value = value
       return
   headers.add(HttpHeader(key: key, value: value))
+
+proc size*(screen: Screen): IVec2 =
+  ## Returns the size of the screen.
+  ivec2(
+    (screen.right - screen.left).int32,
+    (screen.bottom - screen.top).int32
+  )
