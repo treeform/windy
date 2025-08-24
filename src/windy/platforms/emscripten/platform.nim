@@ -20,6 +20,20 @@ type
     isCloseRequested: bool
     canvas: cstring
 
+    # Event state tracking
+    mousePos*: Vec2
+    mousePrevPos*: Vec2
+    mouseDelta*: Vec2
+    scrollDelta*: Vec2
+    buttonDown*: array[Button, bool]
+    buttonPressed*: array[Button, bool]
+    buttonReleased*: array[Button, bool]
+    buttonToggle*: array[Button, bool]
+    focused*: bool
+    contentScale*: float32
+    minimized*: bool
+    maximized*: bool
+
 var
   quitRequested*: bool
   onQuitRequest*: Callback
@@ -29,6 +43,9 @@ var
   initialized: bool
   windows: seq[Window]
   currentContext: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE
+  mainWindow: Window  # Track the main window for events
+
+proc setupEventHandlers(window: Window)  # Forward declaration
 
 proc init =
   if initialized:
@@ -88,10 +105,21 @@ proc newWindow*(
     if currentContext == 0:
       raise WindyError.newException("Failed to create WebGL context")
 
-  # Set canvas size
+    # Set canvas size
   set_canvas_size(size.x.cint, size.y.cint)
 
+  # Make canvas focusable for keyboard input
+  make_canvas_focusable()
+
   windows.add(result)
+  mainWindow = result
+
+  # Initialize event state
+  result.contentScale = 1.0
+  result.focused = true
+
+  # Setup event handlers
+  setupEventHandlers(result)
 
 proc makeContextCurrent*(window: Window) =
   if currentContext != 0:
@@ -111,9 +139,12 @@ proc closeRequested*(window: Window): bool =
   window.isCloseRequested
 
 proc pollEvents*() =
-  # Emscripten handles events through callbacks
-  # This is mostly a no-op but kept for API compatibility
-  discard
+  # Reset per-frame event states
+  if mainWindow != nil:
+    mainWindow.buttonPressed = default(array[Button, bool])
+    mainWindow.buttonReleased = default(array[Button, bool])
+    mainWindow.mouseDelta = vec2(0, 0)
+    mainWindow.scrollDelta = vec2(0, 0)
 
 proc size*(window: Window): IVec2 =
   window.size
@@ -154,19 +185,19 @@ proc framebufferSize*(window: Window): IVec2 =
   result.y = canvas_get_height().int32
 
 proc contentScale*(window: Window): float32 =
-  1.0  # Could be implemented to check devicePixelRatio
+  window.contentScale
 
 proc minimized*(window: Window): bool =
-  false  # Not applicable in browser
+  window.minimized
 
 proc `minimized=`*(window: Window, minimized: bool) =
-  discard
+  window.minimized = minimized
 
 proc maximized*(window: Window): bool =
-  false  # Could check if fullscreen
+  window.maximized
 
 proc `maximized=`*(window: Window, maximized: bool) =
-  discard
+  window.maximized = maximized
 
 proc fullscreen*(window: Window): bool =
   false  # Could be implemented with Fullscreen API
@@ -175,16 +206,23 @@ proc `fullscreen=`*(window: Window, fullscreen: bool) =
   discard
 
 proc focused*(window: Window): bool =
-  true  # Could be implemented with Page Visibility API
+  window.focused
 
 proc `focused=`*(window: Window, focused: bool) =
-  discard
+  window.focused = focused
 
 proc mousePos*(window: Window): Vec2 =
-  vec2(0, 0)  # Would need to track from mouse events
+  window.mousePos
 
-proc mousePos*(window: Window, mouse: Vec2) =
-  discard
+proc `mousePos=`*(window: Window, mouse: Vec2) =
+  window.mousePos = mouse
+
+# Additional getters for mouse tracking
+proc mousePrevPos*(window: Window): Vec2 =
+  window.mousePrevPos
+
+proc mouseDelta*(window: Window): Vec2 =
+  window.mouseDelta
 
 proc screenToContent*(window: Window, v: Vec2): Vec2 =
   v
@@ -193,22 +231,29 @@ proc contentToScreen*(window: Window, v: Vec2): Vec2 =
   v
 
 # Button state tracking
-var buttonStates: array[Button, bool]
-
 proc buttonDown*(button: Button): bool =
-  buttonStates[button]
+  if mainWindow != nil:
+    mainWindow.buttonDown[button]
+  else:
+    false
 
 proc buttonPressed*(button: Button): bool =
-  # Would need to track press events
-  false
+  if mainWindow != nil:
+    mainWindow.buttonPressed[button]
+  else:
+    false
 
 proc buttonReleased*(button: Button): bool =
-  # Would need to track release events
-  false
+  if mainWindow != nil:
+    mainWindow.buttonReleased[button]
+  else:
+    false
 
 proc buttonToggle*(button: Button): bool =
-  # Would need to track toggle state
-  false
+  if mainWindow != nil:
+    mainWindow.buttonToggle[button]
+  else:
+    false
 
 # Clipboard functions
 proc clipboardContent*(): string =
@@ -299,6 +344,169 @@ when defined(windyUseStdHttp):
 proc loadExtensions*() =
   # Extensions are loaded automatically in WebGL
   discard
+
+# Convert JavaScript key codes to windy Button enum
+proc keyCodeToButton(keyCode: culong): Button =
+  case keyCode:
+  of 27: KeyEscape
+  of 32: KeySpace
+  of 13: KeyEnter
+  of 8: KeyBackspace
+  of 9: KeyTab
+  of 37: KeyLeft
+  of 38: KeyUp
+  of 39: KeyRight
+  of 40: KeyDown
+  of 65: KeyA
+  of 66: KeyB
+  of 67: KeyC
+  of 68: KeyD
+  of 69: KeyE
+  of 70: KeyF
+  of 71: KeyG
+  of 72: KeyH
+  of 73: KeyI
+  of 74: KeyJ
+  of 75: KeyK
+  of 76: KeyL
+  of 77: KeyM
+  of 78: KeyN
+  of 79: KeyO
+  of 80: KeyP
+  of 81: KeyQ
+  of 82: KeyR
+  of 83: KeyS
+  of 84: KeyT
+  of 85: KeyU
+  of 86: KeyV
+  of 87: KeyW
+  of 88: KeyX
+  of 89: KeyY
+  of 90: KeyZ
+  of 48: Key0
+  of 49: Key1
+  of 50: Key2
+  of 51: Key3
+  of 52: Key4
+  of 53: Key5
+  of 54: Key6
+  of 55: Key7
+  of 56: Key8
+  of 57: Key9
+  else: ButtonUnknown
+
+proc mouseButtonToButton(button: cushort): Button =
+  case button:
+  of 0: MouseLeft
+  of 1: MouseMiddle
+  of 2: MouseRight
+  else: MouseButton4
+
+# Event handlers
+proc onMouseDown(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  # Ensure canvas has focus when clicked
+  make_canvas_focusable()
+  let button = mouseButtonToButton(mouseEvent.button)
+  window.buttonDown[button] = true
+  window.buttonPressed[button] = true
+  if window.onButtonPress != nil:
+    window.onButtonPress(button)
+  return 1
+
+proc onMouseUp(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  let button = mouseButtonToButton(mouseEvent.button)
+  window.buttonDown[button] = false
+  window.buttonReleased[button] = true
+  if window.onButtonRelease != nil:
+    window.onButtonRelease(button)
+  return 1
+
+proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.mousePrevPos = window.mousePos
+  # Use clientX/clientY as they are more reliably populated
+  window.mousePos = vec2(mouseEvent.clientX.float32, mouseEvent.clientY.float32)
+  window.mouseDelta = window.mousePos - window.mousePrevPos
+  if window.onMouseMove != nil:
+    window.onMouseMove()
+  return 1
+
+proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.scrollDelta = vec2(wheelEvent.deltaX.float32, wheelEvent.deltaY.float32)
+  if window.onScroll != nil:
+    window.onScroll()
+  return 1
+
+proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  let button = keyCodeToButton(keyEvent.keyCode)
+  window.buttonDown[button] = true
+  window.buttonPressed[button] = true
+  if window.onButtonPress != nil:
+    window.onButtonPress(button)
+  return 1
+
+proc onKeyUp(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  let button = keyCodeToButton(keyEvent.keyCode)
+  window.buttonDown[button] = false
+  window.buttonReleased[button] = true
+  if window.onButtonRelease != nil:
+    window.onButtonRelease(button)
+  return 1
+
+proc onKeyPress(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  if window.onRune != nil and keyEvent.charCode > 0:
+    window.onRune(Rune(keyEvent.charCode))
+  return 1
+
+proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.focused = true
+  if window.onFocusChange != nil:
+    window.onFocusChange()
+  return 1
+
+proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.focused = false
+  if window.onFocusChange != nil:
+    window.onFocusChange()
+  return 1
+
+proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.size = ivec2(canvas_get_width().int32, canvas_get_height().int32)
+  if window.onResize != nil:
+    window.onResize()
+  return 1
+
+proc setupEventHandlers(window: Window) =
+  # Mouse events
+  discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mouseup_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mousemove_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseMove, EM_CALLBACK_THREAD_CONTEXT)
+
+  # Wheel event
+  discard emscripten_set_wheel_callback_on_thread(window.canvas, cast[pointer](window), 1, onWheel, EM_CALLBACK_THREAD_CONTEXT)
+
+  # Keyboard events (use canvas to avoid querySelector issues)
+  discard emscripten_set_keydown_callback_on_thread(window.canvas, cast[pointer](window), 1, onKeyDown, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_keyup_callback_on_thread(window.canvas, cast[pointer](window), 1, onKeyUp, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_keypress_callback_on_thread(window.canvas, cast[pointer](window), 1, onKeyPress, EM_CALLBACK_THREAD_CONTEXT)
+
+  # Focus events
+  discard emscripten_set_focus_callback_on_thread(window.canvas, cast[pointer](window), 1, onFocus, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_blur_callback_on_thread(window.canvas, cast[pointer](window), 1, onBlur, EM_CALLBACK_THREAD_CONTEXT)
+
+  # Resize event - TODO: Fix window resize event handling
+  # The EMSCRIPTEN_EVENT_TARGET_WINDOW (null) doesn't work properly with resize callback
+  # For now, commenting out to avoid errors. Canvas size is set initially.
+  # discard emscripten_set_resize_callback_on_thread(window.canvas, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
 
 proc run*(window: Window, f: proc() {.cdecl.}) =
   ## This is the only way to run a loop in emscripten.
