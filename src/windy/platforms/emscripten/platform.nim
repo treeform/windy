@@ -485,6 +485,17 @@ proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer
     window.onResize()
   return 1
 
+# Callback for JavaScript resize events
+proc onCanvasResize(userData: pointer) {.cdecl, exportc.} =
+  let window = cast[Window](userData)
+  # Update the window size based on current canvas size
+  let newWidth = canvas_get_width()
+  let newHeight = canvas_get_height()
+  if newWidth != window.size.x or newHeight != window.size.y:
+    window.size = ivec2(newWidth, newHeight)
+    if window.onResize != nil:
+      window.onResize()
+
 proc setupEventHandlers(window: Window) =
   # Mouse events
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
@@ -503,10 +514,8 @@ proc setupEventHandlers(window: Window) =
   discard emscripten_set_focus_callback_on_thread(window.canvas, cast[pointer](window), 1, onFocus, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_blur_callback_on_thread(window.canvas, cast[pointer](window), 1, onBlur, EM_CALLBACK_THREAD_CONTEXT)
 
-  # Resize event - TODO: Fix window resize event handling
-  # The EMSCRIPTEN_EVENT_TARGET_WINDOW (null) doesn't work properly with resize callback
-  # For now, commenting out to avoid errors. Canvas size is set initially.
-  # discard emscripten_set_resize_callback_on_thread(window.canvas, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
+  # Set up resize observer using JavaScript
+  setup_resize_observer(cast[pointer](window))
 
 proc run*(window: Window, f: proc() {.cdecl.}) =
   ## This is the only way to run a loop in emscripten.

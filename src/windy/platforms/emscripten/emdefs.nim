@@ -32,12 +32,54 @@ EM_JS(void, make_canvas_focusable, (), {
   // Focus the canvas initially
   Module.canvas.focus();
 });
+
+EM_JS(void, setup_resize_observer, (void* userData), {
+  // Store the userData pointer for resize callbacks
+  Module.resizeUserData = userData;
+
+  // Hook into the existing Module.setCanvasSize if it exists
+  if (Module.setCanvasSize) {
+    var originalSetCanvasSize = Module.setCanvasSize;
+    Module.setCanvasSize = function(width, height) {
+      // Call the original function
+      originalSetCanvasSize.call(Module, width, height);
+      // Trigger our resize callback
+      if (typeof _onCanvasResize !== 'undefined') {
+        _onCanvasResize(Module.resizeUserData);
+      }
+    };
+  }
+
+  // Also set up window resize listener as fallback
+  if (!Module.resizeHandler) {
+    Module.resizeHandler = function() {
+      // Call the exported C function directly
+      if (typeof _onCanvasResize !== 'undefined') {
+        _onCanvasResize(Module.resizeUserData);
+      }
+    };
+    window.addEventListener('resize', Module.resizeHandler);
+  }
+
+  // Monitor canvas size changes using ResizeObserver if available
+  if (typeof ResizeObserver !== 'undefined' && Module.canvas) {
+    if (!Module.canvasResizeObserver) {
+      Module.canvasResizeObserver = new ResizeObserver(function(entries) {
+        if (typeof _onCanvasResize !== 'undefined') {
+          _onCanvasResize(Module.resizeUserData);
+        }
+      });
+      Module.canvasResizeObserver.observe(Module.canvas);
+    }
+  }
+});
 """.}
 
 proc canvas_get_width*(): cint {.importc.}
 proc canvas_get_height*(): cint {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
 proc make_canvas_focusable*() {.importc.}
+proc setup_resize_observer*(userData: pointer) {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint
