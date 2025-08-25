@@ -147,6 +147,10 @@ proc pollEvents*() =
     mainWindow.scrollDelta = vec2(0, 0)
 
 proc size*(window: Window): IVec2 =
+  # Get the size of the canvas.
+  # TODO: Currently the resize even is not working.
+  window.size.x = canvas_get_width().int32
+  window.size.y = canvas_get_height().int32
   window.size
 
 proc `size=`*(window: Window, size: IVec2) =
