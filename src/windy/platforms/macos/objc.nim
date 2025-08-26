@@ -1,5 +1,9 @@
 import macros, strutils, typetraits
 
+# Because we cast many of the ObjC functions to proc pointers, we get a warning.
+# They used to be fine but they turned into errors, turn them into warnings again.
+{.passC: "-Wno-incompatible-function-pointer-types".}
+
 type
   Class* = distinct int
   ID* = distinct int
