@@ -1,3 +1,6 @@
+# Allow Emscripten to do odd things with function pointers.
+{.passC: "-Wno-incompatible-function-pointer-types".}
+
 # Emscripten specific definitions
 
 proc emscripten_set_main_loop*(f: proc() {.cdecl.}, a: cint, b: bool) {.importc.}
