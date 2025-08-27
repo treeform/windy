@@ -148,9 +148,6 @@ proc pollEvents*() =
 
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
-  # TODO: Currently the resize even is not working.
-  window.size.x = canvas_get_width().int32
-  window.size.y = canvas_get_height().int32
   window.size
 
 proc `size=`*(window: Window, size: IVec2) =
@@ -517,6 +514,9 @@ proc setupEventHandlers(window: Window) =
   # Focus events
   discard emscripten_set_focus_callback_on_thread(window.canvas, cast[pointer](window), 1, onFocus, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_blur_callback_on_thread(window.canvas, cast[pointer](window), 1, onBlur, EM_CALLBACK_THREAD_CONTEXT)
+
+  # Window resize handler
+  discard emscripten_set_resize_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_WINDOW, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
 
   # Set up resize observer using JavaScript
   setup_resize_observer(cast[pointer](window))

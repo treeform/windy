@@ -195,7 +195,8 @@ const
 # Using cast[pointer](1) for the main thread context
 const EM_CALLBACK_THREAD_CONTEXT* = cast[pointer](1)
 
-# Event target constants
-const EMSCRIPTEN_EVENT_TARGET_WINDOW* = cstring(nil)
-const EMSCRIPTEN_EVENT_TARGET_DOCUMENT* = cstring("#document")
-const EMSCRIPTEN_EVENT_TARGET_SCREEN* = cstring("#screen")
+# Event target constants (match html5.h sentinel pointers)
+const EMSCRIPTEN_EVENT_TARGET_INVALID* = cast[cstring](0)
+const EMSCRIPTEN_EVENT_TARGET_DOCUMENT* = cast[cstring](1)
+const EMSCRIPTEN_EVENT_TARGET_WINDOW* = cast[cstring](2)
+const EMSCRIPTEN_EVENT_TARGET_SCREEN* = cast[cstring](3)
