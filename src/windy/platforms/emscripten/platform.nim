@@ -148,6 +148,8 @@ proc pollEvents*() =
 
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
+  window.size.x = canvas_get_width().int32
+  window.size.y = canvas_get_height().int32
   window.size
 
 proc `size=`*(window: Window, size: IVec2) =
@@ -481,6 +483,7 @@ proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: poi
 
 proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  set_canvas_size(uiEvent.windowInnerWidth, uiEvent.windowInnerHeight)
   window.size = ivec2(canvas_get_width().int32, canvas_get_height().int32)
   if window.onResize != nil:
     window.onResize()
