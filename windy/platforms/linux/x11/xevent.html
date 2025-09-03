@@ -248,15 +248,15 @@
   mode*: cint
   detail*: cint">XFocusChangeEvent</a></li>
 <li><a class="reference" href="#XGenericEvent" title="XGenericEvent = object
-  kind*: XEventKind          ## of event. Always GenericEvent
-  serial*: culong            ## of last request processed
+  kind*: XEventKind          ## Type of event. Always GenericEvent
+  serial*: culong            ## Serial number of last request processed
   send_event*: bool          ## true if from SendEvent request
   display*: Display          ## Display the event was read from
   extension*: cint           ## major opcode of extension that caused the event
   evtype*: cint              ## actual event type.">XGenericEvent</a></li>
 <li><a class="reference" href="#XGenericEventCookie" title="XGenericEventCookie = object
-  kind*: XEventKind          ## of event. Always GenericEvent
-  serial*: culong            ## of last request processed
+  kind*: XEventKind          ## Type of event. Always GenericEvent
+  serial*: culong            ## Serial number of last request processed
   send_event*: bool          ## true if from SendEvent request
   display*: Display          ## Display the event was read from
   extension*: cint           ## major opcode of extension that caused the event
@@ -841,8 +841,8 @@
 </div>
 <div id="XGenericEvent">
   <dt><pre><a href="xevent.html#XGenericEvent"><span class="Identifier">XGenericEvent</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="xevent.html#XEventKind"><span class="Identifier">XEventKind</span></a>          <span class="Comment">## of event. Always GenericEvent</span>
-  <span class="Identifier">serial</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">culong</span>            <span class="Comment">## of last request processed</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="xevent.html#XEventKind"><span class="Identifier">XEventKind</span></a>          <span class="Comment">## Type of event. Always GenericEvent</span>
+  <span class="Identifier">serial</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">culong</span>            <span class="Comment">## Serial number of last request processed</span>
   <span class="Identifier">send_event</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>          <span class="Comment">## true if from SendEvent request</span>
   <span class="Identifier">display</span><span class="Operator">*</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a>          <span class="Comment">## Display the event was read from</span>
   <span class="Identifier">extension</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">cint</span>           <span class="Comment">## major opcode of extension that caused the event</span>
@@ -857,8 +857,8 @@
 </div>
 <div id="XGenericEventCookie">
   <dt><pre><a href="xevent.html#XGenericEventCookie"><span class="Identifier">XGenericEventCookie</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="xevent.html#XEventKind"><span class="Identifier">XEventKind</span></a>          <span class="Comment">## of event. Always GenericEvent</span>
-  <span class="Identifier">serial</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">culong</span>            <span class="Comment">## of last request processed</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="xevent.html#XEventKind"><span class="Identifier">XEventKind</span></a>          <span class="Comment">## Type of event. Always GenericEvent</span>
+  <span class="Identifier">serial</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">culong</span>            <span class="Comment">## Serial number of last request processed</span>
   <span class="Identifier">send_event</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>          <span class="Comment">## true if from SendEvent request</span>
   <span class="Identifier">display</span><span class="Operator">*</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a>          <span class="Comment">## Display the event was read from</span>
   <span class="Identifier">extension</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">cint</span>           <span class="Comment">## major opcode of extension that caused the event</span>
@@ -1284,7 +1284,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-08-27 23:07:38 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-03 04:05:34 UTC</small>
       </div>
     </div>
   </div>
