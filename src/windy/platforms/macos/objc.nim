@@ -65,7 +65,7 @@ macro objc*(body: untyped) =
 
     fn[6] = procBody
 
-    # Someday we can look at the retType and be smarter but this works well now.
+    # In the future we can look at the retType and be smarter but this works well now.
     if repr(retType) in ["NSRect"]:
       procBody[0][0][2][1] = ident("objc_msgSend_stret")
     elif repr(retType) in ["float64", "NSPoint"]:
@@ -107,14 +107,14 @@ macro objc*(body: untyped) =
           procBody[1].add ident("sel" & $numSel)
 
         else:
-          # Second "first real arugment never gets a selector entry, only :
+          # Second "first real argument never gets a selector entry, only :
           if numParams != 1:
             var fixArg = argName
             fixArg.removeSuffix("_mangle")
             sel.add fixArg
           else:
             if argName != "x":
-              error("Second arugment needs to be x.", arg)
+              error("Second argument needs to be x.", arg)
           sel.add ":"
 
           # Add second name and type as is.

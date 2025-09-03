@@ -412,7 +412,7 @@ const
 
 var
   # These "constants" are not known at compile time,
-  # but are poluatinged by x11 via initConstants().
+  # but are populated by x11 via initConstants().
   xaNetWMState*: Atom
   xaNetWMStateMaximizedHorz*: Atom
   xaNetWMStateMaximizedVert*: Atom

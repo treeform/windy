@@ -78,11 +78,11 @@ type
     style: LONG
     rect: RECT
 
-  TrayMenyEntryKind* = enum
+  TrayMenuEntryKind* = enum
     TrayMenuOption, TrayMenuSeparator
 
   TrayMenuEntry* = object
-    case kind*: TrayMenyEntryKind
+    case kind*: TrayMenuEntryKind
     of TrayMenuOption:
       text*: string
       onClick*: Callback
@@ -1844,7 +1844,7 @@ elif compileOption("threads"):
           handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())
           return
 
-      state.responseContentLength = -1 # Unkonwn length
+      state.responseContentLength = -1 # Unknown length
 
       try:
         state.responseContentLength = parseInt($cast[ptr WCHAR](buf[0].addr))
@@ -1865,7 +1865,7 @@ elif compileOption("threads"):
       nil
     )
     if GetLastError() == ERROR_INSUFFICIENT_BUFFER: # Expected!
-      # Set the header buffer to the correct size and inclue a null terminator
+      # Set the header buffer to the correct size and include a null terminator
       responseHeadersBuf.setLen(responseHeadersLen)
     else:
       handle.onHttpError("WinHttpQueryHeaders error: " & $GetLastError())

@@ -129,7 +129,7 @@ proc closeIme*(window: Window) =
   let inputContext = window.inner.contentView.inputContext
   inputContext.discardMarkedText()
 
-  # This shouldn't? be required but without this the Pinyin IME candidate
+  # This should not be required but without this the Pinyin IME candidate
   # window will not close.
   inputContext.deactivate()
   inputContext.activate()
@@ -572,7 +572,7 @@ proc setMarkedText(
     window.onImeChange()
 
 proc unmarkText(self: ID, cmd: SEL): ID {.cdecl.} =
-  # Should accept / commit the marked text, but I can't get this called to test.
+  # Should accept / commit the marked text, but I cannot get this called to test.
   discard
 
 proc validAttributesForMarkedText(self: ID, cmd: SEL): NSArray {.cdecl.} =
@@ -869,7 +869,7 @@ proc newWindow*(
     result.pos = ivec2(0, 0)
     result.visible = visible
 
-  pollEvents() # This can cause lots of issues, workaround?
+  pollEvents() # This can cause lots of issues, potential workaround needed
 
 proc title*(window: Window): string =
   window.state.title

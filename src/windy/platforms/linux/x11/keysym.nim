@@ -12,7 +12,7 @@ const
   xk_Scroll_Lock*: KeySym = 0x0000FF14
   xk_Sys_Req*: KeySym = 0x0000FF15
   xk_Escape*: KeySym = 0x0000FF1B
-  xk_Delete*: KeySym = 0x0000FFFF                           # Delete, rubout \
+  xk_Delete*: KeySym = 0x0000FFFF                           # Delete, rubout
 
   # International & multi-key character composition
   xk_Multi_key*: KeySym = 0x0000FF20                        # Multi-key character compose
@@ -39,7 +39,7 @@ const
   xk_Eisu_toggle*: KeySym = 0x0000FF30                      # Alphanumeric toggle
   xk_Kanji_Bangou*: KeySym = 0x0000FF37                     # Codeinput
   xk_Zen_Koho*: KeySym = 0x0000FF3D                         # Multiple/All Candidate(s)
-  xk_Mae_Koho*: KeySym = 0x0000FF3E                         # Previous Candidate \
+  xk_Mae_Koho*: KeySym = 0x0000FF3E                         # Previous Candidate
   # = $FF31 thru = $FF3F are under xk_KOREAN
 
   # Cursor control & motion
@@ -53,7 +53,7 @@ const
   xk_Next*: KeySym = 0x0000FF56                             # Next
   xk_Page_Down*: KeySym = 0x0000FF56
   xk_End*: KeySym = 0x0000FF57                              # EOL
-  xk_Begin*: KeySym = 0x0000FF58                            # BOL \
+  xk_Begin*: KeySym = 0x0000FF58                            # BOL
                               # Misc Functions
   xk_Select*: KeySym = 0x0000FF60                           # Select, mark
   xk_Print*: KeySym = 0x0000FF61
@@ -1361,7 +1361,7 @@ const
   xk_Hangul_MultipleCandidate*: KeySym = 0x0000FF3D # Multiple candidate
   xk_Hangul_PreviousCandidate*: KeySym = 0x0000FF3E # Previous candidate
   xk_Hangul_Special*: KeySym = 0x0000FF3F # Special symbols
-  xk_Hangul_switch*: KeySym = 0x0000FF7E # Alias for mode_switch \
+  xk_Hangul_switch*: KeySym = 0x0000FF7E # Alias for mode_switch
                                   # Hangul Consonant Characters
   xk_Hangul_Kiyeog*: KeySym = 0x00000EA1
   xk_Hangul_SsangKiyeog*: KeySym = 0x00000EA2
@@ -1619,7 +1619,7 @@ const
   xk_ocaron*: KeySym = 0x000016BD
   xk_obarred*: KeySym = 0x000016BF
   xkc_SCHWA*: KeySym = 0x000016C6
-  xk_schwa*: KeySym = 0x000016F6 # those are not really Caucasus, but I put them here for now\
+  xk_schwa*: KeySym = 0x000016F6 # those are not really Caucasus, but I put them here for now
                                                             # For Inupiak
   xkc_Lbelowdot*: KeySym = 0x000016D1
   xkc_Lstrokebelowdot*: KeySym = 0x000016D2

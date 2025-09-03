@@ -375,16 +375,16 @@ type
     window*: Window
 
   XGenericEvent* = object
-    kind*: XEventKind ## of event. Always GenericEvent
-    serial*: culong   ## of last request processed
+    kind*: XEventKind ## Type of event. Always GenericEvent
+    serial*: culong   ## Serial number of last request processed
     send_event*: bool ## true if from SendEvent request
     display*: Display ## Display the event was read from
     extension*: cint  ## major opcode of extension that caused the event
     evtype*: cint     ## actual event type.
 
   XGenericEventCookie* = object
-    kind*: XEventKind ## of event. Always GenericEvent
-    serial*: culong   ## of last request processed
+    kind*: XEventKind ## Type of event. Always GenericEvent
+    serial*: culong   ## Serial number of last request processed
     send_event*: bool ## true if from SendEvent request
     display*: Display ## Display the event was read from
     extension*: cint  ## major opcode of extension that caused the event
