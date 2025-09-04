@@ -356,10 +356,19 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 13: KeyEnter
   of 8: KeyBackspace
   of 9: KeyTab
+  of 16: KeyLeftShift
+  of 17: KeyLeftControl
+  of 18: KeyLeftAlt
+  of 20: KeyCapsLock
+  of 33: KeyPageUp
+  of 34: KeyPageDown
+  of 35: KeyEnd
+  of 36: KeyHome
   of 37: KeyLeft
   of 38: KeyUp
   of 39: KeyRight
   of 40: KeyDown
+  of 46: KeyDelete
   of 65: KeyA
   of 66: KeyB
   of 67: KeyC
@@ -396,6 +405,17 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 55: Key7
   of 56: Key8
   of 57: Key9
+  of 186: KeySemicolon
+  of 187: KeyEqual
+  of 188: KeyComma
+  of 189: KeyMinus
+  of 190: KeyPeriod
+  of 191: KeySlash
+  of 192: KeyBacktick
+  of 219: KeyLeftBracket
+  of 220: KeyBackslash
+  of 221: KeyRightBracket
+  of 222: KeyApostrophe
   else: ButtonUnknown
 
 proc mouseButtonToButton(button: cushort): Button =
