@@ -34,6 +34,10 @@ type
     minimized*: bool
     maximized*: bool
 
+    # TODO: Implement IME with Emscripten.
+    imeCursorIndex*: int
+    imeCompositionString*: string
+
 var
   quitRequested*: bool
   onQuitRequest*: Callback
@@ -337,6 +341,18 @@ proc depthBits*(window: Window): int =
 
 proc stencilBits*(window: Window): int =
   8
+
+proc setClipboardString*(s: string) =
+  # TODO: Implement clipboard with Emscripten.
+  discard
+
+proc getClipboardString*(): string =
+  # TODO: Implement clipboard with Emscripten.
+  ""
+
+proc closeIme*(window: Window) =
+  # TODO: Implement IME with Emscripten.
+  discard
 
 # HTTP functions (if needed)
 when defined(windyUseStdHttp):
