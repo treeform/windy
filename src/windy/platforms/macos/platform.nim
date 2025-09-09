@@ -818,19 +818,11 @@ proc newWindow*(
     else:
       raise newException(WindyError, "Unsupported OpenGL version")
 
-  # Choose the window mask based on the style parameter
-  let windowMask = case style:
-    of DecoratedResizable:
-      decoratedResizableWindowMask
-    of Decorated:
-      decoratedWindowMask
-    of Undecorated, Transparent:
-      undecoratedWindowMask
 
   autoreleasepool:
     result.inner = WindyWindow.alloc().NSWindow.initWithContentRect(
       NSMakeRect(0, 0, 400, 400),
-      windowMask,
+      decoratedResizableWindowMask,
       NSBackingStoreBuffered,
       false
     )
@@ -885,8 +877,9 @@ proc newWindow*(
     result.title = title
     result.size = size
     result.pos = ivec2(0, 0)
-    result.visible = visible
+
     result.style = style
+    result.visible = visible
 
   pollEvents() # This can cause lots of issues, potential workaround needed
 
