@@ -800,6 +800,7 @@ proc close*(window: Window) =
 proc newWindow*(
   title: string,
   size: IVec2,
+  style = DecoratedResizable,
   visible = true,
   vsync = true,
   openglVersion = OpenGL4Dot1,
@@ -817,10 +818,19 @@ proc newWindow*(
     else:
       raise newException(WindyError, "Unsupported OpenGL version")
 
+  # Choose the window mask based on the style parameter
+  let windowMask = case style:
+    of DecoratedResizable:
+      decoratedResizableWindowMask
+    of Decorated:
+      decoratedWindowMask
+    of Undecorated, Transparent:
+      undecoratedWindowMask
+
   autoreleasepool:
     result.inner = WindyWindow.alloc().NSWindow.initWithContentRect(
       NSMakeRect(0, 0, 400, 400),
-      decoratedResizableWindowMask,
+      windowMask,
       NSBackingStoreBuffered,
       false
     )
@@ -857,6 +867,14 @@ proc newWindow*(
       NSOpenGLContextParameterSwapInterval
     )
 
+    # Handle transparency for Transparent style
+    if style == Transparent:
+      var opaque: GLint = 0
+      openglView.openGLContext.setValues(
+        opaque.addr,
+        NSOpenGLContextParameterSurfaceOpacity
+      )
+
     result.inner.setDelegate(result.inner.ID)
     result.inner.setContentView(openglView.NSView)
     discard result.inner.makeFirstResponder(openglView.NSView)
@@ -868,6 +886,7 @@ proc newWindow*(
     result.size = size
     result.pos = ivec2(0, 0)
     result.visible = visible
+    result.style = style
 
   pollEvents() # This can cause lots of issues, potential workaround needed
 
