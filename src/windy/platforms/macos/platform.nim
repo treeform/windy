@@ -145,7 +145,7 @@ proc `icon=`*(window: Window, icon: Image) =
 proc `visible=`*(window: Window, visible: bool) =
   autoreleasepool:
     if visible:
-      window.inner.orderFront(0.ID)
+      window.inner.makeKeyAndOrderFront(0.ID)
     else:
       window.inner.orderOut(0.ID)
 

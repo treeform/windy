@@ -199,6 +199,7 @@ objc:
   ): NSWindow
   proc orderFront*(self: NSWindow, x: ID)
   proc orderOut*(self: NSWindow, x: ID)
+  proc makeKeyAndOrderFront*(self: NSWindow, x: ID)
   proc setTitle*(self: NSWindow, x: NSString)
   proc close*(self: NSWindow)
   proc isVisible*(self: NSWindow): bool
