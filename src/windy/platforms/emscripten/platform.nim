@@ -20,23 +20,7 @@ type
     isCloseRequested: bool
     canvas: cstring
 
-    # Event state tracking
-    mousePos*: Vec2
-    mousePrevPos*: Vec2
-    mouseDelta*: Vec2
-    scrollDelta*: Vec2
-    buttonDown*: array[Button, bool]
-    buttonPressed*: array[Button, bool]
-    buttonReleased*: array[Button, bool]
-    buttonToggle*: array[Button, bool]
-    focused*: bool
-    contentScale*: float32
-    minimized*: bool
-    maximized*: bool
-
-    # TODO: Implement IME with Emscripten.
-    imeCursorIndex*: int
-    imeCompositionString*: string
+    state: WindowState
 
 var
   quitRequested*: bool
@@ -49,6 +33,9 @@ var
   currentContext: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE
   mainWindow: Window  # Track the main window for events
 
+proc handleButtonPress(window: Window, button: Button)
+proc handleButtonRelease(window: Window, button: Button)
+proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
 
 proc init =
@@ -119,8 +106,7 @@ proc newWindow*(
   mainWindow = result
 
   # Initialize event state
-  result.contentScale = 1.0
-  result.focused = true
+  result.state.perFrame = PerFrame()
 
   # Setup event handlers
   setupEventHandlers(result)
@@ -143,12 +129,8 @@ proc closeRequested*(window: Window): bool =
   window.isCloseRequested
 
 proc pollEvents*() =
-  # Reset per-frame event states
-  if mainWindow != nil:
-    mainWindow.buttonPressed = default(array[Button, bool])
-    mainWindow.buttonReleased = default(array[Button, bool])
-    mainWindow.mouseDelta = vec2(0, 0)
-    mainWindow.scrollDelta = vec2(0, 0)
+  # Emscripten doesn't need to poll events, only callbacks.
+  discard
 
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
@@ -175,10 +157,10 @@ proc `visible=`*(window: Window, visible: bool) =
   discard
 
 proc runeInputEnabled*(window: Window): bool =
-  true
+  window.state.runeInputEnabled
 
 proc `runeInputEnabled=`*(window: Window, enabled: bool) =
-  discard
+  window.state.runeInputEnabled = enabled
 
 proc pos*(window: Window): IVec2 =
   ivec2(0, 0)  # Canvas position is controlled by HTML/CSS
@@ -192,19 +174,19 @@ proc framebufferSize*(window: Window): IVec2 =
   result.y = canvas_get_height().int32
 
 proc contentScale*(window: Window): float32 =
-  window.contentScale
+  1.0  # Fixed at 1.0 for Emscripten, could query device pixel ratio in future
 
 proc minimized*(window: Window): bool =
-  window.minimized
+  false  # Not tracked in browser context
 
 proc `minimized=`*(window: Window, minimized: bool) =
-  window.minimized = minimized
+  discard  # Not applicable in browser
 
 proc maximized*(window: Window): bool =
-  window.maximized
+  false  # Not tracked in browser context
 
 proc `maximized=`*(window: Window, maximized: bool) =
-  window.maximized = maximized
+  discard  # Not applicable in browser
 
 proc fullscreen*(window: Window): bool =
   false  # Could be implemented with Fullscreen API
@@ -213,23 +195,22 @@ proc `fullscreen=`*(window: Window, fullscreen: bool) =
   discard
 
 proc focused*(window: Window): bool =
-  window.focused
+  true  # Not applicable in browser.
 
 proc `focused=`*(window: Window, focused: bool) =
-  window.focused = focused
+  discard  # Focus is controlled by browser
 
-proc mousePos*(window: Window): Vec2 =
-  window.mousePos
+proc mousePos*(window: Window): IVec2 =
+  window.state.mousePos
 
-proc `mousePos=`*(window: Window, mouse: Vec2) =
-  window.mousePos = mouse
+proc mousePrevPos*(window: Window): IVec2 =
+  window.state.mousePrevPos
 
-# Additional getters for mouse tracking
-proc mousePrevPos*(window: Window): Vec2 =
-  window.mousePrevPos
+proc mouseDelta*(window: Window): IVec2 =
+  window.state.perFrame.mouseDelta
 
-proc mouseDelta*(window: Window): Vec2 =
-  window.mouseDelta
+proc scrollDelta*(window: Window): Vec2 =
+  window.state.perFrame.scrollDelta
 
 proc screenToContent*(window: Window, v: Vec2): Vec2 =
   v
@@ -237,30 +218,17 @@ proc screenToContent*(window: Window, v: Vec2): Vec2 =
 proc contentToScreen*(window: Window, v: Vec2): Vec2 =
   v
 
-# Button state tracking
-proc buttonDown*(button: Button): bool =
-  if mainWindow != nil:
-    mainWindow.buttonDown[button]
-  else:
-    false
+proc buttonDown*(window: Window): ButtonView =
+  window.state.buttonDown.ButtonView
 
-proc buttonPressed*(button: Button): bool =
-  if mainWindow != nil:
-    mainWindow.buttonPressed[button]
-  else:
-    false
+proc buttonPressed*(window: Window): ButtonView =
+  window.state.perFrame.buttonPressed.ButtonView
 
-proc buttonReleased*(button: Button): bool =
-  if mainWindow != nil:
-    mainWindow.buttonReleased[button]
-  else:
-    false
+proc buttonReleased*(window: Window): ButtonView =
+  window.state.perFrame.buttonReleased.ButtonView
 
-proc buttonToggle*(button: Button): bool =
-  if mainWindow != nil:
-    mainWindow.buttonToggle[button]
-  else:
-    false
+proc buttonToggle*(window: Window): ButtonView =
+  window.state.buttonToggle.ButtonView
 
 # Clipboard functions
 proc clipboardContent*(): string =
@@ -281,10 +249,11 @@ proc getScreens*(): seq[Screen] =
 
 # Cursor functions
 proc cursor*(window: Window): Cursor =
-  Cursor(kind: DefaultCursor)
+  window.state.cursor
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
-  discard  # Would need CSS cursor manipulation
+  window.state.cursor = cursor
+  # TODO: Apply CSS cursor style based on cursor type
 
 # Style functions
 proc style*(window: Window): WindowStyle =
@@ -351,8 +320,17 @@ proc getClipboardString*(): string =
   ""
 
 proc closeIme*(window: Window) =
-  # TODO: Implement IME with Emscripten.
-  discard
+  if window.state.imeCompositionString.len > 0:
+    window.state.imeCompositionString = ""
+    window.state.imeCursorIndex = 0
+    if window.onImeChange != nil:
+      window.onImeChange()
+
+proc imeCursorIndex*(window: Window): int =
+  window.state.imeCursorIndex
+
+proc imeCompositionString*(window: Window): string =
+  window.state.imeCompositionString
 
 # HTTP functions (if needed)
 when defined(windyUseStdHttp):
@@ -447,34 +425,28 @@ proc onMouseDown(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
   # Ensure canvas has focus when clicked
   make_canvas_focusable()
   let button = mouseButtonToButton(mouseEvent.button)
-  window.buttonDown[button] = true
-  window.buttonPressed[button] = true
-  if window.onButtonPress != nil:
-    window.onButtonPress(button)
+  window.handleButtonPress(button)
   return 1
 
 proc onMouseUp(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   let button = mouseButtonToButton(mouseEvent.button)
-  window.buttonDown[button] = false
-  window.buttonReleased[button] = true
-  if window.onButtonRelease != nil:
-    window.onButtonRelease(button)
+  window.handleButtonRelease(button)
   return 1
 
 proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  window.mousePrevPos = window.mousePos
+  window.state.mousePrevPos = window.state.mousePos
   # Use clientX/clientY as they are more reliably populated
-  window.mousePos = vec2(mouseEvent.clientX.float32, mouseEvent.clientY.float32)
-  window.mouseDelta = window.mousePos - window.mousePrevPos
+  window.state.mousePos = ivec2(mouseEvent.clientX.int32, mouseEvent.clientY.int32)
+  window.state.perFrame.mouseDelta += window.state.mousePos - window.state.mousePrevPos
   if window.onMouseMove != nil:
     window.onMouseMove()
   return 1
 
 proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  window.scrollDelta = vec2(wheelEvent.deltaX.float32, wheelEvent.deltaY.float32)
+  window.state.perFrame.scrollDelta += vec2(wheelEvent.deltaX.float32, wheelEvent.deltaY.float32)
   if window.onScroll != nil:
     window.onScroll()
   return 1
@@ -482,37 +454,29 @@ proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: po
 proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   let button = keyCodeToButton(keyEvent.keyCode)
-  window.buttonDown[button] = true
-  window.buttonPressed[button] = true
-  if window.onButtonPress != nil:
-    window.onButtonPress(button)
+  window.handleButtonPress(button)
   return 1
 
 proc onKeyUp(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   let button = keyCodeToButton(keyEvent.keyCode)
-  window.buttonDown[button] = false
-  window.buttonReleased[button] = true
-  if window.onButtonRelease != nil:
-    window.onButtonRelease(button)
+  window.handleButtonRelease(button)
   return 1
 
 proc onKeyPress(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  if window.onRune != nil and keyEvent.charCode > 0:
-    window.onRune(Rune(keyEvent.charCode))
+  if keyEvent.charCode > 0:
+    window.handleRune(Rune(keyEvent.charCode))
   return 1
 
 proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  window.focused = true
   if window.onFocusChange != nil:
     window.onFocusChange()
   return 1
 
 proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  window.focused = false
   if window.onFocusChange != nil:
     window.onFocusChange()
   return 1
@@ -560,6 +524,29 @@ proc setupEventHandlers(window: Window) =
   # Set up resize observer using JavaScript
   setup_resize_observer(cast[pointer](window))
 
-proc run*(window: Window, f: proc() {.cdecl.}) =
+proc handleButtonPress(window: Window, button: Button) =
+  handleButtonPressTemplate()
+
+proc handleButtonRelease(window: Window, button: Button) =
+  handleButtonReleaseTemplate()
+
+proc handleRune(window: Window, rune: Rune) =
+  handleRuneTemplate()
+
+var mainLoopProc: proc() {.cdecl.}
+
+proc frameWrapper() {.cdecl.} =
+  # Run frame logic for main window
+  if mainWindow != nil:
+    if mainWindow.onFrame != nil:
+      mainWindow.onFrame()
+  if mainLoopProc != nil:
+    mainLoopProc()
+  # Clear per-frame data
+  if mainWindow != nil:
+    mainWindow.state.perFrame = PerFrame()
+
+proc run*(window: Window, mainLoop: proc() {.cdecl.}) =
   ## This is the only way to run a loop in emscripten.
-  emscripten_set_main_loop(f, 0, true)
+  mainLoopProc = mainLoop
+  emscripten_set_main_loop(frameWrapper, 0, true)
