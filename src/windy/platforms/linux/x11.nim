@@ -580,8 +580,7 @@ proc newWindow*(
   visible = true,
   vsync = true,
 
-  openglMajorVersion = 4,
-  openglMinorVersion = 1,
+  openglVersion = OpenGL4Dot1,
   msaa = msaaDisabled,
   depthBits = 24,
   stencilBits = 8,
