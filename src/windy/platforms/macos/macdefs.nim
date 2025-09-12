@@ -109,6 +109,12 @@ const
   NSNormalWindowLevel* = 0.NSWindowLevel
   NSFloatingWindowLevel* = 3.NSWindowLevel
 
+type
+  NSEventType* = enum
+    NSEventTypeKeyDown            = 10,
+    NSEventTypeKeyUp              = 11,
+    NSEventTypeFlagsChanged       = 12,
+
 var
   NSApp* {.importc.}: NSApplication
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
@@ -139,6 +145,8 @@ objc:
   proc locationInWindow*(self: NSEvent): NSPoint
   proc buttonNumber*(self: NSEvent): int
   proc keyCode*(self: NSEvent): uint16
+  proc type*(self: NSEvent): NSEventType
+  proc window*(self: NSEvent): NSWindow
   proc dataWithBytes*(class: typedesc[NSData], x: pointer, length: int): NSData
   proc length*(self: NSData): uint
   proc bytes*(self: NSData): pointer
