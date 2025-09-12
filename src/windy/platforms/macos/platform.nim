@@ -767,6 +767,17 @@ proc pollEvents*() =
   when defined(windyUseStdHttp):
     pollHttp()
 
+proc centerWindow(window: Window) =
+  ## Calculate centered position for a window on the primary screen.
+  let
+    screenFrame = window.inner.screen.frame
+    screenWidth = screenFrame.size.width.int
+    screenHeight = screenFrame.size.height.int
+    # Calculate center position.
+    x = screenFrame.origin.x.int + (screenWidth - window.size.x) div 2
+    y = screenFrame.origin.y.int + (screenHeight - window.size.y) div 2
+  window.pos = ivec2(x.int32, y.int32)
+
 proc makeContextCurrent*(window: Window) =
   window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
 
@@ -876,7 +887,9 @@ proc newWindow*(
 
     result.title = title
     result.size = size
-    result.pos = ivec2(0, 0)
+
+    # Center window on screen by default (macOS standard behavior).
+    result.centerWindow()
 
     result.style = style
     result.visible = visible
@@ -980,6 +993,7 @@ proc getClipboardImage*(): Image =
       return
 
 proc getClipboardString*(): string =
+  ## Gets the clipboard content as a string.
   init()
   autoreleasepool:
     let
@@ -999,6 +1013,7 @@ proc getClipboardString*(): string =
     result = $value
 
 proc setClipboardString*(value: string) =
+  ## Sets the clipboard content to the given string.
   init()
   autoreleasepool:
     let pboard = NSPasteboard.generalPasteboard
@@ -1014,10 +1029,10 @@ proc getScreens*(): seq[Screen] =
       let
         screen = screensArray[i].NSScreen
         frame = screen.frame
-      result.add(Screen(
+      result.add Screen(
         left: frame.origin.x.int,
         right: frame.origin.x.int + frame.size.width.int,
         top: frame.origin.y.int,
         bottom: frame.origin.y.int + frame.size.height.int,
         primary: i == 0
-      ))
+      )
