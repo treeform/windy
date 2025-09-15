@@ -832,8 +832,8 @@ proc pollEvents(window: Window) =
       of 8: pushButtonEvent(MouseButton4)
       of 9: pushButtonEvent(MouseButton5)
 
-      of 4: pushScrollEvent(vec2(0, 10.0)) # scroll up
-      of 5: pushScrollEvent(vec2(0, -10.0)) # scroll down
+      of 4: pushScrollEvent(vec2(0, -10.0)) # scroll up
+      of 5: pushScrollEvent(vec2(0, 10.0)) # scroll down
       of 6: pushScrollEvent(vec2(-10.0, 0)) # scroll left
       of 7: pushScrollEvent(vec2(10.0, 0)) # scroll right
       else: discard
