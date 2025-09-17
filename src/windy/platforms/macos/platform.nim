@@ -1,9 +1,9 @@
 import ../../common, ../../internal, macdefs, opengl, pixie/fileformats/png,
     pixie/images, times, unicode, utils, vmath
 
-when defined(windyUseStdHttp):
-  import ../../http
-  export http
+# TODO: Use macos native http client, fallback to windy http client.
+import ../../http
+export http
 
 type
   Window* = ref object
@@ -925,7 +925,7 @@ proc mouseDelta*(window: Window): IVec2 =
   window.state.perFrame.mouseDelta
 
 proc scrollDelta*(window: Window): Vec2 =
-  window.state.perFrame.scrollDelta
+  window.state.perFrame.scrollDelta * 10
 
 proc runeInputEnabled*(window: Window): bool =
   window.state.runeInputEnabled
