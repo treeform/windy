@@ -577,15 +577,13 @@ proc `runeInputEnabled=`*(window: Window, v: bool) =
 proc newWindow*(
   title: string,
   size: IVec2,
+  style = DecoratedResizable,
   visible = true,
   vsync = true,
-
   openglVersion = OpenGL4Dot1,
   msaa = msaaDisabled,
   depthBits = 24,
-  stencilBits = 8,
-
-  transparent = false,
+  stencilBits = 8
 ): Window =
   ## Creates a new window. Intitializes Windy if needed.
   init()
@@ -596,7 +594,7 @@ proc newWindow*(
   let root = display.defaultRootWindow
 
   var vi: XVisualInfo
-  if transparent:
+  if style == Transparent:
     display.XMatchVisualInfo(display.defaultScreen, 32, TrueColor, vi.addr)
   else:
     display.XMatchVisualInfo(display.defaultScreen, 24, TrueColor, vi.addr)
@@ -686,6 +684,8 @@ proc newWindow*(
         32,
         @[result.xSyncCounter].asString
       )
+
+  result.style = style
 
   windows.add result
 
