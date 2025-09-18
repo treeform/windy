@@ -670,7 +670,7 @@ proc newWindow*(
       glXSwapIntervalSGI(1)
     else:
       raise WindyError.newException("VSync is not supported")
-  
+
   if visible:
     result.visible = true
 
