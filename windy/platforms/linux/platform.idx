@@ -30,7 +30,7 @@ nim	title=	windy/platforms/linux/platform.html#title=,Window,string	proc title=(
 nim	contentScale	windy/platforms/linux/platform.html#contentScale,Window	proc contentScale(window: Window): float32		565
 nim	runeInputEnabled	windy/platforms/linux/platform.html#runeInputEnabled,Window	proc runeInputEnabled(window: Window): bool		571
 nim	runeInputEnabled=	windy/platforms/linux/platform.html#runeInputEnabled=,Window,bool	proc runeInputEnabled=(window: Window; v: bool)		574
-nim	newWindow	windy/platforms/linux/platform.html#newWindow,string,IVec2,int,int	proc newWindow(title: string; size: IVec2; visible = true; vsync = true;\n          openglVersion = OpenGL4Dot1; msaa = msaaDisabled; depthBits = 24;\n          stencilBits = 8; transparent = false): Window		577
+nim	newWindow	windy/platforms/linux/platform.html#newWindow,string,IVec2,int,int	proc newWindow(title: string; size: IVec2; style = DecoratedResizable;\n          visible = true; vsync = true; openglVersion = OpenGL4Dot1;\n          msaa = msaaDisabled; depthBits = 24; stencilBits = 8): Window		577
 nim	mousePos	windy/platforms/linux/platform.html#mousePos,Window	proc mousePos(window: Window): IVec2		871
 nim	mousePrevPos	windy/platforms/linux/platform.html#mousePrevPos,Window	proc mousePrevPos(window: Window): IVec2		874
 nim	mouseDelta	windy/platforms/linux/platform.html#mouseDelta,Window	proc mouseDelta(window: Window): IVec2		877
