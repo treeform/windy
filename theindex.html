@@ -25,7 +25,7 @@
   <div class="document" id="documentId">
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%3D%3D%60" href="#%60%3D%3D%60"><span>`==`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: proc `==`(a, b: HttpRequestHandle): bool" href="windy/common.html#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle">common: proc `==`(a, b: HttpRequestHandle): bool</a></li>
@@ -318,6 +318,10 @@
 <li><a class="reference external"
           data-doc-search-tag="common: type Callback" href="windy/common.html#Callback">common: type Callback</a></li>
           </ul></dd>
+<dt><a name="cancel" href="#cancel"><span>cancel:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc cancel(handle: HttpRequestHandle)" href="windy/http.html#cancel%2CHttpRequestHandle">http: proc cancel(handle: HttpRequestHandle)</a></li>
+          </ul></dd>
 <dt><a name="CapButt" href="#CapButt"><span>CapButt:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const CapButt" href="windy/platforms/linux/x11/x.html#CapButt">x: const CapButt</a></li>
@@ -348,6 +352,8 @@
           </ul></dd>
 <dt><a name="close" href="#close"><span>close:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="http: proc close(handle: WebSocketHandle)" href="windy/http.html#close%2CWebSocketHandle">http: proc close(handle: WebSocketHandle)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="platform: proc close(window: Window)" href="windy/platforms/linux/platform.html#close%2CWindow">platform: proc close(window: Window)</a></li>
           </ul></dd>
 <dt><a name="closed" href="#closed"><span>closed:</span></a></dt><dd><ul class="simple">
@@ -527,6 +533,14 @@
 <dt><a name="CwY" href="#CwY"><span>CwY:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const CwY" href="windy/platforms/linux/x11/x.html#CwY">x: const CwY</a></li>
+          </ul></dd>
+<dt><a name="deadline" href="#deadline"><span>deadline:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc deadline(handle: HttpRequestHandle): float64" href="windy/http.html#deadline%2CHttpRequestHandle">http: proc deadline(handle: HttpRequestHandle): float64</a></li>
+          </ul></dd>
+<dt><a name="deadline%3D" href="#deadline%3D"><span>deadline=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc deadline=(handle: HttpRequestHandle; deadline: float64)" href="windy/http.html#deadline%3D%2CHttpRequestHandle%2Cfloat64">http: proc deadline=(handle: HttpRequestHandle; deadline: float64)</a></li>
           </ul></dd>
 <dt><a name="Decorated" href="#Decorated"><span>Decorated:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1870,9 +1884,39 @@
 <li><a class="reference external"
           data-doc-search-tag="common: Button.NumpadSubtract" href="windy/common.html#NumpadSubtract">common: Button.NumpadSubtract</a></li>
           </ul></dd>
+<dt><a name="onClose%3D" href="#onClose%3D"><span>onClose=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc onClose=(handle: WebSocketHandle; callback: common.Callback)" href="windy/http.html#onClose%3D%2CWebSocketHandle%2C">http: proc onClose=(handle: WebSocketHandle; callback: common.Callback)</a></li>
+          </ul></dd>
+<dt><a name="onDownloadProgress%3D" href="#onDownloadProgress%3D"><span>onDownloadProgress=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc onDownloadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)" href="windy/http.html#onDownloadProgress%3D%2CHttpRequestHandle%2CHttpProgressCallback">http: proc onDownloadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)</a></li>
+          </ul></dd>
+<dt><a name="onError%3D" href="#onError%3D"><span>onError=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc onError=(handle: HttpRequestHandle; callback: HttpErrorCallback)" href="windy/http.html#onError%3D%2CHttpRequestHandle%2CHttpErrorCallback">http: proc onError=(handle: HttpRequestHandle; callback: HttpErrorCallback)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="http: proc onError=(handle: WebSocketHandle; callback: HttpErrorCallback)" href="windy/http.html#onError%3D%2CWebSocketHandle%2CHttpErrorCallback">http: proc onError=(handle: WebSocketHandle; callback: HttpErrorCallback)</a></li>
+          </ul></dd>
+<dt><a name="onMessage%3D" href="#onMessage%3D"><span>onMessage=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc onMessage=(handle: WebSocketHandle; callback: WebSocketMessageCallback)" href="windy/http.html#onMessage%3D%2CWebSocketHandle%2CWebSocketMessageCallback">http: proc onMessage=(handle: WebSocketHandle; callback: WebSocketMessageCallback)</a></li>
+          </ul></dd>
+<dt><a name="onOpen%3D" href="#onOpen%3D"><span>onOpen=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc onOpen=(handle: WebSocketHandle; callback: common.Callback)" href="windy/http.html#onOpen%3D%2CWebSocketHandle%2C">http: proc onOpen=(handle: WebSocketHandle; callback: common.Callback)</a></li>
+          </ul></dd>
 <dt><a name="onQuitRequest" href="#onQuitRequest"><span>onQuitRequest:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="platform: var onQuitRequest" href="windy/platforms/linux/platform.html#onQuitRequest">platform: var onQuitRequest</a></li>
+          </ul></dd>
+<dt><a name="onResponse%3D" href="#onResponse%3D"><span>onResponse=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc onResponse=(handle: HttpRequestHandle; callback: HttpResponseCallback)" href="windy/http.html#onResponse%3D%2CHttpRequestHandle%2CHttpResponseCallback">http: proc onResponse=(handle: HttpRequestHandle; callback: HttpResponseCallback)</a></li>
+          </ul></dd>
+<dt><a name="onUploadProgress%3D" href="#onUploadProgress%3D"><span>onUploadProgress=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc onUploadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)" href="windy/http.html#onUploadProgress%3D%2CHttpRequestHandle%2CHttpProgressCallback">http: proc onUploadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)</a></li>
           </ul></dd>
 <dt><a name="OpenGL3Dot0" href="#OpenGL3Dot0"><span>OpenGL3Dot0:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1921,6 +1965,10 @@
 <dt><a name="OpenGLVersion" href="#OpenGLVersion"><span>OpenGLVersion:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: enum OpenGLVersion" href="windy/common.html#OpenGLVersion">common: enum OpenGLVersion</a></li>
+          </ul></dd>
+<dt><a name="openWebSocket" href="#openWebSocket"><span>openWebSocket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc openWebSocket(url: string; deadline = defaultHttpDeadline): WebSocketHandle" href="windy/http.html#openWebSocket%2Cstring">http: proc openWebSocket(url: string; deadline = defaultHttpDeadline): WebSocketHandle</a></li>
           </ul></dd>
 <dt><a name="Opposite" href="#Opposite"><span>Opposite:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1973,6 +2021,10 @@
 <dt><a name="pollEvents" href="#pollEvents"><span>pollEvents:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="platform: proc pollEvents()" href="windy/platforms/linux/platform.html#pollEvents">platform: proc pollEvents()</a></li>
+          </ul></dd>
+<dt><a name="pollHttp" href="#pollHttp"><span>pollHttp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc pollHttp()" href="windy/http.html#pollHttp">http: proc pollHttp()</a></li>
           </ul></dd>
 <dt><a name="pos" href="#pos"><span>pos:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2125,6 +2177,12 @@
 <dt><a name="SouthWestGravity" href="#SouthWestGravity"><span>SouthWestGravity:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const SouthWestGravity" href="windy/platforms/linux/x11/x.html#SouthWestGravity">x: const SouthWestGravity</a></li>
+          </ul></dd>
+<dt><a name="startHttpRequest" href="#startHttpRequest"><span>startHttpRequest:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc startHttpRequest(url: string; verb = &quot;GET&quot;; headers = newSeq[HttpHeader]();
+                 body = &quot;&quot;; deadline = defaultHttpDeadline): HttpRequestHandle" href="windy/http.html#startHttpRequest%2Cstring%2Cstring%2Cstring">http: proc startHttpRequest(url: string; verb = &quot;GET&quot;; headers = newSeq[HttpHeader]();
+                 body = &quot;&quot;; deadline = defaultHttpDeadline): HttpRequestHandle</a></li>
           </ul></dd>
 <dt><a name="StaticColor" href="#StaticColor"><span>StaticColor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -9992,7 +10050,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-19 23:16:53 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-20 18:16:47 UTC</small>
       </div>
     </div>
   </div>

@@ -1,0 +1,17 @@
+nimTitle	http	windy/http.html	module src/windy/http		0
+nim	cancel	windy/http.html#cancel,HttpRequestHandle	proc cancel(handle: HttpRequestHandle)		61
+nim	close	windy/http.html#close,WebSocketHandle	proc close(handle: WebSocketHandle)		71
+nim	pollHttp	windy/http.html#pollHttp	proc pollHttp()		207
+nim	startHttpRequest	windy/http.html#startHttpRequest,string,string,string	proc startHttpRequest(url: string; verb = "GET"; headers = newSeq[HttpHeader]();\n                 body = ""; deadline = defaultHttpDeadline): HttpRequestHandle		228
+nim	deadline	windy/http.html#deadline,HttpRequestHandle	proc deadline(handle: HttpRequestHandle): float64		249
+nim	deadline=	windy/http.html#deadline=,HttpRequestHandle,float64	proc deadline=(handle: HttpRequestHandle; deadline: float64)		255
+nim	onError=	windy/http.html#onError=,HttpRequestHandle,HttpErrorCallback	proc onError=(handle: HttpRequestHandle; callback: HttpErrorCallback)		261
+nim	onResponse=	windy/http.html#onResponse=,HttpRequestHandle,HttpResponseCallback	proc onResponse=(handle: HttpRequestHandle; callback: HttpResponseCallback)		270
+nim	onUploadProgress=	windy/http.html#onUploadProgress=,HttpRequestHandle,HttpProgressCallback	proc onUploadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)		279
+nim	onDownloadProgress=	windy/http.html#onDownloadProgress=,HttpRequestHandle,HttpProgressCallback	proc onDownloadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)		288
+nim	openWebSocket	windy/http.html#openWebSocket,string	proc openWebSocket(url: string; deadline = defaultHttpDeadline): WebSocketHandle		297
+nim	onError=	windy/http.html#onError=,WebSocketHandle,HttpErrorCallback	proc onError=(handle: WebSocketHandle; callback: HttpErrorCallback)		309
+nim	onOpen=	windy/http.html#onOpen=,WebSocketHandle,	proc onOpen=(handle: WebSocketHandle; callback: common.Callback)		318
+nim	onMessage=	windy/http.html#onMessage=,WebSocketHandle,WebSocketMessageCallback	proc onMessage=(handle: WebSocketHandle; callback: WebSocketMessageCallback)		327
+nim	onClose=	windy/http.html#onClose=,WebSocketHandle,	proc onClose=(handle: WebSocketHandle; callback: common.Callback)		336
+nimgrp	onerror=	windy/http.html#onError=-procs-all	proc		261
