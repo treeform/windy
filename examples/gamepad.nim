@@ -6,12 +6,12 @@ var color = vec4(0, 0, 0, 1)
 window.makeContextCurrent()
 loadExtensions()
 
-proc gamepad() =
-  onGamepadConnected = proc(gamepadId: int) =
-    echo "Gamepad ", gamepadId, " connected: ", gamepadName(gamepadId)
-  onGamepadDisconnected = proc(gamepadId: int) =
-    echo "Gamepad ", gamepadId, " disconnected"
+onGamepadConnected = proc(gamepadId: int) =
+  echo "Gamepad ", gamepadId, " connected: ", gamepadName(gamepadId)
+onGamepadDisconnected = proc(gamepadId: int) =
+  echo "Gamepad ", gamepadId, " disconnected"
 
+proc gamepad() =
   for i in 0..<maxGamepads:
     for btn in 0.GamepadButton..<GamepadButtonCount:
       if gamepadButtonPressed(i, btn):
