@@ -172,6 +172,22 @@ proc addDefaultHeaders*(headers: var seq[HttpHeader]) =
     # If there isn't a specific accept-encoding specified, enable gzip
     headers["accept-encoding"] = "gzip"
 
+template handleGamepadTemplate*() =
+  proc gamepadButton*(gamepadId: int, button: GamepadButton): bool =
+    (gamepadStates[gamepadId].buttons and (1.uint32 shl button.int8)) != 0
+
+  proc gamepadButtonPressed*(gamepadId: int, button: GamepadButton): bool =
+    (gamepadStates[gamepadId].pressed and (1.uint32 shl button.int8)) != 0
+
+  proc gamepadButtonReleased*(gamepadId: int, button: GamepadButton): bool =
+    (gamepadStates[gamepadId].released and (1.uint32 shl button.int8)) != 0
+
+  proc gamepadButtonPressure*(gamepadId: int, button: GamepadButton): float =
+    gamepadStates[gamepadId].pressures[button.int8]
+
+  proc gamepadAxis*(gamepadId: int, axis: GamepadAxis): float =
+    gamepadStates[gamepadId].axes[axis.int8]
+
 proc resetGamepadState*(state: var GamepadState) =
   state.numButtons = 0.int8
   state.numAxes = 0.int8
