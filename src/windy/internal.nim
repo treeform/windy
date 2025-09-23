@@ -5,6 +5,15 @@ const
   CRLF* = "\r\n"
 
 type
+  GamepadState* = object
+    numButtons*: int8
+    numAxes*: int8
+    buttons*: uint32 # One bit per button, 32 buttons max
+    pressed*: uint32 # Buttons pressed this frame
+    released*: uint32 # Buttons released this frame
+    pressures*: array[GamepadButtonCount.int, float32]
+    axes*: array[GamepadAxisCount.int, float32]
+
   WindowState* = object
     title*: string
     icon*: Image
@@ -162,3 +171,14 @@ proc addDefaultHeaders*(headers: var seq[HttpHeader]) =
   if headers["accept-encoding"].len == 0:
     # If there isn't a specific accept-encoding specified, enable gzip
     headers["accept-encoding"] = "gzip"
+
+proc resetGamepadState*(state: var GamepadState) =
+  state.numButtons = 0.int8
+  state.numAxes = 0.int8
+  state.buttons = 0.uint32
+  state.pressed = 0.uint32
+  state.released = 0.uint32
+  for i in 0..<GamepadButtonCount.int:
+    state.pressures[i] = 0.float32
+  for i in 0..<GamepadAxisCount.int:
+    state.axes[i] = 0.float32
