@@ -15,6 +15,7 @@ type
     super_class*: Class
 
 {.push cdecl, dynlib: "libobjc.dylib".}
+
 proc objc_msgSend*() {.importc.}
 proc objc_msgSendSuper*() {.importc.}
 when defined(amd64):
@@ -55,6 +56,7 @@ macro objc*(body: untyped) =
       numParams = 0
 
     sel.removeSuffix("*")
+    sel = sel.strip(true, true, {'`'})
 
     # Mark each proc inline:
     fn[4] = quote do: {.inline.}

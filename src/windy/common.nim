@@ -69,6 +69,7 @@ type
     DecoratedResizable, Decorated, Undecorated, Transparent
 
   Callback* = proc()
+  GamepadCallback* = proc(gamepadId: int) {.raises: [].}
   ButtonCallback* = proc(button: Button)
   RuneCallback* = proc(rune: Rune)
   HttpErrorCallback* = proc(msg: string)
@@ -194,7 +195,38 @@ type
 
   ButtonView* = distinct set[Button]
 
+  # A button is an input whose value is a boolean with an optional pressure value between 0 and 1
+  # For buttons without pressure, the pressure value is 1 if the button is pressed, 0 otherwise
+  GamepadButton* = enum
+    GamepadDown
+    GamepadRight
+    GamepadLeft
+    GamepadUp
+    GamepadA
+    GamepadB
+    GamepadX
+    GamepadY
+    GamepadL1
+    GamepadR1
+    GamepadL2
+    GamepadR2
+    GamepadL3
+    GamepadR3
+    GamepadStart
+    GamepadSelect
+    GamepadHome
+    GamepadButtonCount
+
+  # An axis is an input whose value is a float between -1 and 1
+  GamepadAxis* = enum
+    GamepadLStickX
+    GamepadLStickY
+    GamepadRStickX
+    GamepadRStickY
+    GamepadAxisCount
+
 const
+  maxGamepads* = 4 # GCController, XInput and other native APIs come with a limit of 4 gamepads
   defaultHttpDeadline*: float32 = -1
 
 proc `==`*(a, b: HttpRequestHandle): bool =
