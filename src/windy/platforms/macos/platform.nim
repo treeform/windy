@@ -49,9 +49,6 @@ var
   gamepadButtonLookup: array[maxGamepads, array[GamepadButtonCount.int, int8]]
   gamepadButtonInputs: array[maxGamepads, array[GamepadButtonCount.int, GCControllerButtonInput]]
 
-  onGamepadConnected*: GamepadCallback
-  onGamepadDisconnected*: GamepadCallback
-
 proc indexForNSWindow(windows: seq[Window], inner: NSWindow): int =
   ## Returns the window for this handle, else -1
   for i, window in windows:
@@ -1128,20 +1125,7 @@ proc gamepadConnected*(gamepadId: int): bool =
 proc gamepadName*(gamepadId: int): string =
   $gamepadProfiles[gamepadId].device().vendorName()
 
-proc gamepadButton*(gamepadId: int, button: GamepadButton): bool =
-  (gamepadStates[gamepadId].buttons and (1.uint32 shl button.int8)) != 0
-
-proc gamepadButtonPressed*(gamepadId: int, button: GamepadButton): bool =
-  (gamepadStates[gamepadId].pressed and (1.uint32 shl button.int8)) != 0
-
-proc gamepadButtonReleased*(gamepadId: int, button: GamepadButton): bool =
-  (gamepadStates[gamepadId].released and (1.uint32 shl button.int8)) != 0
-
-proc gamepadButtonPressure*(gamepadId: int, button: GamepadButton): float =
-  gamepadStates[gamepadId].pressures[button.int8]
-
-proc gamepadAxis*(gamepadId: int, axis: GamepadAxis): float =
-  gamepadStates[gamepadId].axes[axis.int8]
+handleGamepadTemplate()
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
   init()

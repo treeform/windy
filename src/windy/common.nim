@@ -229,6 +229,10 @@ const
   maxGamepads* = 4 # GCController, XInput and other native APIs come with a limit of 4 gamepads
   defaultHttpDeadline*: float32 = -1
 
+var
+  onGamepadConnected*: GamepadCallback
+  onGamepadDisconnected*: GamepadCallback
+
 proc `==`*(a, b: HttpRequestHandle): bool =
   a.int == b.int
 
