@@ -197,11 +197,8 @@ type
 
   # A button is an input whose value is a boolean with an optional pressure value between 0 and 1
   # For buttons without pressure, the pressure value is 1 if the button is pressed, 0 otherwise
+  # NOTE These are the same as the HTML5 standard mapping, making the definition order important
   GamepadButton* = enum
-    GamepadDown
-    GamepadRight
-    GamepadLeft
-    GamepadUp
     GamepadA
     GamepadB
     GamepadX
@@ -210,11 +207,16 @@ type
     GamepadR1
     GamepadL2
     GamepadR2
+    GamepadSelect
+    GamepadStart
     GamepadL3
     GamepadR3
-    GamepadStart
-    GamepadSelect
+    GamepadUp
+    GamepadDown
+    GamepadLeft
+    GamepadRight
     GamepadHome
+    GamepadTouchpad
     GamepadButtonCount
 
   # An axis is an input whose value is a float between -1 and 1

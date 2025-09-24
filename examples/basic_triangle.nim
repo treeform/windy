@@ -118,6 +118,6 @@ proc display() =
   # Your OpenGL display code here
   window.swapBuffers()
 
-while not window.closeRequested:
+window.run(proc() =
   display()
-  pollEvents()
+  pollEvents())

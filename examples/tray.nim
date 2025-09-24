@@ -38,7 +38,6 @@ when defined(windows):
 
   showTrayIcon(icon, "Demo", onTrayIconClick, menu)
 
-  while not window.closeRequested:
-    pollEvents()
-
-  hideTrayIcon()
+  window.run(
+    pollEvents,
+    hideTrayIcon)

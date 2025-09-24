@@ -1,6 +1,6 @@
 import opengl, windy
 
-let window = newWindow("Windy Basic", ivec2(1280, 800))
+let window = newWindow("Windy Gamepad", ivec2(1280, 800))
 var color = vec4(0, 0, 0, 1)
 
 window.makeContextCurrent()
@@ -29,7 +29,7 @@ proc display() =
   glClear(GL_COLOR_BUFFER_BIT)
   window.swapBuffers()
 
-while not window.closeRequested:
+window.run(proc() =
   gamepad()
   display()
-  pollEvents()
+  pollEvents())

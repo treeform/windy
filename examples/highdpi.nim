@@ -22,5 +22,4 @@ window.onFrame = proc() =
   # Your OpenGL display code here
   window.swapBuffers()
 
-while not window.closeRequested:
-  pollEvents()
+window.run(pollEvents)

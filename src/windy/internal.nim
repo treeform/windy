@@ -1,6 +1,7 @@
 import common, pixie, std/random
 
 const
+  gamepadDeadzone = 0.1
   multiClickRadius = 4
   CRLF* = "\r\n"
 
@@ -186,7 +187,8 @@ template handleGamepadTemplate*() =
     gamepadStates[gamepadId].pressures[button.int8]
 
   proc gamepadAxis*(gamepadId: int, axis: GamepadAxis): float =
-    gamepadStates[gamepadId].axes[axis.int8]
+    let value = gamepadStates[gamepadId].axes[axis.int8]
+    if abs(value) < gamepadDeadzone: 0 else: value
 
 proc resetGamepadState*(state: var GamepadState) =
   state.numButtons = 0.int8
