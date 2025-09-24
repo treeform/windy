@@ -15,6 +15,6 @@ echo "GL_VERSION: ", cast[cstring](glGetString(GL_VERSION))
 echo "GL_VENDOR: ", cast[cstring](glGetString(GL_VENDOR))
 echo "GL_RENDERER: ", cast[cstring](glGetString(GL_RENDERER))
 
-while not window.closeRequested:
+window.run(proc() =
   pollEvents()
-  sleep(10)
+  sleep(10))
