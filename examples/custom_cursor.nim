@@ -3,7 +3,7 @@ import pixie, windy
 when defined(windows) or defined(macosx):
   # Custom cursor API only currently supported on Windows and macOS
 
-  let window = newWindow("Windy Cursor", ivec2(1280, 800))
+  let window = newWindow("Windy Custom Cursor", ivec2(1280, 800))
   window.makeContextCurrent()
 
   echo window.cursor
@@ -27,5 +27,4 @@ when defined(windows) or defined(macosx):
       else:
         window.cursor = Cursor(kind: DefaultCursor)
 
-  while not window.closeRequested:
-    pollEvents()
+  window.run(pollEvents)
