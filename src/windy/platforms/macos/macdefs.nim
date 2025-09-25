@@ -1,7 +1,7 @@
 import opengl, objc
 export objc
 
-{.passL: "-framework Cocoa".}
+{.passL: "-framework Cocoa -framework GameController".}
 
 type
   CGPoint* {.pure, bycopy.} = object
@@ -47,6 +47,7 @@ type
   NSPasteboardType* = distinct NSString
   NSApplication* = distinct NSObject
   NSNotification* = distinct NSObject
+  NSNotificationCenter* = distinct NSObject
   NSEvent* = distinct NSObject
   NSDate* = distinct NSObject
   NSRunLoopMode* = distinct NSString
@@ -65,6 +66,20 @@ type
   NSTextInputClient* = distinct int
   NSBitmapImageRep* = distinct NSObject
   NSDictionary* = distinct NSObject
+
+  GCDevice* = distinct NSObject
+  GCController* = distinct NSObject
+  GCPhysicalInputProfile* = distinct NSObject
+  GCControllerElement* = distinct NSObject
+  GCControllerAxisInput* = distinct GCControllerElement
+  GCControllerButtonInput* = distinct GCControllerElement
+  GCControllerDirectionPad* = distinct GCControllerElement
+  GCControllerTouchpad* = distinct GCControllerElement
+
+  GCSystemGestureState* = enum
+    GCSystemGestureStateEnabled
+    GCSystemGestureStateAlwaysReceive
+    GCSystemGestureStateDisabled
 
 const
   NSNotFound* = int.high
@@ -120,6 +135,26 @@ var
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSPasteboardTypeTIFF* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
+  GCControllerDidConnectNotification* {.importc.}: NSString
+  GCControllerDidDisconnectNotification* {.importc.}: NSString
+  GCInputLeftShoulder* {.importc.}: NSString
+  GCInputRightShoulder* {.importc.}: NSString
+  GCInputLeftBumper* {.importc.}: NSString
+  GCInputRightBumper* {.importc.}: NSString
+  GCInputLeftTrigger* {.importc.}: NSString
+  GCInputRightTrigger* {.importc.}: NSString
+  GCInputButtonMenu* {.importc.}: NSString
+  GCInputButtonHome* {.importc.}: NSString
+  GCInputButtonOptions* {.importc.}: NSString
+  GCInputButtonA* {.importc.}: NSString
+  GCInputButtonB* {.importc.}: NSString
+  GCInputButtonX* {.importc.}: NSString
+  GCInputButtonY* {.importc.}: NSString
+  GCInputDirectionPad* {.importc.}: NSString
+  GCInputLeftThumbstick* {.importc.}: NSString
+  GCInputRightThumbstick* {.importc.}: NSString
+  GCInputLeftThumbstickButton* {.importc.}: NSString
+  GCInputRightThumbstickButton* {.importc.}: NSString
 
 objc:
   proc isKindOfClass*(self: NSObject, x: Class): bool
@@ -155,6 +190,7 @@ objc:
   proc count*(self: NSArray): uint
   proc objectAtIndex*(self: NSArray, x: uint): ID
   proc containsObject*(self: NSArray, x: ID): bool
+  proc valueForKey*(self: NSDictionary, x: NSString): ID
   proc screens*(class: typedesc[NSScreen]): NSArray
   proc frame*(self: NSScreen): NSRect
   proc frame*(self: NSWindow): NSRect
@@ -300,6 +336,32 @@ objc:
     properties: NSDictionary
   ): NSData
 
+  proc `object`*(self: NSNotification): ID
+
+  proc defaultCenter*(class: typedesc[NSNotificationCenter]): NSNotificationCenter
+  proc addObserver*(self: NSNotificationCenter, x: ID, selector: SEL, name: NSString, object_mangle: ID)
+
+  proc vendorName*(self: GCDevice): NSString
+  proc controllers*(class: typedesc[GCController]): NSArray
+  proc startWirelessControllerDiscoveryWithCompletionHandler*(class: typedesc[GCController], x: ID)
+  proc playerIndex*(self: GCController): int
+  proc setPlayerIndex*(self: GCController, x: int)
+  proc physicalInputProfile*(self: GCController): GCPhysicalInputProfile
+  proc device*(self: GCPhysicalInputProfile): GCDevice
+  proc lastEventTimestamp*(self: GCPhysicalInputProfile): float64
+  proc buttons*(self: GCPhysicalInputProfile): NSDictionary
+  proc dpads*(self: GCPhysicalInputProfile): NSDictionary
+  proc setPreferredSystemGestureState*(self: GCControllerElement, x: GCSystemGestureState)
+  proc left*(self: GCControllerDirectionPad): GCControllerButtonInput
+  proc right*(self: GCControllerDirectionPad): GCControllerButtonInput
+  proc up*(self: GCControllerDirectionPad): GCControllerButtonInput
+  proc down*(self: GCControllerDirectionPad): GCControllerButtonInput
+  proc xAxis*(self: GCControllerDirectionPad): GCControllerAxisInput
+  proc yAxis*(self: GCControllerDirectionPad): GCControllerAxisInput
+  proc value*(self: GCControllerAxisInput): float32
+  proc value*(self: GCControllerButtonInput): float32
+  proc isPressed*(self: GCControllerButtonInput): bool
+
 {.push inline.}
 
 proc NSMakeRect*(x, y, w, h: float64): NSRect =
@@ -319,6 +381,9 @@ proc NSMakePoint*(x, y: float): NSPoint =
 
 proc `[]`*(arr: NSArray, index: int): ID =
   arr.objectAtIndex(index.uint)
+
+proc `[]`*(dict: NSDictionary, key: NSString): ID =
+  dict.valueForKey(key)
 
 proc callSuper*(sender: ID, cmd: SEL) =
   var super = objc_super(

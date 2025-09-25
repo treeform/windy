@@ -1,6 +1,6 @@
 import boxy, opengl, windy
 
-let window = newWindow("Toggle Fullscreen", ivec2(1280, 800))
+let window = newWindow("Windy Toggle Fullscreen", ivec2(1280, 800))
 
 window.makeContextCurrent()
 loadExtensions()
@@ -21,5 +21,4 @@ window.onButtonPress = proc(button: Button) =
   if button == MouseLeft:
     window.fullscreen = window.buttonToggle[MouseLeft]
 
-while not window.closeRequested:
-  pollEvents()
+window.run(pollEvents)
