@@ -6,6 +6,10 @@ import ../../http
 export http
 
 type
+  Gamepad* = object
+    numButtons*: int8
+    numAxes*: int8
+
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
@@ -41,6 +45,7 @@ var
   windows: seq[Window]
 
   # Gamepad state is what we expose; profiles, lookups and inputs are cached for polling GCController each frame
+  gamepads: array[maxGamepads, Gamepad]
   gamepadStates: array[maxGamepads, GamepadState]
   gamepadProfiles: array[maxGamepads, GCPhysicalInputProfile]
   gamepadTimestamps: array[maxGamepads, float64]
@@ -304,6 +309,39 @@ proc applicationDidFinishLaunching(
   NSApp.setActivationPolicy(NSApplicationActivationPolicyRegular)
   NSApp.activateIgnoringOtherApps(true)
 
+gamepadPlatform()
+
+proc gamepadConnected*(gamepadId: int): bool =
+  gamepadProfiles[gamepadId].int != 0
+
+proc pollGamepads() =
+  for i in 0..<gamepadProfiles.len:
+    let profile = gamepadProfiles[i]
+    if profile.int == 0:
+      continue
+
+    let epoch = profile.lastEventTimestamp()
+    var state = gamepadStates[i].addr
+    if epoch <= gamepadTimestamps[i]:
+      state.pressed = 0
+      state.released = 0
+    else:
+      gamepadTimestamps[i] = epoch
+
+      for j in 0..<gamepads[i].numAxes:
+        state.axes[gamepadAxisLookup[i][j]] = gamepadAxisInputs[i][j].value()
+
+      var buttons = 0.uint32
+      for j in 0..<gamepads[i].numButtons:
+        let button = gamepadButtonInputs[i][j]
+        let index = gamepadButtonLookup[i][j]
+        state.pressures[index] = button.value()
+
+        if button.isPressed():
+          buttons = buttons or (1.uint32 shl index)
+
+      gamepadUpdateButtons()
+
 proc profileForController(ctrl: GCController): GCPhysicalInputProfile =
   for i in 0..<gamepadProfiles.len:
     if gamepadProfiles[i].int == 0:
@@ -364,8 +402,9 @@ proc addController(ctrl: GCController) =
   addButton(buttons[GCInputButtonHome].GCControllerButtonInput, GamepadHome)
   addStick(dpads[GCInputLeftThumbstick].GCControllerDirectionPad, GamepadLStickX, GamepadLStickY)
   addStick(dpads[GCInputRightThumbstick].GCControllerDirectionPad, GamepadRStickX, GamepadRStickY)
-  gamepadStates[i].numButtons = numButtons.int8
-  gamepadStates[i].numAxes = numAxes.int8
+  gamepads[i].numButtons = numButtons.int8
+  gamepads[i].numAxes = numAxes.int8
+  gamepadStates[i].name = $profile.device().vendorName()
   if onGamepadConnected != nil:
     onGamepadConnected(i)
 
@@ -872,36 +911,7 @@ proc processFlagsChanged(event: NSEvent) =
     window.handleButtonPress(button)
 
 proc pollEvents*() =
-  for i in 0..<gamepadProfiles.len:
-    let profile = gamepadProfiles[i]
-    if profile.int == 0:
-      continue
-
-    let epoch = profile.lastEventTimestamp()
-    var state = gamepadStates[i].addr
-    var buttons = 0.uint32
-    let prevButtons = state.buttons
-
-    if epoch <= gamepadTimestamps[i]:
-      buttons = prevButtons
-    else:
-      gamepadTimestamps[i] = epoch
-
-      for j in 0..<state.numAxes:
-        state.axes[gamepadAxisLookup[i][j]] = gamepadAxisInputs[i][j].value()
-
-      for j in 0..<state.numButtons:
-        let button = gamepadButtonInputs[i][j]
-        let index = gamepadButtonLookup[i][j]
-        state.pressures[index] = button.value()
-
-        if button.isPressed():
-          buttons = buttons or (1.uint32 shl index)
-
-      state.buttons = buttons
-
-    state.pressed = buttons and (not prevButtons)
-    state.released = prevButtons and (not buttons)
+  pollGamepads()
 
   # Draw first (in case a message closes a window or similar)
   for window in windows:
@@ -1118,14 +1128,6 @@ proc buttonReleased*(window: Window): ButtonView =
 
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
-
-proc gamepadConnected*(gamepadId: int): bool =
-  gamepadProfiles[gamepadId].int != 0
-
-proc gamepadName*(gamepadId: int): string =
-  $gamepadProfiles[gamepadId].device().vendorName()
-
-handleGamepadTemplate()
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
   init()

@@ -285,14 +285,6 @@ proc buttonReleased*(window: Window): ButtonView =
 proc buttonToggle*(window: Window): ButtonView =
   window.state.buttonToggle.ButtonView
 
-proc gamepadConnected*(gamepadId: int): bool =
-  (gamepadsConnectedMask and (1.uint8 shl gamepadId)) != 0
-
-proc gamepadName*(gamepadId: int): string =
-  gamepadNames[gamepadId]
-
-handleGamepadTemplate()
-
 # Clipboard functions
 proc clipboardContent*(): string =
   ""  # Would need JavaScript interop
@@ -476,13 +468,18 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 222: KeyApostrophe
   else: ButtonUnknown
 
+gamepadPlatform()
+
+proc gamepadConnected*(gamepadId: int): bool =
+  (gamepadsConnectedMask and (1.uint8 shl gamepadId)) != 0
+
 proc strcmp(a: cstring, b: cstring): cint {.importc, header: "<string.h>".}
 
 proc onGamepadConnected(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEvent, userData: pointer): EM_BOOL {.cdecl.} =
   # We can only ensure known stable mappings if the gamepad reports the standard mapping
-  if strcmp(cast[cstring](addr gamepadEvent.mapping), "standard".cstring) == 0:
+  if strcmp(cast[cstring](addr gamepadEvent.mapping), cstring "standard") == 0:
     gamepadsConnectedMask = gamepadsConnectedMask or (1.uint8 shl gamepadEvent.index)
-    gamepadNames[gamepadEvent.index] = $gamepadEvent.id
+    gamepadStates[gamepadEvent.index].name = $gamepadEvent.id
     if common.onGamepadConnected != nil:
       common.onGamepadConnected(gamepadEvent.index)
   return 1
@@ -490,13 +487,13 @@ proc onGamepadConnected(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEven
 proc onGamepadDisconnected(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let wasConnected = (gamepadsConnectedMask and (1.uint8 shl gamepadEvent.index)) != 0
   gamepadsConnectedMask = gamepadsConnectedMask and (not (1.uint8 shl gamepadEvent.index))
-  gamepadNames[gamepadEvent.index] = ""
+  resetGamepadState(gamepadStates[gamepadEvent.index])
   if common.onGamepadDisconnected != nil and wasConnected: # Don't notify disconnects if we ignored the connect
     common.onGamepadDisconnected(gamepadEvent.index)
   return 1
 
 proc setupGamepads() =
-  discard emscripten_sample_gamepad_data()
+  discard emscripten_sample_gamepad_data() # Populate gamepad status data we're about to read
 
   var gp: EmscriptenGamepadEvent
   for i in 0..<maxGamepads:
@@ -515,17 +512,14 @@ proc pollGamepads() =
 
     var state = addr gamepadStates[i]
     var buttons = uint32 0
-    var prevButtons = state.buttons
     for j in 0..<GamepadButtonCount.int:
       state.pressures[j] = gp.analogButton[j]
       if gp.digitalButton[j]:
         buttons = buttons or (uint32 1 shl j)
-    state.buttons = buttons
-    state.pressed = buttons and (not prevButtons)
-    state.released = prevButtons and (not buttons)
-
     for j in 0..<GamepadAxisCount.int:
       state.axes[j] = gp.axis[j]
+
+    gamepadUpdateButtons()
 
 proc mouseButtonToButton(button: cushort): Button =
   case button:

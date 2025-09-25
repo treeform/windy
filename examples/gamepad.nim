@@ -1,15 +1,17 @@
 import opengl, windy
 
+# Global event handlers must be registered before the first window is created,
+# this enables them to receive events from gamepads that are already connected
+onGamepadConnected = proc(gamepadId: int) =
+  echo "Gamepad ", gamepadId, " connected: ", gamepadName(gamepadId)
+onGamepadDisconnected = proc(gamepadId: int) =
+  echo "Gamepad ", gamepadId, " disconnected"
+
 let window = newWindow("Windy Gamepad", ivec2(1280, 800))
 var color = vec4(0, 0, 0, 1)
 
 window.makeContextCurrent()
 loadExtensions()
-
-onGamepadConnected = proc(gamepadId: int) =
-  echo "Gamepad ", gamepadId, " connected: ", gamepadName(gamepadId)
-onGamepadDisconnected = proc(gamepadId: int) =
-  echo "Gamepad ", gamepadId, " disconnected"
 
 proc gamepad() =
   for i in 0..<maxGamepads:

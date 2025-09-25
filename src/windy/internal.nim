@@ -7,13 +7,12 @@ const
 
 type
   GamepadState* = object
-    numButtons*: int8
-    numAxes*: int8
     buttons*: uint32 # One bit per button, 32 buttons max
     pressed*: uint32 # Buttons pressed this frame
     released*: uint32 # Buttons released this frame
-    pressures*: array[GamepadButtonCount.int, float32]
-    axes*: array[GamepadAxisCount.int, float32]
+    pressures*: array[GamepadButtonCount.int, float32] # Many APIs report a pressure per button; binary 0..1 otherwise
+    axes*: array[GamepadAxisCount.int, float32] # Values are in the range -1..1
+    name*: string
 
   WindowState* = object
     title*: string
@@ -173,26 +172,35 @@ proc addDefaultHeaders*(headers: var seq[HttpHeader]) =
     # If there isn't a specific accept-encoding specified, enable gzip
     headers["accept-encoding"] = "gzip"
 
-template handleGamepadTemplate*() =
-  proc gamepadButton*(gamepadId: int, button: GamepadButton): bool =
+template gamepadPlatform*() =
+  proc gamepadName*(gamepadId: int): string =
+    gamepadStates[gamepadId].name
+
+  proc gamepadButton*(gamepadId: int, button: GamepadButton): bool {.inline.} =
     (gamepadStates[gamepadId].buttons and (1.uint32 shl button.int8)) != 0
 
-  proc gamepadButtonPressed*(gamepadId: int, button: GamepadButton): bool =
+  proc gamepadButtonPressed*(gamepadId: int, button: GamepadButton): bool {.inline.} =
     (gamepadStates[gamepadId].pressed and (1.uint32 shl button.int8)) != 0
 
-  proc gamepadButtonReleased*(gamepadId: int, button: GamepadButton): bool =
+  proc gamepadButtonReleased*(gamepadId: int, button: GamepadButton): bool {.inline.} =
     (gamepadStates[gamepadId].released and (1.uint32 shl button.int8)) != 0
 
-  proc gamepadButtonPressure*(gamepadId: int, button: GamepadButton): float =
+  proc gamepadButtonPressure*(gamepadId: int, button: GamepadButton): float {.inline.} =
     gamepadStates[gamepadId].pressures[button.int8]
 
-  proc gamepadAxis*(gamepadId: int, axis: GamepadAxis): float =
-    let value = gamepadStates[gamepadId].axes[axis.int8]
-    if abs(value) < gamepadDeadzone: 0 else: value
+  proc gamepadAxis*(gamepadId: int, axis: GamepadAxis): float {.inline.} =
+    gamepadStates[gamepadId].axes[axis.int8]
+
+func gamepadFilterDeadZone*(value: float): float {.inline.} =
+  if abs(value) < gamepadDeadzone: 0 else: value
+
+template gamepadUpdateButtons*() =
+  let prevButtons = state.buttons
+  state.buttons = buttons
+  state.pressed = buttons and (not prevButtons)
+  state.released = prevButtons and (not buttons)
 
 proc resetGamepadState*(state: var GamepadState) =
-  state.numButtons = 0.int8
-  state.numAxes = 0.int8
   state.buttons = 0.uint32
   state.pressed = 0.uint32
   state.released = 0.uint32
@@ -200,3 +208,4 @@ proc resetGamepadState*(state: var GamepadState) =
     state.pressures[i] = 0.float32
   for i in 0..<GamepadAxisCount.int:
     state.axes[i] = 0.float32
+  state.name = ""

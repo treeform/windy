@@ -153,6 +153,10 @@ var
   httpRequests: Table[HttpRequestHandle, ptr HttpRequestState]
   webSockets: Table[WebSocketHandle, ptr WebSocketState]
 
+  gameInput: ptr IGameInput
+  gamepadStates: array[maxGamepads, GamepadState]
+  gameInputDevices: array[maxGamepads, ptr IGameInputDevice] # NOTE GameInput's max is 8, but other platforms limit to 4
+
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
   ## Returns the window for this handle, else -1
   for i, window in windows:
@@ -1024,6 +1028,92 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
+gamepadPlatform()
+
+proc gamepadConnected*(gamepadId: int): bool =
+  gameInputDevices[gamepadId] != nil
+
+proc pollGamepads() =
+  var reading: ptr IGameInputReading
+  var gamepad: GameInputGamepadState
+  for i in 0..<maxGamepads:
+    if gameInputDevices[i] == nil:
+      continue
+
+    # No reading this frame, so we don't change input state but reset derived state.
+    var state = addr gamepadStates[i]
+    if gameInput.lpVtbl.GetCurrentReading(gameInput,
+         GameInputKindGamepad, gameInputDevices[i], addr reading) != S_OK:
+      state.pressed = 0
+      state.released = 0
+      continue
+
+    # Only false if not a gamepad, but we only register gamepads.
+    discard reading.lpVtbl.GetGamepadState(reading, addr gamepad)
+
+    var buttons = uint32 0
+
+    template button(src: GameInputGamepadButtons, dst: GamepadButton) =
+      if (gamepad.buttons.uint32 and src.uint32) != 0:
+        buttons = buttons or (uint32 1 shl dst.int)
+
+    template remap(src: float, dst: GamepadButton) =
+      let val = gamepadFilterDeadZone(src)
+      state.pressures[dst.int] = val
+
+      if val > 0:
+        buttons = buttons or (uint32 1 shl dst.int)
+
+    template axis(src: float, dst: GamepadAxis) =
+      state.axes[dst.int] = gamepadFilterDeadZone(src)
+
+    axis(gamepad.leftThumbstickX, GamepadLStickX)
+    axis(gamepad.leftThumbstickY, GamepadLStickY)
+    axis(gamepad.rightThumbstickX, GamepadRStickX)
+    axis(gamepad.rightThumbstickY, GamepadRStickY)
+    remap(gamepad.leftTrigger, GamepadL2)
+    remap(gamepad.rightTrigger, GamepadR2)
+    button(GameInputGamepadMenu, GamepadStart)
+    button(GameInputGamepadView, GamepadSelect)
+    button(GameInputGamepadA, GamepadA)
+    button(GameInputGamepadB, GamepadB)
+    button(GameInputGamepadX, GamepadX)
+    button(GameInputGamepadY, GamepadY)
+    button(GameInputGamepadDPadUp, GamepadUp)
+    button(GameInputGamepadDPadDown, GamepadDown)
+    button(GameInputGamepadDPadLeft, GamepadLeft)
+    button(GameInputGamepadDPadRight, GamepadRight)
+    button(GameInputGamepadLeftShoulder, GamepadL1)
+    button(GameInputGamepadRightShoulder, GamepadR1)
+    button(GameInputGamepadLeftThumbstick, GamepadL3)
+    button(GameInputGamepadRightThumbstick, GamepadR3)
+
+    gamepadUpdateButtons()
+    comDispose(reading)
+
+proc gameInputDeviceCallback(callbackToken: GameInputCallbackToken, context: pointer, device: ptr IGameInputDevice, timestamp: uint64, currentStatus: GameInputDeviceStatus, previousStatus: GameInputDeviceStatus) {.stdcall.} =
+  if (currentStatus and GameInputDeviceConnected) == 0:
+    for i in 0..<maxGamepads:
+      if gameInputDevices[i] == device:
+        gameInputDevices[i] = nil
+        resetGamepadState(gamepadStates[i])
+        comDispose(device)
+        if onGamepadDisconnected != nil:
+          onGamepadDisconnected(i)
+        break
+  else:
+    for i in 0..<maxGamepads:
+      if gameInputDevices[i] == nil:
+        var info: ptr GameInputDeviceInfo
+        discard device.lpVtbl.GetDeviceInfo(device, addr info)
+        comAddRef(device)
+        gameInputDevices[i] = device
+        gamepadStates[i].name = $info.displayName
+        if onGamepadConnected != nil:
+          onGamepadConnected(i)
+        return
+    echo "No free gamepad slot found"
+
 proc init() {.raises: [].} =
   if initialized:
     return
@@ -1037,6 +1127,22 @@ proc init() {.raises: [].} =
   except:
     quit("Error creating helper window")
   platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
+
+  # Since GameInput requires a distributable install, we'll disable gamepad support if initializing it fails
+  var gameInputV0: ptr IGameInput
+  var hr = GameInputCreate(addr gameInputV0)
+  if hr != S_OK:
+    echo "Error creating GameInput, please ensure it is installed"
+  else:
+    # The factory method gets us a V0 interface, but we're using the V2 interface
+    if not gameInputV0.comQueryInterface(addr IID_IGameInput, addr gameInput):
+      echo "Error querying GameInput v2, please ensure the latest version is installed"
+    else:
+      comDispose(gameInputV0)
+      discard gameInput.lpVtbl.RegisterDeviceCallback(gameInput,
+        nil, GameInputKindGamepad, GameInputDeviceConnected, GameInputAsyncEnumeration,
+        nil, gameInputDeviceCallback, nil) # Also lists gamepads already connected
+
   initialized = true
 
 proc makeContextCurrent*(window: Window) =
@@ -2313,6 +2419,8 @@ elif compileOption("threads"):
       state.onClose()
 
 proc pollEvents*() =
+  pollGamepads()
+
   # Draw first (in case a message closes a window or similar)
   for window in windows:
     if window.onFrame != nil:
