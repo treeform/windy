@@ -640,21 +640,17 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
 
   let cursor = case window.state.cursor.kind:
     of ArrowCursor:
-      echo "Making the call to arrowCursor"
       NSCursor.arrowCursor()
+    of PointingHandCursor:
+      NSCursor.pointingHandCursor()
     of IBeamCursor:
-      echo "Making the call to iBeam"
       NSCursor.IBeamCursor()
-      #NSCursor.arrowCursor()
     of CrosshairCursor:
-      echo "Making the call to crosshairCursor"
       NSCursor.crosshairCursor()
     of ClosedHandCursor:
       NSCursor.closedHandCursor()
     of OpenHandCursor:
       NSCursor.openHandCursor()
-    of PointingHandCursor:
-      NSCursor.pointingHandCursor()
     of ResizeLeftCursor:
       NSCursor.resizeLeftCursor()
     of ResizeRightCursor:
@@ -667,18 +663,11 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
       NSCursor.resizeDownCursor()
     of ResizeUpDownCursor:
       NSCursor.resizeUpDownCursor()
-    of DisappearingItemCursor:
-      NSCursor.disappearingItemCursor()
     of OperationNotAllowedCursor:
       NSCursor.operationNotAllowedCursor()
-    of DragLinkCursor:
-      NSCursor.dragLinkCursor()
-    of DragCopyCursor:
-      NSCursor.dragCopyCursor()
-    of ContextualMenuCursor:
-      NSCursor.contextualMenuCursor()
     of WaitCursor:
-      NSCursor.arrowCursor()  # macOS doesn't have a direct wait cursor equivalent
+      # MacOS doesn't have a direct wait cursor equivalent.
+      NSCursor.arrowCursor()
     of CustomCursor:
       let
         encodedPng = window.state.cursor.image.encodePng()
@@ -692,7 +681,6 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
         )
       NSCursor.alloc().initWithImage(image, hotspot)
 
-  echo "Adding cursor rect"
   self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
 proc init() {.raises: [].} =

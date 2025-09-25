@@ -608,16 +608,20 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   let systemCursor = case cursor.kind:
     of ArrowCursor:
       LoadCursorW(0, IDC_ARROW)
+    of PointingHandCursor:
+      LoadCursorW(0, IDC_HAND)
     of IBeamCursor:
       LoadCursorW(0, IDC_IBEAM)
     of CrosshairCursor:
       LoadCursorW(0, IDC_CROSS)
     of ClosedHandCursor:
-      LoadCursorW(0, IDC_SIZEALL) # Best approximation
+      # Windows doesn't have a closed hand cursor.
+      # Using drag/size all instead.
+      LoadCursorW(0, IDC_SIZEALL)
     of OpenHandCursor:
-      LoadCursorW(0, IDC_SIZEALL) # Best approximation
-    of PointingHandCursor:
-      LoadCursorW(0, IDC_HAND)
+      # Windows doesn't have an open hand cursor.
+      # Using drag/size all instead.
+      LoadCursorW(0, IDC_SIZEALL)
     of ResizeLeftCursor:
       LoadCursorW(0, IDC_SCROLLWEST)
     of ResizeRightCursor:
@@ -630,16 +634,8 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
       LoadCursorW(0, IDC_SCROLLSOUTH)
     of ResizeUpDownCursor:
       LoadCursorW(0, IDC_SIZENS)
-    of DisappearingItemCursor:
-      LoadCursorW(0, IDC_ARROW)  # Fallback to arrow
     of OperationNotAllowedCursor:
       LoadCursorW(0, IDC_NO)
-    of DragLinkCursor:
-      LoadCursorW(0, IDC_HAND)  # Best approximation
-    of DragCopyCursor:
-      LoadCursorW(0, IDC_HAND)  # Best approximation
-    of ContextualMenuCursor:
-      LoadCursorW(0, IDC_ARROW)  # Fallback to arrow
     of WaitCursor:
       LoadCursorW(0, IDC_WAIT)
     of CustomCursor:

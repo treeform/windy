@@ -22,22 +22,18 @@ type
 
   CursorKind* = enum
     ArrowCursor
+    PointingHandCursor
     IBeamCursor
     CrosshairCursor
     ClosedHandCursor
     OpenHandCursor
-    PointingHandCursor
     ResizeLeftCursor
     ResizeRightCursor
     ResizeLeftRightCursor
     ResizeUpCursor
     ResizeDownCursor
     ResizeUpDownCursor
-    DisappearingItemCursor
     OperationNotAllowedCursor
-    DragLinkCursor
-    DragCopyCursor
-    ContextualMenuCursor
     WaitCursor
     CustomCursor
 

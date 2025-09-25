@@ -287,11 +287,7 @@ objc:
   proc resizeUpCursor*(class: typedesc[NSCursor]): NSCursor
   proc resizeDownCursor*(class: typedesc[NSCursor]): NSCursor
   proc resizeUpDownCursor*(class: typedesc[NSCursor]): NSCursor
-  proc disappearingItemCursor*(class: typedesc[NSCursor]): NSCursor
   proc operationNotAllowedCursor*(class: typedesc[NSCursor]): NSCursor
-  proc dragLinkCursor*(class: typedesc[NSCursor]): NSCursor
-  proc dragCopyCursor*(class: typedesc[NSCursor]): NSCursor
-  proc contextualMenuCursor*(class: typedesc[NSCursor]): NSCursor
   proc discardMarkedText*(self: NSTextInputContext)
   proc handleEvent*(self: NSTextInputContext, x: NSEvent): bool
   proc deactivate*(self: NSTextInputContext)

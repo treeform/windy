@@ -3,22 +3,18 @@ import windy, vmath, boxy, opengl
 # Test all cursor types
 let cursors = [
   Cursor(kind: ArrowCursor),
+  Cursor(kind: PointingHandCursor),
   Cursor(kind: IBeamCursor),
   Cursor(kind: CrosshairCursor),
   Cursor(kind: ClosedHandCursor),
   Cursor(kind: OpenHandCursor),
-  Cursor(kind: PointingHandCursor),
   Cursor(kind: ResizeLeftCursor),
   Cursor(kind: ResizeRightCursor),
   Cursor(kind: ResizeLeftRightCursor),
   Cursor(kind: ResizeUpCursor),
   Cursor(kind: ResizeDownCursor),
   Cursor(kind: ResizeUpDownCursor),
-  Cursor(kind: DisappearingItemCursor),
   Cursor(kind: OperationNotAllowedCursor),
-  Cursor(kind: DragLinkCursor),
-  Cursor(kind: DragCopyCursor),
-  Cursor(kind: ContextualMenuCursor),
   Cursor(kind: WaitCursor)
 ]
 
