@@ -3,7 +3,7 @@ import windy, vmath, boxy, opengl
 # Test all cursor types
 let cursors = [
   Cursor(kind: ArrowCursor),
-  Cursor(kind: PointingHandCursor),
+  Cursor(kind: PointerCursor),
   Cursor(kind: IBeamCursor),
   Cursor(kind: CrosshairCursor),
   Cursor(kind: ClosedHandCursor),

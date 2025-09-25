@@ -641,7 +641,7 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
   let cursor = case window.state.cursor.kind:
     of ArrowCursor:
       NSCursor.arrowCursor()
-    of PointingHandCursor:
+    of PointerCursor:
       NSCursor.pointingHandCursor()
     of IBeamCursor:
       NSCursor.IBeamCursor()

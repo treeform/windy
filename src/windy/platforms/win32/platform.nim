@@ -608,7 +608,7 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   let systemCursor = case cursor.kind:
     of ArrowCursor:
       LoadCursorW(0, IDC_ARROW)
-    of PointingHandCursor:
+    of PointerCursor:
       LoadCursorW(0, IDC_HAND)
     of IBeamCursor:
       LoadCursorW(0, IDC_IBEAM)

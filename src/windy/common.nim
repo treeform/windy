@@ -22,7 +22,7 @@ type
 
   CursorKind* = enum
     ArrowCursor
-    PointingHandCursor
+    PointerCursor
     IBeamCursor
     CrosshairCursor
     ClosedHandCursor
