@@ -601,14 +601,52 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
 proc `cursor=`*(window: Window, cursor: Cursor) =
   if window.customCursor != 0:
     discard DestroyCursor(window.customCursor)
+    window.customCursor = 0
 
   window.state.cursor = cursor
 
-  case cursor.kind:
-  of DefaultCursor:
-    window.customCursor = 0
+  let systemCursor = case cursor.kind:
+    of ArrowCursor:
+      LoadCursorW(0, IDC_ARROW)
+    of IBeamCursor:
+      LoadCursorW(0, IDC_IBEAM)
+    of CrosshairCursor:
+      LoadCursorW(0, IDC_CROSS)
+    of ClosedHandCursor:
+      LoadCursorW(0, IDC_SIZEALL) # Best approximation
+    of OpenHandCursor:
+      LoadCursorW(0, IDC_SIZEALL) # Best approximation
+    of PointingHandCursor:
+      LoadCursorW(0, IDC_HAND)
+    of ResizeLeftCursor:
+      LoadCursorW(0, IDC_SIZEWE)
+    of ResizeRightCursor:
+      LoadCursorW(0, IDC_SIZEWE)
+    of ResizeLeftRightCursor:
+      LoadCursorW(0, IDC_SIZEWE)
+    of ResizeUpCursor:
+      LoadCursorW(0, IDC_SIZENS)
+    of ResizeDownCursor:
+      LoadCursorW(0, IDC_SIZENS)
+    of ResizeUpDownCursor:
+      LoadCursorW(0, IDC_SIZENS)
+    of DisappearingItemCursor:
+      LoadCursorW(0, IDC_ARROW)  # Fallback to arrow
+    of OperationNotAllowedCursor:
+      LoadCursorW(0, IDC_NO)
+    of DragLinkCursor:
+      LoadCursorW(0, IDC_HAND)  # Best approximation
+    of DragCopyCursor:
+      LoadCursorW(0, IDC_HAND)  # Best approximation
+    of ContextualMenuCursor:
+      LoadCursorW(0, IDC_ARROW)  # Fallback to arrow
+    of CustomCursor:
+      window.customCursor = cursor.createCursorHandle()
+      window.customCursor
+
+  if cursor.kind != CustomCursor:
+    discard SetCursor(systemCursor)
   else:
-    window.customCursor = cursor.createCursorHandle()
     discard SetCursor(window.customCursor)
 
 proc loadOpenGL() =
@@ -857,8 +895,9 @@ proc wndProc(
     window.trackMouseEventRegistered = false
     return 0
   of WM_SETCURSOR:
-    if window.customCursor != 0 and LOWORD(lParam) == HTCLIENT:
-      discard SetCursor(window.customCursor)
+    if LOWORD(lParam) == HTCLIENT:
+      # Re-apply the current cursor
+      window.cursor = window.state.cursor
       return TRUE
   of WM_MOUSEWHEEL:
     let hiword = HIWORD(wParam)
