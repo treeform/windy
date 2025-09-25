@@ -22,10 +22,10 @@ when defined(windows) or defined(macosx):
     if button == MouseLeft:
       echo "Toggling cursor"
       case window.cursor.kind:
-      of DefaultCursor:
+      of ArrowCursor:
         window.cursor = Cursor(kind: CustomCursor, image: cursor)
       else:
-        window.cursor = Cursor(kind: DefaultCursor)
+        window.cursor = Cursor(kind: ArrowCursor)
 
   while not window.closeRequested:
     pollEvents()
