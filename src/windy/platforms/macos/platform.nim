@@ -677,6 +677,8 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
       NSCursor.dragCopyCursor()
     of ContextualMenuCursor:
       NSCursor.contextualMenuCursor()
+    of WaitCursor:
+      NSCursor.arrowCursor()  # macOS doesn't have a direct wait cursor equivalent
     of CustomCursor:
       let
         encodedPng = window.state.cursor.image.encodePng()

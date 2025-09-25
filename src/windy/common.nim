@@ -38,6 +38,7 @@ type
     DragLinkCursor
     DragCopyCursor
     ContextualMenuCursor
+    WaitCursor
     CustomCursor
 
   Cursor* = object

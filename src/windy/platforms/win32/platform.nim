@@ -619,15 +619,15 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
     of PointingHandCursor:
       LoadCursorW(0, IDC_HAND)
     of ResizeLeftCursor:
-      LoadCursorW(0, IDC_SIZEWE)
+      LoadCursorW(0, IDC_SCROLLWEST)
     of ResizeRightCursor:
-      LoadCursorW(0, IDC_SIZEWE)
+      LoadCursorW(0, IDC_SCROLLEAST)
     of ResizeLeftRightCursor:
       LoadCursorW(0, IDC_SIZEWE)
     of ResizeUpCursor:
-      LoadCursorW(0, IDC_SIZENS)
+      LoadCursorW(0, IDC_SCROLLNORTH)
     of ResizeDownCursor:
-      LoadCursorW(0, IDC_SIZENS)
+      LoadCursorW(0, IDC_SCROLLSOUTH)
     of ResizeUpDownCursor:
       LoadCursorW(0, IDC_SIZENS)
     of DisappearingItemCursor:
@@ -640,6 +640,8 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
       LoadCursorW(0, IDC_HAND)  # Best approximation
     of ContextualMenuCursor:
       LoadCursorW(0, IDC_ARROW)  # Fallback to arrow
+    of WaitCursor:
+      LoadCursorW(0, IDC_WAIT)
     of CustomCursor:
       window.customCursor = cursor.createCursorHandle()
       window.customCursor

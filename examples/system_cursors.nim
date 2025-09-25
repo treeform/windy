@@ -18,27 +18,8 @@ let cursors = [
   Cursor(kind: OperationNotAllowedCursor),
   Cursor(kind: DragLinkCursor),
   Cursor(kind: DragCopyCursor),
-  Cursor(kind: ContextualMenuCursor)
-]
-
-let cursorNames = [
-  "ArrowCursor",
-  "IBeamCursor",
-  "CrosshairCursor",
-  "ClosedHandCursor",
-  "OpenHandCursor",
-  "PointingHandCursor",
-  "ResizeLeftCursor",
-  "ResizeRightCursor",
-  "ResizeLeftRightCursor",
-  "ResizeUpCursor",
-  "ResizeDownCursor",
-  "ResizeUpDownCursor",
-  "DisappearingItemCursor",
-  "OperationNotAllowedCursor",
-  "DragLinkCursor",
-  "DragCopyCursor",
-  "ContextualMenuCursor"
+  Cursor(kind: ContextualMenuCursor),
+  Cursor(kind: WaitCursor)
 ]
 
 var
@@ -53,12 +34,12 @@ bxy = newBoxy()
 
 echo "Press SPACE or click to cycle through cursor types"
 echo "Press ESC to exit"
-echo "Current cursor: ", cursorNames[currentCursor]
+echo "Current cursor: ", cursors[currentCursor].kind
 
 proc nextCursor() =
   currentCursor = (currentCursor + 1) mod cursors.len
   window.cursor = cursors[currentCursor]
-  echo "Current cursor: ", cursorNames[currentCursor]
+  echo "Current cursor: ", cursors[currentCursor].kind
 
 window.onButtonPress = proc(button: Button) =
   case button:
