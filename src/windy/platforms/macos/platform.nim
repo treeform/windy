@@ -638,22 +638,60 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
   if window == nil:
     return
 
-  case window.state.cursor.kind:
-  of DefaultCursor:
-    discard
-  else:
-    let
-      encodedPng = window.state.cursor.image.encodePng()
-      image = NSImage.alloc().initWithData(NSData.dataWithBytes(
-        encodedPng[0].unsafeAddr,
-        encodedPng.len
-      ))
-      hotspot = NSMakePoint(
-        window.state.cursor.hotspot.x.float,
-        window.state.cursor.hotspot.y.float
-      )
-      cursor = NSCursor.alloc().initWithImage(image, hotspot)
-    self.NSView.addCursorRect(self.NSView.bounds, cursor)
+  let cursor = case window.state.cursor.kind:
+    of ArrowCursor:
+      echo "Making the call to arrowCursor"
+      NSCursor.arrowCursor()
+    of IBeamCursor:
+      echo "Making the call to iBeam"
+      NSCursor.IBeamCursor()
+      #NSCursor.arrowCursor()
+    of CrosshairCursor:
+      echo "Making the call to crosshairCursor"
+      NSCursor.crosshairCursor()
+    of ClosedHandCursor:
+      NSCursor.closedHandCursor()
+    of OpenHandCursor:
+      NSCursor.openHandCursor()
+    of PointingHandCursor:
+      NSCursor.pointingHandCursor()
+    of ResizeLeftCursor:
+      NSCursor.resizeLeftCursor()
+    of ResizeRightCursor:
+      NSCursor.resizeRightCursor()
+    of ResizeLeftRightCursor:
+      NSCursor.resizeLeftRightCursor()
+    of ResizeUpCursor:
+      NSCursor.resizeUpCursor()
+    of ResizeDownCursor:
+      NSCursor.resizeDownCursor()
+    of ResizeUpDownCursor:
+      NSCursor.resizeUpDownCursor()
+    of DisappearingItemCursor:
+      NSCursor.disappearingItemCursor()
+    of OperationNotAllowedCursor:
+      NSCursor.operationNotAllowedCursor()
+    of DragLinkCursor:
+      NSCursor.dragLinkCursor()
+    of DragCopyCursor:
+      NSCursor.dragCopyCursor()
+    of ContextualMenuCursor:
+      NSCursor.contextualMenuCursor()
+    of CustomCursor:
+      let
+        encodedPng = window.state.cursor.image.encodePng()
+        image = NSImage.alloc().initWithData(NSData.dataWithBytes(
+          encodedPng[0].unsafeAddr,
+          encodedPng.len
+        ))
+        hotspot = NSMakePoint(
+          window.state.cursor.hotspot.x.float,
+          window.state.cursor.hotspot.y.float
+        )
+      NSCursor.alloc().initWithImage(image, hotspot)
+
+  echo "Adding cursor rect"
+  self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
 proc init() {.raises: [].} =
   if initialized:

@@ -21,15 +21,32 @@ type
     primary*: bool
 
   CursorKind* = enum
-    DefaultCursor, CustomCursor
+    ArrowCursor
+    IBeamCursor
+    CrosshairCursor
+    ClosedHandCursor
+    OpenHandCursor
+    PointingHandCursor
+    ResizeLeftCursor
+    ResizeRightCursor
+    ResizeLeftRightCursor
+    ResizeUpCursor
+    ResizeDownCursor
+    ResizeUpDownCursor
+    DisappearingItemCursor
+    OperationNotAllowedCursor
+    DragLinkCursor
+    DragCopyCursor
+    ContextualMenuCursor
+    CustomCursor
 
   Cursor* = object
     case kind*: CursorKind:
-    of DefaultCursor:
-      discard
     of CustomCursor:
       image*: Image
       hotspot*: IVec2
+    else:
+      discard
 
   HttpHeader* = object
     key*, value*: string

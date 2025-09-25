@@ -275,6 +275,23 @@ objc:
   ): NSTrackingArea
   proc initWithData*(self: NSImage, x: NSData): NSImage
   proc initWithImage*(self: NSCursor, x: NSImage, hotSpot: NSPoint): NSCursor
+  proc arrowCursor*(class: typedesc[NSCursor]): NSCursor
+  proc IBeamCursor*(class: typedesc[NSCursor]): NSCursor
+  proc crosshairCursor*(class: typedesc[NSCursor]): NSCursor
+  proc closedHandCursor*(class: typedesc[NSCursor]): NSCursor
+  proc openHandCursor*(class: typedesc[NSCursor]): NSCursor
+  proc pointingHandCursor*(class: typedesc[NSCursor]): NSCursor
+  proc resizeLeftCursor*(class: typedesc[NSCursor]): NSCursor
+  proc resizeRightCursor*(class: typedesc[NSCursor]): NSCursor
+  proc resizeLeftRightCursor*(class: typedesc[NSCursor]): NSCursor
+  proc resizeUpCursor*(class: typedesc[NSCursor]): NSCursor
+  proc resizeDownCursor*(class: typedesc[NSCursor]): NSCursor
+  proc resizeUpDownCursor*(class: typedesc[NSCursor]): NSCursor
+  proc disappearingItemCursor*(class: typedesc[NSCursor]): NSCursor
+  proc operationNotAllowedCursor*(class: typedesc[NSCursor]): NSCursor
+  proc dragLinkCursor*(class: typedesc[NSCursor]): NSCursor
+  proc dragCopyCursor*(class: typedesc[NSCursor]): NSCursor
+  proc contextualMenuCursor*(class: typedesc[NSCursor]): NSCursor
   proc discardMarkedText*(self: NSTextInputContext)
   proc handleEvent*(self: NSTextInputContext, x: NSEvent): bool
   proc deactivate*(self: NSTextInputContext)
