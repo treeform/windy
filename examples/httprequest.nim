@@ -21,4 +21,5 @@ req.onResponse = proc(response: HttpResponse) =
 # Closing the window exits the demo
 let window = newWindow("Windy Basic", ivec2(1280, 800))
 while not window.closeRequested:
+  pollHttp()
   pollEvents()
