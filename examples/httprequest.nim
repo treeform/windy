@@ -10,7 +10,7 @@ import windy
 # If there is any error, onError will be called during
 # the next pollEvents (or later).
 
-let req = startHttpRequest("https://www.google.com")
+let req = startHttpRequest("https://google.com")
 
 req.onError = proc(msg: string) =
   echo "onError: " & msg
@@ -21,4 +21,5 @@ req.onResponse = proc(response: HttpResponse) =
 # Closing the window exits the demo
 let window = newWindow("Windy Basic", ivec2(1280, 800))
 while not window.closeRequested:
+  pollHttp()
   pollEvents()

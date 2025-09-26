@@ -109,9 +109,18 @@ proc httpRequestTasklet(handle: HttpRequestHandle) {.async.} =
   let httpResponse = HttpResponse()
 
   try:
+    let verb =
+      case state.verb.toUpperAscii():
+      of "GET": HttpGet
+      of "POST": HttpPost
+      of "PUT": HttpPut
+      of "PATCH": HttpPatch
+      of "DELETE": HttpDelete
+      else:
+        raise newException(ValueError, "Invalid verb: " & state.verb)
     let response = await state.client.request(
       state.url,
-      state.verb.toUpperAscii(),
+      verb,
       state.requestBody,
       headers
     )
