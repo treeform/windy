@@ -10,7 +10,7 @@ import windy
 # If there is any error, onError will be called during
 # the next pollEvents (or later).
 
-let req = startHttpRequest("https://google.com")
+let req = startHttpRequest("https://www.google.com")
 
 req.onError = proc(msg: string) =
   echo "onError: " & msg
