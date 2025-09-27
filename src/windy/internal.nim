@@ -200,7 +200,7 @@ template gamepadUpdateButtons*() =
   state.pressed = buttons and (not prevButtons)
   state.released = prevButtons and (not buttons)
 
-proc resetGamepadState*(state: var GamepadState) =
+proc gamepadResetState*(state: var GamepadState) =
   state.buttons = 0.uint32
   state.pressed = 0.uint32
   state.released = 0.uint32
