@@ -485,11 +485,11 @@ proc onGamepadConnected(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEven
   return 1
 
 proc onGamepadDisconnected(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEvent, userData: pointer): EM_BOOL {.cdecl.} =
-  let wasConnected = (gamepadsConnectedMask and (1.uint8 shl gamepadEvent.index)) != 0
-  gamepadsConnectedMask = gamepadsConnectedMask and (not (1.uint8 shl gamepadEvent.index))
-  resetGamepadState(gamepadStates[gamepadEvent.index])
-  if common.onGamepadDisconnected != nil and wasConnected: # Don't notify disconnects if we ignored the connect
-    common.onGamepadDisconnected(gamepadEvent.index)
+  if (gamepadsConnectedMask and (1.uint8 shl gamepadEvent.index)) != 0:
+    gamepadsConnectedMask = gamepadsConnectedMask and (not (1.uint8 shl gamepadEvent.index))
+    gamepadResetState(gamepadStates[gamepadEvent.index])
+    if common.onGamepadDisconnected != nil:
+      common.onGamepadDisconnected(gamepadEvent.index)
   return 1
 
 proc setupGamepads() =

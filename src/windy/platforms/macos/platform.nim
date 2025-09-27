@@ -416,7 +416,7 @@ proc controllerDidDisconnect(self: ID, cmd: SEL, notification: NSNotification): 
   let index = ctrl.playerIndex
   gamepadProfiles[index] = 0.GCPhysicalInputProfile
   gamepadTimestamps[index] = 0.float64
-  resetGamepadState(gamepadStates[index])
+  gamepadResetState(gamepadStates[index])
   if onGamepadDisconnected != nil:
     onGamepadDisconnected(index)
 
