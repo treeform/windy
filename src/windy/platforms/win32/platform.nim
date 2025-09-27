@@ -1092,7 +1092,7 @@ proc gameInputDeviceCallback(callbackToken: GameInputCallbackToken, context: poi
     for i in 0..<maxGamepads:
       if gameInputDevices[i] == device:
         gameInputDevices[i] = nil
-        resetGamepadState(gamepadStates[i])
+        gamepadResetState(gamepadStates[i])
         comDispose(device)
         if onGamepadDisconnected != nil:
           onGamepadDisconnected(i)

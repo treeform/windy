@@ -1,4 +1,12 @@
-import strutils, os
+import strutils
+
+if defined(linux):
+  switch(
+    "passL",
+    """
+    -ludev
+    -levdev
+    """.replace("\n", " "))
 
 if defined(emscripten):
 

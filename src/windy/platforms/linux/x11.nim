@@ -4,6 +4,8 @@ import ../../common, ../../internal, os, sequtils, sets, strformat, times,
 import ../../http
 export http
 
+include gamepad
+
 type
   XWindow = x.Window
 
@@ -112,6 +114,8 @@ proc init =
       WmForDecoratedKind.other
     else:
       WmForDecoratedKind.unsupported
+
+  gamepadSetup()
 
   initialized = true
 
@@ -689,6 +693,7 @@ proc newWindow*(
   windows.add result
 
 proc pollEvents(window: Window) =
+  gamepadPoll()
 
   # Clear all per-frame data
   window.perFrame = PerFrame()
