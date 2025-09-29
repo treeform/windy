@@ -1,4 +1,4 @@
-version     = "0.3.0"
+version     = "0.3.1"
 author      = "Andre von Houck and Ryan Oldenburg"
 description = "Windy"
 license     = "MIT"
