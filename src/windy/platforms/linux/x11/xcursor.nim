@@ -1,7 +1,11 @@
 import
   x, xlib
 
-{.passL: "-lXcursor".}
+const libXcursor* =
+  when defined(macosx):
+    "libXcursor.dylib"
+  else:
+    "libXcursor.so(|.1)"
 
 type
   XcursorPixel* = uint32
@@ -18,6 +22,10 @@ type
     delay*: uint32            # Animation delay to next frame (ms).
     pixels*: ptr XcursorPixel # Pointer to pixels.
 
-proc XcursorImageCreate*(width, height: cint): ptr XcursorImage {.importc, cdecl.}
-proc XcursorImageDestroy*(image: ptr XcursorImage) {.importc, cdecl.}
-proc XcursorImageLoadCursor*(dpy: Display, image: ptr XcursorImage): Cursor {.importc, cdecl.}
+{.push, cdecl, dynlib: libXcursor, importc.}
+
+proc XcursorImageCreate*(width, height: cint): ptr XcursorImage
+proc XcursorImageDestroy*(image: ptr XcursorImage)
+proc XcursorImageLoadCursor*(dpy: Display, image: ptr XcursorImage): Cursor
+
+{.pop.}
