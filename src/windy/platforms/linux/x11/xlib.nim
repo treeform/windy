@@ -334,6 +334,11 @@ proc XSetSelectionOwner*(d: Display, kind: Atom; window: Window;
 proc XConvertSelection*(d: Display, kind: Atom; to: Atom; resultProperty: Atom;
     window: Window; time: int32 = CurrentTime)
 
+proc XCreateFontCursor*(d: Display, shape: cuint): x.Cursor
+proc XDefineCursor*(d: Display, window: x.Window; cursor: x.Cursor)
+proc XUndefineCursor*(d: Display, window: x.Window)
+proc XFreeCursor*(d: Display, cursor: x.Cursor)
+
 {.pop.}
 
 {.push, cdecl, dynlib: libXExt, importc.}

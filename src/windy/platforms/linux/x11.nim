@@ -44,6 +44,8 @@ type
     innerDecorated: bool
     innerFocused: bool
 
+    state: WindowState
+
   WmForDecoratedKind {.pure.} = enum
     unsupported
     motiv
@@ -573,6 +575,53 @@ proc runeInputEnabled*(window: Window): bool =
 proc `runeInputEnabled=`*(window: Window, v: bool) =
   window.runeInputEnabled = v
 
+proc cursor*(window: Window): common.Cursor =
+  window.state.cursor
+
+proc applyCursor(window: Window) =
+  # Minimal mapping using Xlib font cursors.
+  # Values are standard XC_* constants from cursorfont.h.
+  # We inline the numeric constants to avoid adding another header.
+  const
+    XC_left_ptr = 68'u32
+    XC_hand2 = 60'u32
+    XC_xterm = 152'u32
+    XC_crosshair = 34'u32
+    XC_fleur = 52'u32
+    XC_left_side = 70'u32
+    XC_right_side = 96'u32
+    XC_top_side = 138'u32
+    XC_bottom_side = 16'u32
+    XC_sb_h_double_arrow = 108'u32
+    XC_sb_v_double_arrow = 116'u32
+    XC_X_cursor = 0'u32
+    XC_watch = 150'u32
+
+  let shape: cuint = case window.state.cursor.kind
+    of ArrowCursor: XC_left_ptr
+    of PointerCursor: XC_hand2
+    of IBeamCursor: XC_xterm
+    of CrosshairCursor: XC_crosshair
+    of ClosedHandCursor: XC_fleur      # approximate
+    of OpenHandCursor: XC_fleur        # approximate
+    of ResizeLeftCursor: XC_left_side
+    of ResizeRightCursor: XC_right_side
+    of ResizeLeftRightCursor: XC_sb_h_double_arrow
+    of ResizeUpCursor: XC_top_side
+    of ResizeDownCursor: XC_bottom_side
+    of ResizeUpDownCursor: XC_sb_v_double_arrow
+    of OperationNotAllowedCursor: XC_X_cursor
+    of WaitCursor: XC_watch
+    of CustomCursor: XC_left_ptr       # TODO: support custom via Xcursor images
+
+  let c = display.XCreateFontCursor(shape)
+  display.XDefineCursor(window.handle, c)
+  display.XFlush()
+
+proc `cursor=`*(window: Window, v: common.Cursor) =
+  window.state.cursor = v
+  window.applyCursor()
+
 proc newWindow*(
   title: string,
   size: IVec2,
@@ -655,6 +704,10 @@ proc newWindow*(
     raise WindyError.newException("Error creating OpenGL context")
 
   result.title = title
+
+  # Set a default cursor
+  result.state.cursor = common.Cursor(kind: ArrowCursor)
+  result.applyCursor()
 
   makeContextCurrent result
 
