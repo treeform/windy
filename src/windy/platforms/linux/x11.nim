@@ -1,5 +1,6 @@
 import ../../common, ../../internal, os, sequtils, sets, strformat, times,
-    unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, pixie
+    unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, x11/xcursor,
+    pixie
 
 import ../../http
 export http
@@ -597,6 +598,37 @@ proc applyCursor(window: Window) =
     XC_X_cursor = 0'u32
     XC_watch = 150'u32
 
+  if window.state.cursor.kind == CustomCursor:
+    # Create custom cursor from image using Xcursor library.
+    let img = window.state.cursor.image
+    let xcImage = XcursorImageCreate(img.width.cint, img.height.cint)
+    
+    if xcImage != nil:
+      xcImage.xhot = window.state.cursor.hotspot.x.uint32
+      xcImage.yhot = window.state.cursor.hotspot.y.uint32
+      xcImage.size = max(img.width, img.height).uint32
+      
+      # Convert RGBA pixel data to ARGB format expected by Xcursor.
+      for y in 0..<img.height:
+        for x in 0..<img.width:
+          let 
+            idx = y * img.width + x
+            pixel = img.data[idx]
+            # Xcursor uses ARGB format (alpha in high byte).
+            argbPixel = 
+              (pixel.a.uint32 shl 24) or 
+              (pixel.r.uint32 shl 16) or 
+              (pixel.g.uint32 shl 8) or 
+              pixel.b.uint32
+          cast[ptr UncheckedArray[XcursorPixel]](xcImage.pixels)[idx] = argbPixel
+      
+      let cursor = XcursorImageLoadCursor(display, xcImage)
+      display.XDefineCursor(window.handle, cursor)
+      XcursorImageDestroy(xcImage)
+      display.XFlush()
+      return
+  
+  # Use font cursors for standard cursor types.
   let shape: cuint = case window.state.cursor.kind
     of ArrowCursor: XC_left_ptr
     of PointerCursor: XC_hand2
@@ -612,7 +644,7 @@ proc applyCursor(window: Window) =
     of ResizeUpDownCursor: XC_sb_v_double_arrow
     of OperationNotAllowedCursor: XC_X_cursor
     of WaitCursor: XC_watch
-    of CustomCursor: XC_left_ptr       # TODO: support custom via Xcursor images
+    of CustomCursor: XC_left_ptr  # Unused, see custom cursor above.
 
   let c = display.XCreateFontCursor(shape)
   display.XDefineCursor(window.handle, c)
