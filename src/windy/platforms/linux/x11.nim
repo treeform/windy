@@ -67,11 +67,6 @@ var
   clipboardWindow: XWindow
   clipboardContent: string
 
-{.push, cdecl, dynlib: xlib.libX11, importc.}
-proc XCreateFontCursor(d: Display, shape: cuint): x.Cursor
-proc XDefineCursor(d: Display, window: XWindow; cursor: x.Cursor)
-{.pop.}
-
 proc initConstants(display: Display) =
   xaNetWMState = display.XInternAtom("_NET_WM_STATE", 0)
   xaNetWMStateMaximizedHorz = display.XInternAtom("_NET_WM_STATE_MAXIMIZED_HORZ", 0)
