@@ -1,0 +1,9 @@
+nimTitle	xcursor	windy/platforms/linux/x11/xcursor.html	module src/windy/platforms/linux/x11/xcursor		0
+nim	libXcursor	windy/platforms/linux/x11/xcursor.html#libXcursor	const libXcursor		4
+nim	XcursorPixel	windy/platforms/linux/x11/xcursor.html#XcursorPixel	type XcursorPixel		11
+nim	XcursorDim	windy/platforms/linux/x11/xcursor.html#XcursorDim	type XcursorDim		12
+nim	XcursorBool	windy/platforms/linux/x11/xcursor.html#XcursorBool	type XcursorBool		13
+nim	XcursorImage	windy/platforms/linux/x11/xcursor.html#XcursorImage	object XcursorImage		15
+nim	XcursorImageCreate	windy/platforms/linux/x11/xcursor.html#XcursorImageCreate,cint,cint	proc XcursorImageCreate(width, height: cint): ptr XcursorImage		27
+nim	XcursorImageDestroy	windy/platforms/linux/x11/xcursor.html#XcursorImageDestroy,ptr.XcursorImage	proc XcursorImageDestroy(image: ptr XcursorImage)		28
+nim	XcursorImageLoadCursor	windy/platforms/linux/x11/xcursor.html#XcursorImageLoadCursor,Display,ptr.XcursorImage	proc XcursorImageLoadCursor(dpy: Display; image: ptr XcursorImage): Cursor		29

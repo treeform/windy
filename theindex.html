@@ -25,7 +25,7 @@
   <div class="document" id="documentId">
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%3D%3D%60" href="#%60%3D%3D%60"><span>`==`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: proc `==`(a, b: HttpRequestHandle): bool" href="windy/common.html#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle">common: proc `==`(a, b: HttpRequestHandle): bool</a></li>
@@ -1562,6 +1562,10 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: const libX11" href="windy/platforms/linux/x11/xlib.html#libX11">xlib: const libX11</a></li>
           </ul></dd>
+<dt><a name="libXcursor" href="#libXcursor"><span>libXcursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: const libXcursor" href="windy/platforms/linux/x11/xcursor.html#libXcursor">xcursor: const libXcursor</a></li>
+          </ul></dd>
 <dt><a name="libXExt" href="#libXExt"><span>libXExt:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: const libXExt" href="windy/platforms/linux/x11/xlib.html#libXExt">xlib: const libXExt</a></li>
@@ -2883,6 +2887,34 @@
 <dt><a name="XCrossingEvent" href="#XCrossingEvent"><span>XCrossingEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XCrossingEvent" href="windy/platforms/linux/x11/xevent.html#XCrossingEvent">xevent: object XCrossingEvent</a></li>
+          </ul></dd>
+<dt><a name="XcursorBool" href="#XcursorBool"><span>XcursorBool:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: type XcursorBool" href="windy/platforms/linux/x11/xcursor.html#XcursorBool">xcursor: type XcursorBool</a></li>
+          </ul></dd>
+<dt><a name="XcursorDim" href="#XcursorDim"><span>XcursorDim:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: type XcursorDim" href="windy/platforms/linux/x11/xcursor.html#XcursorDim">xcursor: type XcursorDim</a></li>
+          </ul></dd>
+<dt><a name="XcursorImage" href="#XcursorImage"><span>XcursorImage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: object XcursorImage" href="windy/platforms/linux/x11/xcursor.html#XcursorImage">xcursor: object XcursorImage</a></li>
+          </ul></dd>
+<dt><a name="XcursorImageCreate" href="#XcursorImageCreate"><span>XcursorImageCreate:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: proc XcursorImageCreate(width, height: cint): ptr XcursorImage" href="windy/platforms/linux/x11/xcursor.html#XcursorImageCreate%2Ccint%2Ccint">xcursor: proc XcursorImageCreate(width, height: cint): ptr XcursorImage</a></li>
+          </ul></dd>
+<dt><a name="XcursorImageDestroy" href="#XcursorImageDestroy"><span>XcursorImageDestroy:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: proc XcursorImageDestroy(image: ptr XcursorImage)" href="windy/platforms/linux/x11/xcursor.html#XcursorImageDestroy%2Cptr.XcursorImage">xcursor: proc XcursorImageDestroy(image: ptr XcursorImage)</a></li>
+          </ul></dd>
+<dt><a name="XcursorImageLoadCursor" href="#XcursorImageLoadCursor"><span>XcursorImageLoadCursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: proc XcursorImageLoadCursor(dpy: Display; image: ptr XcursorImage): Cursor" href="windy/platforms/linux/x11/xcursor.html#XcursorImageLoadCursor%2CDisplay%2Cptr.XcursorImage">xcursor: proc XcursorImageLoadCursor(dpy: Display; image: ptr XcursorImage): Cursor</a></li>
+          </ul></dd>
+<dt><a name="XcursorPixel" href="#XcursorPixel"><span>XcursorPixel:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xcursor: type XcursorPixel" href="windy/platforms/linux/x11/xcursor.html#XcursorPixel">xcursor: type XcursorPixel</a></li>
           </ul></dd>
 <dt><a name="XDefineCursor" href="#XDefineCursor"><span>XDefineCursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10128,7 +10160,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-29 19:08:10 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-29 22:37:19 UTC</small>
       </div>
     </div>
   </div>
