@@ -34,8 +34,9 @@ var
   mainWindow: Window  # Track the main window for events
 
   gamepadsConnectedMask: uint8
-  gamepadNames: array[maxGamepads, string]
   gamepadStates: array[maxGamepads, GamepadState]
+
+runPlatform() # Only one possible window, ends up equivalent to window.run
 
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
@@ -598,26 +599,6 @@ proc handleButtonRelease(window: Window, button: Button) =
 
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
-
-type Html5GamepadButton = enum
-  Html5GamepadActionBottom
-  Html5GamepadActionRight
-  Html5GamepadActionLeft
-  Html5GamepadActionTop
-  Html5GamepadL1
-  Html5GamepadR1
-  Html5GamepadL2
-  Html5GamepadR2
-  Html5GamepadSelect
-  Html5GamepadStart
-  Html5GamepadL3
-  Html5GamepadR3
-  Html5GamepadDPadTop
-  Html5GamepadDPadBottom
-  Html5GamepadDPadLeft
-  Html5GamepadDPadRight
-  Html5GamepadHome
-  Html5GamepadButtonCount
 
 var mainLoopProc: proc()
 
