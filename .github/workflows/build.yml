@@ -14,5 +14,10 @@ jobs:
     - uses: jiro4989/setup-nim-action@v2
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libx11-dev libxext-dev libxcursor-dev libgl-dev
     - run: nimble test -y
     - run: nimble test --gc:orc -y
