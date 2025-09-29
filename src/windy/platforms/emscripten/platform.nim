@@ -55,8 +55,9 @@ var
   httpRequests: Table[HttpRequestHandle, EmsHttpRequestState]
 
   gamepadsConnectedMask: uint8
-  gamepadNames: array[maxGamepads, string]
   gamepadStates: array[maxGamepads, GamepadState]
+
+runPlatform() # Only one possible window, ends up equivalent to window.run
 
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
