@@ -79,9 +79,13 @@ nim	XKeycodeToKeysym	windy/platforms/linux/x11/xlib.html#XKeycodeToKeysym,Displa
 nim	XGetSelectionOwner	windy/platforms/linux/x11/xlib.html#XGetSelectionOwner,Display,Atom	proc XGetSelectionOwner(d: Display; kind: Atom): Window		331
 nim	XSetSelectionOwner	windy/platforms/linux/x11/xlib.html#XSetSelectionOwner,Display,Atom,Window,int32	proc XSetSelectionOwner(d: Display; kind: Atom; window: Window;\n                   time: int32 = CurrentTime)		332
 nim	XConvertSelection	windy/platforms/linux/x11/xlib.html#XConvertSelection,Display,Atom,Atom,Atom,Window,int32	proc XConvertSelection(d: Display; kind: Atom; to: Atom; resultProperty: Atom;\n                  window: Window; time: int32 = CurrentTime)		334
-nim	XSyncQueryExtension	windy/platforms/linux/x11/xlib.html#XSyncQueryExtension,Display,ptr.cint,ptr.cint	proc XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool		341
-nim	XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,ptr.cint,ptr.cint	proc XSyncInitialize(d: Display; verMaj, verMin: ptr cint)		342
-nim	XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	proc XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter		344
-nim	XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	proc XSyncDestroyCounter(d: Display; c: XSyncCounter)		345
-nim	XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	proc XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)		347
+nim	XCreateFontCursor	windy/platforms/linux/x11/xlib.html#XCreateFontCursor,Display,cuint	proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor		337
+nim	XDefineCursor	windy/platforms/linux/x11/xlib.html#XDefineCursor,Display,,	proc XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)		338
+nim	XUndefineCursor	windy/platforms/linux/x11/xlib.html#XUndefineCursor,Display,	proc XUndefineCursor(d: Display; window: x.Window)		339
+nim	XFreeCursor	windy/platforms/linux/x11/xlib.html#XFreeCursor,Display,	proc XFreeCursor(d: Display; cursor: x.Cursor)		340
+nim	XSyncQueryExtension	windy/platforms/linux/x11/xlib.html#XSyncQueryExtension,Display,ptr.cint,ptr.cint	proc XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool		346
+nim	XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,ptr.cint,ptr.cint	proc XSyncInitialize(d: Display; verMaj, verMin: ptr cint)		347
+nim	XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	proc XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter		349
+nim	XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	proc XSyncDestroyCounter(d: Display; c: XSyncCounter)		350
+nim	XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	proc XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)		352
 nimgrp	Xchangeproperty	windy/platforms/linux/x11/xlib.html#XChangeProperty-procs-all	proc		268

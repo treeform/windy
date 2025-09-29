@@ -276,6 +276,10 @@
   <li><a class="reference" href="#XCreateColormap%2CDisplay%2CWindow%2Cptr.Visual%2Ccint" title="XCreateColormap(d: Display; root: Window; visual: ptr Visual; flags: cint): Colormap">XCreateColormap(d: Display; root: Window; visual: ptr Visual; flags: cint): Colormap</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">XCreateFontCursor
+  <li><a class="reference" href="#XCreateFontCursor%2CDisplay%2Ccuint" title="XCreateFontCursor(d: Display; shape: cuint): x.Cursor">XCreateFontCursor(d: Display; shape: cuint): x.Cursor</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">XCreateGC
   <li><a class="reference" href="#XCreateGC%2CDisplay%2CDrawable%2Cculong%2Cptr.XGCValues" title="XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC">XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC</a></li>
 
@@ -300,6 +304,10 @@
               attributes: ptr XSetWindowAttributes): Window</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">XDefineCursor
+  <li><a class="reference" href="#XDefineCursor%2CDisplay%2C%2C" title="XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)">XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">XDeleteProperty
   <li><a class="reference" href="#XDeleteProperty%2CDisplay%2CWindow%2CAtom" title="XDeleteProperty(d: Display; window: Window; property: Atom)">XDeleteProperty(d: Display; window: Window; property: Atom)</a></li>
 
@@ -318,6 +326,10 @@
 </ul>
 <ul class="simple nested-toc-section">XFree
   <li><a class="reference" href="#XFree%2Cpointer" title="XFree(x: pointer)">XFree(x: pointer)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">XFreeCursor
+  <li><a class="reference" href="#XFreeCursor%2CDisplay%2C" title="XFreeCursor(d: Display; cursor: x.Cursor)">XFreeCursor(d: Display; cursor: x.Cursor)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">XFreeGC
@@ -470,6 +482,10 @@
   <li><a class="reference" href="#XTranslateCoordinates%2CDisplay%2CWindow%2CWindow%2Cint32%2Cint32%2Cptr.int32%2Cptr.int32%2Cptr.Window" title="XTranslateCoordinates(d: Display; window: Window; root: Window; x, y: int32;
                       xReturn, yReturn: ptr int32; childReturn: ptr Window)">XTranslateCoordinates(d: Display; window: Window; root: Window; x, y: int32;
                       xReturn, yReturn: ptr int32; childReturn: ptr Window)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">XUndefineCursor
+  <li><a class="reference" href="#XUndefineCursor%2CDisplay%2C" title="XUndefineCursor(d: Display; window: x.Window)">XUndefineCursor(d: Display; window: x.Window)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">XUnmapWindow
@@ -1090,6 +1106,20 @@
 </div>
 
 </div>
+<div id="XCreateFontCursor-procs-all">
+  <div id="XCreateFontCursor,Display,cuint">
+  <dt><pre><span class="Keyword">proc</span> <a href="#XCreateFontCursor%2CDisplay%2Ccuint"><span class="Identifier">XCreateFontCursor</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">shape</span><span class="Other">:</span> <span class="Identifier">cuint</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">x</span><span class="Other">.</span><span class="Identifier">Cursor</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L337" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L337" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="XCreateGC-procs-all">
   <div id="XCreateGC,Display,Drawable,culong,ptr.XGCValues">
   <dt><pre><span class="Keyword">proc</span> <a href="#XCreateGC%2CDisplay%2CDrawable%2Cculong%2Cptr.XGCValues"><span class="Identifier">XCreateGC</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">o</span><span class="Other">:</span> <a href="x.html#Drawable"><span class="Identifier">Drawable</span></a><span class="Other">;</span> <span class="Identifier">flags</span><span class="Other">:</span> <span class="Identifier">culong</span><span class="Other">;</span> <span class="Identifier">gcv</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="xlib.html#XGCValues"><span class="Identifier">XGCValues</span></a><span class="Other">)</span><span class="Other">:</span> <a href="xlib.html#GC"><span class="Identifier">GC</span></a> {.
@@ -1145,6 +1175,20 @@
     
     <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L226" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L226" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="XDefineCursor-procs-all">
+  <div id="XDefineCursor,Display,,">
+  <dt><pre><span class="Keyword">proc</span> <a href="#XDefineCursor%2CDisplay%2C%2C"><span class="Identifier">XDefineCursor</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">window</span><span class="Other">:</span> <span class="Identifier">x</span><span class="Other">.</span><span class="Identifier">Window</span><span class="Other">;</span> <span class="Identifier">cursor</span><span class="Other">:</span> <span class="Identifier">x</span><span class="Other">.</span><span class="Identifier">Cursor</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span>
+    <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L338" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L338" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1212,6 +1256,20 @@
     
     <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L219" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L219" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="XFreeCursor-procs-all">
+  <div id="XFreeCursor,Display,">
+  <dt><pre><span class="Keyword">proc</span> <a href="#XFreeCursor%2CDisplay%2C"><span class="Identifier">XFreeCursor</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">cursor</span><span class="Other">:</span> <span class="Identifier">x</span><span class="Other">.</span><span class="Identifier">Cursor</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L340" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L340" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1612,8 +1670,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L344" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L344" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L349" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L349" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1626,8 +1684,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L345" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L345" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L350" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L350" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1640,8 +1698,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L342" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L342" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L347" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L347" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1654,8 +1712,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L341" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L341" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L346" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L346" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1668,8 +1726,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L347" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L347" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L352" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L352" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1686,6 +1744,20 @@
     
     <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L285" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L285" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="XUndefineCursor-procs-all">
+  <div id="XUndefineCursor,Display,">
+  <dt><pre><span class="Keyword">proc</span> <a href="#XUndefineCursor%2CDisplay%2C"><span class="Identifier">XUndefineCursor</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">window</span><span class="Other">:</span> <span class="Identifier">x</span><span class="Other">.</span><span class="Identifier">Window</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L339" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L339" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1745,7 +1817,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-29 18:17:15 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-29 19:08:09 UTC</small>
       </div>
     </div>
   </div>

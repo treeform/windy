@@ -443,8 +443,18 @@
 <dt><a name="Cursor" href="#Cursor"><span>Cursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: object Cursor" href="windy/common.html#Cursor">common: object Cursor</a></li>
-          <li><a class="reference external"
+          </ul></dd>
+<dt><a name="cursor" href="#cursor"><span>cursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc cursor(window: Window): common.Cursor" href="windy/platforms/linux/platform.html#cursor%2CWindow">platform: proc cursor(window: Window): common.Cursor</a></li>
+          </ul></dd>
+<dt><a name="Cursor" href="#Cursor"><span>Cursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
           data-doc-search-tag="x: type Cursor" href="windy/platforms/linux/x11/x.html#Cursor">x: type Cursor</a></li>
+          </ul></dd>
+<dt><a name="cursor%3D" href="#cursor%3D"><span>cursor=:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc cursor=(window: Window; v: common.Cursor)" href="windy/platforms/linux/platform.html#cursor%3D%2CWindow%2C">platform: proc cursor=(window: Window; v: common.Cursor)</a></li>
           </ul></dd>
 <dt><a name="CursorKind" href="#CursorKind"><span>CursorKind:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2838,6 +2848,10 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XCreateColormap(d: Display; root: Window; visual: ptr Visual; flags: cint): Colormap" href="windy/platforms/linux/x11/xlib.html#XCreateColormap%2CDisplay%2CWindow%2Cptr.Visual%2Ccint">xlib: proc XCreateColormap(d: Display; root: Window; visual: ptr Visual; flags: cint): Colormap</a></li>
           </ul></dd>
+<dt><a name="XCreateFontCursor" href="#XCreateFontCursor"><span>XCreateFontCursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor" href="windy/platforms/linux/x11/xlib.html#XCreateFontCursor%2CDisplay%2Ccuint">xlib: proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor</a></li>
+          </ul></dd>
 <dt><a name="XCreateGC" href="#XCreateGC"><span>XCreateGC:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC" href="windy/platforms/linux/x11/xlib.html#XCreateGC%2CDisplay%2CDrawable%2Cculong%2Cptr.XGCValues">xlib: proc XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC</a></li>
@@ -2869,6 +2883,10 @@
 <dt><a name="XCrossingEvent" href="#XCrossingEvent"><span>XCrossingEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XCrossingEvent" href="windy/platforms/linux/x11/xevent.html#XCrossingEvent">xevent: object XCrossingEvent</a></li>
+          </ul></dd>
+<dt><a name="XDefineCursor" href="#XDefineCursor"><span>XDefineCursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)" href="windy/platforms/linux/x11/xlib.html#XDefineCursor%2CDisplay%2C%2C">xlib: proc XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)</a></li>
           </ul></dd>
 <dt><a name="XDeleteProperty" href="#XDeleteProperty"><span>XDeleteProperty:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2917,6 +2935,10 @@
 <dt><a name="XFree" href="#XFree"><span>XFree:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XFree(x: pointer)" href="windy/platforms/linux/x11/xlib.html#XFree%2Cpointer">xlib: proc XFree(x: pointer)</a></li>
+          </ul></dd>
+<dt><a name="XFreeCursor" href="#XFreeCursor"><span>XFreeCursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XFreeCursor(d: Display; cursor: x.Cursor)" href="windy/platforms/linux/x11/xlib.html#XFreeCursor%2CDisplay%2C">xlib: proc XFreeCursor(d: Display; cursor: x.Cursor)</a></li>
           </ul></dd>
 <dt><a name="XFreeGC" href="#XFreeGC"><span>XFreeGC:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10036,6 +10058,10 @@
                       xReturn, yReturn: ptr int32; childReturn: ptr Window)" href="windy/platforms/linux/x11/xlib.html#XTranslateCoordinates%2CDisplay%2CWindow%2CWindow%2Cint32%2Cint32%2Cptr.int32%2Cptr.int32%2Cptr.Window">xlib: proc XTranslateCoordinates(d: Display; window: Window; root: Window; x, y: int32;
                       xReturn, yReturn: ptr int32; childReturn: ptr Window)</a></li>
           </ul></dd>
+<dt><a name="XUndefineCursor" href="#XUndefineCursor"><span>XUndefineCursor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XUndefineCursor(d: Display; window: x.Window)" href="windy/platforms/linux/x11/xlib.html#XUndefineCursor%2CDisplay%2C">xlib: proc XUndefineCursor(d: Display; window: x.Window)</a></li>
+          </ul></dd>
 <dt><a name="XUnmapEvent" href="#XUnmapEvent"><span>XUnmapEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XUnmapEvent" href="windy/platforms/linux/x11/xevent.html#XUnmapEvent">xevent: object XUnmapEvent</a></li>
@@ -10102,7 +10128,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-29 18:17:16 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-29 19:08:10 UTC</small>
       </div>
     </div>
   </div>
