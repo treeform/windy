@@ -4,6 +4,8 @@ import ../../common, ../../internal, os, sequtils, sets, strformat, times,
 import ../../http
 export http
 
+include gamepad
+
 type
   XWindow = x.Window
 
@@ -65,6 +67,8 @@ var
   clipboardWindow: XWindow
   clipboardContent: string
 
+runPlatform()
+
 proc initConstants(display: Display) =
   xaNetWMState = display.XInternAtom("_NET_WM_STATE", 0)
   xaNetWMStateMaximizedHorz = display.XInternAtom("_NET_WM_STATE_MAXIMIZED_HORZ", 0)
@@ -112,6 +116,8 @@ proc init =
       WmForDecoratedKind.other
     else:
       WmForDecoratedKind.unsupported
+
+  gamepadSetup()
 
   initialized = true
 
@@ -689,6 +695,7 @@ proc newWindow*(
   windows.add result
 
 proc pollEvents(window: Window) =
+  gamepadPoll()
 
   # Clear all per-frame data
   window.perFrame = PerFrame()

@@ -10,3 +10,9 @@ elif defined(linux):
   import windy/platforms/linux/platform
 
 export common, platform, unicode, vmath
+
+when not defined(emscripten):
+  proc run*(window: Window, mainLoop: proc(), onExit: proc() = empty) =
+    while not window.closeRequested:
+      mainLoop()
+    onExit()

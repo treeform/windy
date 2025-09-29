@@ -1,3 +1,5 @@
+import macros
+
 when defined(cpu64):
   type
     UINT_PTR* = int64
@@ -16,6 +18,7 @@ type
   BOOL* = int32
   LPBOOL* = ptr BOOL
   LONG* = int32
+  ULONG* = uint32
   USHORT* = uint16
   LANGID* = USHORT
   WORD* = uint16
@@ -154,7 +157,7 @@ type
     rcArea*: RECT
   LPCANDIDATEFORM* = ptr CANDIDATEFORM
   GUID* {.pure.} = object
-    Data1*: int32
+    Data1*: uint32
     Data2*: uint16
     Data3*: uint16
     Data4*: array[8, uint8]
@@ -1083,5 +1086,205 @@ proc WinHttpWebSocketClose*(
   pvReason: pointer,
   dwReasonLength: DWORD
 ): DWORD {.dynlib: "winhttp".}
+
+{.pragma: com, stdcall, raises: [].}
+{.pragma: enum32, size: sizeof(uint32).}
+
+type
+  # COM
+  IID* = GUID
+  REFIID* = ptr IID
+
+  IUnknown* = object
+    lpVtbl*: ptr IUnknownVtbl
+  IUnknownVtbl* = object
+    QueryInterface*: proc(this: ptr IUnknown, riid: REFIID, ppv: ptr pointer): HRESULT {.com.}
+    AddRef*: proc(this: ptr IUnknown): ULONG {.com.}
+    Release*: proc(this: ptr IUnknown): ULONG {.com.}
+
+  # GameInput
+  GameInputKind* = uint32
+  GameInputEnumerationKind* = uint32
+  GameInputFocusPolicy* = uint32
+  GameInputDeviceStatus* = uint32
+  GameInputSystemButtons* = uint32
+  GameInputDeviceFamily* = uint32
+  GameInputRumbleMotors* = uint32
+  GameInputGamepadButtons* = uint32
+
+  APP_LOCAL_DEVICE_ID* = object
+    id*: array[32, uint8]
+
+  GameInputUsage* = object
+    page*: uint16
+    id*: uint16
+
+  GameInputVersion* = object
+    major*: uint16
+    minor*: uint16
+    build*: uint16
+    revision*: uint16
+
+  GameInputDeviceInfo* = object
+    vendorId*: uint16
+    productId*: uint16
+    revisionNumber*: uint16
+    usage*: GameInputUsage
+    hardwareVersion*: GameInputVersion
+    firmwareVersion*: GameInputVersion
+    deviceId*: APP_LOCAL_DEVICE_ID
+    deviceRootId*: APP_LOCAL_DEVICE_ID
+    deviceFamily*: GameInputDeviceFamily
+    supportedInput*: GameInputKind
+    supportedRumbleMotors*: GameInputRumbleMotors
+    supportedSystemButtons*: GameInputSystemButtons
+    containerId*: GUID
+    displayName*: cstring
+    pnpPath*: cstring
+    keyboardInfo*: ptr pointer # NOTE These have concrete types, but we don't need them
+    mouseInfo*: ptr pointer
+    sensorsInfo*: ptr pointer
+    arcadeStickInfo*: ptr pointer
+    flightStickInfo*: ptr pointer
+    gamepadInfo*: ptr pointer
+    racingWheelInfo*: ptr pointer
+    uiNavigationInfo*: ptr pointer
+    controllerAxisCount*: uint32
+    controllerAxisInfo*: ptr pointer
+    controllerButtonCount*: uint32
+    controllerButtonInfo*: ptr pointer
+    controllerSwitchCount*: uint32
+    controllerSwitchInfo*: ptr pointer
+    forceFeedbackMotorCount*: uint32
+    forceFeedbackMotorInfo*: ptr pointer
+
+  GameInputHapticInfo* = object
+  GameInputForceFeedbackParams* = object
+  GameInputRumbleParams* = object
+  GameInputSwitchPosition* = object
+  GameInputKeyState* = object
+  GameInputMouseState* = object
+  GameInputSensorsState* = object
+  GameInputArcadeStickState* = object
+  GameInputFlightStickState* = object
+  GameInputGamepadState* = object
+    buttons*: GameInputGamepadButtons
+    leftTrigger*: float32
+    rightTrigger*: float32
+    leftThumbstickX*: float32
+    leftThumbstickY*: float32
+    rightThumbstickX*: float32
+    rightThumbstickY*: float32
+  GameInputRacingWheelState* = object
+  GameInputUiNavigationState* = object
+
+  GameInputCallbackToken* = uint64
+  GameInputReadingCallback* = proc(callbackToken: GameInputCallbackToken, context: pointer, reading: ptr IGameInputReading) {.stdcall.}
+  GameInputDeviceCallback* = proc(callbackToken: GameInputCallbackToken, context: pointer, device: ptr IGameInputDevice, timestamp: uint64, currentStatus: GameInputDeviceStatus, previousStatus: GameInputDeviceStatus) {.stdcall.}
+  GameInputSystemButtonCallback* = proc(callbackToken: GameInputCallbackToken, context: pointer, device: ptr IGameInputDevice, timestamp: uint64, currentButtons: GameInputSystemButtons, previousButtons: GameInputSystemButtons) {.stdcall.}
+  GameInputKeyboardLayoutCallback* = proc(callbackToken: GameInputCallbackToken, context: pointer, device: ptr IGameInputDevice, timestamp: uint64, currentLayout: uint32, previousLayout: uint32) {.stdcall.}
+
+  IGameInput* = object
+    lpVtbl*: ptr IGameInputVtbl
+  IGameInputVtbl* = object
+    IUnknown*: IUnknownVtbl
+    GetCurrentTimestamp*: proc(this: ptr IGameInput): uint64 {.com.}
+    GetCurrentReading*: proc(this: ptr IGameInput, inputKind: GameInputKind, device: ptr IGameInputDevice, reading: ptr ptr IGameInputReading): HRESULT {.com.}
+    GetNextReading*: proc(this: ptr IGameInput, referenceReading: ptr IGameInputReading, inputKind: GameInputKind, device: ptr IGameInputDevice, reading: ptr ptr IGameInputReading): HRESULT {.com.}
+    GetPreviousReading*: proc(this: ptr IGameInput, referenceReading: ptr IGameInputReading, inputKind: GameInputKind, device: ptr IGameInputDevice, reading: ptr ptr IGameInputReading): HRESULT {.com.}
+    RegisterReadingCallback*: proc(this: ptr IGameInput, device: ptr IGameInputDevice, inputKind: GameInputKind, context: pointer, callbackFunc: GameInputReadingCallback, callbackToken: ptr GameInputCallbackToken): HRESULT {.com.}
+    RegisterDeviceCallback*: proc(this: ptr IGameInput, device: ptr IGameInputDevice, inputKind: GameInputKind, statusFilter: GameInputDeviceStatus, enumerationKind: GameInputEnumerationKind, context: pointer, callbackFunc: GameInputDeviceCallback, callbackToken: ptr GameInputCallbackToken): HRESULT {.com.}
+    RegisterSystemButtonCallback*: proc(this: ptr IGameInput, device: ptr IGameInputDevice, buttonFilter: GameInputSystemButtons, context: pointer, callbackFunc: GameInputSystemButtonCallback, callbackToken: ptr GameInputCallbackToken): HRESULT {.com.}
+    RegisterKeyboardLayoutCallback*: proc(this: ptr IGameInput, device: ptr IGameInputDevice, context: pointer, callbackFunc: GameInputKeyboardLayoutCallback, callbackToken: ptr GameInputCallbackToken): HRESULT {.com.}
+    StopCallback*: proc(this: ptr IGameInput, callbackToken: GameInputCallbackToken) {.com.}
+    UnregisterCallback*: proc(this: ptr IGameInput, callbackToken: GameInputCallbackToken, timeoutInMicroseconds: uint64): bool {.com.}
+    CreateDispatcher*: proc(this: ptr IGameInput, dispatcher: ptr IGameInputDispatcher): HRESULT {.com.}
+    FindDeviceFromId*: proc(this: ptr IGameInput, value: uint64, device: ptr ptr IGameInputDevice): HRESULT {.com.}
+    FindDeviceFromPlatformString*: proc(this: ptr IGameInput, value: LPCWSTR, device: ptr ptr IGameInputDevice): HRESULT {.com.}
+    SetFocusPolicy*: proc(this: ptr IGameInput, policy: GameInputFocusPolicy) {.com.}
+
+  IGameInputDevice* = object
+    lpVtbl*: ptr IGameInputDeviceVtbl
+  IGameInputDeviceVtbl* = object
+    IUnknown*: IUnknownVtbl
+    GetDeviceInfo*: proc(this: ptr IGameInputDevice, info: ptr ptr GameInputDeviceInfo): HRESULT {.com.}
+    GetHapticInfo*: proc(this: ptr IGameInputDevice, info: ptr GameInputHapticInfo): HRESULT {.com.}
+    GetDeviceStatus*: proc(this: ptr IGameInputDevice): GameInputDeviceStatus {.com.}
+    CreateForceFeedbackEffect*: proc(this: ptr IGameInputDevice, motorIndex: uint32, params: ptr GameInputForceFeedbackParams, effect: ptr ptr IGameInputForceFeedbackEffect): HRESULT {.com.}
+    IsForceFeedbackMotorPoweredOn*: proc(this: ptr IGameInputDevice, motorIndex: uint32): bool {.com.}
+    SetForceFeedbackMotorGain*: proc(this: ptr IGameInputDevice, motorIndex: uint32, masterGain: float32) {.com.}
+    SetRumbleState*: proc(this: ptr IGameInputDevice, params: ptr GameInputRumbleParams) {.com.}
+    DirectInputEscape*: proc(this: ptr IGameInputDevice, command: uint32, buffer: pointer, bufferInSize: uint32, bufferOut: pointer, bufferOutSize: uint32, bufferOutSizeWritten: ptr uint32): HRESULT {.com.}
+
+  IGameInputReading* = object
+    lpVtbl*: ptr IGameInputReadingVtbl
+  IGameInputReadingVtbl* = object
+    IUnknown*: IUnknownVtbl
+    GetInputKind*: proc(this: ptr IGameInputReading): GameInputKind {.com.}
+    GetTimestamp*: proc(this: ptr IGameInputReading): uint64 {.com.}
+    GetDevice*: proc(this: ptr IGameInputReading, device: ptr ptr IGameInputDevice) {.com.}
+    GetControllerAxisCount*: proc(this: ptr IGameInputReading): uint32 {.com.}
+    GetControllerAxisState*: proc(this: ptr IGameInputReading, stateArrayCount: uint32, stateArray: ptr float32): uint32 {.com.}
+    GetControllerButtonCount*: proc(this: ptr IGameInputReading): uint32 {.com.}
+    GetControllerButtonState*: proc(this: ptr IGameInputReading, stateArrayCount: uint32, stateArray: ptr bool): uint32 {.com.}
+    GetControllerSwitchCount*: proc(this: ptr IGameInputReading): uint32 {.com.}
+    GetControllerSwitchState*: proc(this: ptr IGameInputReading, stateArrayCount: uint32, stateArray: ptr GameInputSwitchPosition): uint32 {.com.}
+    GetKeyCount*: proc(this: ptr IGameInputReading): uint32 {.com.}
+    GetKeyState*: proc(this: ptr IGameInputReading, stateArrayCount: uint32, stateArray: ptr GameInputKeyState): uint32 {.com.}
+    GetMouseState*: proc(this: ptr IGameInputReading, state: ptr GameInputMouseState): bool {.com.}
+    GetSensorsState*: proc(this: ptr IGameInputReading, state: ptr GameInputSensorsState): bool {.com.}
+    GetArcadeStickState*: proc(this: ptr IGameInputReading, state: ptr GameInputArcadeStickState): bool {.com.}
+    GetFlightStickState*: proc(this: ptr IGameInputReading, state: ptr GameInputFlightStickState): bool {.com.}
+    GetGamepadState*: proc(this: ptr IGameInputReading, state: ptr GameInputGamepadState): bool {.com.}
+    GetRacingWheelState*: proc(this: ptr IGameInputReading, state: ptr GameInputRacingWheelState): bool {.com.}
+    GetUiNavigationState*: proc(this: ptr IGameInputReading, state: ptr GameInputUiNavigationState): bool {.com.}
+
+  IGameInputForceFeedbackEffect* = object
+  IGameInputDispatcher* = object
+
+const
+  GameInputKindGamepad* = 0x00040000
+  GameInputDeviceConnected* = 0x00000001
+  GameInputAsyncEnumeration* = 1
+
+  GameInputGamepadNone* = 0x00000000
+  GameInputGamepadMenu* = 0x00000001
+  GameInputGamepadView* = 0x00000002
+  GameInputGamepadA* = 0x00000004
+  GameInputGamepadB* = 0x00000008
+  GameInputGamepadX* = 0x00000010
+  GameInputGamepadY* = 0x00000020
+  GameInputGamepadDPadUp* = 0x00000040
+  GameInputGamepadDPadDown* = 0x00000080
+  GameInputGamepadDPadLeft* = 0x00000100
+  GameInputGamepadDPadRight* = 0x00000200
+  GameInputGamepadLeftShoulder* = 0x00000400
+  GameInputGamepadRightShoulder* = 0x00000800
+  GameInputGamepadLeftThumbstick* = 0x00001000
+  GameInputGamepadRightThumbstick* = 0x00002000
+
+  GameInputSystemButtonsGuide* = 0x00000001
+  GameInputSystemButtonsShare* = 0x00000002
+
+  IID_IGameInput* = IID(Data1: 0xbbaa66d2.uint32, Data2: 0x837a, Data3: 0x40f7, Data4: [0xa3, 0x03, 0x91, 0x7d, 0x50, 0x09, 0x55, 0xf4])
+
+proc GameInputCreate*(
+  gameInput: ptr ptr IGameInput
+): HRESULT {.dynlib: "GameInput".}
+
+{.pop.}
+{.push inline.}
+
+proc comQueryInterface*[T, U](p: T, riid: REFIID, ppv: ptr U): bool =
+  let obj = cast[ptr IUnknown](p)
+  obj.lpVtbl.QueryInterface(obj, riid, cast[ptr pointer](ppv)) == S_OK
+
+proc comAddRef*[T](p: T) =
+  let obj = cast[ptr IUnknown](p)
+  discard obj.lpVtbl.AddRef(obj)
+
+proc comDispose*[T](p: T) =
+  let obj = cast[ptr IUnknown](p)
+  discard obj.lpVtbl.Release(obj)
 
 {.pop.}
