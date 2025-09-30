@@ -1,8 +1,8 @@
 import
   std/[os, sequtils, sets, strformat, strutils, times, unicode],
-  ../../common, ../../internal,
+  ../../[common, internal],
   vmath, pixie,
-  x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, x11/xcursor
+  x11/[glx, keysym, x, xevent, xlib, xcursor]
 
 import ../../http
 export http
@@ -569,26 +569,18 @@ proc `title=`*(window: Window, v: string) =
 proc contentScale*(window: Window): float32 =
   const defaultScreenDpi = 96.0
   
-  # Try to get DPI from Xft.dpi resource (most reliable for user scaling).
+  # Prefer using DPI from Xft.dpi resource for user scaling.
   let xftDpi = display.XGetDefault("Xft", "dpi")
   if xftDpi != nil:
     try:
       let dpi = parseFloat($xftDpi)
       if dpi > 0:
-        echo &"Using Xft.dpi: {dpi} (scale: {dpi / defaultScreenDpi})"
         return dpi / defaultScreenDpi
     except ValueError:
       discard
   
-  
-  # Fall back to physical screen dimensions.
-  const pixelsPerMillimeter = 25.4
-  let s = display.screen(display.defaultScreen)
-  echo &"Screen size: {s.size}, Physical: {s.msize} mm"
-  let dpiX = s.size.x.float * pixelsPerMillimeter / s.msize.x.float
-  let dpiY = s.size.y.float * pixelsPerMillimeter / s.msize.y.float
-  echo &"Calculated DPI: {dpiX} x {dpiY}"
-  return (s.size.vec2 * pixelsPerMillimeter / s.msize.vec2 / defaultScreenDpi).x
+  # otherwise assume no scaling.
+  return 1.0
 
 proc runeInputEnabled*(window: Window): bool =
   window.runeInputEnabled
