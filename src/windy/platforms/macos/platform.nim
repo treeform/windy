@@ -496,7 +496,6 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   else:
     discard
 
-
 proc hasMarkedText(self: ID, cmd: SEL): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window != nil and window.markedText.int != 0:
@@ -797,10 +796,13 @@ proc pollEvents*() =
       # - https://github.com/andlabs/ui/blob/bc848f5c4078b999dbe6ef1cd90e16290a0d1c3a/delegateuitask_darwin.m#L46
       if event.`type`() == NSEventTypeKeyDown:
         processKeyDown(event)
+        break
       elif event.`type`() == NSEventTypeKeyUp:
         processKeyUp(event)
+        break
       elif event.`type`() == NSEventTypeFlagsChanged:
         processFlagsChanged(event)
+        break
 
       # Forward event for app to handle.
       NSApp.sendEvent(event)

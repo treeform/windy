@@ -1,6 +1,8 @@
-import ../../common, ../../internal, os, sequtils, sets, strformat, times,
-    unicode, vmath, x11/glx, x11/keysym, x11/x, x11/xevent, x11/xlib, x11/xcursor,
-    pixie
+import
+  std/[os, sequtils, sets, strformat, strutils, times, unicode],
+  ../../[common, internal],
+  vmath, pixie,
+  x11/[glx, keysym, x, xevent, xlib, xcursor]
 
 import ../../http
 export http
@@ -565,10 +567,20 @@ proc `title=`*(window: Window, v: string) =
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
 proc contentScale*(window: Window): float32 =
-  const pixelsPerMillimeter = 25.4
-  const defaultScreenDpi = 96
-  let s = display.screen(display.defaultScreen)
-  (s.size.vec2 * pixelsPerMillimeter / s.msize.vec2 / defaultScreenDpi).x
+  const defaultScreenDpi = 96.0
+  
+  # Prefer using DPI from Xft.dpi resource for user scaling.
+  let xftDpi = display.XGetDefault("Xft", "dpi")
+  if xftDpi != nil:
+    try:
+      let dpi = parseFloat($xftDpi)
+      if dpi > 0:
+        return dpi / defaultScreenDpi
+    except ValueError:
+      discard
+  
+  # otherwise assume no scaling.
+  return 1.0
 
 proc runeInputEnabled*(window: Window): bool =
   window.runeInputEnabled

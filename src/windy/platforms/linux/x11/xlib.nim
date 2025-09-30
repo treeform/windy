@@ -309,6 +309,9 @@ proc XSetTransientForHint*(d: Display, window: Window; root: Window)
 proc XSetNormalHints*(d: Display, window: Window; hints: ptr XSizeHints)
 proc XGetNormalHints*(d: Display, window: Window; res: ptr XSizeHints)
 
+proc XResourceManagerString*(d: Display): cstring {.importc, dynlib: libX11.}
+proc XGetDefault*(d: Display; program: cstring; option: cstring): cstring {.importc, dynlib: libX11.}
+
 proc XGetGeometry*(
   d: Display, window: Drawable;
   root: ptr Window;
