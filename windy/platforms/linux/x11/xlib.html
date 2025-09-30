@@ -336,6 +336,10 @@
   <li><a class="reference" href="#XFreeGC%2CDisplay%2CGC" title="XFreeGC(d: Display; gc: GC)">XFreeGC(d: Display; gc: GC)</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">XGetDefault
+  <li><a class="reference" href="#XGetDefault%2CDisplay%2Ccstring%2Ccstring" title="XGetDefault(d: Display; program: cstring; option: cstring): cstring">XGetDefault(d: Display; program: cstring; option: cstring): cstring</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">XGetGeometry
   <li><a class="reference" href="#XGetGeometry%2CDisplay%2CDrawable%2Cptr.Window%2Cptr.int32%2Cptr.int32%2Cptr.uint32%2Cptr.uint32%2Cptr.uint32%2Cptr.uint32" title="XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;
              w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)">XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;
@@ -420,6 +424,10 @@
 </ul>
 <ul class="simple nested-toc-section">XResizeWindow
   <li><a class="reference" href="#XResizeWindow%2CDisplay%2CWindow%2Cuint32%2Cuint32" title="XResizeWindow(d: Display; window: Window; w, h: uint32)">XResizeWindow(d: Display; window: Window; w, h: uint32)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">XResourceManagerString
+  <li><a class="reference" href="#XResourceManagerString%2CDisplay" title="XResourceManagerString(d: Display): cstring">XResourceManagerString(d: Display): cstring</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">XSelectInput
@@ -1085,8 +1093,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L334" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L334" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L337" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L337" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1113,8 +1121,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L337" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L337" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L340" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L340" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1187,8 +1195,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L338" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L338" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L341" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L341" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1268,8 +1276,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L340" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L340" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L343" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L343" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1289,6 +1297,20 @@
 </div>
 
 </div>
+<div id="XGetDefault-procs-all">
+  <div id="XGetDefault,Display,cstring,cstring">
+  <dt><pre><span class="Keyword">proc</span> <a href="#XGetDefault%2CDisplay%2Ccstring%2Ccstring"><span class="Identifier">XGetDefault</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">program</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">option</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cstring</span> {.
+    <span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libX11</span><span class="Other">,</span> <span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L313" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L313" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="XGetGeometry-procs-all">
   <div id="XGetGeometry,Display,Drawable,ptr.Window,ptr.int32,ptr.int32,ptr.uint32,ptr.uint32,ptr.uint32,ptr.uint32">
   <dt><pre><span class="Keyword">proc</span> <a href="#XGetGeometry%2CDisplay%2CDrawable%2Cptr.Window%2Cptr.int32%2Cptr.int32%2Cptr.uint32%2Cptr.uint32%2Cptr.uint32%2Cptr.uint32"><span class="Identifier">XGetGeometry</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">window</span><span class="Other">:</span> <a href="x.html#Drawable"><span class="Identifier">Drawable</span></a><span class="Other">;</span> <span class="Identifier">root</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="x.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span>
@@ -1298,8 +1320,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L312" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L312" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L315" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L315" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1312,8 +1334,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L324" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L324" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L327" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L327" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1340,8 +1362,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L331" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L331" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L334" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L334" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1414,8 +1436,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L329" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L329" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L332" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L332" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1471,8 +1493,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L322" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L322" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L325" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L325" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1514,8 +1536,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L328" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L328" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L331" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L331" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1542,8 +1564,22 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L321" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L321" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L324" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L324" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="XResourceManagerString-procs-all">
+  <div id="XResourceManagerString,Display">
+  <dt><pre><span class="Keyword">proc</span> <a href="#XResourceManagerString%2CDisplay"><span class="Identifier">XResourceManagerString</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cstring</span> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libX11</span><span class="Other">,</span>
+    <span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L312" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L312" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1584,8 +1620,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L325" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L325" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L328" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L328" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1613,8 +1649,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L332" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L332" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L335" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L335" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1670,8 +1706,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L349" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L349" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L352" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L352" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1684,8 +1720,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L350" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L350" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L353" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L353" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1698,8 +1734,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L347" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L347" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L350" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L350" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1712,8 +1748,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L346" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L346" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L349" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L349" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1726,8 +1762,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L352" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L352" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L355" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L355" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1756,8 +1792,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L339" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L339" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L342" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L342" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1817,7 +1853,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-30 17:58:20 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-30 21:47:16 UTC</small>
       </div>
     </div>
   </div>

@@ -69,23 +69,25 @@ nim	XMatchVisualInfo	windy/platforms/linux/x11/xlib.html#XMatchVisualInfo,Displa
 nim	XSetTransientForHint	windy/platforms/linux/x11/xlib.html#XSetTransientForHint,Display,Window,Window	proc XSetTransientForHint(d: Display; window: Window; root: Window)		307
 nim	XSetNormalHints	windy/platforms/linux/x11/xlib.html#XSetNormalHints,Display,Window,ptr.XSizeHints	proc XSetNormalHints(d: Display; window: Window; hints: ptr XSizeHints)		309
 nim	XGetNormalHints	windy/platforms/linux/x11/xlib.html#XGetNormalHints,Display,Window,ptr.XSizeHints	proc XGetNormalHints(d: Display; window: Window; res: ptr XSizeHints)		310
-nim	XGetGeometry	windy/platforms/linux/x11/xlib.html#XGetGeometry,Display,Drawable,ptr.Window,ptr.int32,ptr.int32,ptr.uint32,ptr.uint32,ptr.uint32,ptr.uint32	proc XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;\n             w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)		312
-nim	XResizeWindow	windy/platforms/linux/x11/xlib.html#XResizeWindow,Display,Window,uint32,uint32	proc XResizeWindow(d: Display; window: Window; w, h: uint32)		321
-nim	XMoveWindow	windy/platforms/linux/x11/xlib.html#XMoveWindow,Display,Window,int32,int32	proc XMoveWindow(d: Display; window: Window; x, y: int32)		322
-nim	XGetInputFocus	windy/platforms/linux/x11/xlib.html#XGetInputFocus,Display,ptr.Window,ptr.RevertTo	proc XGetInputFocus(d: Display; window: ptr Window; revertTo: ptr RevertTo)		324
-nim	XSetInputFocus	windy/platforms/linux/x11/xlib.html#XSetInputFocus,Display,Window,RevertTo,int32	proc XSetInputFocus(d: Display; window: Window; revertTo: RevertTo;\n               time: int32 = CurrentTime)		325
-nim	XQueryKeymap	windy/platforms/linux/x11/xlib.html#XQueryKeymap,Display,array[,char]	proc XQueryKeymap(d: Display; res: var array[32, char])		328
-nim	XKeycodeToKeysym	windy/platforms/linux/x11/xlib.html#XKeycodeToKeysym,Display,KeyCode,cint	proc XKeycodeToKeysym(d: Display; code: KeyCode; i: cint): KeySym		329
-nim	XGetSelectionOwner	windy/platforms/linux/x11/xlib.html#XGetSelectionOwner,Display,Atom	proc XGetSelectionOwner(d: Display; kind: Atom): Window		331
-nim	XSetSelectionOwner	windy/platforms/linux/x11/xlib.html#XSetSelectionOwner,Display,Atom,Window,int32	proc XSetSelectionOwner(d: Display; kind: Atom; window: Window;\n                   time: int32 = CurrentTime)		332
-nim	XConvertSelection	windy/platforms/linux/x11/xlib.html#XConvertSelection,Display,Atom,Atom,Atom,Window,int32	proc XConvertSelection(d: Display; kind: Atom; to: Atom; resultProperty: Atom;\n                  window: Window; time: int32 = CurrentTime)		334
-nim	XCreateFontCursor	windy/platforms/linux/x11/xlib.html#XCreateFontCursor,Display,cuint	proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor		337
-nim	XDefineCursor	windy/platforms/linux/x11/xlib.html#XDefineCursor,Display,,	proc XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)		338
-nim	XUndefineCursor	windy/platforms/linux/x11/xlib.html#XUndefineCursor,Display,	proc XUndefineCursor(d: Display; window: x.Window)		339
-nim	XFreeCursor	windy/platforms/linux/x11/xlib.html#XFreeCursor,Display,	proc XFreeCursor(d: Display; cursor: x.Cursor)		340
-nim	XSyncQueryExtension	windy/platforms/linux/x11/xlib.html#XSyncQueryExtension,Display,ptr.cint,ptr.cint	proc XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool		346
-nim	XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,ptr.cint,ptr.cint	proc XSyncInitialize(d: Display; verMaj, verMin: ptr cint)		347
-nim	XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	proc XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter		349
-nim	XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	proc XSyncDestroyCounter(d: Display; c: XSyncCounter)		350
-nim	XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	proc XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)		352
+nim	XResourceManagerString	windy/platforms/linux/x11/xlib.html#XResourceManagerString,Display	proc XResourceManagerString(d: Display): cstring		312
+nim	XGetDefault	windy/platforms/linux/x11/xlib.html#XGetDefault,Display,cstring,cstring	proc XGetDefault(d: Display; program: cstring; option: cstring): cstring		313
+nim	XGetGeometry	windy/platforms/linux/x11/xlib.html#XGetGeometry,Display,Drawable,ptr.Window,ptr.int32,ptr.int32,ptr.uint32,ptr.uint32,ptr.uint32,ptr.uint32	proc XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;\n             w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)		315
+nim	XResizeWindow	windy/platforms/linux/x11/xlib.html#XResizeWindow,Display,Window,uint32,uint32	proc XResizeWindow(d: Display; window: Window; w, h: uint32)		324
+nim	XMoveWindow	windy/platforms/linux/x11/xlib.html#XMoveWindow,Display,Window,int32,int32	proc XMoveWindow(d: Display; window: Window; x, y: int32)		325
+nim	XGetInputFocus	windy/platforms/linux/x11/xlib.html#XGetInputFocus,Display,ptr.Window,ptr.RevertTo	proc XGetInputFocus(d: Display; window: ptr Window; revertTo: ptr RevertTo)		327
+nim	XSetInputFocus	windy/platforms/linux/x11/xlib.html#XSetInputFocus,Display,Window,RevertTo,int32	proc XSetInputFocus(d: Display; window: Window; revertTo: RevertTo;\n               time: int32 = CurrentTime)		328
+nim	XQueryKeymap	windy/platforms/linux/x11/xlib.html#XQueryKeymap,Display,array[,char]	proc XQueryKeymap(d: Display; res: var array[32, char])		331
+nim	XKeycodeToKeysym	windy/platforms/linux/x11/xlib.html#XKeycodeToKeysym,Display,KeyCode,cint	proc XKeycodeToKeysym(d: Display; code: KeyCode; i: cint): KeySym		332
+nim	XGetSelectionOwner	windy/platforms/linux/x11/xlib.html#XGetSelectionOwner,Display,Atom	proc XGetSelectionOwner(d: Display; kind: Atom): Window		334
+nim	XSetSelectionOwner	windy/platforms/linux/x11/xlib.html#XSetSelectionOwner,Display,Atom,Window,int32	proc XSetSelectionOwner(d: Display; kind: Atom; window: Window;\n                   time: int32 = CurrentTime)		335
+nim	XConvertSelection	windy/platforms/linux/x11/xlib.html#XConvertSelection,Display,Atom,Atom,Atom,Window,int32	proc XConvertSelection(d: Display; kind: Atom; to: Atom; resultProperty: Atom;\n                  window: Window; time: int32 = CurrentTime)		337
+nim	XCreateFontCursor	windy/platforms/linux/x11/xlib.html#XCreateFontCursor,Display,cuint	proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor		340
+nim	XDefineCursor	windy/platforms/linux/x11/xlib.html#XDefineCursor,Display,,	proc XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)		341
+nim	XUndefineCursor	windy/platforms/linux/x11/xlib.html#XUndefineCursor,Display,	proc XUndefineCursor(d: Display; window: x.Window)		342
+nim	XFreeCursor	windy/platforms/linux/x11/xlib.html#XFreeCursor,Display,	proc XFreeCursor(d: Display; cursor: x.Cursor)		343
+nim	XSyncQueryExtension	windy/platforms/linux/x11/xlib.html#XSyncQueryExtension,Display,ptr.cint,ptr.cint	proc XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool		349
+nim	XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,ptr.cint,ptr.cint	proc XSyncInitialize(d: Display; verMaj, verMin: ptr cint)		350
+nim	XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	proc XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter		352
+nim	XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	proc XSyncDestroyCounter(d: Display; c: XSyncCounter)		353
+nim	XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	proc XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)		355
 nimgrp	Xchangeproperty	windy/platforms/linux/x11/xlib.html#XChangeProperty-procs-all	proc		268
