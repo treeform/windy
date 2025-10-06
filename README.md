@@ -59,3 +59,19 @@ Here are a few reasons that may be worth considering:
 * Windy includes events for double, triple and quadruple clicks. Furthermore, Windy maintains the keyboard and mouse state in a way that makes reacting to input state easier each frame. See `buttonPressed[]`, `buttonDown[]`, `buttonReleased[]` and `buttonToggle[]` on `Window`.
 
 * Windy has IME input support for Chinese, Japanese, Korean and other languages. Text input can also be enabled or disabled at any time (for example, to avoid opening the IME editor when a user just wants to use WASD in a game).
+
+## Emscripten
+
+Windy can be compiled to WebAssembly using Emscripten. See the [Emscripten tutorial](https://github.com/treeform/nim_emscripten_tutorial) for more information on how Emscripten works with Nim and things you need to know.
+
+To compile any of the examples:
+```sh
+nim c -d:emscripten examples/basic_triangle.nim
+```
+
+Then run the compiled HTML file:
+```sh
+emrun examples/basic_triangle.html
+```
+
+Some operations like closing, moving, minimizing and resizing the window do not make sense in the browser, so these are not supported.
