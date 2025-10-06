@@ -314,11 +314,17 @@ proc stencilBits*(window: Window): int =
 
 proc setClipboardString*(s: string) =
   # TODO: Implement clipboard with Emscripten.
-  discard
+  raise newException(
+    Exception,
+    "setClipboardString is not supported on emscripten"
+  )
 
 proc getClipboardString*(): string =
   # TODO: Implement clipboard with Emscripten.
-  ""
+  raise newException(
+    Exception,
+    "getClipboardString is not supported on emscripten"
+  )
 
 proc closeIme*(window: Window) =
   if window.state.imeCompositionString.len > 0:

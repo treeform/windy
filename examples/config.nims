@@ -39,5 +39,11 @@ when defined(emscripten):
     """).replace("\n", " ")
   )
 
+  # Prevent accidental running of emscripten.
+  if paramStr(1) == "run" or paramStr(1) == "r":
+    setCommand("c")
+    echo "To run emscripten, use:"
+    echo "emrun examples/" & projectName() & ".html"
+
 when not defined(debug):
   --define:release

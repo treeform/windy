@@ -43,8 +43,6 @@ window.onButtonPress = proc(button: Button) =
     nextCursor()
   of MouseLeft:
     nextCursor()
-  of KeyEscape:
-    window.closeRequested = true
   else:
     discard
 

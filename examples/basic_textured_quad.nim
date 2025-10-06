@@ -2,9 +2,16 @@
 
 import opengl, pixie, windy
 
-const vertexShaderText = """
-#version 410
+const emscriptenShaderText = """
+#version 300 es
+precision mediump float;
+"""
 
+const desktopShaderText = """
+#version 410
+"""
+
+const vertexShaderBody = """
 in vec3 vertexPos;
 in vec2 vertexUv;
 
@@ -19,9 +26,7 @@ void main()
 }
 """
 
-const fragmentShaderText = """
-#version 410
-
+const fragmentShaderBody = """
 in vec3 pos;
 in vec2 uv;
 uniform sampler2D testTexture;
@@ -62,6 +67,11 @@ loadExtensions()
 
 let
   vertexShader = glCreateShader(GL_VERTEX_SHADER)
+  vertexShaderText =
+    if defined(emscripten):
+      emscriptenShaderText & vertexShaderBody
+    else:
+      desktopShaderText & vertexShaderBody
   vertexShaderTextArr = allocCStringArray([vertexShaderText])
 glShaderSource(vertexShader, 1.GLsizei, vertexShaderTextArr, nil)
 glCompileShader(vertex_shader)
@@ -69,6 +79,11 @@ checkError(vertexShader)
 
 let
   fragmentShader = glCreateShader(GL_FRAGMENT_SHADER)
+  fragmentShaderText =
+    if defined(emscripten):
+      emscriptenShaderText & fragmentShaderBody
+    else:
+      desktopShaderText & fragmentShaderBody
   fragmentShaderTextArr = allocCStringArray([fragmentShaderText])
 glShaderSource(fragmentShader, 1.GLsizei, fragmentShaderTextArr, nil)
 glCompileShader(fragmentShader)
@@ -138,8 +153,8 @@ glTexImage2D(
 )
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
 let textureLoc = glGetUniformLocation(program, "testTexture")
 glActiveTexture(GL_TEXTURE0)
