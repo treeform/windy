@@ -1,5 +1,7 @@
 import os, strformat, strutils
 
+--path:"../src"
+
 when defined(emscripten):
   --nimcache:tmp
   --os:linux

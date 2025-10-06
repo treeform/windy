@@ -17,11 +17,11 @@ proc emscripten_sleep*(ms: cuint) {.importc.}
 #include <emscripten/html5.h>
 #include <GLES2/gl2.h>
 
-EM_JS(int, canvas_get_width, (), {
+EM_JS(int, get_canvas_width, (), {
   return Module.canvas.width;
 });
 
-EM_JS(int, canvas_get_height, (), {
+EM_JS(int, get_canvas_height, (), {
   return Module.canvas.height;
 });
 
@@ -77,13 +77,18 @@ EM_JS(void, setup_resize_observer, (void* userData), {
     }
   }
 });
+
+EM_JS(void, set_document_title, (const char* title), {
+  document.title = UTF8ToString(title);
+});
 """.}
 
-proc canvas_get_width*(): cint {.importc.}
-proc canvas_get_height*(): cint {.importc.}
+proc get_canvas_width*(): cint {.importc.}
+proc get_canvas_height*(): cint {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
 proc make_canvas_focusable*() {.importc.}
 proc setup_resize_observer*(userData: pointer) {.importc.}
+proc set_document_title*(title: cstring) {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint

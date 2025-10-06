@@ -15,12 +15,10 @@ type
     onRune*: RuneCallback
     onImeChange*: Callback
 
-    size: IVec2
-    title: string
-    isCloseRequested: bool
+    ## In Emscripten, the canvas is the more or less the window.
     canvas: cstring
-
     state: WindowState
+    cachedTitle: string
 
 var
   quitRequested*: bool
@@ -38,78 +36,13 @@ proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
 
+proc warn(message: string) =
+  echo "Warning: ", message
+
 proc init =
   if initialized:
     return
   initialized = true
-
-proc newWindow*(
-  title = "",
-  size = ivec2(1280, 720),
-  pos = ivec2(0, 0),
-  screen = 0,
-  visible = true,
-  vsync = true,
-  openglVersion = OpenGL3Dot3,
-  msaa = msaaDisabled,
-  depthBits = 24,
-  stencilBits = 8,
-  redBits = 8,
-  greenBits = 8,
-  blueBits = 8,
-  alphaBits = 8,
-  decorated = true,
-  transparent = false,
-  floating = false,
-  resizable = true,
-  maximized = false,
-  minimized = false,
-  fullscreen = false,
-  focus = true
-): Window =
-  init()
-
-  result = Window()
-  result.title = title
-  result.size = size
-  result.canvas = "#canvas"
-
-  # Create WebGL context
-  var attrs: EmscriptenWebGLContextAttributes
-  emscripten_webgl_init_context_attributes(attrs.addr)
-
-  attrs.alpha = alphaBits > 0
-  attrs.depth = depthBits > 0
-  attrs.stencil = stencilBits > 0
-  attrs.antialias = msaa != msaaDisabled
-  attrs.premultipliedAlpha = true
-  attrs.preserveDrawingBuffer = false
-  attrs.majorVersion = 2  # WebGL 2.0
-  attrs.minorVersion = 0
-  attrs.enableExtensionsByDefault = true
-
-  currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
-  if currentContext == 0:
-    # Try WebGL 1.0 if 2.0 fails
-    attrs.majorVersion = 1
-    currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
-    if currentContext == 0:
-      raise WindyError.newException("Failed to create WebGL context")
-
-    # Set canvas size
-  set_canvas_size(size.x.cint, size.y.cint)
-
-  # Make canvas focusable for keyboard input
-  make_canvas_focusable()
-
-  windows.add(result)
-  mainWindow = result
-
-  # Initialize event state
-  result.state.perFrame = PerFrame()
-
-  # Setup event handlers
-  setupEventHandlers(result)
 
 proc makeContextCurrent*(window: Window) =
   if currentContext != 0:
@@ -120,13 +53,11 @@ proc swapBuffers*(window: Window) =
   discard
 
 proc close*(window: Window) =
-  window.isCloseRequested = true
-  let idx = windows.find(window)
-  if idx != -1:
-    windows.del(idx)
+  ## Emscripten windows cannot be closed.
+  warn "Emscripten windows cannot be closed"
 
 proc closeRequested*(window: Window): bool =
-  window.isCloseRequested
+  return false
 
 proc pollEvents*() =
   ## Polls for events.
@@ -139,27 +70,29 @@ proc pollEvents*() =
 
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
-  window.size.x = canvas_get_width().int32
-  window.size.y = canvas_get_height().int32
-  window.size
+  return ivec2(get_canvas_width().int32, get_canvas_height().int32)
 
 proc `size=`*(window: Window, size: IVec2) =
-  window.size = size
-  set_canvas_size(size.x.cint, size.y.cint)
-
-proc title*(window: Window): string =
-  window.title
+  ## Size cannot be set on emscripten windows.
+  warn "Size cannot be set on emscripten windows"
 
 proc `title=`*(window: Window, title: string) =
-  window.title = title
-  # In browser context, we could set document.title here
+  ## Sets the title of the window.
+  window.cachedTitle = title
+  set_document_title(title.cstring)
+
+proc `title`*(window: Window): string =
+  ## Gets the title of the window.
+  window.cachedTitle
 
 proc visible*(window: Window): bool =
+  ## Gets the visibility of the window.
+  #TODO: Implement HTML visibility.
   true
 
 proc `visible=`*(window: Window, visible: bool) =
-  # Canvas is always visible in browser
-  discard
+  # Visible is always cannot be set on emscripten windows.
+  warn "Visible cannot be set on emscripten windows"
 
 proc runeInputEnabled*(window: Window): bool =
   window.state.runeInputEnabled
@@ -168,15 +101,16 @@ proc `runeInputEnabled=`*(window: Window, enabled: bool) =
   window.state.runeInputEnabled = enabled
 
 proc pos*(window: Window): IVec2 =
-  ivec2(0, 0)  # Canvas position is controlled by HTML/CSS
+  ## Position cannot be gotten on emscripten windows.
+  warn "Position cannot be gotten on emscripten windows"
 
 proc `pos=`*(window: Window, pos: IVec2) =
-  # Canvas position is controlled by HTML/CSS
-  discard
+  ## Position cannot be set on emscripten windows.
+  warn "Position cannot be set on emscripten windows"
 
 proc framebufferSize*(window: Window): IVec2 =
-  result.x = canvas_get_width().int32
-  result.y = canvas_get_height().int32
+  result.x = get_canvas_width().int32
+  result.y = get_canvas_height().int32
 
 proc contentScale*(window: Window): float32 =
   1.0  # Fixed at 1.0 for Emscripten, could query device pixel ratio in future
@@ -204,6 +138,75 @@ proc focused*(window: Window): bool =
 
 proc `focused=`*(window: Window, focused: bool) =
   discard  # Focus is controlled by browser
+
+proc newWindow*(
+  title = "",
+  size = ivec2(0, 0),
+  pos = ivec2(0, 0),
+  screen = 0,
+  visible = true,
+  vsync = true,
+  openglVersion = OpenGL3Dot3,
+  msaa = msaaDisabled,
+  depthBits = 24,
+  stencilBits = 8,
+  redBits = 8,
+  greenBits = 8,
+  blueBits = 8,
+  alphaBits = 8,
+  decorated = true,
+  transparent = false,
+  floating = false,
+  resizable = true,
+  maximized = false,
+  minimized = false,
+  fullscreen = false,
+  focus = true
+): Window =
+  init()
+
+  result = Window()
+  result.canvas = "#canvas"
+
+  # Create WebGL context
+  var attrs: EmscriptenWebGLContextAttributes
+  emscripten_webgl_init_context_attributes(attrs.addr)
+
+  attrs.alpha = alphaBits > 0
+  attrs.depth = depthBits > 0
+  attrs.stencil = stencilBits > 0
+  attrs.antialias = msaa != msaaDisabled
+  attrs.premultipliedAlpha = true
+  attrs.preserveDrawingBuffer = false
+  attrs.majorVersion = 2  # WebGL 2.0
+  attrs.minorVersion = 0
+  attrs.enableExtensionsByDefault = true
+
+  currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
+  if currentContext == 0:
+    # Try WebGL 1.0 if 2.0 fails
+    attrs.majorVersion = 1
+    currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
+    if currentContext == 0:
+      raise WindyError.newException("Failed to create WebGL context")
+
+  # Make canvas focusable for keyboard input
+  make_canvas_focusable()
+
+  windows.add(result)
+  mainWindow = result
+
+  # Initialize event state
+  result.state.perFrame = PerFrame()
+
+  # Setup event handlers
+  setupEventHandlers(result)
+
+  result.title = title
+  if pos != ivec2(0, 0):
+    result.pos = pos
+  if size != ivec2(0, 0):
+    result.size = size
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
@@ -498,7 +501,7 @@ proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: poi
 proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   set_canvas_size(uiEvent.windowInnerWidth, uiEvent.windowInnerHeight)
-  window.size = ivec2(canvas_get_width().int32, canvas_get_height().int32)
+  window.size = ivec2(get_canvas_width().int32, get_canvas_height().int32)
   if window.onResize != nil:
     window.onResize()
   return 1
@@ -507,8 +510,8 @@ proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer
 proc onCanvasResize(userData: pointer) {.cdecl, exportc.} =
   let window = cast[Window](userData)
   # Update the window size based on current canvas size
-  let newWidth = canvas_get_width()
-  let newHeight = canvas_get_height()
+  let newWidth = get_canvas_width()
+  let newHeight = get_canvas_height()
   if newWidth != window.size.x or newHeight != window.size.y:
     window.size = ivec2(newWidth, newHeight)
     if window.onResize != nil:
