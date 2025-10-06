@@ -20,6 +20,8 @@ when defined(emscripten):
   --gc:arc
   --exceptions:goto
   --define:noSignalHandler
+  --debugger:native
+  --define:noAutoGLerrorCheck
 
   # Pass this to Emscripten linker to generate html file scaffold for us.
   switch(
@@ -46,4 +48,6 @@ when defined(emscripten):
     echo "emrun examples/" & projectName() & ".html"
 
 when not defined(debug):
+  --define:noAutoGLerrorCheck
   --define:release
+  --define:ssl
