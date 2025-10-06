@@ -131,6 +131,10 @@ proc closeRequested*(window: Window): bool =
 proc pollEvents*() =
   ## Polls for events.
   ## Note: Will block to match frames per second.
+  for window in windows:
+    if window.onFrame != nil:
+      window.onFrame()
+
   emscripten_sleep(0)
 
 proc size*(window: Window): IVec2 =

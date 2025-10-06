@@ -14,7 +14,6 @@ bxy = newBoxy()
 
 echo "Move your mouse to test cursor position accuracy"
 echo "Press +/- to adjust square size"
-echo "Press ESC to exit"
 echo &"Content scale: {window.contentScale}"
 echo &"Window size: {window.size}"
 echo &"Logical size: {window.size.vec2 / window.contentScale}"
