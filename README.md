@@ -69,6 +69,12 @@ To compile any of the examples:
 nim c -d:emscripten examples/basic_triangle.nim
 ```
 
+This will generate:
+* HTML shell: `examples/basic_triangle.html`
+* Preloaded data: `examples/basic_triangle.data`
+* JavaScript: `examples/basic_triangle.js`
+* WebAssembly: `examples/basic_triangle.wasm`
+
 Then run the compiled HTML file:
 ```sh
 emrun examples/basic_triangle.html
