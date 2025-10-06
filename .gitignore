@@ -6,6 +6,10 @@
 # normal ignores:
 *.exe
 *.out
+*.wasm
+*.html
+*.js
+*.data
 nimcache
 *.pdb
 *.ilk
@@ -14,3 +18,4 @@ nimcache
 __pycache__
 bindings/generated
 cacert.pem
+tmp/

@@ -129,8 +129,9 @@ proc closeRequested*(window: Window): bool =
   window.isCloseRequested
 
 proc pollEvents*() =
-  # Emscripten doesn't need to poll events, only callbacks.
-  discard
+  ## Polls for events.
+  ## Note: Will block to match frames per second.
+  emscripten_sleep(0)
 
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
