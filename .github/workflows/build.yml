@@ -50,7 +50,7 @@ jobs:
     - run: nim c -d:emscripten examples/fixedsize.nim
     - run: nim c -d:emscripten examples/fullscreen.nim
     - run: nim c -d:emscripten examples/highdpi.nim
-    # - run: nim c -d:emscripten examples/httprequest.nim
+    - run: nim c -d:emscripten examples/httprequest.nim
     - run: nim c -d:emscripten examples/icon.nim
     - run: nim c -d:emscripten examples/opengl_version.nim
     - run: nim c -d:emscripten examples/property_changes.nim
