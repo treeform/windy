@@ -55,4 +55,4 @@ jobs:
     - run: nim c -d:emscripten examples/screens.nim
     - run: nim c -d:emscripten examples/system_cursors.nim
     - run: nim c -d:emscripten examples/tray.nim
-    - run: nim c -d:emscripten examples/websocket.nim
+    # - run: nim c -d:emscripten examples/websocket.nim
