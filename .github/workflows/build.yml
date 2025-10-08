@@ -16,7 +16,7 @@ jobs:
     - uses: treeform/setup-nim-action@v2
     - uses: mymindstorm/setup-emsdk@v14
 
-    - run: nimble install 
+    - run: nimble install -y
     - run: nimble install boxy
 
     - run: nim c examples/basic.nim
