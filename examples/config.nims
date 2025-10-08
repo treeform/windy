@@ -29,9 +29,9 @@ when defined(emscripten):
   switch(
     "passL",
     (&"""
-    -o examples/{projectName()}.html
+    -o examples/emscripten/{projectName()}.html
     --preload-file examples/data
-    --shell-file examples/data/emscripten.html
+    --shell-file examples/emscripten/emscripten.html
     -s ASYNCIFY
     -s USE_WEBGL2=1
     -s MAX_WEBGL_VERSION=2
