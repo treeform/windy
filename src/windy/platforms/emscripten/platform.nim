@@ -62,10 +62,10 @@ proc closeRequested*(window: Window): bool =
 proc pollEvents*() =
   ## Polls for events.
   ## Note: Will block to match frames per second.
-  for window in windows:
-    if window.onFrame != nil:
-      window.onFrame()
-
+  if mainWindow != nil:
+    if mainWindow.onFrame != nil:
+      mainWindow.onFrame()
+    mainWindow.state.perFrame = PerFrame()
   emscripten_sleep(0)
 
 proc size*(window: Window): IVec2 =
@@ -549,21 +549,3 @@ proc handleButtonRelease(window: Window, button: Button) =
 
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
-
-var mainLoopProc: proc() {.cdecl.}
-
-proc frameWrapper() {.cdecl.} =
-  # Run frame logic for main window
-  if mainWindow != nil:
-    if mainWindow.onFrame != nil:
-      mainWindow.onFrame()
-  if mainLoopProc != nil:
-    mainLoopProc()
-  # Clear per-frame data
-  if mainWindow != nil:
-    mainWindow.state.perFrame = PerFrame()
-
-proc run*(window: Window, mainLoop: proc() {.cdecl.}) =
-  ## This is the only way to run a loop in emscripten.
-  mainLoopProc = mainLoop
-  emscripten_set_main_loop(frameWrapper, 0, true)
