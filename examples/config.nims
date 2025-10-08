@@ -24,6 +24,7 @@ when defined(emscripten):
   --define:noSignalHandler
   --debugger:native
   --define:noAutoGLerrorCheck
+  --define:release
 
   # Pass this to Emscripten linker to generate html file scaffold for us.
   switch(
