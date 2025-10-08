@@ -1,4 +1,7 @@
-import ../../common, ../../internal, vmath, pixie, unicode, times
+import
+  std/[tables, strutils, unicode, times],
+  ../../common, ../../internal, vmath, pixie
+
 import emdefs
 
 type
@@ -20,6 +23,25 @@ type
     state: WindowState
     cachedTitle: string
 
+  # use HttpRequestHandle from common.nim
+  EmsHttpRequestState = ref object
+    url, verb: string
+    headers: seq[HttpHeader]
+    requestBody: string
+    deadline: float64
+    startTime: float64
+    canceled: bool
+    completed: bool
+
+    onError: HttpErrorCallback
+    onResponse: HttpResponseCallback
+    onUploadProgress: HttpProgressCallback
+    onDownloadProgress: HttpProgressCallback
+
+    # Fetch specific
+    fetch*: ptr emscripten_fetch_t
+    bodyKeepAlive*: string
+
 var
   quitRequested*: bool
   onQuitRequest*: Callback
@@ -30,6 +52,7 @@ var
   windows: seq[Window]
   currentContext: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE
   mainWindow: Window  # Track the main window for events
+  httpRequests: Table[HttpRequestHandle, EmsHttpRequestState]
 
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
@@ -549,3 +572,152 @@ proc handleButtonRelease(window: Window, button: Button) =
 
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
+
+proc getState(fetch: ptr emscripten_fetch_t): EmsHttpRequestState =
+  cast[EmsHttpRequestState](fetch.userData)
+
+proc onFetchSuccess(fetch: ptr emscripten_fetch_t) {.cdecl.} =
+  let state = getState(fetch)
+  if state == nil: return
+  state.completed = true
+  var response = HttpResponse()
+  response.code = int(fetch.status)
+  if fetch.numBytes > 0 and fetch.data != nil:
+    let len = int(fetch.numBytes)
+    response.body.setLen(len)
+    copyMem(response.body[0].addr, fetch.data, len)
+  # Headers: responseHeaders is a raw header block; keep as empty for now
+  if state.onResponse != nil:
+    state.onResponse(response)
+  emscripten_fetch_close(fetch)
+
+proc onFetchError(fetch: ptr emscripten_fetch_t) {.cdecl.} =
+  let state = getState(fetch)
+  if state == nil: return
+  state.completed = true
+  if state.onError != nil:
+    var msg = $fetch.status & " "
+    for c in fetch.statusText:
+      if c == '\0': break
+      msg &= $c
+    state.onError(msg)
+  emscripten_fetch_close(fetch)
+
+proc onFetchProgress(fetch: ptr emscripten_fetch_t) {.cdecl.} =
+  let state = getState(fetch)
+  if state == nil: return
+  if state.onDownloadProgress != nil:
+    let completed = int(fetch.dataOffset + fetch.numBytes)
+    let total = (if fetch.totalBytes == 0: -1 else: int(fetch.totalBytes))
+    state.onDownloadProgress(completed, total)
+
+proc startHttpRequest*(
+  url: string,
+  verb = "GET",
+  headers = newSeq[HttpHeader](),
+  body = "",
+  deadline = defaultHttpDeadline
+): HttpRequestHandle {.raises: [].} =
+  ## Start an HTTP request.
+  init()
+  var headers = headers
+  headers.addDefaultHeaders()
+
+  # Create handle and state (reuse std/http pattern: random handle)
+  var handle: HttpRequestHandle
+  var state = EmsHttpRequestState()
+  while true:
+    handle = windyRand.next().HttpRequestHandle
+    if handle notin httpRequests:
+      httpRequests[handle] = state
+      break
+
+  state.url = url
+  state.verb = verb
+  state.headers = headers
+  state.requestBody = body
+  state.deadline = (if deadline >= 0: epochTime() + deadline.float64 else: -1.0)
+  state.startTime = epochTime()
+
+  # Setup fetch attrs
+  var attr: emscripten_fetch_attr_t
+  emscripten_fetch_attr_init(addr attr)
+  # Copy HTTP method
+  let httpMethod = verb.toUpperAscii()
+  for i in 0 ..< min(httpMethod.len, attr.requestMethod.len):
+    attr.requestMethod[i] = httpMethod[i]
+  if httpMethod.len < attr.requestMethod.len:
+    attr.requestMethod[httpMethod.len] = '\0'
+
+  attr.userData = cast[pointer](state)
+  attr.onsuccess = onFetchSuccess
+  attr.onerror = onFetchError
+  attr.onprogress = onFetchProgress
+  attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY
+
+  if state.requestBody.len > 0:
+    state.bodyKeepAlive = state.requestBody
+    attr.requestData = cast[ptr char](state.bodyKeepAlive.cstring)
+    attr.requestDataSize = csize_t(state.requestBody.len)
+
+  # Headers array (optional): omit for now to avoid pointer array complexities
+  attr.requestHeaders = nil
+
+  discard emscripten_fetch(addr attr, url.cstring)
+  result = handle
+
+proc cancel*(handle: HttpRequestHandle) {.raises: [].} =
+  ## Cancel an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.canceled = true
+  # There is no direct cancel from C API here; closing will abort if still active
+  if state.fetch != nil:
+    emscripten_fetch_close(state.fetch)
+
+proc deadline*(handle: HttpRequestHandle): float64 =
+  ## Get the deadline of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.deadline
+
+proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
+  ## Set the deadline of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.deadline = deadline
+
+proc `onError=`*(handle: HttpRequestHandle, callback: HttpErrorCallback) =
+  ## Set the error callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onError = callback
+
+proc `onResponse=`*(handle: HttpRequestHandle, callback: HttpResponseCallback) =
+  ## Set the response callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onResponse = callback
+
+proc `onUploadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCallback) =
+  ## Set the upload progress callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onUploadProgress = callback
+
+proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCallback) =
+  ## Set the download progress callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onDownloadProgress = callback
+
+proc pollHttp*() =
+  ## Poll HTTP requests.
+  let now = epochTime()
+  # Deadline checks
+  for handle, state in httpRequests:
+    if state.completed: continue
+    if state.deadline > 0 and state.deadline <= now:
+      state.completed = true
+      if state.onError != nil:
+        state.onError("Deadline exceeded")

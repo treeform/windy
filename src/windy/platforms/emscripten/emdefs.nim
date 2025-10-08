@@ -206,3 +206,49 @@ const EMSCRIPTEN_EVENT_TARGET_INVALID* = cast[cstring](0)
 const EMSCRIPTEN_EVENT_TARGET_DOCUMENT* = cast[cstring](1)
 const EMSCRIPTEN_EVENT_TARGET_WINDOW* = cast[cstring](2)
 const EMSCRIPTEN_EVENT_TARGET_SCREEN* = cast[cstring](3)
+
+# Fetch API bindings
+type
+  emscripten_fetch_t* {.importc: "emscripten_fetch_t", header: "<emscripten/fetch.h>".} = object
+    id*: cuint
+    userData*: pointer
+    url*: cstring
+    data*: pointer
+    numBytes*: culonglong
+    dataOffset*: culonglong
+    totalBytes*: culonglong
+    readyState*: cushort
+    status*: cushort
+    statusText*: array[64, char]
+    responseHeaders*: cstring
+
+  emscripten_fetch_attr_t* {.importc: "emscripten_fetch_attr_t", header: "<emscripten/fetch.h>".} = object
+    requestMethod*: array[32, char]
+    userData*: pointer
+    onsuccess*: proc(fetch: ptr emscripten_fetch_t) {.cdecl.}
+    onerror*: proc(fetch: ptr emscripten_fetch_t) {.cdecl.}
+    onprogress*: proc(fetch: ptr emscripten_fetch_t) {.cdecl.}
+    onreadystatechange*: proc(fetch: ptr emscripten_fetch_t) {.cdecl.}
+    attributes*: cuint
+    timeoutMSecs*: culong
+    withCredentials*: EM_BOOL
+    requestData*: pointer
+    requestDataSize*: csize_t
+    requestHeaders*: ptr cstring
+    overriddenMimeType*: cstring
+    userName*: cstring
+    password*: cstring
+
+const
+  EMSCRIPTEN_FETCH_LOAD_TO_MEMORY* = 1.cuint
+  EMSCRIPTEN_FETCH_STREAM_DATA* = 2.cuint
+  EMSCRIPTEN_FETCH_PERSIST_FILE* = 4.cuint
+  EMSCRIPTEN_FETCH_APPEND* = 8.cuint
+  EMSCRIPTEN_FETCH_REPLACE* = 16.cuint
+  EMSCRIPTEN_FETCH_NO_DOWNLOAD* = 32.cuint
+  EMSCRIPTEN_FETCH_SYNCHRONOUS* = 64.cuint
+  EMSCRIPTEN_FETCH_WAITABLE* = 128.cuint
+
+proc emscripten_fetch_attr_init*(attr: ptr emscripten_fetch_attr_t) {.importc, header: "<emscripten/fetch.h>".}
+proc emscripten_fetch*(attr: ptr emscripten_fetch_attr_t, url: cstring): ptr emscripten_fetch_t {.importc, header: "<emscripten/fetch.h>".}
+proc emscripten_fetch_close*(fetch: ptr emscripten_fetch_t) {.importc, header: "<emscripten/fetch.h>".}

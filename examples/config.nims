@@ -34,6 +34,7 @@ when defined(emscripten):
     --preload-file examples/data
     --shell-file examples/emscripten/emscripten.html
     -s ASYNCIFY
+    -s FETCH
     -s USE_WEBGL2=1
     -s MAX_WEBGL_VERSION=2
     -s MIN_WEBGL_VERSION=1
