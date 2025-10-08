@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: nim-lang/setup-nimble-action@v1
+    - uses: treeform/setup-nim-action@v1
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - run: nimble test -y
