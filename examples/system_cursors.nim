@@ -29,7 +29,6 @@ loadExtensions()
 bxy = newBoxy()
 
 echo "Press SPACE or click to cycle through cursor types"
-echo "Press ESC to exit"
 echo "Current cursor: ", cursors[currentCursor].kind
 
 proc nextCursor() =
@@ -43,8 +42,6 @@ window.onButtonPress = proc(button: Button) =
     nextCursor()
   of MouseLeft:
     nextCursor()
-  of KeyEscape:
-    window.closeRequested = true
   else:
     discard
 

@@ -1,4 +1,7 @@
-import ../../common, ../../internal, vmath, pixie, unicode, times
+import
+  std/[tables, strutils, unicode, times],
+  ../../common, ../../internal, vmath, pixie
+
 import emdefs
 
 type
@@ -15,12 +18,29 @@ type
     onRune*: RuneCallback
     onImeChange*: Callback
 
-    size: IVec2
-    title: string
-    isCloseRequested: bool
+    ## In Emscripten, the canvas is the more or less the window.
     canvas: cstring
-
     state: WindowState
+    cachedTitle: string
+
+  # use HttpRequestHandle from common.nim
+  EmsHttpRequestState = ref object
+    url, verb: string
+    headers: seq[HttpHeader]
+    requestBody: string
+    deadline: float64
+    startTime: float64
+    canceled: bool
+    completed: bool
+
+    onError: HttpErrorCallback
+    onResponse: HttpResponseCallback
+    onUploadProgress: HttpProgressCallback
+    onDownloadProgress: HttpProgressCallback
+
+    # Fetch specific
+    fetch*: ptr emscripten_fetch_t
+    bodyKeepAlive*: string
 
 var
   quitRequested*: bool
@@ -32,84 +52,20 @@ var
   windows: seq[Window]
   currentContext: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE
   mainWindow: Window  # Track the main window for events
+  httpRequests: Table[HttpRequestHandle, EmsHttpRequestState]
 
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
 
+proc warn(message: string) =
+  echo "Warning: ", message
+
 proc init =
   if initialized:
     return
   initialized = true
-
-proc newWindow*(
-  title = "",
-  size = ivec2(1280, 720),
-  pos = ivec2(0, 0),
-  screen = 0,
-  visible = true,
-  vsync = true,
-  openglVersion = OpenGL3Dot3,
-  msaa = msaaDisabled,
-  depthBits = 24,
-  stencilBits = 8,
-  redBits = 8,
-  greenBits = 8,
-  blueBits = 8,
-  alphaBits = 8,
-  decorated = true,
-  transparent = false,
-  floating = false,
-  resizable = true,
-  maximized = false,
-  minimized = false,
-  fullscreen = false,
-  focus = true
-): Window =
-  init()
-
-  result = Window()
-  result.title = title
-  result.size = size
-  result.canvas = "#canvas"
-
-  # Create WebGL context
-  var attrs: EmscriptenWebGLContextAttributes
-  emscripten_webgl_init_context_attributes(attrs.addr)
-
-  attrs.alpha = alphaBits > 0
-  attrs.depth = depthBits > 0
-  attrs.stencil = stencilBits > 0
-  attrs.antialias = msaa != msaaDisabled
-  attrs.premultipliedAlpha = true
-  attrs.preserveDrawingBuffer = false
-  attrs.majorVersion = 2  # WebGL 2.0
-  attrs.minorVersion = 0
-  attrs.enableExtensionsByDefault = true
-
-  currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
-  if currentContext == 0:
-    # Try WebGL 1.0 if 2.0 fails
-    attrs.majorVersion = 1
-    currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
-    if currentContext == 0:
-      raise WindyError.newException("Failed to create WebGL context")
-
-    # Set canvas size
-  set_canvas_size(size.x.cint, size.y.cint)
-
-  # Make canvas focusable for keyboard input
-  make_canvas_focusable()
-
-  windows.add(result)
-  mainWindow = result
-
-  # Initialize event state
-  result.state.perFrame = PerFrame()
-
-  # Setup event handlers
-  setupEventHandlers(result)
 
 proc makeContextCurrent*(window: Window) =
   if currentContext != 0:
@@ -120,41 +76,46 @@ proc swapBuffers*(window: Window) =
   discard
 
 proc close*(window: Window) =
-  window.isCloseRequested = true
-  let idx = windows.find(window)
-  if idx != -1:
-    windows.del(idx)
+  ## Emscripten windows cannot be closed.
+  warn "Emscripten windows cannot be closed"
 
 proc closeRequested*(window: Window): bool =
-  window.isCloseRequested
+  return false
 
 proc pollEvents*() =
-  # Emscripten doesn't need to poll events, only callbacks.
-  discard
+  ## Polls for events.
+  ## Note: Will block to match frames per second.
+  if mainWindow != nil:
+    if mainWindow.onFrame != nil:
+      mainWindow.onFrame()
+    mainWindow.state.perFrame = PerFrame()
+  emscripten_sleep(0)
 
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
-  window.size.x = canvas_get_width().int32
-  window.size.y = canvas_get_height().int32
-  window.size
+  return ivec2(get_canvas_width().int32, get_canvas_height().int32)
 
 proc `size=`*(window: Window, size: IVec2) =
-  window.size = size
-  set_canvas_size(size.x.cint, size.y.cint)
-
-proc title*(window: Window): string =
-  window.title
+  ## Size cannot be set on emscripten windows.
+  warn "Size cannot be set on emscripten windows"
 
 proc `title=`*(window: Window, title: string) =
-  window.title = title
-  # In browser context, we could set document.title here
+  ## Sets the title of the window.
+  window.cachedTitle = title
+  set_document_title(title.cstring)
+
+proc `title`*(window: Window): string =
+  ## Gets the title of the window.
+  window.cachedTitle
 
 proc visible*(window: Window): bool =
+  ## Gets the visibility of the window.
+  #TODO: Implement HTML visibility.
   true
 
 proc `visible=`*(window: Window, visible: bool) =
-  # Canvas is always visible in browser
-  discard
+  # Visible is always cannot be set on emscripten windows.
+  warn "Visible cannot be set on emscripten windows"
 
 proc runeInputEnabled*(window: Window): bool =
   window.state.runeInputEnabled
@@ -163,15 +124,16 @@ proc `runeInputEnabled=`*(window: Window, enabled: bool) =
   window.state.runeInputEnabled = enabled
 
 proc pos*(window: Window): IVec2 =
-  ivec2(0, 0)  # Canvas position is controlled by HTML/CSS
+  ## Position cannot be gotten on emscripten windows.
+  warn "Position cannot be gotten on emscripten windows"
 
 proc `pos=`*(window: Window, pos: IVec2) =
-  # Canvas position is controlled by HTML/CSS
-  discard
+  ## Position cannot be set on emscripten windows.
+  warn "Position cannot be set on emscripten windows"
 
 proc framebufferSize*(window: Window): IVec2 =
-  result.x = canvas_get_width().int32
-  result.y = canvas_get_height().int32
+  result.x = get_canvas_width().int32
+  result.y = get_canvas_height().int32
 
 proc contentScale*(window: Window): float32 =
   1.0  # Fixed at 1.0 for Emscripten, could query device pixel ratio in future
@@ -199,6 +161,75 @@ proc focused*(window: Window): bool =
 
 proc `focused=`*(window: Window, focused: bool) =
   discard  # Focus is controlled by browser
+
+proc newWindow*(
+  title = "",
+  size = ivec2(0, 0),
+  pos = ivec2(0, 0),
+  screen = 0,
+  visible = true,
+  vsync = true,
+  openglVersion = OpenGL3Dot3,
+  msaa = msaaDisabled,
+  depthBits = 24,
+  stencilBits = 8,
+  redBits = 8,
+  greenBits = 8,
+  blueBits = 8,
+  alphaBits = 8,
+  decorated = true,
+  transparent = false,
+  floating = false,
+  resizable = true,
+  maximized = false,
+  minimized = false,
+  fullscreen = false,
+  focus = true
+): Window =
+  init()
+
+  result = Window()
+  result.canvas = "#canvas"
+
+  # Create WebGL context
+  var attrs: EmscriptenWebGLContextAttributes
+  emscripten_webgl_init_context_attributes(attrs.addr)
+
+  attrs.alpha = alphaBits > 0
+  attrs.depth = depthBits > 0
+  attrs.stencil = stencilBits > 0
+  attrs.antialias = msaa != msaaDisabled
+  attrs.premultipliedAlpha = true
+  attrs.preserveDrawingBuffer = false
+  attrs.majorVersion = 2  # WebGL 2.0
+  attrs.minorVersion = 0
+  attrs.enableExtensionsByDefault = true
+
+  currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
+  if currentContext == 0:
+    # Try WebGL 1.0 if 2.0 fails
+    attrs.majorVersion = 1
+    currentContext = emscripten_webgl_create_context(result.canvas, attrs.addr)
+    if currentContext == 0:
+      raise WindyError.newException("Failed to create WebGL context")
+
+  # Make canvas focusable for keyboard input
+  make_canvas_focusable()
+
+  windows.add(result)
+  mainWindow = result
+
+  # Initialize event state
+  result.state.perFrame = PerFrame()
+
+  # Setup event handlers
+  setupEventHandlers(result)
+
+  result.title = title
+  if pos != ivec2(0, 0):
+    result.pos = pos
+  if size != ivec2(0, 0):
+    result.size = size
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
@@ -313,11 +344,17 @@ proc stencilBits*(window: Window): int =
 
 proc setClipboardString*(s: string) =
   # TODO: Implement clipboard with Emscripten.
-  discard
+  raise newException(
+    Exception,
+    "setClipboardString is not supported on emscripten"
+  )
 
 proc getClipboardString*(): string =
   # TODO: Implement clipboard with Emscripten.
-  ""
+  raise newException(
+    Exception,
+    "getClipboardString is not supported on emscripten"
+  )
 
 proc closeIme*(window: Window) =
   if window.state.imeCompositionString.len > 0:
@@ -487,7 +524,7 @@ proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: poi
 proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   set_canvas_size(uiEvent.windowInnerWidth, uiEvent.windowInnerHeight)
-  window.size = ivec2(canvas_get_width().int32, canvas_get_height().int32)
+  window.size = ivec2(get_canvas_width().int32, get_canvas_height().int32)
   if window.onResize != nil:
     window.onResize()
   return 1
@@ -496,8 +533,8 @@ proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer
 proc onCanvasResize(userData: pointer) {.cdecl, exportc.} =
   let window = cast[Window](userData)
   # Update the window size based on current canvas size
-  let newWidth = canvas_get_width()
-  let newHeight = canvas_get_height()
+  let newWidth = get_canvas_width()
+  let newHeight = get_canvas_height()
   if newWidth != window.size.x or newHeight != window.size.y:
     window.size = ivec2(newWidth, newHeight)
     if window.onResize != nil:
@@ -536,20 +573,151 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
 
-var mainLoopProc: proc() {.cdecl.}
+proc getState(fetch: ptr emscripten_fetch_t): EmsHttpRequestState =
+  cast[EmsHttpRequestState](fetch.userData)
 
-proc frameWrapper() {.cdecl.} =
-  # Run frame logic for main window
-  if mainWindow != nil:
-    if mainWindow.onFrame != nil:
-      mainWindow.onFrame()
-  if mainLoopProc != nil:
-    mainLoopProc()
-  # Clear per-frame data
-  if mainWindow != nil:
-    mainWindow.state.perFrame = PerFrame()
+proc onFetchSuccess(fetch: ptr emscripten_fetch_t) {.cdecl.} =
+  let state = getState(fetch)
+  if state == nil: return
+  state.completed = true
+  var response = HttpResponse()
+  response.code = int(fetch.status)
+  if fetch.numBytes > 0 and fetch.data != nil:
+    let len = int(fetch.numBytes)
+    response.body.setLen(len)
+    copyMem(response.body[0].addr, fetch.data, len)
+  # Headers: responseHeaders is a raw header block; keep as empty for now
+  if state.onResponse != nil:
+    state.onResponse(response)
+  emscripten_fetch_close(fetch)
 
-proc run*(window: Window, mainLoop: proc() {.cdecl.}) =
-  ## This is the only way to run a loop in emscripten.
-  mainLoopProc = mainLoop
-  emscripten_set_main_loop(frameWrapper, 0, true)
+proc onFetchError(fetch: ptr emscripten_fetch_t) {.cdecl.} =
+  let state = getState(fetch)
+  if state == nil: return
+  state.completed = true
+  if state.onError != nil:
+    var msg = $fetch.status & " "
+    for c in fetch.statusText:
+      if c == '\0': break
+      msg &= $c
+    state.onError(msg)
+  emscripten_fetch_close(fetch)
+
+proc onFetchProgress(fetch: ptr emscripten_fetch_t) {.cdecl.} =
+  let state = getState(fetch)
+  if state == nil: return
+  if state.onDownloadProgress != nil:
+    let completed = int(fetch.dataOffset + fetch.numBytes)
+    let total = (if fetch.totalBytes == 0: -1 else: int(fetch.totalBytes))
+    state.onDownloadProgress(completed, total)
+
+proc startHttpRequest*(
+  url: string,
+  verb = "GET",
+  headers = newSeq[HttpHeader](),
+  body = "",
+  deadline = defaultHttpDeadline
+): HttpRequestHandle {.raises: [].} =
+  ## Start an HTTP request.
+  init()
+  var headers = headers
+  headers.addDefaultHeaders()
+
+  # Create handle and state (reuse std/http pattern: random handle)
+  var handle: HttpRequestHandle
+  var state = EmsHttpRequestState()
+  while true:
+    handle = windyRand.next().HttpRequestHandle
+    if handle notin httpRequests:
+      httpRequests[handle] = state
+      break
+
+  state.url = url
+  state.verb = verb
+  state.headers = headers
+  state.requestBody = body
+  state.deadline = (if deadline >= 0: epochTime() + deadline.float64 else: -1.0)
+  state.startTime = epochTime()
+
+  # Setup fetch attrs
+  var attr: emscripten_fetch_attr_t
+  emscripten_fetch_attr_init(addr attr)
+  # Copy HTTP method
+  let httpMethod = verb.toUpperAscii()
+  for i in 0 ..< min(httpMethod.len, attr.requestMethod.len):
+    attr.requestMethod[i] = httpMethod[i]
+  if httpMethod.len < attr.requestMethod.len:
+    attr.requestMethod[httpMethod.len] = '\0'
+
+  attr.userData = cast[pointer](state)
+  attr.onsuccess = onFetchSuccess
+  attr.onerror = onFetchError
+  attr.onprogress = onFetchProgress
+  attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY
+
+  if state.requestBody.len > 0:
+    state.bodyKeepAlive = state.requestBody
+    attr.requestData = cast[ptr char](state.bodyKeepAlive.cstring)
+    attr.requestDataSize = csize_t(state.requestBody.len)
+
+  # Headers array (optional): omit for now to avoid pointer array complexities
+  attr.requestHeaders = nil
+
+  discard emscripten_fetch(addr attr, url.cstring)
+  result = handle
+
+proc cancel*(handle: HttpRequestHandle) {.raises: [].} =
+  ## Cancel an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.canceled = true
+  # There is no direct cancel from C API here; closing will abort if still active
+  if state.fetch != nil:
+    emscripten_fetch_close(state.fetch)
+
+proc deadline*(handle: HttpRequestHandle): float64 =
+  ## Get the deadline of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.deadline
+
+proc `deadline=`*(handle: HttpRequestHandle, deadline: float64) =
+  ## Set the deadline of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.deadline = deadline
+
+proc `onError=`*(handle: HttpRequestHandle, callback: HttpErrorCallback) =
+  ## Set the error callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onError = callback
+
+proc `onResponse=`*(handle: HttpRequestHandle, callback: HttpResponseCallback) =
+  ## Set the response callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onResponse = callback
+
+proc `onUploadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCallback) =
+  ## Set the upload progress callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onUploadProgress = callback
+
+proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCallback) =
+  ## Set the download progress callback of an HTTP request.
+  let state = httpRequests.getOrDefault(handle, nil)
+  if state == nil: return
+  state.onDownloadProgress = callback
+
+proc pollHttp*() =
+  ## Poll HTTP requests.
+  let now = epochTime()
+  # Deadline checks
+  for handle, state in httpRequests:
+    if state.completed: continue
+    if state.deadline > 0 and state.deadline <= now:
+      state.completed = true
+      if state.onError != nil:
+        state.onError("Deadline exceeded")

@@ -7,8 +7,16 @@ let window = newWindow("Windy Triangle", ivec2(1280, 800))
 window.makeContextCurrent()
 loadExtensions()
 
-let vertexShaderText = """
+const emscriptenShaderText = """
+#version 300 es
+precision mediump float;
+"""
+
+const desktopShaderText = """
 #version 410
+"""
+
+let vertexShaderBody = """
 in vec3 aPos;
 out vec3 pos;
 void main()
@@ -18,8 +26,7 @@ void main()
 }
 """
 
-let fragmentShaderText = """
-#version 410
+let fragmentShaderBody = """
 in vec3 pos;
 out vec4 fragColor;
 void main()
@@ -49,12 +56,23 @@ proc checkLinkError*(program: GLuint) =
     echo log
 
 var vertexShader = glCreateShader(GL_VERTEX_SHADER)
+let vertexShaderText =
+  if defined(emscripten):
+    emscriptenShaderText & vertexShaderBody
+  else:
+    desktopShaderText & vertexShaderBody
 var vertexShaderTextArr = allocCStringArray([vertexShaderText])
+
 glShaderSource(vertexShader, 1.GLsizei, vertexShaderTextArr, nil)
 glCompileShader(vertex_shader)
 checkError(vertexShader)
 
 var fragmentShader = glCreateShader(GL_FRAGMENT_SHADER)
+let fragmentShaderText =
+  if defined(emscripten):
+    emscriptenShaderText & fragmentShaderBody
+  else:
+    desktopShaderText & fragmentShaderBody
 var fragmentShaderTextArr = allocCStringArray([fragmentShaderText])
 glShaderSource(fragmentShader, 1.GLsizei, fragmentShaderTextArr, nil)
 glCompileShader(fragmentShader)
