@@ -2392,6 +2392,10 @@ proc pollEvents*() =
   when defined(windyUseStdHttp):
     pollHttp()
 
+proc pollHttp*() =
+  ## Polling for HTTP requests happens in the main windows loop.
+  discard
+
 proc forceMousePos*(window: Window, mousePos: IVec2) =
   ## Forces mouse position to a place.
   ## This is used for simulating UI tests.
