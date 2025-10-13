@@ -82,6 +82,17 @@ proc close*(window: Window) =
 proc closeRequested*(window: Window): bool =
   return false
 
+proc pollHttp() =
+  ## Poll HTTP requests.
+  let now = epochTime()
+  # Deadline checks
+  for handle, state in httpRequests:
+    if state.completed: continue
+    if state.deadline > 0 and state.deadline <= now:
+      state.completed = true
+      if state.onError != nil:
+        state.onError("Deadline exceeded")
+
 proc pollEvents*() =
   ## Polls for events.
   ## Note: Will block to match frames per second.
@@ -89,6 +100,7 @@ proc pollEvents*() =
     if mainWindow.onFrame != nil:
       mainWindow.onFrame()
     mainWindow.state.perFrame = PerFrame()
+  pollHttp()
   emscripten_sleep(0)
 
 proc size*(window: Window): IVec2 =
@@ -368,11 +380,6 @@ proc imeCursorIndex*(window: Window): int =
 
 proc imeCompositionString*(window: Window): string =
   window.state.imeCompositionString
-
-# HTTP functions (if needed)
-when defined(windyUseStdHttp):
-  import ../../http
-  export http
 
 # OpenGL extension loading
 proc loadExtensions*() =
@@ -710,14 +717,3 @@ proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCal
   let state = httpRequests.getOrDefault(handle, nil)
   if state == nil: return
   state.onDownloadProgress = callback
-
-proc pollHttp*() =
-  ## Poll HTTP requests.
-  let now = epochTime()
-  # Deadline checks
-  for handle, state in httpRequests:
-    if state.completed: continue
-    if state.deadline > 0 and state.deadline <= now:
-      state.completed = true
-      if state.onError != nil:
-        state.onError("Deadline exceeded")

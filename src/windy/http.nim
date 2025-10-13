@@ -1,5 +1,8 @@
 import common, internal, std/asyncdispatch, std/httpclient, std/random, std/strutils, std/tables, ws, std/times, zippy
 
+when defined(emscripten):
+  {.error: "windy/http is not supported on emscripten".}
+
 type
   HttpRequestState = ref object
     url, verb: string
