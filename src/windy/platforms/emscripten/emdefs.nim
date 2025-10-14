@@ -81,6 +81,17 @@ EM_JS(void, setup_resize_observer, (void* userData), {
 EM_JS(void, set_document_title, (const char* title), {
   document.title = UTF8ToString(title);
 });
+
+EM_JS(int, get_window_url_length, (), {
+  if (typeof location === 'undefined' || typeof location.href === 'undefined') return 1;
+  var s = location.href;
+  return lengthBytesUTF8(s) + 1; // include null terminator
+});
+
+EM_JS(int, get_window_url_into, (char* output, int maxLen), {
+  var s = (typeof location !== 'undefined' && typeof location.href !== 'undefined') ? location.href : "";
+  return stringToUTF8(s, output, maxLen);
+});
 """.}
 
 proc get_canvas_width*(): cint {.importc.}
@@ -89,6 +100,8 @@ proc set_canvas_size*(width, height: cint) {.importc.}
 proc make_canvas_focusable*() {.importc.}
 proc setup_resize_observer*(userData: pointer) {.importc.}
 proc set_document_title*(title: cstring) {.importc.}
+proc get_window_url_length*(): cint {.importc.}
+proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint

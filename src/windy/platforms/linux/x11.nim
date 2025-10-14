@@ -568,7 +568,7 @@ proc `title=`*(window: Window, v: string) =
 
 proc contentScale*(window: Window): float32 =
   const defaultScreenDpi = 96.0
-  
+
   # Prefer using DPI from Xft.dpi resource for user scaling.
   let xftDpi = display.XGetDefault("Xft", "dpi")
   if xftDpi != nil:
@@ -578,7 +578,7 @@ proc contentScale*(window: Window): float32 =
         return dpi / defaultScreenDpi
     except ValueError:
       discard
-  
+
   # otherwise assume no scaling.
   return 1.0
 
@@ -614,32 +614,32 @@ proc applyCursor(window: Window) =
     # Create custom cursor from image using Xcursor library.
     let img = window.state.cursor.image
     let xcImage = XcursorImageCreate(img.width.cint, img.height.cint)
-    
+
     if xcImage != nil:
       xcImage.xhot = window.state.cursor.hotspot.x.uint32
       xcImage.yhot = window.state.cursor.hotspot.y.uint32
       xcImage.size = max(img.width, img.height).uint32
-      
+
       # Convert RGBA pixel data to ARGB format expected by Xcursor.
       for y in 0..<img.height:
         for x in 0..<img.width:
-          let 
+          let
             idx = y * img.width + x
             pixel = img.data[idx]
             # Xcursor uses ARGB format (alpha in high byte).
-            argbPixel = 
-              (pixel.a.uint32 shl 24) or 
-              (pixel.r.uint32 shl 16) or 
-              (pixel.g.uint32 shl 8) or 
+            argbPixel =
+              (pixel.a.uint32 shl 24) or
+              (pixel.r.uint32 shl 16) or
+              (pixel.g.uint32 shl 8) or
               pixel.b.uint32
           cast[ptr UncheckedArray[XcursorPixel]](xcImage.pixels)[idx] = argbPixel
-      
+
       let cursor = XcursorImageLoadCursor(display, xcImage)
       display.XDefineCursor(window.handle, cursor)
       XcursorImageDestroy(xcImage)
       display.XFlush()
       return
-  
+
   # Use font cursors for standard cursor types.
   let shape: cuint = case window.state.cursor.kind
     of ArrowCursor: XC_left_ptr
@@ -1140,3 +1140,7 @@ proc `icon=`*(window: Window, icon: Image) =
     cast[cstring](data[0].addr),
     (data.len).cint
   )
+
+proc url*(window: Window): string =
+  ## Url cannot be gotten on linux.
+  warn "Url cannot be gotten on linux"

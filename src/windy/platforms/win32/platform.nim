@@ -647,6 +647,10 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   else:
     discard SetCursor(window.customCursor)
 
+proc url*(window: Window): string =
+  ## Url cannot be gotten on windows.
+  warn "Url cannot be gotten on windows"
+
 proc loadOpenGL() =
   let opengl = LoadLibraryA("opengl32.dll")
   if opengl == 0:

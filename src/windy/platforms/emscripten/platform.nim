@@ -59,9 +59,6 @@ proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
 
-proc warn(message: string) =
-  echo "Warning: ", message
-
 proc init =
   if initialized:
     return
@@ -142,6 +139,15 @@ proc pos*(window: Window): IVec2 =
 proc `pos=`*(window: Window, pos: IVec2) =
   ## Position cannot be set on emscripten windows.
   warn "Position cannot be set on emscripten windows"
+
+proc url*(window: Window): string =
+  ## Gets the URL of the window.
+  let len = get_window_url_length()
+  if len <= 1:
+    return ""
+  var s = newString(len - 1)
+  discard get_window_url_into(s.cstring, len)
+  return s
 
 proc framebufferSize*(window: Window): IVec2 =
   result.x = get_canvas_width().int32
