@@ -50,3 +50,4 @@ nim	closeIme	windy/platforms/linux/platform.html#closeIme,Window	proc closeIme(w
 nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	proc imeCursorIndex(window: Window): int		1121
 nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1124
 nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1127
+nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1144
