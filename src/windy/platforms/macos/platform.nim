@@ -234,6 +234,10 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   autoreleasepool:
     window.inner.invalidateCursorRectsForView(window.inner.contentView)
 
+proc url*(window: Window): string =
+  ## Url cannot be gotten on macOS windows.
+  warn "Url cannot be gotten on macOS windows"
+
 proc handleMouseMove(window: Window, location: NSPoint) =
   let
     x = round(location.x)
@@ -807,8 +811,7 @@ proc pollEvents*() =
       # Forward event for app to handle.
       NSApp.sendEvent(event)
 
-  when defined(windyUseStdHttp):
-    pollHttp()
+  pollHttp()
 
 proc centerWindow(window: Window) =
   ## Calculate centered position for a window on the primary screen.

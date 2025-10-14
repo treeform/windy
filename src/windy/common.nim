@@ -231,3 +231,7 @@ proc size*(screen: Screen): IVec2 =
     (screen.right - screen.left).int32,
     (screen.bottom - screen.top).int32
   )
+
+proc warn*(message: string) =
+  ## Warns about missing functionality.
+  echo "Warning: ", message
