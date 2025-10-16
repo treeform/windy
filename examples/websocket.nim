@@ -25,4 +25,6 @@ ws.onClose = proc() =
   echo "onClose"
 
 # Closing the window exits the demo
-newWindow("Windy WebSocket", ivec2(1280, 800)).run(pollEvents)
+let window = newWindow("Windy WebSocket", ivec2(1280, 800))
+while not window.closeRequested:
+  pollEvents()

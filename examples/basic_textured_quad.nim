@@ -175,6 +175,6 @@ proc display() =
   glDrawArrays(GL_TRIANGLES, 0, 3*2)
   swapBuffers(window)
 
-window.run(proc() =
+while not window.closeRequested:
   pollEvents()
-  display())
+  display()

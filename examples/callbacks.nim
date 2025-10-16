@@ -52,7 +52,7 @@ window.onButtonRelease = proc(button: Button) =
 window.onRune = proc(rune: Rune) =
   echo "onRune ", rune
 
-window.run(proc() =
+while not window.closeRequested:
   if window.minimized or not window.visible:
     sleep(10)
-  pollEvents())
+  pollEvents()

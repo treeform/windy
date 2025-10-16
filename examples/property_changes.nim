@@ -10,7 +10,7 @@ window.onFrame = proc() =
   # Your OpenGL display code here
   window.swapBuffers()
 
-window.run(proc() =
+while not window.closeRequested:
   sleep(100)
 
   pollEvents()
@@ -74,4 +74,4 @@ window.run(proc() =
     doAssert not window.fullscreen
 
   echo "SUCCESS!"
-  quit())
+  quit()

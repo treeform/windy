@@ -14,4 +14,5 @@ when defined(windows) or defined(linux):
 
   window.icon = icon
 
-  window.run(pollEvents)
+  while not window.closeRequested:
+    pollEvents()

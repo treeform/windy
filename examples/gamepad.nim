@@ -31,7 +31,7 @@ proc display() =
   glClear(GL_COLOR_BUFFER_BIT)
   window.swapBuffers()
 
-window.run(proc() =
+while not window.closeRequested:
   gamepad()
   display()
-  pollEvents())
+  pollEvents()
