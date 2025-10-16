@@ -1,7 +1,4 @@
-{.push importc, cdecl.}
-
-{.push header: "<sys/epoll.h>".}
-
+# <sys/epoll.h>
 type
   epoll_data_t* {.union.} = object
     `ptr`*: pointer
@@ -18,14 +15,13 @@ const
   EPOLL_CTL_MOD* = 3
   EPOLLIN* = 0x001
 
+{.push importc, cdecl.}
+
 proc epoll_create1*(flags: cint): cint
 proc epoll_ctl*(epfd: cint, op: cint, fd: cint, event: ptr epoll_event): cint
 proc epoll_wait*(epfd: cint, events: ptr epoll_event, maxevents: cint, timeout: cint): cint
 
-{.pop.}
-
-{.push header: "<libudev.h>".}
-
+# <libudev.h>
 type
   dev_t* = uint64
 
@@ -112,8 +108,6 @@ proc udev_enumerate_scan_devices*(udev_enumerate: ptr udev_enumerate): cint
 proc udev_enumerate_scan_subsystems*(udev_enumerate: ptr udev_enumerate): cint
 proc udev_enumerate_get_list_entry*(udev_enumerate: ptr udev_enumerate): ptr udev_list_entry
 
-{.pop.}
-
 # <sys/time.h>
 type
   timeval* = object
@@ -189,8 +183,7 @@ const
 
   ABS_MISC* = 0x28
 
-{.push header: "<libevdev-1.0/libevdev/libevdev.h>".}
-
+# <libevdev-1.0/libevdev/libevdev.h>
 type
   libevdev* = object
 
@@ -212,7 +205,5 @@ proc libevdev_get_id_version*(dev: ptr libevdev): cint
 proc libevdev_has_event_code*(dev: ptr libevdev, `type`: uint16, code: uint16): bool
 proc libevdev_get_abs_info*(dev: ptr libevdev, code: uint16): ptr input_absinfo
 proc libevdev_next_event*(dev: ptr libevdev, flags: cint, event: ptr input_event): cint
-
-{.pop.}
 
 {.pop.}
