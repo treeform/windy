@@ -209,9 +209,3 @@ proc gamepadResetState*(state: var GamepadState) =
   for i in 0..<GamepadAxisCount.int:
     state.axes[i] = 0.float32
   state.name = ""
-
-template runPlatform*() =
-  proc run*(mainLoop: proc(), onExit: proc() = empty) =
-    while windows.len > 0:
-      mainLoop()
-    onExit()

@@ -1,3 +1,5 @@
+{.passL: "-ludev -levdev."}
+
 # <sys/epoll.h>
 type
   epoll_data_t* {.union.} = object
