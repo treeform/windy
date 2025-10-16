@@ -72,8 +72,6 @@ var
   clipboardWindow: XWindow
   clipboardContent: string
 
-runPlatform()
-
 proc initConstants(display: Display) =
   xaNetWMState = display.XInternAtom("_NET_WM_STATE", 0)
   xaNetWMStateMaximizedHorz = display.XInternAtom("_NET_WM_STATE_MAXIMIZED_HORZ", 0)

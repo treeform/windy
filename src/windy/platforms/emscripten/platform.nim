@@ -57,8 +57,6 @@ var
   gamepadsConnectedMask: uint8
   gamepadStates: array[maxGamepads, GamepadState]
 
-runPlatform() # Only one possible window, ends up equivalent to window.run
-
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)

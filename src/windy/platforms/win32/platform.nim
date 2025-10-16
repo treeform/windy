@@ -157,8 +157,6 @@ var
   gamepadStates: array[maxGamepads, GamepadState]
   gameInputDevices: array[maxGamepads, ptr IGameInputDevice] # NOTE GameInput's max is 8, but other platforms limit to 4
 
-runPlatform()
-
 proc indexForHandle(windows: seq[Window], hWnd: HWND): int =
   ## Returns the window for this handle, else -1
   for i, window in windows:

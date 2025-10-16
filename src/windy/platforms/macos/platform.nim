@@ -54,8 +54,6 @@ var
   gamepadButtonLookup: array[maxGamepads, array[GamepadButtonCount.int, int8]]
   gamepadButtonInputs: array[maxGamepads, array[GamepadButtonCount.int, GCControllerButtonInput]]
 
-runPlatform()
-
 proc indexForNSWindow(windows: seq[Window], inner: NSWindow): int =
   ## Returns the window for this handle, else -1
   for i, window in windows:
