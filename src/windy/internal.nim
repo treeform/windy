@@ -1,10 +1,19 @@
 import common, pixie, std/random
 
 const
+  gamepadDeadzone = 0.1
   multiClickRadius = 4
   CRLF* = "\r\n"
 
 type
+  GamepadState* = object
+    buttons*: uint32 # One bit per button, 32 buttons max
+    pressed*: uint32 # Buttons pressed this frame
+    released*: uint32 # Buttons released this frame
+    pressures*: array[GamepadButtonCount.int, float32] # Many APIs report a pressure per button; binary 0..1 otherwise
+    axes*: array[GamepadAxisCount.int, float32] # Values are in the range -1..1
+    name*: string
+
   WindowState* = object
     title*: string
     icon*: Image
@@ -162,3 +171,41 @@ proc addDefaultHeaders*(headers: var seq[HttpHeader]) =
   if headers["accept-encoding"].len == 0:
     # If there isn't a specific accept-encoding specified, enable gzip
     headers["accept-encoding"] = "gzip"
+
+template gamepadPlatform*() =
+  proc gamepadName*(gamepadId: int): string =
+    gamepadStates[gamepadId].name
+
+  proc gamepadButton*(gamepadId: int, button: GamepadButton): bool {.inline.} =
+    (gamepadStates[gamepadId].buttons and (1.uint32 shl button.int8)) != 0
+
+  proc gamepadButtonPressed*(gamepadId: int, button: GamepadButton): bool {.inline.} =
+    (gamepadStates[gamepadId].pressed and (1.uint32 shl button.int8)) != 0
+
+  proc gamepadButtonReleased*(gamepadId: int, button: GamepadButton): bool {.inline.} =
+    (gamepadStates[gamepadId].released and (1.uint32 shl button.int8)) != 0
+
+  proc gamepadButtonPressure*(gamepadId: int, button: GamepadButton): float {.inline.} =
+    gamepadStates[gamepadId].pressures[button.int8]
+
+  proc gamepadAxis*(gamepadId: int, axis: GamepadAxis): float {.inline.} =
+    gamepadStates[gamepadId].axes[axis.int8]
+
+func gamepadFilterDeadZone*(value: float): float {.inline.} =
+  if abs(value) < gamepadDeadzone: 0 else: value
+
+template gamepadUpdateButtons*() =
+  let prevButtons = state.buttons
+  state.buttons = buttons
+  state.pressed = buttons and (not prevButtons)
+  state.released = prevButtons and (not buttons)
+
+proc gamepadResetState*(state: var GamepadState) =
+  state.buttons = 0.uint32
+  state.pressed = 0.uint32
+  state.released = 0.uint32
+  for i in 0..<GamepadButtonCount.int:
+    state.pressures[i] = 0.float32
+  for i in 0..<GamepadAxisCount.int:
+    state.axes[i] = 0.float32
+  state.name = ""

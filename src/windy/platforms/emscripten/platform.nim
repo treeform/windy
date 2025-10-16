@@ -54,10 +54,14 @@ var
   mainWindow: Window  # Track the main window for events
   httpRequests: Table[HttpRequestHandle, EmsHttpRequestState]
 
+  gamepadsConnectedMask: uint8
+  gamepadStates: array[maxGamepads, GamepadState]
+
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
+proc setupGamepads()
 
 proc init =
   if initialized:
@@ -242,6 +246,7 @@ proc newWindow*(
 
   # Setup event handlers
   setupEventHandlers(result)
+  setupGamepads()
 
   result.title = title
   if pos != ivec2(0, 0):
@@ -462,6 +467,59 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 222: KeyApostrophe
   else: ButtonUnknown
 
+gamepadPlatform()
+
+proc gamepadConnected*(gamepadId: int): bool =
+  (gamepadsConnectedMask and (1.uint8 shl gamepadId)) != 0
+
+proc strcmp(a: cstring, b: cstring): cint {.importc, header: "<string.h>".}
+
+proc onGamepadConnected(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  # We can only ensure known stable mappings if the gamepad reports the standard mapping
+  if strcmp(cast[cstring](addr gamepadEvent.mapping), cstring "standard") == 0:
+    gamepadsConnectedMask = gamepadsConnectedMask or (1.uint8 shl gamepadEvent.index)
+    gamepadStates[gamepadEvent.index].name = $gamepadEvent.id
+    if common.onGamepadConnected != nil:
+      common.onGamepadConnected(gamepadEvent.index)
+  return 1
+
+proc onGamepadDisconnected(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  if (gamepadsConnectedMask and (1.uint8 shl gamepadEvent.index)) != 0:
+    gamepadsConnectedMask = gamepadsConnectedMask and (not (1.uint8 shl gamepadEvent.index))
+    gamepadResetState(gamepadStates[gamepadEvent.index])
+    if common.onGamepadDisconnected != nil:
+      common.onGamepadDisconnected(gamepadEvent.index)
+  return 1
+
+proc setupGamepads() =
+  discard emscripten_sample_gamepad_data() # Populate gamepad status data we're about to read
+
+  var gp: EmscriptenGamepadEvent
+  for i in 0..<maxGamepads:
+    if emscripten_get_gamepad_status(cint i, addr gp) == 0 and gp.connected:
+      discard onGamepadConnected(0, addr gp, nil)
+
+proc pollGamepads() =
+  discard emscripten_sample_gamepad_data()
+
+  var gp: EmscriptenGamepadEvent
+  for i in 0..<maxGamepads:
+    if (gamepadsConnectedMask and (1.uint8 shl i)) == 0:
+      continue
+
+    discard emscripten_get_gamepad_status(cint i, addr gp)
+
+    var state = addr gamepadStates[i]
+    var buttons = uint32 0
+    for j in 0..<GamepadButtonCount.int:
+      state.pressures[j] = gp.analogButton[j]
+      if gp.digitalButton[j]:
+        buttons = buttons or (uint32 1 shl j)
+    for j in 0..<GamepadAxisCount.int:
+      state.axes[j] = gp.axis[j]
+
+    gamepadUpdateButtons()
+
 proc mouseButtonToButton(button: cushort): Button =
   case button:
   of 0: MouseLeft
@@ -554,6 +612,10 @@ proc onCanvasResize(userData: pointer) {.cdecl, exportc.} =
       window.onResize()
 
 proc setupEventHandlers(window: Window) =
+  # Gamepad events
+  discard emscripten_set_gamepadconnected_callback_on_thread(nil, 1, onGamepadConnected, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_gamepaddisconnected_callback_on_thread(nil, 1, onGamepadDisconnected, EM_CALLBACK_THREAD_CONTEXT)
+
   # Mouse events
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mouseup_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)

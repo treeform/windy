@@ -128,8 +128,22 @@ proc emscripten_webgl_init_context_attributes*(attrs: ptr EmscriptenWebGLContext
 proc emscripten_webgl_create_context*(target: cstring, attrs: ptr EmscriptenWebGLContextAttributes): EMSCRIPTEN_WEBGL_CONTEXT_HANDLE {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_webgl_make_context_current*(context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 
+const EM_HTML5_MEDIUM_STRING_LEN_BYTES* = 64
+
 # Mouse event handling
 type
+  EmscriptenGamepadEvent* {.importc: "EmscriptenGamepadEvent", header: "<emscripten/html5.h>".} = object
+    timestamp*: cdouble
+    numAxes*: cint
+    numButtons*: cint
+    axis*: array[64, cdouble]
+    analogButton*: array[64, cdouble]
+    digitalButton*: array[64, bool]
+    connected*: bool
+    index*: cint
+    id*: array[EM_HTML5_MEDIUM_STRING_LEN_BYTES, char]
+    mapping*: array[EM_HTML5_MEDIUM_STRING_LEN_BYTES, char]
+
   EmscriptenMouseEvent* {.importc: "EmscriptenMouseEvent", header: "<emscripten/html5.h>".} = object
     timestamp*: cdouble
     screenX*, screenY*: clong
@@ -181,7 +195,11 @@ type
   EmscriptenKeyboardEventCallback* = proc(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.}
   EmscriptenFocusEventCallback* = proc(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.}
   EmscriptenUiEventCallback* = proc(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.}
+  EmscriptenGamepadEventCallback* = proc(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEvent, userData: pointer): EM_BOOL {.cdecl.}
+  EmscriptenGamepadDisconnectedEventCallback* = proc(eventType: cint, gamepadEvent: ptr EmscriptenGamepadEvent, userData: pointer): EM_BOOL {.cdecl.}
 
+proc emscripten_set_gamepadconnected_callback_on_thread*(userData: pointer, useCapture: EM_BOOL, callback: EmscriptenGamepadEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+proc emscripten_set_gamepaddisconnected_callback_on_thread*(userData: pointer, useCapture: EM_BOOL, callback: EmscriptenGamepadDisconnectedEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_mousedown_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_mouseup_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_mousemove_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
@@ -192,6 +210,9 @@ proc emscripten_set_keypress_callback_on_thread*(target: cstring, userData: poin
 proc emscripten_set_blur_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenFocusEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_focus_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenFocusEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_resize_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenUiEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+
+proc emscripten_sample_gamepad_data*(): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+proc emscripten_get_gamepad_status*(index: cint, status: ptr EmscriptenGamepadEvent): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 
 const
   EMSCRIPTEN_EVENT_KEYPRESS* = 1

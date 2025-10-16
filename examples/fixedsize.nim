@@ -1,6 +1,6 @@
 import opengl, windy
 
-let window = newWindow("Windy Basic", ivec2(500, 500))
+let window = newWindow("Windy Fixed Size", ivec2(500, 500))
 window.style = Decorated
 
 window.makeContextCurrent()

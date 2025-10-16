@@ -6,6 +6,10 @@ import ../../http
 export http
 
 type
+  Gamepad* = object
+    numButtons*: int8
+    numAxes*: int8
+
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
@@ -39,6 +43,16 @@ const
 var
   WindyAppDelegate, WindyWindow, WindyView: Class
   windows: seq[Window]
+
+  # Gamepad state is what we expose; profiles, lookups and inputs are cached for polling GCController each frame
+  gamepads: array[maxGamepads, Gamepad]
+  gamepadStates: array[maxGamepads, GamepadState]
+  gamepadProfiles: array[maxGamepads, GCPhysicalInputProfile]
+  gamepadTimestamps: array[maxGamepads, float64]
+  gamepadAxisLookup: array[maxGamepads, array[GamepadAxisCount.int, int8]]
+  gamepadAxisInputs: array[maxGamepads, array[GamepadAxisCount.int, GCControllerAxisInput]]
+  gamepadButtonLookup: array[maxGamepads, array[GamepadButtonCount.int, int8]]
+  gamepadButtonInputs: array[maxGamepads, array[GamepadButtonCount.int, GCControllerButtonInput]]
 
 proc indexForNSWindow(windows: seq[Window], inner: NSWindow): int =
   ## Returns the window for this handle, else -1
@@ -294,6 +308,117 @@ proc applicationDidFinishLaunching(
   NSApp.setPresentationOptions(NSApplicationPresentationDefault)
   NSApp.setActivationPolicy(NSApplicationActivationPolicyRegular)
   NSApp.activateIgnoringOtherApps(true)
+
+gamepadPlatform()
+
+proc gamepadConnected*(gamepadId: int): bool =
+  gamepadProfiles[gamepadId].int != 0
+
+proc pollGamepads() =
+  for i in 0..<gamepadProfiles.len:
+    let profile = gamepadProfiles[i]
+    if profile.int == 0:
+      continue
+
+    let epoch = profile.lastEventTimestamp()
+    var state = gamepadStates[i].addr
+    if epoch <= gamepadTimestamps[i]:
+      state.pressed = 0
+      state.released = 0
+    else:
+      gamepadTimestamps[i] = epoch
+
+      for j in 0..<gamepads[i].numAxes:
+        state.axes[gamepadAxisLookup[i][j]] = gamepadAxisInputs[i][j].value()
+
+      var buttons = 0.uint32
+      for j in 0..<gamepads[i].numButtons:
+        let button = gamepadButtonInputs[i][j]
+        let index = gamepadButtonLookup[i][j]
+        state.pressures[index] = button.value()
+
+        if button.isPressed():
+          buttons = buttons or (1.uint32 shl index)
+
+      gamepadUpdateButtons()
+
+proc profileForController(ctrl: GCController): GCPhysicalInputProfile =
+  for i in 0..<gamepadProfiles.len:
+    if gamepadProfiles[i].int == 0:
+      ctrl.setPlayerIndex(i)
+      let profile = ctrl.physicalInputProfile()
+      gamepadProfiles[i] = profile
+      return profile
+  return 0.GCPhysicalInputProfile
+
+proc addController(ctrl: GCController) =
+  let profile = profileForController(ctrl)
+  let i = ctrl.playerIndex
+  # NOTE GCController has buttons, dpads, axes and touchpads.
+  # However, axes are subcollections of dpads and touchpads are unpopulated by gamepads.
+  # Counter-intuitively, we take the gamepad dpad from buttons and the axes from dpads.
+  # This ends up matching the common gamepad interface with a single dpad consumed as 4 boolean buttons.
+  # Other axes can also be consumed as buttons, but they make more sense as axes with a neg/pos range.
+  # Buttons also make the distinction between analog and digital. Analog buttons also register as axes.
+  # For input names, we rely on Apple's mappings. Vendor names are available as a fallback but not used.
+  # Finally, it's possible for the same input element to appear in both buttons and dpads.
+  let dpads = profile.dpads()
+  let buttons = profile.buttons()
+  var numAxes = 0
+  var numButtons = 0
+  proc addButton(button: GCControllerButtonInput, index: GamepadButton) =
+    if button.int != 0:
+      button.GCControllerElement.setPreferredSystemGestureState(GCSystemGestureStateDisabled)
+      gamepadButtonInputs[i][numButtons] = button
+      gamepadButtonLookup[i][numButtons] = index.int8
+      numButtons += 1
+  proc addAxis(axis: GCControllerAxisInput, index: GamepadAxis) =
+    if axis.int != 0:
+      gamepadAxisInputs[i][numAxes] = axis
+      gamepadAxisLookup[i][numAxes] = index.int8
+      numAxes += 1
+  proc addStick(stick: GCControllerDirectionPad, x: GamepadAxis, y: GamepadAxis) =
+    if stick.int != 0:
+      addAxis(stick.xAxis, x)
+      addAxis(stick.yAxis, y)
+  let dpad = dpads[GCInputDirectionPad].GCControllerDirectionPad
+  if dpad.int != 0:
+    addButton(dpad.down, GamepadDown)
+    addButton(dpad.right, GamepadRight)
+    addButton(dpad.left, GamepadLeft)
+    addButton(dpad.up, GamepadUp)
+  addButton(buttons[GCInputButtonA].GCControllerButtonInput, GamepadA)
+  addButton(buttons[GCInputButtonB].GCControllerButtonInput, GamepadB)
+  addButton(buttons[GCInputButtonX].GCControllerButtonInput, GamepadX)
+  addButton(buttons[GCInputButtonY].GCControllerButtonInput, GamepadY)
+  addButton(buttons[GCInputLeftShoulder].GCControllerButtonInput, GamepadL1)
+  addButton(buttons[GCInputRightShoulder].GCControllerButtonInput, GamepadR1)
+  addButton(buttons[GCInputLeftTrigger].GCControllerButtonInput, GamepadL2)
+  addButton(buttons[GCInputRightTrigger].GCControllerButtonInput, GamepadR2)
+  addButton(buttons[GCInputLeftThumbstickButton].GCControllerButtonInput, GamepadL3)
+  addButton(buttons[GCInputRightThumbstickButton].GCControllerButtonInput, GamepadR3)
+  addButton(buttons[GCInputButtonOptions].GCControllerButtonInput, GamepadSelect)
+  addButton(buttons[GCInputButtonMenu].GCControllerButtonInput, GamepadStart)
+  addButton(buttons[GCInputButtonHome].GCControllerButtonInput, GamepadHome)
+  addStick(dpads[GCInputLeftThumbstick].GCControllerDirectionPad, GamepadLStickX, GamepadLStickY)
+  addStick(dpads[GCInputRightThumbstick].GCControllerDirectionPad, GamepadRStickX, GamepadRStickY)
+  gamepads[i].numButtons = numButtons.int8
+  gamepads[i].numAxes = numAxes.int8
+  gamepadStates[i].name = $profile.device().vendorName()
+  if onGamepadConnected != nil:
+    onGamepadConnected(i)
+
+proc controllerDidConnect(self: ID, cmd: SEL, notification: NSNotification): ID {.cdecl.} =
+  addController(notification.`object`.GCController)
+
+proc controllerDidDisconnect(self: ID, cmd: SEL, notification: NSNotification): ID {.cdecl.} =
+  let ctrl = notification.`object`.GCController
+  let index = ctrl.playerIndex
+  gamepadProfiles[index] = 0.GCPhysicalInputProfile
+  gamepadTimestamps[index] = 0.float64
+  gamepadResetState(gamepadStates[index])
+  if onGamepadDisconnected != nil:
+    onGamepadDisconnected(index)
 
 proc windowDidResize(
   self: ID,
@@ -686,7 +811,7 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
 
   self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
-proc init() {.raises: [].} =
+proc init(withGamepad = true) {.raises: [].} =
   if initialized:
     return
 
@@ -696,6 +821,8 @@ proc init() {.raises: [].} =
     addClass "WindyAppDelegate", "NSObject", WindyAppDelegate:
       addMethod "applicationWillFinishLaunching:", applicationWillFinishLaunching
       addMethod "applicationDidFinishLaunching:", applicationDidFinishLaunching
+      addMethod "controllerDidConnect:", controllerDidConnect
+      addMethod "controllerDidDisconnect:", controllerDidDisconnect
 
     addClass "WindyWindow", "NSWindow", WindyWindow:
       addMethod "windowDidResize:", windowDidResize
@@ -737,11 +864,22 @@ proc init() {.raises: [].} =
       addMethod "resetCursorRects", resetCursorRects
 
     let appDelegate = WindyAppDelegate.new()
-    NSApp.setDelegate(appDelegate)
 
-    NSApp.finishLaunching()
+    if withGamepad:
+      let nc = NSNotificationCenter.defaultCenter()
+      nc.addObserver(appDelegate, s"controllerDidConnect:", GCControllerDidConnectNotification, 0.ID)
+      nc.addObserver(appDelegate, s"controllerDidDisconnect:", GCControllerDidDisconnectNotification, 0.ID)
+
+      GCController.startWirelessControllerDiscoveryWithCompletionHandler(0.ID)
+
+      let controllers = GCController.controllers()
+      for i in 0..<controllers.count():
+        addController(controllers[i.int].GCController)
 
     platformDoubleClickInterval = NSEvent.doubleClickInterval
+
+    NSApp.setDelegate(appDelegate)
+    NSApp.finishLaunching()
 
   initialized = true
 
@@ -773,6 +911,8 @@ proc processFlagsChanged(event: NSEvent) =
     window.handleButtonPress(button)
 
 proc pollEvents*() =
+  pollGamepads()
+
   # Draw first (in case a message closes a window or similar)
   for window in windows:
     if window.onFrame != nil:
@@ -874,7 +1014,6 @@ proc newWindow*(
       NSOpenGLProfileVersion4_1Core
     else:
       raise newException(WindyError, "Unsupported OpenGL version")
-
 
   autoreleasepool:
     result.inner = WindyWindow.alloc().NSWindow.initWithContentRect(
