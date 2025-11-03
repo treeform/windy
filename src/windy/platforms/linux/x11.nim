@@ -917,11 +917,14 @@ proc pollEvents(window: Window) =
         if ev.kind == xeButtonRelease and MouseLeft in window.buttonClicking and isDblclk:
           inc window.clickSeqLen
           if window.clickSeqLen >= 2:
-            pushButtonEvent(DoubleClick)
+            pushButtonEvent(DoubleClick, true)  # Send as press event first
+            pushButtonEvent(DoubleClick, false) # Then send as release event
           if window.clickSeqLen >= 3:
-            pushButtonEvent(TripleClick)
+            pushButtonEvent(TripleClick, true)
+            pushButtonEvent(TripleClick, false)
           if window.clickSeqLen >= 4:
-            pushButtonEvent(QuadrupleClick)
+            pushButtonEvent(QuadrupleClick, true)
+            pushButtonEvent(QuadrupleClick, false)
 
       of 2: pushButtonEvent(MouseMiddle)
       of 3: pushButtonEvent(MouseRight)
