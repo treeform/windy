@@ -245,8 +245,9 @@ proc handleMouseMove(window: Window, location: NSPoint) =
     y = round(window.inner.contentView.bounds.size.height - location.y)
 
   window.state.mousePrevPos = window.state.mousePos
-  echo "handleMouseMove: ", x, ", ", y
   window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
+
+  # Prevent a jump in the mouse delta when focusing a window.
   if window.state.hasPrevMouse:
     window.state.perFrame.mouseDelta += window.state.mousePos - window.state.mousePrevPos
   else:
