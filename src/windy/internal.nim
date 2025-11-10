@@ -10,6 +10,7 @@ type
     icon*: Image
     cursor*: Cursor
     closeRequested*, closed*: bool
+    hasPrevMouse*: bool
     mousePos*, mousePrevPos*: IVec2
     buttonDown*, buttonToggle*: set[Button]
     perFrame*: PerFrame

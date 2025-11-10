@@ -146,6 +146,7 @@ proc `visible=`*(window: Window, visible: bool) =
   autoreleasepool:
     if visible:
       window.inner.makeKeyAndOrderFront(0.ID)
+      NSApp.activateIgnoringOtherApps(true)
     else:
       window.inner.orderOut(0.ID)
 
@@ -245,8 +246,13 @@ proc handleMouseMove(window: Window, location: NSPoint) =
 
   window.state.mousePrevPos = window.state.mousePos
   window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
-  window.state.perFrame.mouseDelta +=
-    window.state.mousePos - window.state.mousePrevPos
+
+  # Prevent a jump in the mouse delta when focusing a window.
+  if window.state.hasPrevMouse:
+    window.state.perFrame.mouseDelta += window.state.mousePos - window.state.mousePrevPos
+  else:
+    window.state.perFrame.mouseDelta = ivec2(0, 0)
+  window.state.hasPrevMouse = true
 
   if window.onMouseMove != nil:
     window.onMouseMove()
@@ -344,6 +350,8 @@ proc windowDidResignKey(
   let window = windows.forNSWindow(self.NSWindow)
   if window != nil and window.onFocusChange != nil:
     window.onFocusChange()
+  # When loosing focus, prev mouse position is not valid.
+  window.state.hasPrevMouse = false
 
 proc windowShouldClose(
   self: ID,
