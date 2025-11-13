@@ -497,8 +497,8 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
 proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   # Normalize web wheel events to match other platforms.
-  let normalizedDeltaX = wheelEvent.deltaX.float32 * 0.01
-  let normalizedDeltaY = wheelEvent.deltaY.float32 * 0.01
+  let normalizedDeltaX = wheelEvent.deltaX.float32
+  let normalizedDeltaY = wheelEvent.deltaY.float32
   window.state.perFrame.scrollDelta += vec2(normalizedDeltaX, normalizedDeltaY)
   if window.onScroll != nil:
     window.onScroll()
