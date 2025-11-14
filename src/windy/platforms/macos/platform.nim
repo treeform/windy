@@ -397,7 +397,7 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
   let options =
     NSTrackingMouseEnteredAndExited or
     NSTrackingMouseMoved or
-    NSTrackingActiveInKeyWindow or
+    NSTrackingActiveAlways or
     NSTrackingCursorUpdate or
     NSTrackingInVisibleRect or
     NSTrackingAssumeInside
