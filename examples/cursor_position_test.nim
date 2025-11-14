@@ -29,6 +29,9 @@ window.onButtonPress = proc(button: Button) =
   else:
     discard
 
+window.onScroll = proc() =
+  echo "onScroll ", window.scrollDelta
+
 window.onFrame = proc() =
   bxy.beginFrame(window.size)
 
