@@ -33,21 +33,21 @@ nim	runeInputEnabled=	windy/platforms/linux/platform.html#runeInputEnabled=,Wind
 nim	cursor	windy/platforms/linux/platform.html#cursor,Window	proc cursor(window: Window): common.Cursor		591
 nim	cursor=	windy/platforms/linux/platform.html#cursor=,Window,	proc cursor=(window: Window; v: common.Cursor)		665
 nim	newWindow	windy/platforms/linux/platform.html#newWindow,string,IVec2,int,int	proc newWindow(title: string; size: IVec2; style = DecoratedResizable;\n          visible = true; vsync = true; openglVersion = OpenGL4Dot1;\n          msaa = msaaDisabled; depthBits = 24; stencilBits = 8): Window		669
-nim	mousePos	windy/platforms/linux/platform.html#mousePos,Window	proc mousePos(window: Window): IVec2		967
-nim	mousePrevPos	windy/platforms/linux/platform.html#mousePrevPos,Window	proc mousePrevPos(window: Window): IVec2		970
-nim	mouseDelta	windy/platforms/linux/platform.html#mouseDelta,Window	proc mouseDelta(window: Window): IVec2		973
-nim	scrollDelta	windy/platforms/linux/platform.html#scrollDelta,Window	proc scrollDelta(window: Window): Vec2		976
-nim	buttonDown	windy/platforms/linux/platform.html#buttonDown,Window	proc buttonDown(window: Window): ButtonView		979
-nim	buttonPressed	windy/platforms/linux/platform.html#buttonPressed,Window	proc buttonPressed(window: Window): ButtonView		982
-nim	buttonReleased	windy/platforms/linux/platform.html#buttonReleased,Window	proc buttonReleased(window: Window): ButtonView		985
-nim	buttonToggle	windy/platforms/linux/platform.html#buttonToggle,Window	proc buttonToggle(window: Window): ButtonView		988
-nim	closeRequested	windy/platforms/linux/platform.html#closeRequested,Window	proc closeRequested(window: Window): bool		991
-nim	closeRequested=	windy/platforms/linux/platform.html#closeRequested=,Window,bool	proc closeRequested=(window: Window; v: bool)		994
-nim	getClipboardString	windy/platforms/linux/platform.html#getClipboardString	proc getClipboardString(): string		1071
-nim	setClipboardString	windy/platforms/linux/platform.html#setClipboardString,string	proc setClipboardString(s: string)		1090
-nim	pollEvents	windy/platforms/linux/platform.html#pollEvents	proc pollEvents()		1095
-nim	closeIme	windy/platforms/linux/platform.html#closeIme,Window	proc closeIme(window: Window)		1118
-nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	proc imeCursorIndex(window: Window): int		1121
-nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1124
-nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1127
-nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1144
+nim	mousePos	windy/platforms/linux/platform.html#mousePos,Window	proc mousePos(window: Window): IVec2		970
+nim	mousePrevPos	windy/platforms/linux/platform.html#mousePrevPos,Window	proc mousePrevPos(window: Window): IVec2		973
+nim	mouseDelta	windy/platforms/linux/platform.html#mouseDelta,Window	proc mouseDelta(window: Window): IVec2		976
+nim	scrollDelta	windy/platforms/linux/platform.html#scrollDelta,Window	proc scrollDelta(window: Window): Vec2		979
+nim	buttonDown	windy/platforms/linux/platform.html#buttonDown,Window	proc buttonDown(window: Window): ButtonView		982
+nim	buttonPressed	windy/platforms/linux/platform.html#buttonPressed,Window	proc buttonPressed(window: Window): ButtonView		985
+nim	buttonReleased	windy/platforms/linux/platform.html#buttonReleased,Window	proc buttonReleased(window: Window): ButtonView		988
+nim	buttonToggle	windy/platforms/linux/platform.html#buttonToggle,Window	proc buttonToggle(window: Window): ButtonView		991
+nim	closeRequested	windy/platforms/linux/platform.html#closeRequested,Window	proc closeRequested(window: Window): bool		994
+nim	closeRequested=	windy/platforms/linux/platform.html#closeRequested=,Window,bool	proc closeRequested=(window: Window; v: bool)		997
+nim	getClipboardString	windy/platforms/linux/platform.html#getClipboardString	proc getClipboardString(): string		1074
+nim	setClipboardString	windy/platforms/linux/platform.html#setClipboardString,string	proc setClipboardString(s: string)		1093
+nim	pollEvents	windy/platforms/linux/platform.html#pollEvents	proc pollEvents()		1098
+nim	closeIme	windy/platforms/linux/platform.html#closeIme,Window	proc closeIme(window: Window)		1121
+nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	proc imeCursorIndex(window: Window): int		1124
+nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1127
+nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1130
+nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1147
