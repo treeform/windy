@@ -214,6 +214,10 @@
           msaa = msaaDisabled; depthBits = 24; stencilBits = 8): Window</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">openTempTextFile
+  <li><a class="reference" href="#openTempTextFile%2Cstring%2Cstring" title="openTempTextFile(title, text: string)">openTempTextFile(title, text: string)</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">pollEvents
   <li><a class="reference" href="#pollEvents" title="pollEvents()">pollEvents()</a></li>
 
@@ -784,6 +788,21 @@
 </div>
 
 </div>
+<div id="openTempTextFile-procs-all">
+  <div id="openTempTextFile,string,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#openTempTextFile%2Cstring%2Cstring"><span class="Identifier">openTempTextFile</span></a><span class="Other">(</span><span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">text</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">ExecIOEffect</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Open a text file in the default text editor.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1151" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1151" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="pollEvents-procs-all">
   <div id="pollEvents">
   <dt><pre><span class="Keyword">proc</span> <a href="#pollEvents"><span class="Identifier">pollEvents</span></a><span class="Other">(</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
@@ -1027,7 +1046,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-11-14 23:48:22 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-11-17 22:27:06 UTC</small>
       </div>
     </div>
   </div>
