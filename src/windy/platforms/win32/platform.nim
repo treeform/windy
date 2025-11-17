@@ -1,6 +1,8 @@
-import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
-    pixie/fileformats/bmp, pixie/images, std/tables,
-    std/strutils, std/times, std/unicode, urlly, utils, vmath, windefs, zippy
+import
+  std/[os, times, unicode, strutils, tables],
+  ../../[common, internal], flatty/binny, pixie/fileformats/png,
+  pixie/fileformats/bmp, pixie/images,
+  urlly, utils, vmath, windefs, zippy
 
 const
   windowClassName = "WINDY0"
