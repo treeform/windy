@@ -723,3 +723,7 @@ proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCal
   let state = httpRequests.getOrDefault(handle, nil)
   if state == nil: return
   state.onDownloadProgress = callback
+
+proc openTempTextFile*(title, text: string) =
+  ## Open a new tab in the browser.
+  open_temp_text_file(title.cstring, text.cstring)

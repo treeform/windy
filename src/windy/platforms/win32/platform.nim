@@ -1,6 +1,8 @@
-import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
-    pixie/fileformats/bmp, pixie/images, std/tables,
-    std/strutils, std/times, std/unicode, urlly, utils, vmath, windefs, zippy
+import
+  std/[os, times, unicode, strutils, tables],
+  ../../[common, internal], flatty/binny, pixie/fileformats/png,
+  pixie/fileformats/bmp, pixie/images,
+  urlly, utils, vmath, windefs, zippy
 
 const
   windowClassName = "WINDY0"
@@ -2414,3 +2416,10 @@ proc forceButtonReleased*(window: Window, button: Button) =
   ## Forces button release.
   ## This is used for simulating UI tests.
   window.handleButtonRelease(button)
+
+proc openTempTextFile*(title, text: string) =
+  ## Open a text file in the default text editor.
+  if not dirExists("tmp"):
+    createDir("tmp")
+  writeFile("tmp/" & title, text)
+  discard execShellCmd("notepad tmp/" & title)
