@@ -2414,3 +2414,10 @@ proc forceButtonReleased*(window: Window, button: Button) =
   ## Forces button release.
   ## This is used for simulating UI tests.
   window.handleButtonRelease(button)
+
+proc openTempTextFile*(title, text: string) =
+  ## Open a text file in the default text editor.
+  if not dirExists("tmp"):
+    createDir("tmp")
+  writeFile("tmp/" & title, text)
+  discard execShellCmd("notepad tmp/" & title)

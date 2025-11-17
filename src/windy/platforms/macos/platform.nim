@@ -1,5 +1,7 @@
-import ../../common, ../../internal, macdefs, opengl, pixie/fileformats/png,
-    pixie/images, times, unicode, utils, vmath
+import
+  std/[os, times, unicode],
+  opengl, pixie/fileformats/png, pixie/images, utils, vmath,
+  ../../[common, internal], macdefs
 
 # TODO: Use macos native http client, fallback to windy http client.
 import ../../http
@@ -1090,3 +1092,10 @@ proc getScreens*(): seq[Screen] =
         bottom: frame.origin.y.int + frame.size.height.int,
         primary: i == 0
       )
+
+proc openTempTextFile*(title, text: string) =
+  ## Open a text file in the default text editor.
+  if not dirExists("tmp"):
+    createDir("tmp")
+  writeFile("tmp/" & title, text)
+  discard execShellCmd("open -a TextEdit tmp/" & title)

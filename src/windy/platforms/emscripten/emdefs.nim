@@ -92,6 +92,20 @@ EM_JS(int, get_window_url_into, (char* output, int maxLen), {
   var s = (typeof location !== 'undefined' && typeof location.href !== 'undefined') ? location.href : "";
   return stringToUTF8(s, output, maxLen);
 });
+
+EM_JS(void, open_temp_text_file, (const char* title, const char* text), {
+  const win = window.open('', '_blank');
+  if (!win) {
+    console.error("Popup blocked");
+    return;
+  }
+  const titleUtf8 = UTF8ToString(title);
+  const textUtf8 = UTF8ToString(text);
+  win.document.title = titleUtf8;
+  const pre = win.document.createElement('pre');
+  pre.innerText = textUtf8;
+  win.document.body.appendChild(pre);
+});
 """.}
 
 proc get_canvas_width*(): cint {.importc.}
@@ -102,6 +116,7 @@ proc setup_resize_observer*(userData: pointer) {.importc.}
 proc set_document_title*(title: cstring) {.importc.}
 proc get_window_url_length*(): cint {.importc.}
 proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}
+proc open_temp_text_file*(title, text: cstring) {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint
