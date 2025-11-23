@@ -225,7 +225,20 @@ proc createWindow(windowClassName, title: string): HWND =
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
 
+when Backend == OpenGLBackend:
+  proc destoryGraphicsContext(window: Window) =
+    if window.hglrc != 0:
+      discard wglMakeCurrent(window.hdc, 0)
+      discard wglDeleteContext(window.hglrc)
+      window.hglrc = 0
+elif Backend == DirectXBackend:
+  proc destoryGraphicsContext(window: Window) =
+    discard
+
 proc destroy(window: Window) =
+  ## Destroys the window and its graphics context.
+
+  # Clear callbacks
   window.onCloseRequest = nil
   window.onFrame = nil
   window.onMove = nil
@@ -237,12 +250,11 @@ proc destroy(window: Window) =
   window.onButtonRelease = nil
   window.onRune = nil
   window.onImeChange = nil
+  
+  # Destroy graphics context
+  window.destoryGraphicsContext()
 
-  when Backend == OpenGLBackend:
-    if window.hglrc != 0:
-      discard wglMakeCurrent(window.hdc, 0)
-      discard wglDeleteContext(window.hglrc)
-      window.hglrc = 0
+  # Release DC and destroy window
   if window.hdc != 0:
     discard ReleaseDC(window.hWnd, window.hdc)
     window.hdc = 0
@@ -1035,14 +1047,136 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
+when Backend == OpenGLBackend:
+
+  proc loadGraphicsContext() =
+      loadOpenGL()
+
+  proc makeContextCurrent*(window: Window) =
+      makeContextCurrent(window.hdc, window.hglrc)
+
+  proc swapBuffers*(window: Window) =
+    if SwapBuffers(window.hdc) == 0:
+      raise newException(WindyError, "Error swapping buffers")
+
+
+  proc createGraphicsContext(
+    window: Window, 
+    depthBits: int, 
+    stencilBits: int,
+     msaa: MSAA, 
+     vsync: bool,
+     openglVersion: OpenGLVersion
+  ) =
+    let pixelFormatAttribs = [
+      WGL_DRAW_TO_WINDOW_ARB.int32,
+      1,
+      WGL_SUPPORT_OPENGL_ARB,
+      1,
+      WGL_DOUBLE_BUFFER_ARB,
+      1,
+      WGL_ACCELERATION_ARB,
+      WGL_FULL_ACCELERATION_ARB,
+      WGL_PIXEL_TYPE_ARB,
+      WGL_TYPE_RGBA_ARB,
+      WGL_COLOR_BITS_ARB,
+      32,
+      WGL_ALPHA_BITS_ARB,
+      8,
+      WGL_DEPTH_BITS_ARB,
+      depthBits.int32,
+      WGL_STENCIL_BITS_ARB,
+      stencilBits.int32,
+      WGL_SAMPLES_ARB,
+      msaa.int32,
+      0
+    ]
+
+    var
+      pixelFormat: int32
+      numFormats: UINT
+    if wglChoosePixelFormatARB(
+      window.hdc,
+      pixelFormatAttribs[0].unsafeAddr,
+      nil,
+      1,
+      pixelFormat.addr,
+      numFormats.addr
+    ) == 0:
+      raise newException(WindyError, "Error choosing pixel format")
+    if numFormats == 0:
+      raise newException(WindyError, "No pixel format chosen")
+
+    var pfd: PIXELFORMATDESCRIPTOR
+    if DescribePixelFormat(
+      window.hdc,
+      pixelFormat,
+      sizeof(PIXELFORMATDESCRIPTOR).UINT,
+      pfd.addr
+    ) == 0:
+      raise newException(WindyError, "Error describing pixel format")
+
+    if SetPixelFormat(window.hdc, pixelFormat, pfd.addr) == 0:
+      raise newException(WindyError, "Error setting pixel format")
+
+    let contextAttribs = [
+      WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
+      openglVersion.major.int32,
+      WGL_CONTEXT_MINOR_VERSION_ARB,
+      openglVersion.minor.int32,
+      WGL_CONTEXT_PROFILE_MASK_ARB,
+      WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+      WGL_CONTEXT_FLAGS_ARB,
+      WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+      0
+    ]
+
+    window.hglrc = wglCreateContextAttribsARB(
+      window.hdc,
+      0,
+      contextAttribs[0].unsafeAddr
+    )
+    if window.hglrc == 0:
+      raise newException(WindyError, "Error creating OpenGL context")
+
+    # The first call to ShowWindow may ignore the parameter so do an initial
+    # call to clear that behavior.
+    discard ShowWindow(window.hWnd, SW_HIDE)
+
+    window.makeContextCurrent()
+
+    if wglSwapIntervalEXT(if vsync: 1 else: 0) == 0:
+      raise newException(WindyError, "Error setting swap interval")
+
+elif Backend == DirectXBackend:
+
+  proc loadGraphicsContext() =
+    discard
+
+  proc makeContextCurrent*(window: Window) =
+    discard
+
+  proc swapBuffers*(window: Window) =
+    discard
+
+  proc createGraphicsContext(
+    window: Window, 
+    depthBits: int, 
+    stencilBits: int, 
+    msaa: MSAA, 
+    vsync: bool,
+    openglVersion: OpenGLVersion
+  ) =
+    discard ShowWindow(window.hWnd, SW_HIDE)
+
+
 proc init() {.raises: [].} =
   if initialized:
     return
   windowPropKey = "Windy".wstr()
   loadLibraries()
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
-  when Backend == OpenGLBackend:
-    loadOpenGL()
+  loadGraphicsContext()
   try:
     helperWindow = createHelperWindow()
     registerWindowClass(windowClassName, wndProc)
@@ -1050,15 +1184,6 @@ proc init() {.raises: [].} =
     quit("Error creating helper window")
   platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
   initialized = true
-
-proc makeContextCurrent*(window: Window) =
-  when Backend == OpenGLBackend:
-    makeContextCurrent(window.hdc, window.hglrc)
-
-proc swapBuffers*(window: Window) =
-  when Backend == OpenGLBackend:
-    if SwapBuffers(window.hdc) == 0:
-      raise newException(WindyError, "Error swapping buffers")
 
 proc getHWND*(window: Window): HWND =
   result = window.hWnd
@@ -1093,99 +1218,14 @@ proc newWindow*(
     if result.hdc == 0:
       raise newException(WindyError, "result.hdc is 0")
 
-    when Backend == OpenGLBackend:
-      let pixelFormatAttribs = [
-        WGL_DRAW_TO_WINDOW_ARB.int32,
-        1,
-        WGL_SUPPORT_OPENGL_ARB,
-        1,
-        WGL_DOUBLE_BUFFER_ARB,
-        1,
-        WGL_ACCELERATION_ARB,
-        WGL_FULL_ACCELERATION_ARB,
-        WGL_PIXEL_TYPE_ARB,
-        WGL_TYPE_RGBA_ARB,
-        WGL_COLOR_BITS_ARB,
-        32,
-        WGL_ALPHA_BITS_ARB,
-        8,
-        WGL_DEPTH_BITS_ARB,
-        depthBits.int32,
-        WGL_STENCIL_BITS_ARB,
-        stencilBits.int32,
-        WGL_SAMPLES_ARB,
-        msaa.int32,
-        0
-      ]
-
-      var
-        pixelFormat: int32
-        numFormats: UINT
-      if wglChoosePixelFormatARB(
-        result.hdc,
-        pixelFormatAttribs[0].unsafeAddr,
-        nil,
-        1,
-        pixelFormat.addr,
-        numFormats.addr
-      ) == 0:
-        raise newException(WindyError, "Error choosing pixel format")
-      if numFormats == 0:
-        raise newException(WindyError, "No pixel format chosen")
-
-      var pfd: PIXELFORMATDESCRIPTOR
-      if DescribePixelFormat(
-        result.hdc,
-        pixelFormat,
-        sizeof(PIXELFORMATDESCRIPTOR).UINT,
-        pfd.addr
-      ) == 0:
-        raise newException(WindyError, "Error describing pixel format")
-
-      if SetPixelFormat(result.hdc, pixelFormat, pfd.addr) == 0:
-        raise newException(WindyError, "Error setting pixel format")
-
-      let contextAttribs = [
-        WGL_CONTEXT_MAJOR_VERSION_ARB.int32,
-        openglVersion.major.int32,
-        WGL_CONTEXT_MINOR_VERSION_ARB,
-        openglVersion.minor.int32,
-        WGL_CONTEXT_PROFILE_MASK_ARB,
-        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-        WGL_CONTEXT_FLAGS_ARB,
-        WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-        0
-      ]
-
-      result.hglrc = wglCreateContextAttribsARB(
-        result.hdc,
-        0,
-        contextAttribs[0].unsafeAddr
-      )
-      if result.hglrc == 0:
-        raise newException(WindyError, "Error creating OpenGL context")
-
-      # The first call to ShowWindow may ignore the parameter so do an initial
-      # call to clear that behavior.
-      discard ShowWindow(result.hWnd, SW_HIDE)
-
-      result.makeContextCurrent()
-
-      if wglSwapIntervalEXT(if vsync: 1 else: 0) == 0:
-        raise newException(WindyError, "Error setting swap interval")
-    else:
-      # Non-OpenGL path: just get DC and show window
-      discard ShowWindow(result.hWnd, SW_HIDE)
+    result.createGraphicsContext(depthBits, stencilBits, msaa, vsync, openglVersion)
 
     windows.add(result)
 
     result.style = style
     result.visible = visible
     
-    # Show window if visible is true (for directx path)
-    when Backend == DirectXBackend:
-      if visible:
-        result.visible = true
+
   except WindyError as e:
     destroy result
     raise e
