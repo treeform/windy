@@ -2,15 +2,19 @@ import ../../common, ../../internal, flatty/binny, pixie/fileformats/png,
     pixie/fileformats/bmp, pixie/images, std/tables,
     std/strutils, std/times, std/unicode, urlly, utils, vmath, windefs, zippy
 
+type BackendKind = enum
+  OpenGLBackend
+  DirectXBackend
+
 when defined(windyOpenGl):
   {.hint: "Using OpenGL backend".}
-  const windyOpenGL = true
+  const Backend = OpenGLBackend
 elif defined(windyDirectX):
   {.hint: "Using DirectX backend".}
-  const windyDirectX = true
+  const Backend = DirectXBackend
 else:
   # Use OpenGL by default
-  const windyOpenGL = true
+  const Backend = OpenGLBackend
 
 const
   windowClassName = "WINDY0"
@@ -234,7 +238,7 @@ proc destroy(window: Window) =
   window.onRune = nil
   window.onImeChange = nil
 
-  when defined(windyOpenGL):
+  when Backend == OpenGLBackend:
     if window.hglrc != 0:
       discard wglMakeCurrent(window.hdc, 0)
       discard wglDeleteContext(window.hglrc)
@@ -1037,7 +1041,7 @@ proc init() {.raises: [].} =
   windowPropKey = "Windy".wstr()
   loadLibraries()
   discard SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
-  when defined(windyOpenGL):
+  when Backend == OpenGLBackend:
     loadOpenGL()
   try:
     helperWindow = createHelperWindow()
@@ -1048,11 +1052,11 @@ proc init() {.raises: [].} =
   initialized = true
 
 proc makeContextCurrent*(window: Window) =
-  when defined(windyOpenGL):
+  when Backend == OpenGLBackend:
     makeContextCurrent(window.hdc, window.hglrc)
 
 proc swapBuffers*(window: Window) =
-  when defined(windyOpenGL):
+  when Backend == OpenGLBackend:
     if SwapBuffers(window.hdc) == 0:
       raise newException(WindyError, "Error swapping buffers")
 
@@ -1089,7 +1093,7 @@ proc newWindow*(
     if result.hdc == 0:
       raise newException(WindyError, "result.hdc is 0")
 
-    when defined(windyOpenGL):
+    when Backend == OpenGLBackend:
       let pixelFormatAttribs = [
         WGL_DRAW_TO_WINDOW_ARB.int32,
         1,
@@ -1179,7 +1183,7 @@ proc newWindow*(
     result.visible = visible
     
     # Show window if visible is true (for directx path)
-    when defined(windyDirectX):
+    when Backend == DirectXBackend:
       if visible:
         result.visible = true
   except WindyError as e:
