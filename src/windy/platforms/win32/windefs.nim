@@ -1084,4 +1084,20 @@ proc WinHttpWebSocketClose*(
   dwReasonLength: DWORD
 ): DWORD {.dynlib: "winhttp".}
 
+proc CreateEventW*(
+  lpEventAttributes: pointer,
+  bManualReset: BOOL,
+  bInitialState: BOOL,
+  lpName: pointer
+): HANDLE {.dynlib: "kernel32".}
+
+proc WaitForSingleObject*(
+  hHandle: HANDLE,
+  dwMilliseconds: DWORD
+): DWORD {.dynlib: "kernel32".}
+
+proc CloseHandle*(
+  hObject: HANDLE
+): BOOL {.dynlib: "kernel32".}
+
 {.pop.}
