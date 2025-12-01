@@ -100,9 +100,14 @@ proc pollEvents*() =
   pollHttp()
   emscripten_sleep(0)
 
+proc contentScale*(window: Window): float32 =
+  ## Gets the content scale of the window.
+  get_device_pixel_ratio().float32
+
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
-  return ivec2(get_canvas_width().int32, get_canvas_height().int32)
+  result.x = get_canvas_width()
+  result.y = get_canvas_height()
 
 proc `size=`*(window: Window, size: IVec2) =
   ## Size cannot be set on emscripten windows.
@@ -150,11 +155,9 @@ proc url*(window: Window): string =
   return s
 
 proc framebufferSize*(window: Window): IVec2 =
-  result.x = get_canvas_width().int32
-  result.y = get_canvas_height().int32
-
-proc contentScale*(window: Window): float32 =
-  1.0  # Fixed at 1.0 for Emscripten, could query device pixel ratio in future
+  ## Gets the framebuffer size of the window.
+  result.x = get_canvas_width()
+  result.y = get_canvas_height()
 
 proc minimized*(window: Window): bool =
   false  # Not tracked in browser context
@@ -248,6 +251,20 @@ proc newWindow*(
     result.pos = pos
   if size != ivec2(0, 0):
     result.size = size
+
+  # Recompute the size due to content scale.
+  echo "Setting canvas size"
+  echo "content scale: ", get_device_pixel_ratio()
+  echo "size: ", result.size.x, "x", result.size.y
+  echo "canvas size: ", (get_window_width().float32 * result.contentScale).int32, "x", (get_window_height().float32 * result.contentScale).int32
+  result.size = ivec2(
+    (get_window_width().float32 / result.contentScale).int32,
+    (get_window_height().float32 / result.contentScale).int32
+  )
+  set_canvas_size(
+    get_window_width(),
+    get_window_height()
+  )
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
@@ -536,7 +553,10 @@ proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: poi
 
 proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  set_canvas_size(uiEvent.windowInnerWidth, uiEvent.windowInnerHeight)
+  set_canvas_size(
+    (uiEvent.windowInnerWidth.float32 * window.contentScale).int32,
+    (uiEvent.windowInnerHeight.float32 * window.contentScale).int32
+  )
   window.size = ivec2(get_canvas_width().int32, get_canvas_height().int32)
   if window.onResize != nil:
     window.onResize()
