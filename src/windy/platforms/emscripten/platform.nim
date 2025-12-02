@@ -268,13 +268,13 @@ proc newWindow*(
   make_canvas_focusable()
 
 proc mousePos*(window: Window): IVec2 =
-  window.state.mousePos
+  (window.state.mousePos.vec2 * window.contentScale).ivec2
 
 proc mousePrevPos*(window: Window): IVec2 =
-  window.state.mousePrevPos
+  (window.state.mousePrevPos.vec2 * window.contentScale).ivec2
 
 proc mouseDelta*(window: Window): IVec2 =
-  window.state.perFrame.mouseDelta
+  (window.state.perFrame.mouseDelta.vec2 * window.contentScale).ivec2
 
 proc scrollDelta*(window: Window): Vec2 =
   window.state.perFrame.scrollDelta
