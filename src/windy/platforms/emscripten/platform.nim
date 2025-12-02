@@ -100,14 +100,10 @@ proc pollEvents*() =
   pollHttp()
   emscripten_sleep(0)
 
-proc contentScale*(window: Window): float32 =
-  ## Gets the content scale of the window.
-  get_device_pixel_ratio().float32
-
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
-  result.x = get_canvas_width()
-  result.y = get_canvas_height()
+  result.x = get_window_width() * get_device_pixel_ratio().int32
+  result.y = get_window_height() * get_device_pixel_ratio().int32
 
 proc `size=`*(window: Window, size: IVec2) =
   ## Size cannot be set on emscripten windows.
@@ -183,6 +179,25 @@ proc focused*(window: Window): bool =
 proc `focused=`*(window: Window, focused: bool) =
   discard  # Focus is controlled by browser
 
+proc updateCanvasSize(window: Window) =
+  let
+    width = get_window_width().int32
+    height = get_window_height().int32
+    contentScale = get_device_pixel_ratio().float32
+    size = ivec2(width, height)
+  set_canvas_size(
+    (size.x.float32 * contentScale).int32,
+    (size.y.float32 * contentScale).int32
+  )
+
+proc contentScale*(window: Window): float32 =
+  ## Gets the content scale of the window.
+  let contentScale = get_device_pixel_ratio().float32
+  if window.state.contentScale != contentScale:
+    window.state.contentScale = contentScale
+    window.updateCanvasSize()
+  return window.state.contentScale
+
 proc newWindow*(
   title = "",
   size = ivec2(0, 0),
@@ -234,9 +249,6 @@ proc newWindow*(
     if currentContext == 0:
       raise WindyError.newException("Failed to create WebGL context")
 
-  # Make canvas focusable for keyboard input
-  make_canvas_focusable()
-
   windows.add(result)
   mainWindow = result
 
@@ -246,25 +258,14 @@ proc newWindow*(
   # Setup event handlers
   setupEventHandlers(result)
 
+  # Set the title of the window.
   result.title = title
-  if pos != ivec2(0, 0):
-    result.pos = pos
-  if size != ivec2(0, 0):
-    result.size = size
 
-  # Recompute the size due to content scale.
-  echo "Setting canvas size"
-  echo "content scale: ", get_device_pixel_ratio()
-  echo "size: ", result.size.x, "x", result.size.y
-  echo "canvas size: ", (get_window_width().float32 * result.contentScale).int32, "x", (get_window_height().float32 * result.contentScale).int32
-  result.size = ivec2(
-    (get_window_width().float32 / result.contentScale).int32,
-    (get_window_height().float32 / result.contentScale).int32
-  )
-  set_canvas_size(
-    get_window_width(),
-    get_window_height()
-  )
+  # Set the correct canvas size based on the window size and content scale.
+  result.updateCanvasSize()
+
+  # Make canvas focusable for keyboard input
+  make_canvas_focusable()
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
@@ -553,25 +554,11 @@ proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: poi
 
 proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  set_canvas_size(
-    (uiEvent.windowInnerWidth.float32 * window.contentScale).int32,
-    (uiEvent.windowInnerHeight.float32 * window.contentScale).int32
-  )
-  window.size = ivec2(get_canvas_width().int32, get_canvas_height().int32)
+  window.updateCanvasSize()
+
   if window.onResize != nil:
     window.onResize()
   return 1
-
-# Callback for JavaScript resize events
-proc onCanvasResize(userData: pointer) {.cdecl, exportc.} =
-  let window = cast[Window](userData)
-  # Update the window size based on current canvas size
-  let newWidth = get_canvas_width()
-  let newHeight = get_canvas_height()
-  if newWidth != window.size.x or newHeight != window.size.y:
-    window.size = ivec2(newWidth, newHeight)
-    if window.onResize != nil:
-      window.onResize()
 
 proc setupEventHandlers(window: Window) =
   # Mouse events
@@ -593,9 +580,6 @@ proc setupEventHandlers(window: Window) =
 
   # Window resize handler
   discard emscripten_set_resize_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_WINDOW, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
-
-  # Set up resize observer using JavaScript
-  setup_resize_observer(cast[pointer](window))
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()

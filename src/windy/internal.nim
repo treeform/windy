@@ -24,6 +24,8 @@ type
     imeCursorIndex*: int
     imeCompositionString*: string
 
+    contentScale*: float32
+
   PerFrame* = object
     mouseDelta*: IVec2
     scrollDelta*: Vec2

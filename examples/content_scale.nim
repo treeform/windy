@@ -18,6 +18,7 @@ window.makeContextCurrent()
 loadExtensions()
 
 window.onFrame = proc() =
+  echo "content scale: ", window.contentScale
   glClear(GL_COLOR_BUFFER_BIT)
   # Your OpenGL display code here
   window.swapBuffers()
