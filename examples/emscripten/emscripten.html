@@ -36,29 +36,17 @@
 
           return canvas;
         })(),
-        setCanvasSize: function(width, height) {
-          var canvas = document.getElementById('canvas');
-          if (canvas.width !== width || canvas.height !== height) {
-            canvas.width = width;
-            canvas.height = height;
-          }
-        },
         totalDependencies: 0,
         monitorRunDependencies: function(left) {
         },
         onRuntimeInitialized: function() {
           setTimeout(function() {
-            Module.setCanvasSize(window.innerWidth, window.innerHeight);
             console.info('WASM Runtime Initialized');
           }, 0);
         }
       };
       window.onerror = function() {
         console.info('Exception thrown, see JavaScript console');
-      };
-      window.onresize = function() {
-        var canvas = document.getElementById('canvas');
-        Module.setCanvasSize(window.innerWidth, window.innerHeight);
       };
     </script>
     {{{ SCRIPT }}}

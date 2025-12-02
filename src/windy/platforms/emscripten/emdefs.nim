@@ -17,6 +17,14 @@ proc emscripten_sleep*(ms: cuint) {.importc.}
 #include <emscripten/html5.h>
 #include <GLES2/gl2.h>
 
+EM_JS(int, get_window_width, (), {
+  return window.innerWidth;
+});
+
+EM_JS(int, get_window_height, (), {
+  return window.innerHeight;
+});
+
 EM_JS(int, get_canvas_width, (), {
   return Module.canvas.width;
 });
@@ -28,6 +36,8 @@ EM_JS(int, get_canvas_height, (), {
 EM_JS(void, set_canvas_size, (int width, int height), {
   Module.canvas.width = width;
   Module.canvas.height = height;
+  Module.canvas.style.width = "100%";
+  Module.canvas.style.height = "100%";
 });
 
 EM_JS(void, make_canvas_focusable, (), {
@@ -35,47 +45,6 @@ EM_JS(void, make_canvas_focusable, (), {
   Module.canvas.tabIndex = 1;
   // Focus the canvas initially
   Module.canvas.focus();
-});
-
-EM_JS(void, setup_resize_observer, (void* userData), {
-  // Store the userData pointer for resize callbacks
-  Module.resizeUserData = userData;
-
-  // Hook into the existing Module.setCanvasSize if it exists
-  if (Module.setCanvasSize) {
-    var originalSetCanvasSize = Module.setCanvasSize;
-    Module.setCanvasSize = function(width, height) {
-      // Call the original function
-      originalSetCanvasSize.call(Module, width, height);
-      // Trigger our resize callback
-      if (typeof _onCanvasResize !== 'undefined') {
-        _onCanvasResize(Module.resizeUserData);
-      }
-    };
-  }
-
-  // Also set up window resize listener as fallback
-  if (!Module.resizeHandler) {
-    Module.resizeHandler = function() {
-      // Call the exported C function directly
-      if (typeof _onCanvasResize !== 'undefined') {
-        _onCanvasResize(Module.resizeUserData);
-      }
-    };
-    window.addEventListener('resize', Module.resizeHandler);
-  }
-
-  // Monitor canvas size changes using ResizeObserver if available
-  if (typeof ResizeObserver !== 'undefined' && Module.canvas) {
-    if (!Module.canvasResizeObserver) {
-      Module.canvasResizeObserver = new ResizeObserver(function(entries) {
-        if (typeof _onCanvasResize !== 'undefined') {
-          _onCanvasResize(Module.resizeUserData);
-        }
-      });
-      Module.canvasResizeObserver.observe(Module.canvas);
-    }
-  }
 });
 
 EM_JS(void, set_document_title, (const char* title), {
@@ -93,6 +62,10 @@ EM_JS(int, get_window_url_into, (char* output, int maxLen), {
   return stringToUTF8(s, output, maxLen);
 });
 
+EM_JS(double, get_device_pixel_ratio, (), {
+  return window.devicePixelRatio || 1.0;
+});
+
 EM_JS(void, open_temp_text_file, (const char* title, const char* text), {
   const win = window.open('', '_blank');
   if (!win) {
@@ -108,14 +81,16 @@ EM_JS(void, open_temp_text_file, (const char* title, const char* text), {
 });
 """.}
 
+proc get_window_width*(): cint {.importc.}
+proc get_window_height*(): cint {.importc.}
 proc get_canvas_width*(): cint {.importc.}
 proc get_canvas_height*(): cint {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
 proc make_canvas_focusable*() {.importc.}
-proc setup_resize_observer*(userData: pointer) {.importc.}
 proc set_document_title*(title: cstring) {.importc.}
 proc get_window_url_length*(): cint {.importc.}
 proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}
+proc get_device_pixel_ratio*(): cdouble {.importc.}
 proc open_temp_text_file*(title, text: cstring) {.importc.}
 
 type
