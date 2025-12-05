@@ -58,12 +58,7 @@ proc init* =
         info.pos = pos
 
       outputObj.onMode:
-        # Prefer the current mode, then preferred, otherwise first advertised.
-        if ModeFlag.current in flags:
-          info.mode = size
-        elif ModeFlag.prefered in flags and info.mode == ivec2(0, 0):
-          info.mode = size
-        elif info.mode == ivec2(0, 0):
+        if ModeFlag.current in flags or info.mode == ivec2(0, 0):
           info.mode = size
 
       outputObj.onScale:
@@ -102,7 +97,7 @@ proc getScreens*(): seq[common.Screen] =
 
   for i, o in outputs:
     let mode = if o.mode == ivec2(0, 0): defaultMode else: o.mode
-    let scale = max(o.scale, 1) # normalize physical pixels into logical coords
+    let scale = max(o.scale, 1)
     result.add common.Screen(
       left: o.pos.x,
       top: o.pos.y,
