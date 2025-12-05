@@ -1,5 +1,12 @@
-import ../../common, ../../internal, vmath, wayland/egl, wayland/protocol,
-    wayland/sharedBuffer
+import ../../common, vmath, wayland/egl, wayland/protocol
+
+type
+  OutputInfo = ref object
+    pos: IVec2
+    mode: IVec2
+    scale: int = 1
+
+var outputs: seq[OutputInfo]
 
 var
   initialized: bool
@@ -40,6 +47,31 @@ proc init* =
       shell.onPing:
         shell.pong(serial)
 
+    of Output.iface:
+      let outputObj = registry.bindInterface(Output, name, iface, min(version, 3))
+      var info = OutputInfo()
+      outputs.add(info)
+
+      outputObj.onGeometry:
+        info.pos = pos
+
+      outputObj.onMode:
+        # Prefer the current mode, then preferred, otherwise first advertised.
+        if ModeFlag.current in flags:
+          info.mode = size
+        elif ModeFlag.prefered in flags and info.mode == ivec2(0, 0):
+          info.mode = size
+        elif info.mode == ivec2(0, 0):
+          info.mode = size
+
+      outputObj.onScale:
+        if factor > 0:
+          info.scale = factor
+
+      outputObj.onDone:
+        if info.scale <= 0:
+          info.scale = 1
+
   sync display
 
   if compositor == nil or shm == nil or shell == nil:
@@ -55,6 +87,27 @@ proc init* =
   initEgl()
 
   initialized = true
+
+proc getScreens*(): seq[common.Screen] =
+  ## Enumerate Wayland outputs and return them as Screen records.
+  init()
+  # Pump events so that output geometry/mode/scale are populated.
+  display.sync
+
+  if outputs.len == 0:
+    # Fallback: single 1920x1080 primary if no outputs were advertised.
+    return @[common.Screen(left: 0, top: 0, right: 1920, bottom: 1080, primary: true)]
+
+  for i, o in outputs:
+    let mode = if o.mode == ivec2(0, 0): ivec2(1920, 1080) else: o.mode
+    let scale = max(o.scale, 1)
+    result.add common.Screen(
+      left: o.pos.x,
+      top: o.pos.y,
+      right: o.pos.x + mode.x * scale,
+      bottom: o.pos.y + mode.y * scale,
+      primary: i == 0 or (o.pos.x == 0 and o.pos.y == 0)
+    )
 
 when isMainModule:
   init()
