@@ -6,6 +6,8 @@ type
     mode: IVec2
     scale: int = 1
 
+const defaultMode = ivec2(1920, 1080)
+
 var outputs: seq[OutputInfo]
 
 var
@@ -96,17 +98,17 @@ proc getScreens*(): seq[common.Screen] =
 
   if outputs.len == 0:
     # Fallback: single 1920x1080 primary if no outputs were advertised.
-    return @[common.Screen(left: 0, top: 0, right: 1920, bottom: 1080, primary: true)]
+    return @[common.Screen(left: 0, top: 0, right: defaultMode.x, bottom: defaultMode.y, primary: true)]
 
   for i, o in outputs:
-    let mode = if o.mode == ivec2(0, 0): ivec2(1920, 1080) else: o.mode
-    let scale = max(o.scale, 1)
+    let mode = if o.mode == ivec2(0, 0): defaultMode else: o.mode
+    let scale = max(o.scale, 1) # normalize physical pixels into logical coords
     result.add common.Screen(
       left: o.pos.x,
       top: o.pos.y,
-      right: o.pos.x + mode.x * scale,
-      bottom: o.pos.y + mode.y * scale,
-      primary: i == 0 or (o.pos.x == 0 and o.pos.y == 0)
+      right: o.pos.x + mode.x div scale,
+      bottom: o.pos.y + mode.y div scale,
+      primary: i == 0 or o.pos == ivec2(0, 0)
     )
 
 when isMainModule:
