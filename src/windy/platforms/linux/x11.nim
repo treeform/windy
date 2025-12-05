@@ -566,6 +566,23 @@ proc `title=`*(window: Window, v: string) =
   window.handle.setProperty(xaNetWMIconName, xaUTF8String, 8, v)
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
+proc getScreens*(): seq[common.Screen] =
+  ## Minimal screen enumeration for X11. Returns the default screen as primary.
+  init()
+
+  let s = display.screen(display.defaultScreen)
+  if s == nil:
+    return
+
+  let size = s.size
+  result.add common.Screen(
+    left: 0,
+    top: 0,
+    right: size.x,
+    bottom: size.y,
+    primary: true
+  )
+
 proc contentScale*(window: Window): float32 =
   const defaultScreenDpi = 96.0
 
