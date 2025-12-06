@@ -561,22 +561,15 @@ proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer
     window.onResize()
   return 1
 
-# Callback for JavaScript resize events
-proc onCanvasResize(userData: pointer) {.cdecl, exportc.} =
-  let window = cast[Window](userData)
-  # Update the window size based on current canvas size
-  let newWidth = get_canvas_width()
-  let newHeight = get_canvas_height()
-  if newWidth != window.size.x or newHeight != window.size.y:
-    window.size = ivec2(newWidth, newHeight)
-    if window.onResize != nil:
-      window.onResize()
 
 # Callback for JavaScript file drop events
 proc onFileDrop(fileName: cstring, fileData: cstring, userData: pointer) {.cdecl, exportc.} =
+  echo "Emscripten onFileDrop called: ", fileName, " (", fileData.len, " bytes)"
   let window = cast[Window](userData)
   if window.onFileDrop != nil:
     window.onFileDrop($fileName, $fileData)
+  else:
+    echo "window.onFileDrop is nil!"
 
 
 proc setupEventHandlers(window: Window) =

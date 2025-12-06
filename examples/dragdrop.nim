@@ -5,9 +5,6 @@ let window = newWindow("Drag and Drop Example", ivec2(800, 600))
 window.makeContextCurrent()
 loadExtensions()
 
-# Request focus for drag-and-drop to work
-window.focus()
-
 window.onFileDrop = proc(fileName: string, fileData: string) =
   echo "File dropped: ", fileName, " (", fileData.len, " bytes)"
   echo "Content preview: ", fileData[0..min(100, fileData.len-1)]
