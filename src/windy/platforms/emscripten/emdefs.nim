@@ -47,6 +47,83 @@ EM_JS(void, make_canvas_focusable, (), {
   Module.canvas.focus();
 });
 
+EM_JS(void, setup_resize_observer, (void* userData), {
+  // Store the userData pointer for resize callbacks
+  Module.resizeUserData = userData;
+
+  // Hook into the existing Module.setCanvasSize if it exists
+  if (Module.setCanvasSize) {
+    var originalSetCanvasSize = Module.setCanvasSize;
+    Module.setCanvasSize = function(width, height) {
+      // Call the original function
+      originalSetCanvasSize.call(Module, width, height);
+      // Trigger our resize callback
+      if (typeof _onCanvasResize !== 'undefined') {
+        _onCanvasResize(Module.resizeUserData);
+      }
+    };
+  }
+
+  // Also set up window resize listener as fallback
+  if (!Module.resizeHandler) {
+    Module.resizeHandler = function() {
+      // Call the exported C function directly
+      if (typeof _onCanvasResize !== 'undefined') {
+        _onCanvasResize(Module.resizeUserData);
+      }
+    };
+    window.addEventListener('resize', Module.resizeHandler);
+  }
+
+  // Monitor canvas size changes using ResizeObserver if available
+  if (typeof ResizeObserver !== 'undefined' && Module.canvas) {
+    if (!Module.canvasResizeObserver) {
+      Module.canvasResizeObserver = new ResizeObserver(function(entries) {
+        if (typeof _onCanvasResize !== 'undefined') {
+          _onCanvasResize(Module.resizeUserData);
+        }
+      });
+      Module.canvasResizeObserver.observe(Module.canvas);
+    }
+  }
+});
+
+EM_JS(void, setup_file_drop_handler, (void* userData), {
+  // Store the userData pointer for file drop callbacks
+  Module.fileDropUserData = userData;
+
+  // Set up drag and drop event handlers on the canvas
+  if (Module.canvas && !Module.fileDropHandlerSet) {
+    Module.fileDropHandlerSet = true;
+
+    Module.canvas.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    Module.canvas.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        var file = e.dataTransfer.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var arrayBuffer = e.target.result;
+          var uint8Array = new Uint8Array(arrayBuffer);
+          // Convert to string for Nim
+          var binaryString = String.fromCharCode.apply(null, uint8Array);
+          // Call the exported Nim function
+          if (typeof _onFileDrop !== 'undefined') {
+            _onFileDrop(Module.allocateUTF8(file.name), Module.allocateUTF8(binaryString), Module.fileDropUserData);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    });
+  }
+});
+
 EM_JS(void, set_document_title, (const char* title), {
   document.title = UTF8ToString(title);
 });
@@ -87,6 +164,8 @@ proc get_canvas_width*(): cint {.importc.}
 proc get_canvas_height*(): cint {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
 proc make_canvas_focusable*() {.importc.}
+proc setup_resize_observer*(userData: pointer) {.importc.}
+proc setup_file_drop_handler*(userData: pointer) {.importc.}
 proc set_document_title*(title: cstring) {.importc.}
 proc get_window_url_length*(): cint {.importc.}
 proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}

@@ -17,6 +17,7 @@ type
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
     onImeChange*: Callback
+    onFileDrop*: FileDropCallback
 
     ## In Emscripten, the canvas is the more or less the window.
     canvas: cstring
@@ -560,6 +561,24 @@ proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer
     window.onResize()
   return 1
 
+# Callback for JavaScript resize events
+proc onCanvasResize(userData: pointer) {.cdecl, exportc.} =
+  let window = cast[Window](userData)
+  # Update the window size based on current canvas size
+  let newWidth = get_canvas_width()
+  let newHeight = get_canvas_height()
+  if newWidth != window.size.x or newHeight != window.size.y:
+    window.size = ivec2(newWidth, newHeight)
+    if window.onResize != nil:
+      window.onResize()
+
+# Callback for JavaScript file drop events
+proc onFileDrop(fileName: cstring, fileData: cstring, userData: pointer) {.cdecl, exportc.} =
+  let window = cast[Window](userData)
+  if window.onFileDrop != nil:
+    window.onFileDrop($fileName, $fileData)
+
+
 proc setupEventHandlers(window: Window) =
   # Mouse events
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
@@ -580,6 +599,10 @@ proc setupEventHandlers(window: Window) =
 
   # Window resize handler
   discard emscripten_set_resize_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_WINDOW, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
+
+  # Set up resize observer using JavaScript
+  setup_resize_observer(cast[pointer](window))
+  setup_file_drop_handler(cast[pointer](window))
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()

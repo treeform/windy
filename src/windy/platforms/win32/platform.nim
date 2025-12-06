@@ -76,6 +76,7 @@ type
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
     onImeChange*: Callback
+    onFileDrop*: FileDropCallback
     imePos*: IVec2
 
     state: WindowState

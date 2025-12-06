@@ -22,6 +22,7 @@ type
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
     onImeChange*: Callback
+    onFileDrop*: FileDropCallback
 
     mousePos, mousePrevPos: IVec2
     buttonClicking, buttonToggle: set[Button]
