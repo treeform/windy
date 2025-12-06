@@ -47,47 +47,6 @@ EM_JS(void, make_canvas_focusable, (), {
   Module.canvas.focus();
 });
 
-EM_JS(void, setup_resize_observer, (void* userData), {
-  // Store the userData pointer for resize callbacks
-  Module.resizeUserData = userData;
-
-  // Hook into the existing Module.setCanvasSize if it exists
-  if (Module.setCanvasSize) {
-    var originalSetCanvasSize = Module.setCanvasSize;
-    Module.setCanvasSize = function(width, height) {
-      // Call the original function
-      originalSetCanvasSize.call(Module, width, height);
-      // Trigger our resize callback
-      if (typeof _onCanvasResize !== 'undefined') {
-        _onCanvasResize(Module.resizeUserData);
-      }
-    };
-  }
-
-  // Also set up window resize listener as fallback
-  if (!Module.resizeHandler) {
-    Module.resizeHandler = function() {
-      // Call the exported C function directly
-      if (typeof _onCanvasResize !== 'undefined') {
-        _onCanvasResize(Module.resizeUserData);
-      }
-    };
-    window.addEventListener('resize', Module.resizeHandler);
-  }
-
-  // Monitor canvas size changes using ResizeObserver if available
-  if (typeof ResizeObserver !== 'undefined' && Module.canvas) {
-    if (!Module.canvasResizeObserver) {
-      Module.canvasResizeObserver = new ResizeObserver(function(entries) {
-        if (typeof _onCanvasResize !== 'undefined') {
-          _onCanvasResize(Module.resizeUserData);
-        }
-      });
-      Module.canvasResizeObserver.observe(Module.canvas);
-    }
-  }
-});
-
 EM_JS(void, setup_file_drop_handler, (void* userData), {
   // Store the userData pointer for file drop callbacks
   Module.fileDropUserData = userData;

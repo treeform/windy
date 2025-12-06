@@ -601,7 +601,6 @@ proc setupEventHandlers(window: Window) =
   discard emscripten_set_resize_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_WINDOW, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
 
   # Set up resize observer using JavaScript
-  setup_resize_observer(cast[pointer](window))
   setup_file_drop_handler(cast[pointer](window))
 
 proc handleButtonPress(window: Window, button: Button) =
