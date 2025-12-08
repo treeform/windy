@@ -598,14 +598,12 @@ proc handleRune(window: Window, rune: Rune) =
 #include <emscripten.h>
 """.}
 
-proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileNameLen: cint, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
+proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
   let window = cast[Window](userData)
-  if window == nil:
+  if window == nil or window.onFileDrop == nil:
     return
   
-  if window.onFileDrop == nil:
-    return
-  
+  # convert the js data into Nim data.
   let fileName = $fileNamePtr
   var fileData = newString(fileDataLen)
   if fileDataLen > 0:

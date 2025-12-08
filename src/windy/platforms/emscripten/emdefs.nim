@@ -125,17 +125,19 @@ EM_JS(void, setup_drag_drop_handlers_internal, (const char* target, void* userDa
         const arrayBuffer = evt.target.result;
         const uint8Array = new Uint8Array(arrayBuffer);
         
-        // Allocate memory for filename and file data.
+        // read the raw data from the drop event into javascript.
+        // Allocate and copy filename.
         const fileNameLen = lengthBytesUTF8(file.name) + 1;
         const fileNamePtr = _malloc(fileNameLen);
         stringToUTF8(file.name, fileNamePtr, fileNameLen);
         
+        // Allocate memory for file data.
         const fileDataLen = uint8Array.length;
         const fileDataPtr = _malloc(fileDataLen);
         HEAPU8.set(uint8Array, fileDataPtr);
-        
-        // Call the C helper function.
-        Module._windy_file_drop_callback(userData, fileNamePtr, fileNameLen, fileDataPtr, fileDataLen);
+
+        // Call the C helper function. It copies the data into Nim structures.
+        Module._windy_file_drop_callback(userData, fileNamePtr, fileDataPtr, fileDataLen);
         
         // Free allocated memory.
         _free(fileNamePtr);
