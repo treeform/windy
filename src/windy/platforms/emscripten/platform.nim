@@ -582,6 +582,9 @@ proc setupEventHandlers(window: Window) =
   # Window resize handler
   discard emscripten_set_resize_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_WINDOW, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
 
+  # Drag and drop handler
+  setup_drag_drop_handlers_internal(window.canvas, cast[pointer](window))
+
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
 
@@ -590,6 +593,25 @@ proc handleButtonRelease(window: Window, button: Button) =
 
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
+
+{.emit: """
+#include <emscripten.h>
+""".}
+
+proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileNameLen: cint, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
+  let window = cast[Window](userData)
+  if window == nil:
+    return
+  
+  if window.onFileDrop == nil:
+    return
+  
+  let fileName = $fileNamePtr
+  var fileData = newString(fileDataLen)
+  if fileDataLen > 0:
+    copyMem(fileData[0].addr, fileDataPtr, fileDataLen)
+  
+  window.onFileDrop(fileName, fileData)
 
 proc getState(fetch: ptr emscripten_fetch_t): EmsHttpRequestState =
   cast[EmsHttpRequestState](fetch.userData)

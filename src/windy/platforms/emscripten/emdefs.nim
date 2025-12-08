@@ -79,6 +79,73 @@ EM_JS(void, open_temp_text_file, (const char* title, const char* text), {
   pre.innerText = textUtf8;
   win.document.body.appendChild(pre);
 });
+
+EM_JS(void, setup_drag_drop_handlers_internal, (const char* target, void* userData), {
+  const canvas = target ? document.querySelector(UTF8ToString(target)) : Module.canvas;
+  if (!canvas) {
+    console.error("Canvas not found for drag and drop setup");
+    return;
+  }
+  
+  // Prevent default drag behaviors on the canvas.
+  // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API
+  // elements do not support drop by default, you have to prevent default and stop propagation to enable drop.
+  canvas.addEventListener('dragenter', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }, false);
+  
+  canvas.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }, false);
+  
+  canvas.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }, false);
+  
+  // Handle the drop event.
+  canvas.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) {
+      return;
+    }
+    
+    // Process each dropped file.
+    for (let i = 0; i < e.dataTransfer.files.length; i++) {
+      const file = e.dataTransfer.files[i];
+      const reader = new FileReader();
+      
+      reader.onload = function(evt) {
+        if (evt.target.readyState !== FileReader.DONE) return;
+        
+        const arrayBuffer = evt.target.result;
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Allocate memory for filename and file data.
+        const fileNameLen = lengthBytesUTF8(file.name) + 1;
+        const fileNamePtr = _malloc(fileNameLen);
+        stringToUTF8(file.name, fileNamePtr, fileNameLen);
+        
+        const fileDataLen = uint8Array.length;
+        const fileDataPtr = _malloc(fileDataLen);
+        HEAPU8.set(uint8Array, fileDataPtr);
+        
+        // Call the C helper function.
+        Module._windy_file_drop_callback(userData, fileNamePtr, fileNameLen, fileDataPtr, fileDataLen);
+        
+        // Free allocated memory.
+        _free(fileNamePtr);
+        _free(fileDataPtr);
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+  }, false);
+});
 """.}
 
 proc get_window_width*(): cint {.importc.}
@@ -93,6 +160,8 @@ proc get_window_url_length*(): cint {.importc.}
 proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}
 proc get_device_pixel_ratio*(): cdouble {.importc.}
 proc open_temp_text_file*(title, text: cstring) {.importc.}
+
+proc setup_drag_drop_handlers_internal*(target: cstring, userData: pointer) {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint
