@@ -594,11 +594,10 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
 
-{.emit: """
-#include <emscripten.h>
-""".}
-
 proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
+  ## callback to handle the file drop event.
+  ## EMSCRIPTEN_KEEPALIVE is required to avoid dead code elimination.
+  
   let window = cast[Window](userData)
   if window == nil or window.onFileDrop == nil:
     return
