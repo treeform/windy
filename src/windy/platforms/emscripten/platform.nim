@@ -2,6 +2,11 @@ import
   std/[tables, strutils, unicode, times],
   ../../common, ../../internal, vmath, pixie
 
+# include for EMSCRIPTEN_KEEPALIVE
+{.emit: """
+#include <emscripten.h>
+""".}
+
 import emdefs
 
 type
