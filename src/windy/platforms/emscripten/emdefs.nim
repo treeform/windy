@@ -47,56 +47,6 @@ EM_JS(void, make_canvas_focusable, (), {
   Module.canvas.focus();
 });
 
-EM_JS(void, setup_file_drop_handler, (void* userData), {
-  console.log('Setting up file drop handler, userData:', userData);
-
-  // Store the userData pointer for file drop callbacks
-  Module.fileDropUserData = userData;
-
-  // Set up drag and drop event handlers on the canvas
-  if (Module.canvas && !Module.fileDropHandlerSet) {
-    console.log('Setting up drag and drop event listeners');
-    Module.fileDropHandlerSet = true;
-
-    Module.canvas.addEventListener('dragover', function(e) {
-      console.log('dragover event');
-      e.preventDefault();
-      e.stopPropagation();
-    });
-
-    Module.canvas.addEventListener('drop', function(e) {
-      console.log('drop event');
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        console.log('Processing dropped file');
-        var file = e.dataTransfer.files[0];
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          console.log('FileReader onload');
-          var arrayBuffer = e.target.result;
-          var uint8Array = new Uint8Array(arrayBuffer);
-          // Convert to string for Nim
-          var binaryString = String.fromCharCode.apply(null, uint8Array);
-          console.log('Calling _onFileDrop, file name:', file.name, 'data length:', binaryString.length);
-          // Call the exported Nim function
-          if (typeof _onFileDrop !== 'undefined') {
-            _onFileDrop(Module.allocateUTF8(file.name), Module.allocateUTF8(binaryString), Module.fileDropUserData);
-          } else {
-            console.error('_onFileDrop function not found');
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      } else {
-        console.log('No files in drop event');
-      }
-    });
-  } else {
-    console.log('Canvas not found or handlers already set');
-  }
-});
-
 EM_JS(void, set_document_title, (const char* title), {
   document.title = UTF8ToString(title);
 });

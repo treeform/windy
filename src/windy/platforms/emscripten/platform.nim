@@ -561,17 +561,6 @@ proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer
     window.onResize()
   return 1
 
-
-# Callback for JavaScript file drop events
-proc onFileDrop(fileName: cstring, fileData: cstring, userData: pointer) {.cdecl, exportc.} =
-  echo "Emscripten onFileDrop called: ", fileName, " (", fileData.len, " bytes)"
-  let window = cast[Window](userData)
-  if window.onFileDrop != nil:
-    window.onFileDrop($fileName, $fileData)
-  else:
-    echo "window.onFileDrop is nil!"
-
-
 proc setupEventHandlers(window: Window) =
   # Mouse events
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
@@ -592,9 +581,6 @@ proc setupEventHandlers(window: Window) =
 
   # Window resize handler
   discard emscripten_set_resize_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_WINDOW, cast[pointer](window), 1, onResize, EM_CALLBACK_THREAD_CONTEXT)
-
-  # Set up resize observer using JavaScript
-  setup_file_drop_handler(cast[pointer](window))
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
