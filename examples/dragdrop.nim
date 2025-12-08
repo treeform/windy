@@ -10,12 +10,10 @@ window.onFileDrop = proc(fileName: string, fileData: string) =
   echo "Content preview: ", fileData[0..min(100, fileData.len-1)]
 
 window.onFrame = proc() =
-  # Clear screen with a light color
+  # Clear screen with a light color.
+  # just something to let the user drop a file onto the window.
   glClearColor(0.9, 0.9, 0.9, 1.0)
   glClear(GL_COLOR_BUFFER_BIT)
-
-  # Simple text display
-  # (In a real app you'd use a text rendering library)
 
 window.onCloseRequest = proc() =
   echo "Window close requested"

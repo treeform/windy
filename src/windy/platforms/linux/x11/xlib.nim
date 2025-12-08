@@ -219,6 +219,7 @@ proc XFlush*(d: Display)
 proc XFree*(x: pointer)
 
 proc XInternAtom*(d: Display, name: cstring; onlyIfExist: cint): Atom
+proc XGetAtomName*(d: Display, atom: Atom): cstring
 
 proc XCreateColormap*(d: Display, root: Window; visual: ptr Visual;
     flags: cint): Colormap
