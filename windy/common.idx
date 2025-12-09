@@ -57,130 +57,131 @@ nim	HttpErrorCallback	windy/common.html#HttpErrorCallback	type HttpErrorCallback
 nim	HttpResponseCallback	windy/common.html#HttpResponseCallback	type HttpResponseCallback		75
 nim	HttpProgressCallback	windy/common.html#HttpProgressCallback	type HttpProgressCallback		76
 nim	WebSocketMessageCallback	windy/common.html#WebSocketMessageCallback	type WebSocketMessageCallback		77
-nim	ButtonUnknown	windy/common.html#ButtonUnknown	Button.ButtonUnknown		79
-nim	MouseLeft	windy/common.html#MouseLeft	Button.MouseLeft		79
-nim	MouseRight	windy/common.html#MouseRight	Button.MouseRight		79
-nim	MouseMiddle	windy/common.html#MouseMiddle	Button.MouseMiddle		79
-nim	MouseButton4	windy/common.html#MouseButton4	Button.MouseButton4		79
-nim	MouseButton5	windy/common.html#MouseButton5	Button.MouseButton5		79
-nim	DoubleClick	windy/common.html#DoubleClick	Button.DoubleClick		79
-nim	TripleClick	windy/common.html#TripleClick	Button.TripleClick		79
-nim	QuadrupleClick	windy/common.html#QuadrupleClick	Button.QuadrupleClick		79
-nim	Key0	windy/common.html#Key0	Button.Key0		79
-nim	Key1	windy/common.html#Key1	Button.Key1		79
-nim	Key2	windy/common.html#Key2	Button.Key2		79
-nim	Key3	windy/common.html#Key3	Button.Key3		79
-nim	Key4	windy/common.html#Key4	Button.Key4		79
-nim	Key5	windy/common.html#Key5	Button.Key5		79
-nim	Key6	windy/common.html#Key6	Button.Key6		79
-nim	Key7	windy/common.html#Key7	Button.Key7		79
-nim	Key8	windy/common.html#Key8	Button.Key8		79
-nim	Key9	windy/common.html#Key9	Button.Key9		79
-nim	KeyA	windy/common.html#KeyA	Button.KeyA		79
-nim	KeyB	windy/common.html#KeyB	Button.KeyB		79
-nim	KeyC	windy/common.html#KeyC	Button.KeyC		79
-nim	KeyD	windy/common.html#KeyD	Button.KeyD		79
-nim	KeyE	windy/common.html#KeyE	Button.KeyE		79
-nim	KeyF	windy/common.html#KeyF	Button.KeyF		79
-nim	KeyG	windy/common.html#KeyG	Button.KeyG		79
-nim	KeyH	windy/common.html#KeyH	Button.KeyH		79
-nim	KeyI	windy/common.html#KeyI	Button.KeyI		79
-nim	KeyJ	windy/common.html#KeyJ	Button.KeyJ		79
-nim	KeyK	windy/common.html#KeyK	Button.KeyK		79
-nim	KeyL	windy/common.html#KeyL	Button.KeyL		79
-nim	KeyM	windy/common.html#KeyM	Button.KeyM		79
-nim	KeyN	windy/common.html#KeyN	Button.KeyN		79
-nim	KeyO	windy/common.html#KeyO	Button.KeyO		79
-nim	KeyP	windy/common.html#KeyP	Button.KeyP		79
-nim	KeyQ	windy/common.html#KeyQ	Button.KeyQ		79
-nim	KeyR	windy/common.html#KeyR	Button.KeyR		79
-nim	KeyS	windy/common.html#KeyS	Button.KeyS		79
-nim	KeyT	windy/common.html#KeyT	Button.KeyT		79
-nim	KeyU	windy/common.html#KeyU	Button.KeyU		79
-nim	KeyV	windy/common.html#KeyV	Button.KeyV		79
-nim	KeyW	windy/common.html#KeyW	Button.KeyW		79
-nim	KeyX	windy/common.html#KeyX	Button.KeyX		79
-nim	KeyY	windy/common.html#KeyY	Button.KeyY		79
-nim	KeyZ	windy/common.html#KeyZ	Button.KeyZ		79
-nim	KeyBacktick	windy/common.html#KeyBacktick	Button.KeyBacktick		79
-nim	KeyMinus	windy/common.html#KeyMinus	Button.KeyMinus		79
-nim	KeyEqual	windy/common.html#KeyEqual	Button.KeyEqual		79
-nim	KeyBackspace	windy/common.html#KeyBackspace	Button.KeyBackspace		79
-nim	KeyTab	windy/common.html#KeyTab	Button.KeyTab		79
-nim	KeyLeftBracket	windy/common.html#KeyLeftBracket	Button.KeyLeftBracket		79
-nim	KeyRightBracket	windy/common.html#KeyRightBracket	Button.KeyRightBracket		79
-nim	KeyBackslash	windy/common.html#KeyBackslash	Button.KeyBackslash		79
-nim	KeyCapsLock	windy/common.html#KeyCapsLock	Button.KeyCapsLock		79
-nim	KeySemicolon	windy/common.html#KeySemicolon	Button.KeySemicolon		79
-nim	KeyApostrophe	windy/common.html#KeyApostrophe	Button.KeyApostrophe		79
-nim	KeyEnter	windy/common.html#KeyEnter	Button.KeyEnter		79
-nim	KeyLeftShift	windy/common.html#KeyLeftShift	Button.KeyLeftShift		79
-nim	KeyComma	windy/common.html#KeyComma	Button.KeyComma		79
-nim	KeyPeriod	windy/common.html#KeyPeriod	Button.KeyPeriod		79
-nim	KeySlash	windy/common.html#KeySlash	Button.KeySlash		79
-nim	KeyRightShift	windy/common.html#KeyRightShift	Button.KeyRightShift		79
-nim	KeyLeftControl	windy/common.html#KeyLeftControl	Button.KeyLeftControl		79
-nim	KeyLeftSuper	windy/common.html#KeyLeftSuper	Button.KeyLeftSuper		79
-nim	KeyLeftAlt	windy/common.html#KeyLeftAlt	Button.KeyLeftAlt		79
-nim	KeySpace	windy/common.html#KeySpace	Button.KeySpace		79
-nim	KeyRightAlt	windy/common.html#KeyRightAlt	Button.KeyRightAlt		79
-nim	KeyRightSuper	windy/common.html#KeyRightSuper	Button.KeyRightSuper		79
-nim	KeyMenu	windy/common.html#KeyMenu	Button.KeyMenu		79
-nim	KeyRightControl	windy/common.html#KeyRightControl	Button.KeyRightControl		79
-nim	KeyDelete	windy/common.html#KeyDelete	Button.KeyDelete		79
-nim	KeyHome	windy/common.html#KeyHome	Button.KeyHome		79
-nim	KeyEnd	windy/common.html#KeyEnd	Button.KeyEnd		79
-nim	KeyInsert	windy/common.html#KeyInsert	Button.KeyInsert		79
-nim	KeyPageUp	windy/common.html#KeyPageUp	Button.KeyPageUp		79
-nim	KeyPageDown	windy/common.html#KeyPageDown	Button.KeyPageDown		79
-nim	KeyEscape	windy/common.html#KeyEscape	Button.KeyEscape		79
-nim	KeyUp	windy/common.html#KeyUp	Button.KeyUp		79
-nim	KeyDown	windy/common.html#KeyDown	Button.KeyDown		79
-nim	KeyLeft	windy/common.html#KeyLeft	Button.KeyLeft		79
-nim	KeyRight	windy/common.html#KeyRight	Button.KeyRight		79
-nim	KeyPrintScreen	windy/common.html#KeyPrintScreen	Button.KeyPrintScreen		79
-nim	KeyScrollLock	windy/common.html#KeyScrollLock	Button.KeyScrollLock		79
-nim	KeyPause	windy/common.html#KeyPause	Button.KeyPause		79
-nim	KeyF1	windy/common.html#KeyF1	Button.KeyF1		79
-nim	KeyF2	windy/common.html#KeyF2	Button.KeyF2		79
-nim	KeyF3	windy/common.html#KeyF3	Button.KeyF3		79
-nim	KeyF4	windy/common.html#KeyF4	Button.KeyF4		79
-nim	KeyF5	windy/common.html#KeyF5	Button.KeyF5		79
-nim	KeyF6	windy/common.html#KeyF6	Button.KeyF6		79
-nim	KeyF7	windy/common.html#KeyF7	Button.KeyF7		79
-nim	KeyF8	windy/common.html#KeyF8	Button.KeyF8		79
-nim	KeyF9	windy/common.html#KeyF9	Button.KeyF9		79
-nim	KeyF10	windy/common.html#KeyF10	Button.KeyF10		79
-nim	KeyF11	windy/common.html#KeyF11	Button.KeyF11		79
-nim	KeyF12	windy/common.html#KeyF12	Button.KeyF12		79
-nim	KeyNumLock	windy/common.html#KeyNumLock	Button.KeyNumLock		79
-nim	Numpad0	windy/common.html#Numpad0	Button.Numpad0		79
-nim	Numpad1	windy/common.html#Numpad1	Button.Numpad1		79
-nim	Numpad2	windy/common.html#Numpad2	Button.Numpad2		79
-nim	Numpad3	windy/common.html#Numpad3	Button.Numpad3		79
-nim	Numpad4	windy/common.html#Numpad4	Button.Numpad4		79
-nim	Numpad5	windy/common.html#Numpad5	Button.Numpad5		79
-nim	Numpad6	windy/common.html#Numpad6	Button.Numpad6		79
-nim	Numpad7	windy/common.html#Numpad7	Button.Numpad7		79
-nim	Numpad8	windy/common.html#Numpad8	Button.Numpad8		79
-nim	Numpad9	windy/common.html#Numpad9	Button.Numpad9		79
-nim	NumpadDecimal	windy/common.html#NumpadDecimal	Button.NumpadDecimal		79
-nim	NumpadEnter	windy/common.html#NumpadEnter	Button.NumpadEnter		79
-nim	NumpadAdd	windy/common.html#NumpadAdd	Button.NumpadAdd		79
-nim	NumpadSubtract	windy/common.html#NumpadSubtract	Button.NumpadSubtract		79
-nim	NumpadMultiply	windy/common.html#NumpadMultiply	Button.NumpadMultiply		79
-nim	NumpadDivide	windy/common.html#NumpadDivide	Button.NumpadDivide		79
-nim	NumpadEqual	windy/common.html#NumpadEqual	Button.NumpadEqual		79
-nim	Button	windy/common.html#Button	enum Button		79
-nim	ButtonView	windy/common.html#ButtonView	type ButtonView		195
-nim	defaultHttpDeadline	windy/common.html#defaultHttpDeadline	const defaultHttpDeadline		198
-nim	`==`	windy/common.html#==,HttpRequestHandle,HttpRequestHandle	proc `==`(a, b: HttpRequestHandle): bool		200
-nim	`==`	windy/common.html#==,WebSocketHandle,WebSocketHandle	proc `==`(a, b: WebSocketHandle): bool		203
-nim	`[]`	windy/common.html#[],ButtonView,Button	proc `[]`(buttonView: ButtonView; button: Button): bool		206
-nim	len	windy/common.html#len,ButtonView	proc len(buttonView: ButtonView): int		209
-nim	`[]`	windy/common.html#[],seq[HttpHeader],string	proc `[]`(headers: seq[HttpHeader]; key: string): string		212
-nim	`[]=`	windy/common.html#[]=,seq[HttpHeader],string,string	proc `[]=`(headers: var seq[HttpHeader]; key, value: string)		219
-nim	size	windy/common.html#size,Screen	proc size(screen: Screen): IVec2		228
-nim	warn	windy/common.html#warn,string	proc warn(message: string)		235
-nimgrp	==	windy/common.html#==-procs-all	proc		200
-nimgrp	[]	windy/common.html#[]-procs-all	proc		206
+nim	FileDropCallback	windy/common.html#FileDropCallback	type FileDropCallback		78
+nim	ButtonUnknown	windy/common.html#ButtonUnknown	Button.ButtonUnknown		80
+nim	MouseLeft	windy/common.html#MouseLeft	Button.MouseLeft		80
+nim	MouseRight	windy/common.html#MouseRight	Button.MouseRight		80
+nim	MouseMiddle	windy/common.html#MouseMiddle	Button.MouseMiddle		80
+nim	MouseButton4	windy/common.html#MouseButton4	Button.MouseButton4		80
+nim	MouseButton5	windy/common.html#MouseButton5	Button.MouseButton5		80
+nim	DoubleClick	windy/common.html#DoubleClick	Button.DoubleClick		80
+nim	TripleClick	windy/common.html#TripleClick	Button.TripleClick		80
+nim	QuadrupleClick	windy/common.html#QuadrupleClick	Button.QuadrupleClick		80
+nim	Key0	windy/common.html#Key0	Button.Key0		80
+nim	Key1	windy/common.html#Key1	Button.Key1		80
+nim	Key2	windy/common.html#Key2	Button.Key2		80
+nim	Key3	windy/common.html#Key3	Button.Key3		80
+nim	Key4	windy/common.html#Key4	Button.Key4		80
+nim	Key5	windy/common.html#Key5	Button.Key5		80
+nim	Key6	windy/common.html#Key6	Button.Key6		80
+nim	Key7	windy/common.html#Key7	Button.Key7		80
+nim	Key8	windy/common.html#Key8	Button.Key8		80
+nim	Key9	windy/common.html#Key9	Button.Key9		80
+nim	KeyA	windy/common.html#KeyA	Button.KeyA		80
+nim	KeyB	windy/common.html#KeyB	Button.KeyB		80
+nim	KeyC	windy/common.html#KeyC	Button.KeyC		80
+nim	KeyD	windy/common.html#KeyD	Button.KeyD		80
+nim	KeyE	windy/common.html#KeyE	Button.KeyE		80
+nim	KeyF	windy/common.html#KeyF	Button.KeyF		80
+nim	KeyG	windy/common.html#KeyG	Button.KeyG		80
+nim	KeyH	windy/common.html#KeyH	Button.KeyH		80
+nim	KeyI	windy/common.html#KeyI	Button.KeyI		80
+nim	KeyJ	windy/common.html#KeyJ	Button.KeyJ		80
+nim	KeyK	windy/common.html#KeyK	Button.KeyK		80
+nim	KeyL	windy/common.html#KeyL	Button.KeyL		80
+nim	KeyM	windy/common.html#KeyM	Button.KeyM		80
+nim	KeyN	windy/common.html#KeyN	Button.KeyN		80
+nim	KeyO	windy/common.html#KeyO	Button.KeyO		80
+nim	KeyP	windy/common.html#KeyP	Button.KeyP		80
+nim	KeyQ	windy/common.html#KeyQ	Button.KeyQ		80
+nim	KeyR	windy/common.html#KeyR	Button.KeyR		80
+nim	KeyS	windy/common.html#KeyS	Button.KeyS		80
+nim	KeyT	windy/common.html#KeyT	Button.KeyT		80
+nim	KeyU	windy/common.html#KeyU	Button.KeyU		80
+nim	KeyV	windy/common.html#KeyV	Button.KeyV		80
+nim	KeyW	windy/common.html#KeyW	Button.KeyW		80
+nim	KeyX	windy/common.html#KeyX	Button.KeyX		80
+nim	KeyY	windy/common.html#KeyY	Button.KeyY		80
+nim	KeyZ	windy/common.html#KeyZ	Button.KeyZ		80
+nim	KeyBacktick	windy/common.html#KeyBacktick	Button.KeyBacktick		80
+nim	KeyMinus	windy/common.html#KeyMinus	Button.KeyMinus		80
+nim	KeyEqual	windy/common.html#KeyEqual	Button.KeyEqual		80
+nim	KeyBackspace	windy/common.html#KeyBackspace	Button.KeyBackspace		80
+nim	KeyTab	windy/common.html#KeyTab	Button.KeyTab		80
+nim	KeyLeftBracket	windy/common.html#KeyLeftBracket	Button.KeyLeftBracket		80
+nim	KeyRightBracket	windy/common.html#KeyRightBracket	Button.KeyRightBracket		80
+nim	KeyBackslash	windy/common.html#KeyBackslash	Button.KeyBackslash		80
+nim	KeyCapsLock	windy/common.html#KeyCapsLock	Button.KeyCapsLock		80
+nim	KeySemicolon	windy/common.html#KeySemicolon	Button.KeySemicolon		80
+nim	KeyApostrophe	windy/common.html#KeyApostrophe	Button.KeyApostrophe		80
+nim	KeyEnter	windy/common.html#KeyEnter	Button.KeyEnter		80
+nim	KeyLeftShift	windy/common.html#KeyLeftShift	Button.KeyLeftShift		80
+nim	KeyComma	windy/common.html#KeyComma	Button.KeyComma		80
+nim	KeyPeriod	windy/common.html#KeyPeriod	Button.KeyPeriod		80
+nim	KeySlash	windy/common.html#KeySlash	Button.KeySlash		80
+nim	KeyRightShift	windy/common.html#KeyRightShift	Button.KeyRightShift		80
+nim	KeyLeftControl	windy/common.html#KeyLeftControl	Button.KeyLeftControl		80
+nim	KeyLeftSuper	windy/common.html#KeyLeftSuper	Button.KeyLeftSuper		80
+nim	KeyLeftAlt	windy/common.html#KeyLeftAlt	Button.KeyLeftAlt		80
+nim	KeySpace	windy/common.html#KeySpace	Button.KeySpace		80
+nim	KeyRightAlt	windy/common.html#KeyRightAlt	Button.KeyRightAlt		80
+nim	KeyRightSuper	windy/common.html#KeyRightSuper	Button.KeyRightSuper		80
+nim	KeyMenu	windy/common.html#KeyMenu	Button.KeyMenu		80
+nim	KeyRightControl	windy/common.html#KeyRightControl	Button.KeyRightControl		80
+nim	KeyDelete	windy/common.html#KeyDelete	Button.KeyDelete		80
+nim	KeyHome	windy/common.html#KeyHome	Button.KeyHome		80
+nim	KeyEnd	windy/common.html#KeyEnd	Button.KeyEnd		80
+nim	KeyInsert	windy/common.html#KeyInsert	Button.KeyInsert		80
+nim	KeyPageUp	windy/common.html#KeyPageUp	Button.KeyPageUp		80
+nim	KeyPageDown	windy/common.html#KeyPageDown	Button.KeyPageDown		80
+nim	KeyEscape	windy/common.html#KeyEscape	Button.KeyEscape		80
+nim	KeyUp	windy/common.html#KeyUp	Button.KeyUp		80
+nim	KeyDown	windy/common.html#KeyDown	Button.KeyDown		80
+nim	KeyLeft	windy/common.html#KeyLeft	Button.KeyLeft		80
+nim	KeyRight	windy/common.html#KeyRight	Button.KeyRight		80
+nim	KeyPrintScreen	windy/common.html#KeyPrintScreen	Button.KeyPrintScreen		80
+nim	KeyScrollLock	windy/common.html#KeyScrollLock	Button.KeyScrollLock		80
+nim	KeyPause	windy/common.html#KeyPause	Button.KeyPause		80
+nim	KeyF1	windy/common.html#KeyF1	Button.KeyF1		80
+nim	KeyF2	windy/common.html#KeyF2	Button.KeyF2		80
+nim	KeyF3	windy/common.html#KeyF3	Button.KeyF3		80
+nim	KeyF4	windy/common.html#KeyF4	Button.KeyF4		80
+nim	KeyF5	windy/common.html#KeyF5	Button.KeyF5		80
+nim	KeyF6	windy/common.html#KeyF6	Button.KeyF6		80
+nim	KeyF7	windy/common.html#KeyF7	Button.KeyF7		80
+nim	KeyF8	windy/common.html#KeyF8	Button.KeyF8		80
+nim	KeyF9	windy/common.html#KeyF9	Button.KeyF9		80
+nim	KeyF10	windy/common.html#KeyF10	Button.KeyF10		80
+nim	KeyF11	windy/common.html#KeyF11	Button.KeyF11		80
+nim	KeyF12	windy/common.html#KeyF12	Button.KeyF12		80
+nim	KeyNumLock	windy/common.html#KeyNumLock	Button.KeyNumLock		80
+nim	Numpad0	windy/common.html#Numpad0	Button.Numpad0		80
+nim	Numpad1	windy/common.html#Numpad1	Button.Numpad1		80
+nim	Numpad2	windy/common.html#Numpad2	Button.Numpad2		80
+nim	Numpad3	windy/common.html#Numpad3	Button.Numpad3		80
+nim	Numpad4	windy/common.html#Numpad4	Button.Numpad4		80
+nim	Numpad5	windy/common.html#Numpad5	Button.Numpad5		80
+nim	Numpad6	windy/common.html#Numpad6	Button.Numpad6		80
+nim	Numpad7	windy/common.html#Numpad7	Button.Numpad7		80
+nim	Numpad8	windy/common.html#Numpad8	Button.Numpad8		80
+nim	Numpad9	windy/common.html#Numpad9	Button.Numpad9		80
+nim	NumpadDecimal	windy/common.html#NumpadDecimal	Button.NumpadDecimal		80
+nim	NumpadEnter	windy/common.html#NumpadEnter	Button.NumpadEnter		80
+nim	NumpadAdd	windy/common.html#NumpadAdd	Button.NumpadAdd		80
+nim	NumpadSubtract	windy/common.html#NumpadSubtract	Button.NumpadSubtract		80
+nim	NumpadMultiply	windy/common.html#NumpadMultiply	Button.NumpadMultiply		80
+nim	NumpadDivide	windy/common.html#NumpadDivide	Button.NumpadDivide		80
+nim	NumpadEqual	windy/common.html#NumpadEqual	Button.NumpadEqual		80
+nim	Button	windy/common.html#Button	enum Button		80
+nim	ButtonView	windy/common.html#ButtonView	type ButtonView		196
+nim	defaultHttpDeadline	windy/common.html#defaultHttpDeadline	const defaultHttpDeadline		199
+nim	`==`	windy/common.html#==,HttpRequestHandle,HttpRequestHandle	proc `==`(a, b: HttpRequestHandle): bool		201
+nim	`==`	windy/common.html#==,WebSocketHandle,WebSocketHandle	proc `==`(a, b: WebSocketHandle): bool		204
+nim	`[]`	windy/common.html#[],ButtonView,Button	proc `[]`(buttonView: ButtonView; button: Button): bool		207
+nim	len	windy/common.html#len,ButtonView	proc len(buttonView: ButtonView): int		210
+nim	`[]`	windy/common.html#[],seq[HttpHeader],string	proc `[]`(headers: seq[HttpHeader]; key: string): string		213
+nim	`[]=`	windy/common.html#[]=,seq[HttpHeader],string,string	proc `[]=`(headers: var seq[HttpHeader]; key, value: string)		220
+nim	size	windy/common.html#size,Screen	proc size(screen: Screen): IVec2		229
+nim	warn	windy/common.html#warn,string	proc warn(message: string)		236
+nimgrp	==	windy/common.html#==-procs-all	proc		201
+nimgrp	[]	windy/common.html#[]-procs-all	proc		207

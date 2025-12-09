@@ -37,57 +37,58 @@ nim	XSync	windy/platforms/linux/x11/xlib.html#XSync,Display	proc XSync(d: Displa
 nim	XFlush	windy/platforms/linux/x11/xlib.html#XFlush,Display	proc XFlush(d: Display)		218
 nim	XFree	windy/platforms/linux/x11/xlib.html#XFree,pointer	proc XFree(x: pointer)		219
 nim	XInternAtom	windy/platforms/linux/x11/xlib.html#XInternAtom,Display,cstring,cint	proc XInternAtom(d: Display; name: cstring; onlyIfExist: cint): Atom		221
-nim	XCreateColormap	windy/platforms/linux/x11/xlib.html#XCreateColormap,Display,Window,ptr.Visual,cint	proc XCreateColormap(d: Display; root: Window; visual: ptr Visual; flags: cint): Colormap		223
-nim	XCreateWindow	windy/platforms/linux/x11/xlib.html#XCreateWindow,Display,Window,cint,cint,cuint,cuint,cuint,cuint,cuint,ptr.Visual,culong,ptr.XSetWindowAttributes	proc XCreateWindow(d: Display; root: Window; x, y: cint; w, h: cuint;\n              borderWidth: cuint; depth: cuint; class: cuint;\n              visual: ptr Visual; valueMask: culong;\n              attributes: ptr XSetWindowAttributes): Window		226
-nim	XDestroyWindow	windy/platforms/linux/x11/xlib.html#XDestroyWindow,Display,Window	proc XDestroyWindow(d: Display; window: Window)		238
-nim	DefaultScreen	windy/platforms/linux/x11/xlib.html#DefaultScreen,Display_2	proc DefaultScreen(d: Display): Window		240
-nim	RootWindow	windy/platforms/linux/x11/xlib.html#RootWindow,Display,Window	proc RootWindow(d: Display; window: Window): Window		241
-nim	XCreateSimpleWindow	windy/platforms/linux/x11/xlib.html#XCreateSimpleWindow,Display,Window,cint,cint,cuint,cuint,cuint,culong,culong	proc XCreateSimpleWindow(d: Display; root: Window; x, y: cint; w, h: cuint;\n                    borderW: cuint; border, background: culong): Window		243
-nim	XMapWindow	windy/platforms/linux/x11/xlib.html#XMapWindow,Display,Window	proc XMapWindow(d: Display; window: Window)		252
-nim	XUnmapWindow	windy/platforms/linux/x11/xlib.html#XUnmapWindow,Display,Window	proc XUnmapWindow(d: Display; window: Window)		253
-nim	XRaiseWindow	windy/platforms/linux/x11/xlib.html#XRaiseWindow,Display,Window	proc XRaiseWindow(d: Display; window: Window)		255
-nim	XLowerWindow	windy/platforms/linux/x11/xlib.html#XLowerWindow,Display,Window	proc XLowerWindow(d: Display; window: Window)		256
-nim	XIconifyWindow	windy/platforms/linux/x11/xlib.html#XIconifyWindow,Display,Window,cint	proc XIconifyWindow(d: Display; window: Window; screen: cint)		257
-nim	XSetWMProtocols	windy/platforms/linux/x11/xlib.html#XSetWMProtocols,Display,Window,ptr.Atom,cint	proc XSetWMProtocols(d: Display; window: Window; wmProtocols: ptr Atom; len: cint)		259
-nim	XSelectInput	windy/platforms/linux/x11/xlib.html#XSelectInput,Display,Window,clong	proc XSelectInput(d: Display; window: Window; inputs: clong)		260
-nim	XGetWindowProperty	windy/platforms/linux/x11/xlib.html#XGetWindowProperty,Display,Window,Atom,clong,clong,bool,Atom,ptr.Atom,ptr.cint,ptr.culong,ptr.culong,ptr.cstring	proc XGetWindowProperty(d: Display; window: Window; property: Atom; offset: clong;\n                   len: clong; delete: bool; requiredKind: Atom;\n                   kindReturn: ptr Atom; formatReturn: ptr cint;\n                   lenReturn: ptr culong; bytesAfterReturn: ptr culong;\n                   dataReturn: ptr cstring)		262
-nim	XChangeProperty	windy/platforms/linux/x11/xlib.html#XChangeProperty,Display,Window,Atom,Atom,cint,PropMode,cstring,cint	proc XChangeProperty(d: Display; window: Window; property: Atom; kind: Atom;\n                format: cint; mode: PropMode; data: cstring; len: cint)		268
-nim	XChangeProperty	windy/platforms/linux/x11/xlib.html#XChangeProperty,Display,Window,Atom,Atom,cint,PropMode,pointer,cint	proc XChangeProperty(d: Display; window: Window; property: Atom; kind: Atom;\n                format: cint; mode: PropMode; data: pointer; len: cint)		272
-nim	XDeleteProperty	windy/platforms/linux/x11/xlib.html#XDeleteProperty,Display,Window,Atom	proc XDeleteProperty(d: Display; window: Window; property: Atom)		276
-nim	Xutf8SetWMProperties	windy/platforms/linux/x11/xlib.html#Xutf8SetWMProperties,Display,Window,cstring,cstring,ptr.cstring,cint,pointer,pointer,pointer	proc Xutf8SetWMProperties(d: Display; window: Window; name: cstring;\n                     iconName: cstring; argv: ptr cstring; argc: cint;\n                     normalHints: pointer; wmHints: pointer; classHints: pointer)		278
-nim	XTranslateCoordinates	windy/platforms/linux/x11/xlib.html#XTranslateCoordinates,Display,Window,Window,int32,int32,ptr.int32,ptr.int32,ptr.Window	proc XTranslateCoordinates(d: Display; window: Window; root: Window; x, y: int32;\n                      xReturn, yReturn: ptr int32; childReturn: ptr Window)		285
-nim	XGetWindowAttributes	windy/platforms/linux/x11/xlib.html#XGetWindowAttributes,Display,Window,ptr.XWindowAttributes	proc XGetWindowAttributes(d: Display; window: Window; res: ptr XWindowAttributes)		290
-nim	XOpenIM	windy/platforms/linux/x11/xlib.html#XOpenIM,Display,pointer,cstring,cstring	proc XOpenIM(d: Display; db: pointer = nil; resName: cstring = nil;\n        resClass: cstring = nil): XIM		292
-nim	XCloseIM	windy/platforms/linux/x11/xlib.html#XCloseIM,XIM	proc XCloseIM(im: XIM)		294
-nim	XCreateIC	windy/platforms/linux/x11/xlib.html#XCreateIC,XIM	proc XCreateIC(im: XIM): XIC		296
-nim	XDestroyIC	windy/platforms/linux/x11/xlib.html#XDestroyIC,XIC	proc XDestroyIC(ic: XIC)		297
-nim	XSetICFocus	windy/platforms/linux/x11/xlib.html#XSetICFocus,XIC	proc XSetICFocus(ic: XIC)		298
-nim	XUnsetICFocus	windy/platforms/linux/x11/xlib.html#XUnsetICFocus,XIC	proc XUnsetICFocus(ic: XIC)		299
-nim	XCreateGC	windy/platforms/linux/x11/xlib.html#XCreateGC,Display,Drawable,culong,ptr.XGCValues	proc XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC		301
-nim	XFreeGC	windy/platforms/linux/x11/xlib.html#XFreeGC,Display,GC	proc XFreeGC(d: Display; gc: GC)		302
-nim	XMatchVisualInfo	windy/platforms/linux/x11/xlib.html#XMatchVisualInfo,Display,cint,cint,cint,ptr.XVisualInfo	proc XMatchVisualInfo(d: Display; screen: cint; depth: cint; flags: cint;\n                 result: ptr XVisualInfo)		304
-nim	XSetTransientForHint	windy/platforms/linux/x11/xlib.html#XSetTransientForHint,Display,Window,Window	proc XSetTransientForHint(d: Display; window: Window; root: Window)		307
-nim	XSetNormalHints	windy/platforms/linux/x11/xlib.html#XSetNormalHints,Display,Window,ptr.XSizeHints	proc XSetNormalHints(d: Display; window: Window; hints: ptr XSizeHints)		309
-nim	XGetNormalHints	windy/platforms/linux/x11/xlib.html#XGetNormalHints,Display,Window,ptr.XSizeHints	proc XGetNormalHints(d: Display; window: Window; res: ptr XSizeHints)		310
-nim	XResourceManagerString	windy/platforms/linux/x11/xlib.html#XResourceManagerString,Display	proc XResourceManagerString(d: Display): cstring		312
-nim	XGetDefault	windy/platforms/linux/x11/xlib.html#XGetDefault,Display,cstring,cstring	proc XGetDefault(d: Display; program: cstring; option: cstring): cstring		313
-nim	XGetGeometry	windy/platforms/linux/x11/xlib.html#XGetGeometry,Display,Drawable,ptr.Window,ptr.int32,ptr.int32,ptr.uint32,ptr.uint32,ptr.uint32,ptr.uint32	proc XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;\n             w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)		315
-nim	XResizeWindow	windy/platforms/linux/x11/xlib.html#XResizeWindow,Display,Window,uint32,uint32	proc XResizeWindow(d: Display; window: Window; w, h: uint32)		324
-nim	XMoveWindow	windy/platforms/linux/x11/xlib.html#XMoveWindow,Display,Window,int32,int32	proc XMoveWindow(d: Display; window: Window; x, y: int32)		325
-nim	XGetInputFocus	windy/platforms/linux/x11/xlib.html#XGetInputFocus,Display,ptr.Window,ptr.RevertTo	proc XGetInputFocus(d: Display; window: ptr Window; revertTo: ptr RevertTo)		327
-nim	XSetInputFocus	windy/platforms/linux/x11/xlib.html#XSetInputFocus,Display,Window,RevertTo,int32	proc XSetInputFocus(d: Display; window: Window; revertTo: RevertTo;\n               time: int32 = CurrentTime)		328
-nim	XQueryKeymap	windy/platforms/linux/x11/xlib.html#XQueryKeymap,Display,array[,char]	proc XQueryKeymap(d: Display; res: var array[32, char])		331
-nim	XKeycodeToKeysym	windy/platforms/linux/x11/xlib.html#XKeycodeToKeysym,Display,KeyCode,cint	proc XKeycodeToKeysym(d: Display; code: KeyCode; i: cint): KeySym		332
-nim	XGetSelectionOwner	windy/platforms/linux/x11/xlib.html#XGetSelectionOwner,Display,Atom	proc XGetSelectionOwner(d: Display; kind: Atom): Window		334
-nim	XSetSelectionOwner	windy/platforms/linux/x11/xlib.html#XSetSelectionOwner,Display,Atom,Window,int32	proc XSetSelectionOwner(d: Display; kind: Atom; window: Window;\n                   time: int32 = CurrentTime)		335
-nim	XConvertSelection	windy/platforms/linux/x11/xlib.html#XConvertSelection,Display,Atom,Atom,Atom,Window,int32	proc XConvertSelection(d: Display; kind: Atom; to: Atom; resultProperty: Atom;\n                  window: Window; time: int32 = CurrentTime)		337
-nim	XCreateFontCursor	windy/platforms/linux/x11/xlib.html#XCreateFontCursor,Display,cuint	proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor		340
-nim	XDefineCursor	windy/platforms/linux/x11/xlib.html#XDefineCursor,Display,,	proc XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)		341
-nim	XUndefineCursor	windy/platforms/linux/x11/xlib.html#XUndefineCursor,Display,	proc XUndefineCursor(d: Display; window: x.Window)		342
-nim	XFreeCursor	windy/platforms/linux/x11/xlib.html#XFreeCursor,Display,	proc XFreeCursor(d: Display; cursor: x.Cursor)		343
-nim	XSyncQueryExtension	windy/platforms/linux/x11/xlib.html#XSyncQueryExtension,Display,ptr.cint,ptr.cint	proc XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool		349
-nim	XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,ptr.cint,ptr.cint	proc XSyncInitialize(d: Display; verMaj, verMin: ptr cint)		350
-nim	XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	proc XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter		352
-nim	XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	proc XSyncDestroyCounter(d: Display; c: XSyncCounter)		353
-nim	XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	proc XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)		355
-nimgrp	Xchangeproperty	windy/platforms/linux/x11/xlib.html#XChangeProperty-procs-all	proc		268
+nim	XGetAtomName	windy/platforms/linux/x11/xlib.html#XGetAtomName,Display,Atom	proc XGetAtomName(d: Display; atom: Atom): cstring		222
+nim	XCreateColormap	windy/platforms/linux/x11/xlib.html#XCreateColormap,Display,Window,ptr.Visual,cint	proc XCreateColormap(d: Display; root: Window; visual: ptr Visual; flags: cint): Colormap		224
+nim	XCreateWindow	windy/platforms/linux/x11/xlib.html#XCreateWindow,Display,Window,cint,cint,cuint,cuint,cuint,cuint,cuint,ptr.Visual,culong,ptr.XSetWindowAttributes	proc XCreateWindow(d: Display; root: Window; x, y: cint; w, h: cuint;\n              borderWidth: cuint; depth: cuint; class: cuint;\n              visual: ptr Visual; valueMask: culong;\n              attributes: ptr XSetWindowAttributes): Window		227
+nim	XDestroyWindow	windy/platforms/linux/x11/xlib.html#XDestroyWindow,Display,Window	proc XDestroyWindow(d: Display; window: Window)		239
+nim	DefaultScreen	windy/platforms/linux/x11/xlib.html#DefaultScreen,Display_2	proc DefaultScreen(d: Display): Window		241
+nim	RootWindow	windy/platforms/linux/x11/xlib.html#RootWindow,Display,Window	proc RootWindow(d: Display; window: Window): Window		242
+nim	XCreateSimpleWindow	windy/platforms/linux/x11/xlib.html#XCreateSimpleWindow,Display,Window,cint,cint,cuint,cuint,cuint,culong,culong	proc XCreateSimpleWindow(d: Display; root: Window; x, y: cint; w, h: cuint;\n                    borderW: cuint; border, background: culong): Window		244
+nim	XMapWindow	windy/platforms/linux/x11/xlib.html#XMapWindow,Display,Window	proc XMapWindow(d: Display; window: Window)		253
+nim	XUnmapWindow	windy/platforms/linux/x11/xlib.html#XUnmapWindow,Display,Window	proc XUnmapWindow(d: Display; window: Window)		254
+nim	XRaiseWindow	windy/platforms/linux/x11/xlib.html#XRaiseWindow,Display,Window	proc XRaiseWindow(d: Display; window: Window)		256
+nim	XLowerWindow	windy/platforms/linux/x11/xlib.html#XLowerWindow,Display,Window	proc XLowerWindow(d: Display; window: Window)		257
+nim	XIconifyWindow	windy/platforms/linux/x11/xlib.html#XIconifyWindow,Display,Window,cint	proc XIconifyWindow(d: Display; window: Window; screen: cint)		258
+nim	XSetWMProtocols	windy/platforms/linux/x11/xlib.html#XSetWMProtocols,Display,Window,ptr.Atom,cint	proc XSetWMProtocols(d: Display; window: Window; wmProtocols: ptr Atom; len: cint)		260
+nim	XSelectInput	windy/platforms/linux/x11/xlib.html#XSelectInput,Display,Window,clong	proc XSelectInput(d: Display; window: Window; inputs: clong)		261
+nim	XGetWindowProperty	windy/platforms/linux/x11/xlib.html#XGetWindowProperty,Display,Window,Atom,clong,clong,bool,Atom,ptr.Atom,ptr.cint,ptr.culong,ptr.culong,ptr.cstring	proc XGetWindowProperty(d: Display; window: Window; property: Atom; offset: clong;\n                   len: clong; delete: bool; requiredKind: Atom;\n                   kindReturn: ptr Atom; formatReturn: ptr cint;\n                   lenReturn: ptr culong; bytesAfterReturn: ptr culong;\n                   dataReturn: ptr cstring)		263
+nim	XChangeProperty	windy/platforms/linux/x11/xlib.html#XChangeProperty,Display,Window,Atom,Atom,cint,PropMode,cstring,cint	proc XChangeProperty(d: Display; window: Window; property: Atom; kind: Atom;\n                format: cint; mode: PropMode; data: cstring; len: cint)		269
+nim	XChangeProperty	windy/platforms/linux/x11/xlib.html#XChangeProperty,Display,Window,Atom,Atom,cint,PropMode,pointer,cint	proc XChangeProperty(d: Display; window: Window; property: Atom; kind: Atom;\n                format: cint; mode: PropMode; data: pointer; len: cint)		273
+nim	XDeleteProperty	windy/platforms/linux/x11/xlib.html#XDeleteProperty,Display,Window,Atom	proc XDeleteProperty(d: Display; window: Window; property: Atom)		277
+nim	Xutf8SetWMProperties	windy/platforms/linux/x11/xlib.html#Xutf8SetWMProperties,Display,Window,cstring,cstring,ptr.cstring,cint,pointer,pointer,pointer	proc Xutf8SetWMProperties(d: Display; window: Window; name: cstring;\n                     iconName: cstring; argv: ptr cstring; argc: cint;\n                     normalHints: pointer; wmHints: pointer; classHints: pointer)		279
+nim	XTranslateCoordinates	windy/platforms/linux/x11/xlib.html#XTranslateCoordinates,Display,Window,Window,int32,int32,ptr.int32,ptr.int32,ptr.Window	proc XTranslateCoordinates(d: Display; window: Window; root: Window; x, y: int32;\n                      xReturn, yReturn: ptr int32; childReturn: ptr Window)		286
+nim	XGetWindowAttributes	windy/platforms/linux/x11/xlib.html#XGetWindowAttributes,Display,Window,ptr.XWindowAttributes	proc XGetWindowAttributes(d: Display; window: Window; res: ptr XWindowAttributes)		291
+nim	XOpenIM	windy/platforms/linux/x11/xlib.html#XOpenIM,Display,pointer,cstring,cstring	proc XOpenIM(d: Display; db: pointer = nil; resName: cstring = nil;\n        resClass: cstring = nil): XIM		293
+nim	XCloseIM	windy/platforms/linux/x11/xlib.html#XCloseIM,XIM	proc XCloseIM(im: XIM)		295
+nim	XCreateIC	windy/platforms/linux/x11/xlib.html#XCreateIC,XIM	proc XCreateIC(im: XIM): XIC		297
+nim	XDestroyIC	windy/platforms/linux/x11/xlib.html#XDestroyIC,XIC	proc XDestroyIC(ic: XIC)		298
+nim	XSetICFocus	windy/platforms/linux/x11/xlib.html#XSetICFocus,XIC	proc XSetICFocus(ic: XIC)		299
+nim	XUnsetICFocus	windy/platforms/linux/x11/xlib.html#XUnsetICFocus,XIC	proc XUnsetICFocus(ic: XIC)		300
+nim	XCreateGC	windy/platforms/linux/x11/xlib.html#XCreateGC,Display,Drawable,culong,ptr.XGCValues	proc XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC		302
+nim	XFreeGC	windy/platforms/linux/x11/xlib.html#XFreeGC,Display,GC	proc XFreeGC(d: Display; gc: GC)		303
+nim	XMatchVisualInfo	windy/platforms/linux/x11/xlib.html#XMatchVisualInfo,Display,cint,cint,cint,ptr.XVisualInfo	proc XMatchVisualInfo(d: Display; screen: cint; depth: cint; flags: cint;\n                 result: ptr XVisualInfo)		305
+nim	XSetTransientForHint	windy/platforms/linux/x11/xlib.html#XSetTransientForHint,Display,Window,Window	proc XSetTransientForHint(d: Display; window: Window; root: Window)		308
+nim	XSetNormalHints	windy/platforms/linux/x11/xlib.html#XSetNormalHints,Display,Window,ptr.XSizeHints	proc XSetNormalHints(d: Display; window: Window; hints: ptr XSizeHints)		310
+nim	XGetNormalHints	windy/platforms/linux/x11/xlib.html#XGetNormalHints,Display,Window,ptr.XSizeHints	proc XGetNormalHints(d: Display; window: Window; res: ptr XSizeHints)		311
+nim	XResourceManagerString	windy/platforms/linux/x11/xlib.html#XResourceManagerString,Display	proc XResourceManagerString(d: Display): cstring		313
+nim	XGetDefault	windy/platforms/linux/x11/xlib.html#XGetDefault,Display,cstring,cstring	proc XGetDefault(d: Display; program: cstring; option: cstring): cstring		314
+nim	XGetGeometry	windy/platforms/linux/x11/xlib.html#XGetGeometry,Display,Drawable,ptr.Window,ptr.int32,ptr.int32,ptr.uint32,ptr.uint32,ptr.uint32,ptr.uint32	proc XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;\n             w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)		316
+nim	XResizeWindow	windy/platforms/linux/x11/xlib.html#XResizeWindow,Display,Window,uint32,uint32	proc XResizeWindow(d: Display; window: Window; w, h: uint32)		325
+nim	XMoveWindow	windy/platforms/linux/x11/xlib.html#XMoveWindow,Display,Window,int32,int32	proc XMoveWindow(d: Display; window: Window; x, y: int32)		326
+nim	XGetInputFocus	windy/platforms/linux/x11/xlib.html#XGetInputFocus,Display,ptr.Window,ptr.RevertTo	proc XGetInputFocus(d: Display; window: ptr Window; revertTo: ptr RevertTo)		328
+nim	XSetInputFocus	windy/platforms/linux/x11/xlib.html#XSetInputFocus,Display,Window,RevertTo,int32	proc XSetInputFocus(d: Display; window: Window; revertTo: RevertTo;\n               time: int32 = CurrentTime)		329
+nim	XQueryKeymap	windy/platforms/linux/x11/xlib.html#XQueryKeymap,Display,array[,char]	proc XQueryKeymap(d: Display; res: var array[32, char])		332
+nim	XKeycodeToKeysym	windy/platforms/linux/x11/xlib.html#XKeycodeToKeysym,Display,KeyCode,cint	proc XKeycodeToKeysym(d: Display; code: KeyCode; i: cint): KeySym		333
+nim	XGetSelectionOwner	windy/platforms/linux/x11/xlib.html#XGetSelectionOwner,Display,Atom	proc XGetSelectionOwner(d: Display; kind: Atom): Window		335
+nim	XSetSelectionOwner	windy/platforms/linux/x11/xlib.html#XSetSelectionOwner,Display,Atom,Window,int32	proc XSetSelectionOwner(d: Display; kind: Atom; window: Window;\n                   time: int32 = CurrentTime)		336
+nim	XConvertSelection	windy/platforms/linux/x11/xlib.html#XConvertSelection,Display,Atom,Atom,Atom,Window,int32	proc XConvertSelection(d: Display; kind: Atom; to: Atom; resultProperty: Atom;\n                  window: Window; time: int32 = CurrentTime)		338
+nim	XCreateFontCursor	windy/platforms/linux/x11/xlib.html#XCreateFontCursor,Display,cuint	proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor		341
+nim	XDefineCursor	windy/platforms/linux/x11/xlib.html#XDefineCursor,Display,,	proc XDefineCursor(d: Display; window: x.Window; cursor: x.Cursor)		342
+nim	XUndefineCursor	windy/platforms/linux/x11/xlib.html#XUndefineCursor,Display,	proc XUndefineCursor(d: Display; window: x.Window)		343
+nim	XFreeCursor	windy/platforms/linux/x11/xlib.html#XFreeCursor,Display,	proc XFreeCursor(d: Display; cursor: x.Cursor)		344
+nim	XSyncQueryExtension	windy/platforms/linux/x11/xlib.html#XSyncQueryExtension,Display,ptr.cint,ptr.cint	proc XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool		350
+nim	XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,ptr.cint,ptr.cint	proc XSyncInitialize(d: Display; verMaj, verMin: ptr cint)		351
+nim	XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	proc XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter		353
+nim	XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	proc XSyncDestroyCounter(d: Display; c: XSyncCounter)		354
+nim	XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	proc XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)		356
+nimgrp	Xchangeproperty	windy/platforms/linux/x11/xlib.html#XChangeProperty-procs-all	proc		269
