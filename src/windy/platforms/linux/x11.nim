@@ -1,5 +1,5 @@
 import
-  std/[os, sequtils, sets, strformat, strutils, times, unicode],
+  std/[os, sequtils, sets, strformat, strutils, times, unicode, uri],
   ../../[common, internal],
   vmath, pixie,
   x11/[glx, keysym, x, xevent, xlib, xcursor]
@@ -22,6 +22,7 @@ type
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
     onImeChange*: Callback
+    onFileDrop*: FileDropCallback
 
     mousePos, mousePrevPos: IVec2
     buttonClicking, buttonToggle: set[Button]
@@ -47,6 +48,11 @@ type
     innerDecorated: bool
     innerFocused: bool
 
+    # XDnD state
+    xdndSource: XWindow
+    xdndVersion: int32
+    xdndFormat: Atom
+
     state: WindowState
 
   WmForDecoratedKind {.pure.} = enum
@@ -69,6 +75,26 @@ var
   wmForDecoratedKind: WmForDecoratedKind
   clipboardWindow: XWindow
   clipboardContent: string
+  xaCardinal: Atom
+  xaWindyXdndTargetProperty: Atom
+
+  # XDnD atoms
+  xaXdndTypeList: Atom
+  xaXdndSelection: Atom
+  xaXdndEnter: Atom
+  xaXdndPosition: Atom
+  xaXdndStatus: Atom
+  xaXdndLeave: Atom
+  xaXdndDrop: Atom
+  xaXdndFinished: Atom
+  xaXdndActionCopy: Atom
+  xaXdndActionMove: Atom
+  xaXdndActionLink: Atom
+  xaXdndActionAsk: Atom
+  xaXdndActionPrivate: Atom
+  xaTextUriList: Atom
+  xaTextPlain: Atom
+  xaXdndAware: Atom
 
 proc initConstants(display: Display) =
   xaNetWMState = display.XInternAtom("_NET_WM_STATE", 0)
@@ -86,8 +112,28 @@ proc initConstants(display: Display) =
   xaNetWMSyncRequestCounter = display.XInternAtom("_NET_WM_SYNC_REQUEST_COUNTER", 0)
   xaClipboard = display.XInternAtom("CLIPBOARD", 0)
   xaWindyClipboardTargetProperty = display.XInternAtom("windy_clipboardTargetProperty", 0)
+  xaWindyXdndTargetProperty = display.XInternAtom("windy_xdndTargetProperty", 0)
   xaTargets = display.XInternAtom("TARGETS", 0)
   xaText = display.XInternAtom("TEXT", 0)
+  xaCardinal = display.XInternAtom("CARDINAL", 0)
+
+  # XDnD atoms
+  xaXdndTypeList = display.XInternAtom("XdndTypeList", 0)
+  xaXdndSelection = display.XInternAtom("XdndSelection", 0)
+  xaXdndEnter = display.XInternAtom("XdndEnter", 0)
+  xaXdndPosition = display.XInternAtom("XdndPosition", 0)
+  xaXdndStatus = display.XInternAtom("XdndStatus", 0)
+  xaXdndLeave = display.XInternAtom("XdndLeave", 0)
+  xaXdndDrop = display.XInternAtom("XdndDrop", 0)
+  xaXdndFinished = display.XInternAtom("XdndFinished", 0)
+  xaXdndActionCopy = display.XInternAtom("XdndActionCopy", 0)
+  xaXdndActionMove = display.XInternAtom("XdndActionMove", 0)
+  xaXdndActionLink = display.XInternAtom("XdndActionLink", 0)
+  xaXdndActionAsk = display.XInternAtom("XdndActionAsk", 0)
+  xaXdndActionPrivate = display.XInternAtom("XdndActionPrivate", 0)
+  xaTextUriList = display.XInternAtom("text/uri-list", 0)
+  xaTextPlain = display.XInternAtom("text/plain", 0)
+  xaXdndAware = display.XInternAtom("XdndAware", 0)
 
 proc atomIfExist(name: string): Atom =
   display.XInternAtom(name, 1)
@@ -720,7 +766,8 @@ proc newWindow*(
     StructureNotifyMask or
     EnterWindowMask or
     LeaveWindowMask or
-    FocusChangeMask
+    FocusChangeMask or
+    PropertyChangeMask
   )
 
   var wmProtocols = [xaWMDeleteWindow, xaNetWMSyncRequest]
@@ -752,6 +799,10 @@ proc newWindow*(
   # Set a default cursor
   result.state.cursor = common.Cursor(kind: ArrowCursor)
   result.applyCursor()
+
+  # Enable XDnD awareness (version 5)
+  const xdndVersion = 5'u32
+  result.handle.setProperty(xaXdndAware, xaCardinal, 32, @[xdndVersion].asString)
 
   makeContextCurrent result
 
@@ -836,6 +887,87 @@ proc pollEvents(window: Window) =
           lo: cast[uint32](ev.client.data.l[2]),
           hi: cast[int32](ev.client.data.l[3])
         )
+
+      elif ev.client.messageType == xaXdndEnter:
+        # XDnD drag entered.
+        window.xdndSource = cast[XWindow](ev.client.data.l[0])
+        window.xdndVersion = (ev.client.data.l[1] shr 24).int32
+        window.xdndFormat = 0
+
+        if window.xdndVersion > 5:
+          continue
+
+        var formats: seq[Atom]
+
+        # Try to get the full type list from source window.
+        let prop = window.xdndSource.property(xaXdndTypeList)
+        if prop.data.len > 0:
+          formats = prop.data.asSeq(Atom)
+        else:
+          # Fall back to formats from client message data.
+          for i in 2..4:
+            if ev.client.data.l[i] != 0:
+              formats.add(cast[Atom](ev.client.data.l[i]))
+
+        # Look for text/uri-list or text/plain formats.
+        for fmt in formats:
+          if fmt == xaTextUriList or fmt == xaTextPlain:
+            window.xdndFormat = fmt
+            break
+
+        # If no standard format found, request text/uri-list anyway.
+        # Many file managers respond to it even if not advertised.
+        if window.xdndFormat == 0:
+          window.xdndFormat = xaTextUriList
+
+      elif ev.client.messageType == xaXdndPosition:
+        # XDnD position update.
+        if window.xdndVersion > 5:
+          continue
+
+        # Send status back to source.
+        let acceptFlag: clong = if window.xdndFormat != 0: 1 else: 0
+        let action: clong = if window.xdndVersion >= 2 and window.xdndFormat != 0: cast[clong](xaXdndActionCopy) else: 0
+        let reply = window.xdndSource.newClientMessage(xaXdndStatus, [
+          cast[clong](window.handle),
+          acceptFlag,
+          0.clong, 0.clong,
+          action
+        ])
+        window.xdndSource.send(reply)
+        display.XFlush()
+
+      elif ev.client.messageType == xaXdndLeave:
+        # XDnD drag left
+        window.xdndSource = 0
+        window.xdndVersion = 0
+        window.xdndFormat = 0
+
+      elif ev.client.messageType == xaXdndDrop:
+        if window.xdndVersion > 5 or window.xdndFormat == 0:
+          # Send finished message if we can't handle it.
+          if window.xdndVersion >= 2:
+            let reply = window.xdndSource.newClientMessage(xaXdndFinished, [
+              cast[clong](window.handle),
+              0.clong,
+              0.clong
+            ])
+            window.xdndSource.send(reply)
+          window.xdndSource = 0
+          window.xdndVersion = 0
+          window.xdndFormat = 0
+          continue
+
+        # Request the selection data.
+        let time: int32 = if window.xdndVersion >= 1: ev.client.data.l[2].int32 else: CurrentTime
+        display.XConvertSelection(
+          xaXdndSelection,
+          window.xdndFormat,
+          xaWindyXdndTargetProperty,
+          window.handle,
+          time
+        )
+        display.XFlush()
 
     of xeFocusIn:
       if window.innerFocused:
@@ -964,6 +1096,40 @@ proc pollEvents(window: Window) =
             for rune in s.runes:
               if window.onRune != nil:
                 window.onRune(rune)
+
+    of xeSelection:
+      # Handle XDnD selection data.
+      if ev.selection.property == xaWindyXdndTargetProperty:
+        let prop = window.handle.property(xaWindyXdndTargetProperty)
+        if prop.data.len > 0:
+          # Parse URI list (files separated by newlines).
+          let uriList = prop.data
+          for line in uriList.splitLines():
+            if line.len > 0 and line.startsWith("file://"):
+              # Convert URI to local path and decode percent-encoding.
+              var filePath = decodeUrl(line[7..^1])
+              if window.onFileDrop != nil:
+                let fileContent = readFile(filePath)
+                window.onFileDrop(filePath, fileContent)
+
+        # Clean up the property.
+        window.handle.delProperty(xaWindyXdndTargetProperty)
+
+        # Send finished message.
+        if window.xdndVersion >= 2:
+          let reply = window.xdndSource.newClientMessage(xaXdndFinished, [
+            cast[clong](window.handle),
+            1.clong,  # Data received successfully
+            cast[clong](xaXdndActionCopy)
+          ])
+          window.xdndSource.send(reply)
+          display.XFlush()
+
+        # Reset XDnD state.
+        window.xdndSource = 0
+        window.xdndVersion = 0
+        window.xdndFormat = 0
+
     else:
       discard
 

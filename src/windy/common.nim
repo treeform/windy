@@ -75,6 +75,7 @@ type
   HttpResponseCallback* = proc(response: HttpResponse)
   HttpProgressCallback* = proc(completed, total: int)
   WebSocketMessageCallback* = proc(msg: string, kind: WebSocketMessageKind)
+  FileDropCallback* = proc(fileName: string, fileData: string)
 
   Button* = enum
     ButtonUnknown
