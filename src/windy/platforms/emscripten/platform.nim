@@ -147,6 +147,10 @@ proc `pos=`*(window: Window, pos: IVec2) =
   ## Position cannot be set on emscripten windows.
   warn "Position cannot be set on emscripten windows"
 
+proc centerWindow*(window: Window) =
+  ## Position cannot be controlled on emscripten windows.
+  warn "Position cannot be controlled on emscripten windows"
+
 proc url*(window: Window): string =
   ## Gets the URL of the window.
   let len = get_window_url_length()
