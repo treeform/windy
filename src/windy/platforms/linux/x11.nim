@@ -809,9 +809,6 @@ proc newWindow*(
 
   result.title = title
 
-  # Center window on screen by default (Linux standard behavior).
-  result.centerWindow()
-
   # Set a default cursor
   result.state.cursor = common.Cursor(kind: ArrowCursor)
   result.applyCursor()
