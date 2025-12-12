@@ -598,18 +598,6 @@ proc `pos=`*(window: Window, pos: IVec2) =
     SWP_NOACTIVATE or SWP_NOZORDER or SWP_NOSIZE
   )
 
-proc centerWindow*(window: Window) =
-  ## Calculate centered position for a window on the primary screen.
-  # Use a reasonable default screen size for centering (1920x1080)
-  const defaultScreenWidth = 1920
-  const defaultScreenHeight = 1080
-  let
-    windowSize = window.size
-    # Calculate center position on primary screen.
-    x = (defaultScreenWidth - windowSize.x) div 2
-    y = (defaultScreenHeight - windowSize.y) div 2
-  window.pos = ivec2(x.int32, y.int32)
-
 proc `minimized=`*(window: Window, minimized: bool) =
   var cmd: int32
   if minimized:
@@ -1511,6 +1499,10 @@ proc getScreens*(): seq[Screen] =
   discard EnumDisplayMonitors(0, nil, callback, cast[LPARAM](h.addr))
 
   h.screens
+
+proc centerWindow*(window: Window) =
+  ## Center window functionality is not implemented for Windows.
+  warn "Center window functionality is not implemented for Windows"
 
 proc close(handle: HttpRequestHandle) =
   let state = httpRequests.getOrDefault(handle, nil)
