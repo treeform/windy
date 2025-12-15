@@ -1314,6 +1314,10 @@ proc url*(window: Window): string =
   ## Url cannot be gotten on linux.
   warn "Url cannot be gotten on linux"
 
+proc openUrl*(url: string) =
+  ## Open a URL in the default browser.
+  discard execShellCmd("xdg-open " & url)
+
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.
   if not dirExists("tmp"):
