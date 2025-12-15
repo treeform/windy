@@ -1100,3 +1100,7 @@ proc openTempTextFile*(title, text: string) =
     createDir("tmp")
   writeFile("tmp/" & title, text)
   discard execShellCmd("open -a TextEdit tmp/" & title)
+
+proc openUrl*(url: string) =
+  ## Open a URL in the default web browser.
+  discard execShellCmd("open " & url)
