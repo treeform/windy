@@ -80,6 +80,11 @@ EM_JS(void, open_temp_text_file, (const char* title, const char* text), {
   win.document.body.appendChild(pre);
 });
 
+EM_JS(void, open_url, (const char* url), {
+  const urlUtf8 = UTF8ToString(url);
+  window.open(urlUtf8, '_blank');
+});
+
 EM_JS(void, setup_drag_drop_handlers_internal, (const char* target, void* userData), {
   const canvas = target ? document.querySelector(UTF8ToString(target)) : Module.canvas;
   if (!canvas) {
@@ -162,6 +167,7 @@ proc get_window_url_length*(): cint {.importc.}
 proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}
 proc get_device_pixel_ratio*(): cdouble {.importc.}
 proc open_temp_text_file*(title, text: cstring) {.importc.}
+proc open_url*(url: cstring) {.importc.}
 
 proc setup_drag_drop_handlers_internal*(target: cstring, userData: pointer) {.importc.}
 
