@@ -760,3 +760,7 @@ proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCal
 proc openTempTextFile*(title, text: string) =
   ## Open a new tab in the browser.
   open_temp_text_file(title.cstring, text.cstring)
+
+proc openUrl*(url: string) =
+  ## Open a URL in a new browser tab.
+  open_url(url.cstring)
