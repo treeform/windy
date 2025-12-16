@@ -483,6 +483,19 @@ proc `size=`*(window: Window, v: IVec2) =
 
   blockUntil(originalValue != window.size)
 
+proc centerWindow*(window: Window) =
+  ## Calculate centered position for a window on the primary screen.
+  var rootAttrs: XWindowAttributes
+  display.XGetWindowAttributes(display.defaultRootWindow, rootAttrs.addr)
+  let
+    screenWidth = rootAttrs.size.x.int
+    screenHeight = rootAttrs.size.y.int
+    windowSize = window.size
+    # Calculate center position.
+    x = (screenWidth - windowSize.x) div 2
+    y = (screenHeight - windowSize.y) div 2
+  window.pos = ivec2(x.int32, y.int32)
+
 proc maximized*(window: Window): bool =
   let wmState = window.handle.wmState
   return xaNetWMStateMaximizedHorz in wmState and

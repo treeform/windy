@@ -1500,6 +1500,10 @@ proc getScreens*(): seq[Screen] =
 
   h.screens
 
+proc centerWindow*(window: Window) =
+  ## Center window functionality is not implemented for Windows.
+  warn "Center window functionality is not implemented for Windows"
+
 proc close(handle: HttpRequestHandle) =
   let state = httpRequests.getOrDefault(handle, nil)
   if state == nil:
