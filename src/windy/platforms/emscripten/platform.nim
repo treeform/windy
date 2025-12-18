@@ -330,7 +330,38 @@ proc cursor*(window: Window): Cursor =
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
   window.state.cursor = cursor
-  # TODO: Apply CSS cursor style based on cursor type
+  case cursor.kind:
+  of ArrowCursor:
+    set_cursor("auto")
+  of PointerCursor:
+    set_cursor("pointer")
+  of IBeamCursor:
+    set_cursor("text")
+  of CrosshairCursor:
+    set_cursor("crosshair")
+  of ClosedHandCursor:
+    set_cursor("grabbing")
+  of OpenHandCursor:
+    set_cursor("grab")
+  of ResizeLeftCursor:
+    set_cursor("w-resize")
+  of ResizeRightCursor:
+    set_cursor("e-resize")
+  of ResizeLeftRightCursor:
+    set_cursor("col-resize")
+  of ResizeUpCursor:
+    set_cursor("n-resize")
+  of ResizeDownCursor:
+    set_cursor("s-resize")
+  of ResizeUpDownCursor:
+    set_cursor("row-resize")
+  of OperationNotAllowedCursor:
+    set_cursor("not-allowed")
+  of WaitCursor:
+    set_cursor("wait")
+  of CustomCursor:
+    # TODO base64 encode Image?
+    set_cursor("auto")
 
 # Style functions
 proc style*(window: Window): WindowStyle =
