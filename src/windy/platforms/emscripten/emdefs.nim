@@ -153,6 +153,11 @@ EM_JS(void, setup_drag_drop_handlers_internal, (const char* target, void* userDa
     }
   }, false);
 });
+
+EM_JS(void, set_cursor, (const char* cursor), {
+  const cursorUtf8 = UTF8ToString(cursor);
+  Module.canvas.style.cursor = cursorUtf8;
+});
 """.}
 
 proc get_window_width*(): cint {.importc.}
@@ -168,8 +173,8 @@ proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}
 proc get_device_pixel_ratio*(): cdouble {.importc.}
 proc open_temp_text_file*(title, text: cstring) {.importc.}
 proc open_url*(url: cstring) {.importc.}
-
 proc setup_drag_drop_handlers_internal*(target: cstring, userData: pointer) {.importc.}
+proc set_cursor*(cursor: cstring) {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint
