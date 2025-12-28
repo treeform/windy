@@ -42,6 +42,10 @@ type
     im: XIM
     xSyncCounter: XSyncCounter
     lastSync: XSyncValue
+    syncState: SyncState
+    vsyncEnabled: bool
+    vsyncTemporaryDisabled: bool
+    lastVsyncDisable: times.Time
 
     closeRequested, closed: bool
     runeInputEnabled: bool
@@ -60,6 +64,11 @@ type
     motiv
     kwm
     other
+
+  SyncState = enum
+    SyncNotNeeded
+    SyncRecieved
+    SyncAndConfigureRecieved
 
 var
   quitRequested*: bool
@@ -400,6 +409,19 @@ proc closed*(window: Window): bool = window.closed
 proc close*(window: Window) =
   destroy window
 
+
+proc setVsync(window: Window, v: bool, silent: bool) =
+  if glxSwapIntervalExt != nil:
+    display.glxSwapIntervalExt(window.handle, if v: 1 else: 0)
+  elif glxSwapIntervalMesa != nil:
+    glxSwapIntervalMesa(if v: 1 else: 0)
+  elif glxSwapIntervalSgi != nil:
+    glxSwapIntervalSgi(if v: 1 else: 0)
+  else:
+    if not silent:
+      raise WindyError.newException("VSync is not supported")
+
+
 proc makeContextCurrent*(window: Window) =
   display.glXMakeCurrent(window.handle, window.ctx)
 
@@ -463,10 +485,13 @@ proc `pos=`*(window: Window, v: IVec2) =
   blockUntil(originalValue != window.pos)
 
 proc size*(window: Window): IVec2 =
-  var
-    attributes: XWindowAttributes
-  display.XGetWindowAttributes(window.handle, attributes.addr)
-  return attributes.size
+  if window.prevSize == ivec2():
+    var
+      attributes: XWindowAttributes
+    display.XGetWindowAttributes(window.handle, attributes.addr)
+    return attributes.size
+  else:
+    return window.prevSize
 
 proc framebufferSize*(window: Window): IVec2 =
   window.size
@@ -820,17 +845,8 @@ proc newWindow*(
   makeContextCurrent result
 
   if vsync:
-    if glXSwapIntervalEXT != nil:
-      display.glXSwapIntervalEXT(result.handle, 1)
-    elif glXSwapIntervalMESA != nil:
-      glXSwapIntervalMESA(1)
-    elif glXSwapIntervalSGI != nil:
-      glXSwapIntervalSGI(1)
-    else:
-      raise WindyError.newException("VSync is not supported")
-
-  if visible:
-    result.visible = true
+    result.setVsync(true, silent=false)
+    result.vsyncEnabled = true
 
   block xsync:
     var vEv, vEr: cint
@@ -845,6 +861,9 @@ proc newWindow*(
         @[result.xSyncCounter].asString
       )
 
+  if visible:
+    result.visible = true
+
   result.style = style
 
   windows.add result
@@ -856,8 +875,14 @@ proc pollEvents(window: Window) =
   window.buttonPressed = {}
   window.buttonReleased = {}
 
-  # signal that frame was drawn
-  display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
+  if window.vsyncTemporaryDisabled and getTime() - window.lastVsyncDisable > initDuration(milliseconds=50):
+    window.setVsync(true, silent=true)  # re-enable vsync
+    window.vsyncTemporaryDisabled = false
+
+  if window.syncState == SyncAndConfigureRecieved:
+    # signal that frame was drawn
+    display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
+    window.syncState = SyncNotNeeded
 
   var ev: XEvent
 
@@ -885,7 +910,13 @@ proc pollEvents(window: Window) =
       if window.onButtonRelease != nil:
         window.onButtonRelease(button)
 
-  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
+  while true:
+    if not display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
+      if window.syncState == SyncRecieved:
+        continue  # wait until xeConfigure before drawing
+      else:
+        break
+
     case ev.kind
 
     of xeClientMessage:
@@ -900,6 +931,7 @@ proc pollEvents(window: Window) =
           lo: cast[uint32](ev.client.data.l[2]),
           hi: cast[int32](ev.client.data.l[3])
         )
+        window.syncState = SyncRecieved
 
       elif ev.client.messageType == xaXdndEnter:
         # XDnD drag entered.
@@ -1031,6 +1063,13 @@ proc pollEvents(window: Window) =
           window.onResize()
         if window.onFrame != nil:
           window.onFrame()
+
+      if window.syncState == SyncRecieved:
+        window.syncState = SyncAndConfigureRecieved
+        if window.vsyncEnabled:
+          window.setVsync(false, silent=true)  # temporary disable vsync to avoid flickering
+          window.lastVsyncDisable = getTime()
+          window.vsyncTemporaryDisabled = true
 
     of xeMotion:
       window.mousePrevPos = window.mousePos
