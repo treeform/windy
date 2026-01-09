@@ -1,5 +1,5 @@
 import
-  std/[os, times, unicode, strutils, tables],
+  std/[os, times, unicode, strutils, tables, pathnorm],
   ../../[common, internal], flatty/binny, pixie/fileformats/png,
   pixie/fileformats/bmp, pixie/images,
   urlly, utils, vmath, windefs, zippy
@@ -2491,6 +2491,11 @@ proc forceButtonReleased*(window: Window, button: Button) =
   ## Forces button release.
   ## This is used for simulating UI tests.
   window.handleButtonRelease(button)
+
+proc getConfigHome*(appName: string): string =
+  ## Returns the platform-appropriate user config directory for the given app name.
+  ## For Windows: Returns %APPDATA%\<appName>.
+  result = (getEnv("APPDATA") / appName).normalizePath
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.

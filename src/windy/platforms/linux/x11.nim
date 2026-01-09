@@ -1,5 +1,5 @@
 import
-  std/[os, sequtils, sets, strformat, strutils, times, unicode, uri],
+  std/[os, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
   ../../[common, internal],
   vmath, pixie,
   x11/[glx, keysym, x, xevent, xlib, xcursor]
@@ -1326,6 +1326,16 @@ proc `icon=`*(window: Window, icon: Image) =
 proc url*(window: Window): string =
   ## Url cannot be gotten on linux.
   warn "Url cannot be gotten on linux"
+
+proc getConfigHome*(appName: string): string =
+  ## Returns the platform-appropriate user config directory for the given app name.
+  ## For Linux: Honors XDG_CONFIG_HOME, defaults to ~/.config/<appName>.
+  let xdgConfigHome = getEnv("XDG_CONFIG_HOME")
+  if xdgConfigHome != "":
+    result = (xdgConfigHome / appName).normalizePath
+  else:
+    result = (getHomeDir() / ".config" / appName).normalizePath
+
 
 proc openUrl*(url: string) =
   ## Open a URL in the default browser.

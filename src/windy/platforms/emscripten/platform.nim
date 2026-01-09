@@ -788,6 +788,9 @@ proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCal
   if state == nil: return
   state.onDownloadProgress = callback
 
+proc getConfigHome*(appName: string): string =
+  raise newException(Exception, "getConfigHome is not supported on emscripten")
+
 proc openTempTextFile*(title, text: string) =
   ## Open a new tab in the browser.
   open_temp_text_file(title.cstring, text.cstring)
