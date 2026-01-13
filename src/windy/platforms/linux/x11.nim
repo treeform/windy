@@ -1336,7 +1336,6 @@ proc getConfigHome*(appName: string): string =
   else:
     result = (getHomeDir() / ".config" / appName).normalizePath
 
-
 proc openUrl*(url: string) =
   ## Open a URL in the default browser.
   discard execShellCmd("xdg-open " & url)
