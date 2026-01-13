@@ -1336,6 +1336,25 @@ proc getConfigHome*(appName: string): string =
   else:
     result = (getHomeDir() / ".config" / appName).normalizePath
 
+proc getConfig*(appName: string, fileName: string): string =
+  ## Returns the contents of a config file for the given app and filename.
+  ## Returns empty string if the file doesn't exist.
+  let configDir = getConfigHome(appName)
+  let configPath = configDir / fileName
+  if fileExists(configPath):
+    result = readFile(configPath)
+  else:
+    result = ""
+
+proc setConfig*(appName: string, fileName: string, content: string) =
+  ## Saves content to a config file for the given app and filename.
+  ## Creates the config directory if it doesn't exist.
+  let configDir = getConfigHome(appName)
+  if not dirExists(configDir):
+    createDir(configDir)
+  let configPath = configDir / fileName
+  writeFile(configPath, content)
+
 proc openUrl*(url: string) =
   ## Open a URL in the default browser.
   discard execShellCmd("xdg-open " & url)

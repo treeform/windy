@@ -791,6 +791,22 @@ proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCal
 proc getConfigHome*(appName: string): string =
   raise newException(Exception, "getConfigHome is not supported on emscripten")
 
+proc getConfig*(appName: string, fileName: string): string =
+  ## Returns the contents of a config file for the given app and filename from localStorage.
+  ## Returns empty string if the config doesn't exist.
+  let key = appName & ":" & fileName
+  let length = getLocalStorageLength(key.cstring)
+  if length <= 1: # Only null terminator means no content
+    return ""
+  var buffer = newString(length - 1) # -1 for null terminator
+  discard getLocalStorageInto(buffer.cstring, length.cint, key.cstring)
+  result = buffer
+
+proc setConfig*(appName: string, fileName: string, content: string) =
+  ## Saves content to a config file for the given app and filename in localStorage.
+  let key = appName & ":" & fileName
+  setLocalStorage(key.cstring, content.cstring)
+
 proc openTempTextFile*(title, text: string) =
   ## Open a new tab in the browser.
   open_temp_text_file(title.cstring, text.cstring)
