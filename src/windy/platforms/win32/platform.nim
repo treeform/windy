@@ -1,5 +1,5 @@
 import
-  std/[os, times, unicode, strutils, tables],
+  std/[os, times, unicode, strutils, tables, pathnorm],
   ../../[common, internal], flatty/binny, pixie/fileformats/png,
   pixie/fileformats/bmp, pixie/images,
   urlly, utils, vmath, windefs, zippy
@@ -2491,6 +2491,30 @@ proc forceButtonReleased*(window: Window, button: Button) =
   ## Forces button release.
   ## This is used for simulating UI tests.
   window.handleButtonRelease(button)
+
+proc getConfigHome*(appName: string): string =
+  ## Returns the platform-appropriate user config directory for the given app name.
+  ## For Windows: Returns %APPDATA%\<appName>.
+  result = (getEnv("APPDATA") / appName).normalizePath
+
+proc getConfig*(appName: string, fileName: string): string =
+  ## Returns the contents of a config file for the given app and filename.
+  ## Returns empty string if the file doesn't exist.
+  let configDir = getConfigHome(appName)
+  let configPath = configDir / fileName
+  if fileExists(configPath):
+    result = readFile(configPath)
+  else:
+    result = ""
+
+proc setConfig*(appName: string, fileName: string, content: string) =
+  ## Saves content to a config file for the given app and filename.
+  ## Creates the config directory if it doesn't exist.
+  let configDir = getConfigHome(appName)
+  if not dirExists(configDir):
+    createDir(configDir)
+  let configPath = configDir / fileName
+  writeFile(configPath, content)
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.

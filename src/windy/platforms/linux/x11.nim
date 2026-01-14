@@ -1,5 +1,5 @@
 import
-  std/[os, sequtils, sets, strformat, strutils, times, unicode, uri],
+  std/[os, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
   ../../[common, internal],
   vmath, pixie,
   x11/[glx, keysym, x, xevent, xlib, xcursor]
@@ -1326,6 +1326,34 @@ proc `icon=`*(window: Window, icon: Image) =
 proc url*(window: Window): string =
   ## Url cannot be gotten on linux.
   warn "Url cannot be gotten on linux"
+
+proc getConfigHome*(appName: string): string =
+  ## Returns the platform-appropriate user config directory for the given app name.
+  ## For Linux: Honors XDG_CONFIG_HOME, defaults to ~/.config/<appName>.
+  let xdgConfigHome = getEnv("XDG_CONFIG_HOME")
+  if xdgConfigHome != "":
+    result = (xdgConfigHome / appName).normalizePath
+  else:
+    result = (getHomeDir() / ".config" / appName).normalizePath
+
+proc getConfig*(appName: string, fileName: string): string =
+  ## Returns the contents of a config file for the given app and filename.
+  ## Returns empty string if the file doesn't exist.
+  let configDir = getConfigHome(appName)
+  let configPath = configDir / fileName
+  if fileExists(configPath):
+    result = readFile(configPath)
+  else:
+    result = ""
+
+proc setConfig*(appName: string, fileName: string, content: string) =
+  ## Saves content to a config file for the given app and filename.
+  ## Creates the config directory if it doesn't exist.
+  let configDir = getConfigHome(appName)
+  if not dirExists(configDir):
+    createDir(configDir)
+  let configPath = configDir / fileName
+  writeFile(configPath, content)
 
 proc openUrl*(url: string) =
   ## Open a URL in the default browser.
