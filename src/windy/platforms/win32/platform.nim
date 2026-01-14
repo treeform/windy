@@ -2516,6 +2516,10 @@ proc setConfig*(appName: string, fileName: string, content: string) =
   let configPath = configDir / fileName
   writeFile(configPath, content)
 
+proc openUrl*(url: string) =
+  ## Open a URL in the default web browser.
+  discard execShellCmd("start " & url)
+
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.
   if not dirExists("tmp"):
