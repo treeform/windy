@@ -52,5 +52,8 @@ nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	pro
 nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1306
 nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1309
 nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1326
-nim	openUrl	windy/platforms/linux/platform.html#openUrl,string	proc openUrl(url: string)		1330
-nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1334
+nim	getConfigHome	windy/platforms/linux/platform.html#getConfigHome,string	proc getConfigHome(appName: string): string		1330
+nim	getConfig	windy/platforms/linux/platform.html#getConfig,string,string	proc getConfig(appName: string; fileName: string): string		1339
+nim	setConfig	windy/platforms/linux/platform.html#setConfig,string,string,string	proc setConfig(appName: string; fileName: string; content: string)		1349
+nim	openUrl	windy/platforms/linux/platform.html#openUrl,string	proc openUrl(url: string)		1358
+nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1362

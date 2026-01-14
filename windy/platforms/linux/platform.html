@@ -167,6 +167,14 @@
   <li><a class="reference" href="#getClipboardString" title="getClipboardString(): string">getClipboardString(): string</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">getConfig
+  <li><a class="reference" href="#getConfig%2Cstring%2Cstring" title="getConfig(appName: string; fileName: string): string">getConfig(appName: string; fileName: string): string</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">getConfigHome
+  <li><a class="reference" href="#getConfigHome%2Cstring" title="getConfigHome(appName: string): string">getConfigHome(appName: string): string</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">icon=
   <li><a class="reference" href="#icon%3D%2CWindow%2CImage" title="icon=(window: Window; icon: Image)">icon=(window: Window; icon: Image)</a></li>
 
@@ -253,6 +261,10 @@
 </ul>
 <ul class="simple nested-toc-section">setClipboardString
   <li><a class="reference" href="#setClipboardString%2Cstring" title="setClipboardString(s: string)">setClipboardString(s: string)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">setConfig
+  <li><a class="reference" href="#setConfig%2Cstring%2Cstring%2Cstring" title="setConfig(appName: string; fileName: string; content: string)">setConfig(appName: string; fileName: string; content: string)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">size
@@ -649,6 +661,34 @@
 </div>
 
 </div>
+<div id="getConfig-procs-all">
+  <div id="getConfig,string,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#getConfig%2Cstring%2Cstring"><span class="Identifier">getConfig</span></a><span class="Other">(</span><span class="Identifier">appName</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">fileName</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Returns the contents of a config file for the given app and filename. Returns empty string if the file doesn't exist.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1339" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1339" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="getConfigHome-procs-all">
+  <div id="getConfigHome,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#getConfigHome%2Cstring"><span class="Identifier">getConfigHome</span></a><span class="Other">(</span><span class="Identifier">appName</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Returns the platform-appropriate user config directory for the given app name. For Linux: Honors XDG_CONFIG_HOME, defaults to ~/.config/&lt;appName&gt;.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1330" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1330" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="icon=-procs-all">
   <div id="icon=,Window,Image">
   <dt><pre><span class="Keyword">proc</span> <a href="#icon%3D%2CWindow%2CImage"><span class="Identifier">icon=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">icon</span><span class="Other">:</span> <span class="Identifier">Image</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -819,8 +859,8 @@
   <dd>
     
     Open a text file in the default text editor.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1334" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1334" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1362" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1362" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -832,8 +872,8 @@
   <dd>
     
     Open a URL in the default browser.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1330" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1330" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1358" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1358" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -928,6 +968,22 @@
     
     <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1272" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1272" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="setConfig-procs-all">
+  <div id="setConfig,string,string,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#setConfig%2Cstring%2Cstring%2Cstring"><span class="Identifier">setConfig</span></a><span class="Other">(</span><span class="Identifier">appName</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">fileName</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">content</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span>
+                                       <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">,</span>
+                                       <span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Saves content to a config file for the given app and filename. Creates the config directory if it doesn't exist.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1349" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1349" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1082,7 +1138,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-01-03 04:36:12 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-01-14 00:59:41 UTC</small>
       </div>
     </div>
   </div>
