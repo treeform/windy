@@ -563,7 +563,7 @@ proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: po
   # macOS and Linux both report deltaMode 0 (DOM_DELTA_PIXEL) but with
   # very different magnitudes. Use a flat OS-based multiplier instead.
   let scale =
-    if "Mac" in platform: 1.0f
+    if "Mac" in platform: -1.0f
     else: 0.2f
   let
     x = wheelEvent.deltaX.float32 * scale
