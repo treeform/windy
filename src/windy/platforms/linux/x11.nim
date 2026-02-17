@@ -1195,7 +1195,7 @@ proc processClipboardEvents: bool =
     event: ptr XEvent,
     userData: pointer
   ): bool {.cdecl.} =
-    event.any.window == cast[Window](userData).handle
+    event.any.window == cast[XWindow](userData)
 
   while display.XCheckIfEvent(
     ev.addr, checkEvent, cast[pointer](clipboardWindow)
