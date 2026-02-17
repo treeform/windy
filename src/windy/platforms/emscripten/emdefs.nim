@@ -181,6 +181,14 @@ EM_JS(void, set_local_storage, (const char* key, const char* value), {
   const valueUtf8 = UTF8ToString(value);
   localStorage.setItem(keyUtf8, valueUtf8);
 });
+
+EM_JS(const char*, get_platform, (), {
+  var s = navigator.platform || "";
+  var len = lengthBytesUTF8(s) + 1;
+  var buf = _malloc(len);
+  stringToUTF8(s, buf, len);
+  return buf;
+});
 """.}
 
 proc get_window_width*(): cint {.importc.}
@@ -201,6 +209,7 @@ proc set_cursor*(cursor: cstring) {.importc.}
 proc getLocalStorageLength*(key: cstring): cint {.importc: "get_local_storage_length".}
 proc getLocalStorageInto*(output: cstring, maxLen: cint, key: cstring): cint {.importc: "get_local_storage_into".}
 proc setLocalStorage*(key: cstring, value: cstring) {.importc: "set_local_storage".}
+proc get_platform*(): cstring {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint

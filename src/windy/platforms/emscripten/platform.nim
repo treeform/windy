@@ -48,6 +48,9 @@ type
     fetch*: ptr emscripten_fetch_t
     bodyKeepAlive*: string
 
+let
+  platform = $get_platform()
+
 var
   quitRequested*: bool
   onQuitRequest*: Callback
@@ -554,29 +557,17 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
   return 1
 
 proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  ## Handle browser wheel events with OS-specific normalization.
   let window = cast[Window](userData)
 
-  var x = wheelEvent.deltaX.float32
-  var y = wheelEvent.deltaY.float32
-
-  # Normalize to match native backends (~10 units per scroll notch).
-  # DOM_DELTA_PIXEL (0): browsers report ~100-120px per notch on Linux.
-  # DOM_DELTA_LINE  (1): browsers report ~3 lines per notch.
-  # DOM_DELTA_PAGE  (2): one full page.
-  echo "wheelEvent.deltaMode: ", wheelEvent.deltaMode
-  case wheelEvent.deltaMode
-  of 0: # DOM_DELTA_PIXEL
-    x *= 0.1'f32
-    y *= 0.1'f32
-  of 1: # DOM_DELTA_LINE
-    x *= 10.0'f32 / 3.0'f32
-    y *= 10.0'f32 / 3.0'f32
-  of 2: # DOM_DELTA_PAGE
-    let pageHeight = max(1'f32, window.size.y.float32 * 0.9'f32)
-    x *= pageHeight
-    y *= pageHeight
-  else:
-    discard
+  # macOS and Linux both report deltaMode 0 (DOM_DELTA_PIXEL) but with
+  # very different magnitudes. Use a flat OS-based multiplier instead.
+  let scale =
+    if "Mac" in platform: 1.0f
+    else: 0.2f
+  let
+    x = wheelEvent.deltaX.float32 * scale
+    y = wheelEvent.deltaY.float32 * scale
 
   window.state.perFrame.scrollDelta += vec2(x, y)
   if window.onScroll != nil:
