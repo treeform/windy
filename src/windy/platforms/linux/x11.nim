@@ -44,7 +44,6 @@ type
     lastSync: XSyncValue
 
     closeRequested, closed: bool
-    runeInputEnabled: bool
     innerDecorated: bool
     innerFocused: bool
 
@@ -642,10 +641,10 @@ proc contentScale*(window: Window): float32 =
   return 1.0
 
 proc runeInputEnabled*(window: Window): bool =
-  window.runeInputEnabled
+  window.state.runeInputEnabled
 
 proc `runeInputEnabled=`*(window: Window, v: bool) =
-  window.runeInputEnabled = v
+  window.state.runeInputEnabled = v
 
 proc cursor*(window: Window): common.Cursor =
   window.state.cursor
@@ -740,7 +739,7 @@ proc newWindow*(
   init()
   result = Window()
   result.innerDecorated = true
-  result.runeInputEnabled = true
+  result.state.runeInputEnabled = true
 
   let root = display.defaultRootWindow
 
@@ -884,6 +883,9 @@ proc pollEvents(window: Window) =
       window.buttonReleased.incl button
       if window.onButtonRelease != nil:
         window.onButtonRelease(button)
+
+  proc handleRune(window: Window, rune: Rune) =
+    handleRuneTemplate()
 
   while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
     case ev.kind
@@ -1095,7 +1097,7 @@ proc pollEvents(window: Window) =
         pushButtonEvent(key, ev.kind == xeKeyPress)
 
       # handle text input
-      if window.runeInputEnabled and
+      if window.state.runeInputEnabled and
         ev.kind == xeKeyPress and
         window.ic != nil and
         (ev.key.state and ControlMask) == 0:
@@ -1105,10 +1107,9 @@ proc pollEvents(window: Window) =
           s.setLen(window.ic.Xutf8LookupString(
             ev.key.addr, s.cstring, 16, nil, status.addr
           ))
-          if s != "\u001B": # Ignore ESC.
+          if status == XLookupChars or status == XLookupBoth:
             for rune in s.runes:
-              if window.onRune != nil:
-                window.onRune(rune)
+              window.handleRune(rune)
 
     of xeSelection:
       # Handle XDnD selection data.
