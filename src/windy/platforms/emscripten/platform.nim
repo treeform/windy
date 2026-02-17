@@ -555,10 +555,29 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
 
 proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  # Normalize web wheel events to match other platforms.
-  let normalizedDeltaX = wheelEvent.deltaX.float32
-  let normalizedDeltaY = wheelEvent.deltaY.float32
-  window.state.perFrame.scrollDelta += vec2(normalizedDeltaX, normalizedDeltaY)
+
+  var x = wheelEvent.deltaX.float32
+  var y = wheelEvent.deltaY.float32
+
+  # Normalize to match native backends (~10 units per scroll notch).
+  # DOM_DELTA_PIXEL (0): browsers report ~100-120px per notch on Linux.
+  # DOM_DELTA_LINE  (1): browsers report ~3 lines per notch.
+  # DOM_DELTA_PAGE  (2): one full page.
+  case wheelEvent.deltaMode
+  of 0: # DOM_DELTA_PIXEL
+    x *= 0.1'f32
+    y *= 0.1'f32
+  of 1: # DOM_DELTA_LINE
+    x *= 10.0'f32 / 3.0'f32
+    y *= 10.0'f32 / 3.0'f32
+  of 2: # DOM_DELTA_PAGE
+    let pageHeight = max(1'f32, window.size.y.float32 * 0.9'f32)
+    x *= pageHeight
+    y *= pageHeight
+  else:
+    discard
+
+  window.state.perFrame.scrollDelta += vec2(x, y)
   if window.onScroll != nil:
     window.onScroll()
   return 1
