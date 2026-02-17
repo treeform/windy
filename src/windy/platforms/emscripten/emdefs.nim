@@ -158,6 +158,29 @@ EM_JS(void, set_cursor, (const char* cursor), {
   const cursorUtf8 = UTF8ToString(cursor);
   Module.canvas.style.cursor = cursorUtf8;
 });
+
+EM_JS(int, get_local_storage_length, (const char* key), {
+  const keyUtf8 = UTF8ToString(key);
+  const value = localStorage.getItem(keyUtf8);
+  if (value === null) return 1; // Only null terminator if not found
+  return lengthBytesUTF8(value) + 1; // Include null terminator
+});
+
+EM_JS(int, get_local_storage_into, (char* output, int maxLen, const char* key), {
+  const keyUtf8 = UTF8ToString(key);
+  const value = localStorage.getItem(keyUtf8);
+  if (value === null) {
+    if (maxLen > 0) output[0] = 0; // Null terminator only
+    return 1;
+  }
+  return stringToUTF8(value, output, maxLen);
+});
+
+EM_JS(void, set_local_storage, (const char* key, const char* value), {
+  const keyUtf8 = UTF8ToString(key);
+  const valueUtf8 = UTF8ToString(value);
+  localStorage.setItem(keyUtf8, valueUtf8);
+});
 """.}
 
 proc get_window_width*(): cint {.importc.}
@@ -175,6 +198,9 @@ proc open_temp_text_file*(title, text: cstring) {.importc.}
 proc open_url*(url: cstring) {.importc.}
 proc setup_drag_drop_handlers_internal*(target: cstring, userData: pointer) {.importc.}
 proc set_cursor*(cursor: cstring) {.importc.}
+proc getLocalStorageLength*(key: cstring): cint {.importc: "get_local_storage_length".}
+proc getLocalStorageInto*(output: cstring, maxLen: cint, key: cstring): cint {.importc: "get_local_storage_into".}
+proc setLocalStorage*(key: cstring, value: cstring) {.importc: "set_local_storage".}
 
 type
   EMSCRIPTEN_RESULT* = cint
