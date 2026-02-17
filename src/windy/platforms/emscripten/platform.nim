@@ -563,6 +563,7 @@ proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: po
   # DOM_DELTA_PIXEL (0): browsers report ~100-120px per notch on Linux.
   # DOM_DELTA_LINE  (1): browsers report ~3 lines per notch.
   # DOM_DELTA_PAGE  (2): one full page.
+  echo "wheelEvent.deltaMode: ", wheelEvent.deltaMode
   case wheelEvent.deltaMode
   of 0: # DOM_DELTA_PIXEL
     x *= 0.1'f32
@@ -656,17 +657,17 @@ proc handleRune(window: Window, rune: Rune) =
 proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
   ## callback to handle the file drop event.
   ## EMSCRIPTEN_KEEPALIVE is required to avoid dead code elimination.
-  
+
   let window = cast[Window](userData)
   if window == nil or window.onFileDrop == nil:
     return
-  
+
   # convert the js data into Nim data.
   let fileName = $fileNamePtr
   var fileData = newString(fileDataLen)
   if fileDataLen > 0:
     copyMem(fileData[0].addr, fileDataPtr, fileDataLen)
-  
+
   window.onFileDrop(fileName, fileData)
 
 proc getState(fetch: ptr emscripten_fetch_t): EmsHttpRequestState =
