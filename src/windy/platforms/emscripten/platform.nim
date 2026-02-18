@@ -48,6 +48,9 @@ type
     fetch*: ptr emscripten_fetch_t
     bodyKeepAlive*: string
 
+let
+  platform = $get_platform()
+
 var
   quitRequested*: bool
   onQuitRequest*: Callback
@@ -554,11 +557,19 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
   return 1
 
 proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  ## Handle browser wheel events with OS-specific normalization.
   let window = cast[Window](userData)
-  # Normalize web wheel events to match other platforms.
-  let normalizedDeltaX = wheelEvent.deltaX.float32
-  let normalizedDeltaY = wheelEvent.deltaY.float32
-  window.state.perFrame.scrollDelta += vec2(normalizedDeltaX, normalizedDeltaY)
+
+  # macOS and Linux both report deltaMode 0 (DOM_DELTA_PIXEL) but with
+  # very different magnitudes. Use a flat OS-based multiplier instead.
+  let scale =
+    if "Mac" in platform: -1.0f
+    else: 0.2f
+  let
+    x = wheelEvent.deltaX.float32 * scale
+    y = wheelEvent.deltaY.float32 * scale
+
+  window.state.perFrame.scrollDelta += vec2(x, y)
   if window.onScroll != nil:
     window.onScroll()
   return 1
@@ -637,17 +648,17 @@ proc handleRune(window: Window, rune: Rune) =
 proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
   ## callback to handle the file drop event.
   ## EMSCRIPTEN_KEEPALIVE is required to avoid dead code elimination.
-  
+
   let window = cast[Window](userData)
   if window == nil or window.onFileDrop == nil:
     return
-  
+
   # convert the js data into Nim data.
   let fileName = $fileNamePtr
   var fileData = newString(fileDataLen)
   if fileDataLen > 0:
     copyMem(fileData[0].addr, fileDataPtr, fileDataLen)
-  
+
   window.onFileDrop(fileName, fileData)
 
 proc getState(fetch: ptr emscripten_fetch_t): EmsHttpRequestState =
