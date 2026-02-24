@@ -40,7 +40,7 @@ proc asString[T](x: openarray[T]): string =
 
 proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   new result, (proc(d: Display) = close d.socket)
-  
+
   result.display = result
   result.id = Id 1
   result.ids[1] = result
@@ -48,11 +48,11 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   let d = result
   result.deleteId = proc(id: Id) =
     d.ids.del id.uint32
-  
+
   var name =
     if name != "": $name
     else: "wayland-0"
-  
+
   if not name.isAbsolute:
     var runtimeDir = getEnv("XDG_RUNTIME_DIR")
     if runtimeDir == "": raise WindyError.newException("XDG_RUNTIME_DIR not set in the environment")
@@ -62,11 +62,11 @@ proc connect*(name = getEnv("WAYLAND_SOCKET")): Display =
   if sock == osInvalidSocket: raise WindyError.newException("Failed to create socket")
 
   var a = "\1\0" & name
-  
+
   if sock.connect(cast[ptr SockAddr](a[0].addr), uint32 a.len) < 0:
     close sock
     raise WindyError.newException("Failed to connect to wayland server")
-  
+
   result.socket = newSocket(sock, nativesockets.AF_UNIX, nativesockets.SOCK_STREAM, nativesockets.IPPROTO_IP)
 
 proc new(d: Display, t: type): t =
@@ -89,10 +89,10 @@ proc serialize[T](x: T): seq[uint32] =
 
   elif x is int:
     result.add cast[uint32](x.int32)
-  
+
   elif x is float:
     result.add cast[uint32](x.float32)
-  
+
   elif x is bool:
     result.add x.uint32
 
@@ -109,7 +109,7 @@ proc serialize[T](x: T): seq[uint32] =
   elif x is tuple|object:
     for x in x.fields:
       result.add x.serialize
-  
+
   elif x is array:
     for x in x:
       result.add x.serialize
@@ -117,15 +117,15 @@ proc serialize[T](x: T): seq[uint32] =
   elif x is set:
     when T.sizeof > uint32.sizeof: {.error: "too large set".}
     result.add cast[uint32](x)
-  
+
   elif x is Proxy:
     result.add x.id.uint32
-  
+
   elif x is FileDescriptor: discard # will be stored in the ancillary data of the UNIX domain socket message (msg_control)
 
   elif T.sizeof == uint32.sizeof:
     result.add cast[uint32](x)
-  
+
   else: {.error: "unserializable type " & $T.}
 
 proc fileDescriptors[T](x: T): seq[FileDescriptor] =
@@ -167,7 +167,7 @@ proc deserialize(display: Display, x: seq[uint32], T: type, i: var uint32): T =
   elif result is tuple|object:
     for v in result.fields:
       v = deserialize(display, x, typeof(v), i)
-    
+
   elif result is array:
     for v in result.mitems:
       v = deserialize(display, x, typeof(v), i)
@@ -175,7 +175,7 @@ proc deserialize(display: Display, x: seq[uint32], T: type, i: var uint32): T =
   elif result is set:
     when T.sizeof > uint.sizeof: {.error: "too large set".}
     result = cast[T](x[i]); i += 1
-  
+
   elif result is FileDescriptor:
     ## todo
 
@@ -196,14 +196,14 @@ proc marshal[T](x: Proxy, op: int, data: T = ()) =
   var d = data.serialize
   d.insert ((d.len.uint32 * uint32.sizeof.uint32 + 8) shl 16) or (op.uint32 and 0x0000ffff)
   d.insert x.id.uint32
-  
+
   let fds = data.fileDescriptors
 
   var iovec = IOVec(
     iov_base: d[0].addr,
     iov_len: csize_t d.len * uint32.sizeof,
   )
-  
+
   var hdr = 0.cint.repeat(csize_t.sizeof div cint.sizeof) & @[SOL_SOCKET, SCM_RIGHTS] & cast[seq[cint]](fds)
   cast[ptr csize_t](hdr[0].addr)[] = csize_t hdr.len * cint.sizeof
 
