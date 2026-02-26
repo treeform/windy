@@ -151,6 +151,11 @@ template handleButtonReleaseTemplate*() =
   if window.onButtonRelease != nil:
     window.onButtonRelease(button)
 
+template clearButtonsTemplate*() =
+  let buttons = window.state.buttonDown
+  for button in buttons:
+    window.handleButtonRelease(button)
+
 template handleRuneTemplate*() =
   if not window.state.runeInputEnabled:
     return

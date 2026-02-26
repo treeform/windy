@@ -326,6 +326,7 @@ proc windowDidMove(
   if window != nil and window.onMove != nil:
     window.onMove()
 
+
 proc canBecomeKeyWindow(
   self: ID,
   cmd: SEL,
@@ -341,6 +342,7 @@ proc windowDidBecomeKey(
   let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
+  clearButtonsTemplate()
   if window.onFocusChange != nil:
     window.onFocusChange()
   handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
@@ -351,7 +353,10 @@ proc windowDidResignKey(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window != nil and window.onFocusChange != nil:
+  if window == nil:
+    return
+  clearButtonsTemplate()
+  if window.onFocusChange != nil:
     window.onFocusChange()
   # When loosing focus, prev mouse position is not valid.
   window.state.hasPrevMouse = false

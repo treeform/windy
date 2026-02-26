@@ -889,6 +889,7 @@ proc wndProc(
       window.onFrame()
     return 0
   of WM_SETFOCUS, WM_KILLFOCUS:
+    clearButtonsTemplate()
     if window.onFocusChange != nil:
       window.onFocusChange()
     return 0
