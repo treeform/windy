@@ -326,14 +326,6 @@ proc windowDidMove(
   if window != nil and window.onMove != nil:
     window.onMove()
 
-proc clearAllButtons(window: Window) =
-  ## Clears all pressed buttons to avoid stuck input state.
-  if window == nil:
-    return
-
-  let buttons = window.state.buttonDown
-  for button in buttons:
-    window.handleButtonRelease(button)
 
 proc canBecomeKeyWindow(
   self: ID,
@@ -350,7 +342,7 @@ proc windowDidBecomeKey(
   let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
-  window.clearAllButtons()
+  clearButtonsTemplate()
   if window.onFocusChange != nil:
     window.onFocusChange()
   handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
@@ -363,7 +355,7 @@ proc windowDidResignKey(
   let window = windows.forNSWindow(self.NSWindow)
   if window == nil:
     return
-  window.clearAllButtons()
+  clearButtonsTemplate()
   if window.onFocusChange != nil:
     window.onFocusChange()
   # When loosing focus, prev mouse position is not valid.

@@ -10,9 +10,13 @@ window.onFrame = proc() =
   glClear(GL_COLOR_BUFFER_BIT)
 
   # Print if alt is down, when mouse is down:
-  if window.buttonDown[KeyLeftSuper] or window.buttonDown[KeyRightSuper]:
-    echo "alt is down and mouse is down"
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
+  if window.buttonDown[KeyLeftSuper] or
+    window.buttonDown[KeyRightSuper] or
+    window.buttonDown[KeyLeftAlt] or
+    window.buttonDown[KeyRightAlt] or
+    window.buttonDown[KeyLeftControl] or
+    window.buttonDown[KeyRightControl]:
+      glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
   else:
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 

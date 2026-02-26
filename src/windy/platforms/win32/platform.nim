@@ -253,7 +253,7 @@ proc destroy(window: Window) =
   window.onButtonRelease = nil
   window.onRune = nil
   window.onImeChange = nil
-  
+
   # Destroy graphics context
   window.destoryGraphicsContext()
 
@@ -889,6 +889,7 @@ proc wndProc(
       window.onFrame()
     return 0
   of WM_SETFOCUS, WM_KILLFOCUS:
+    clearButtonsTemplate()
     if window.onFocusChange != nil:
       window.onFocusChange()
     return 0
@@ -1068,10 +1069,10 @@ when Backend == OpenGLBackend:
 
 
   proc createGraphicsContext(
-    window: Window, 
-    depthBits: int, 
+    window: Window,
+    depthBits: int,
     stencilBits: int,
-     msaa: MSAA, 
+     msaa: MSAA,
      vsync: bool,
      openglVersion: OpenGLVersion
   ) =
@@ -1167,10 +1168,10 @@ elif Backend == DirectXBackend:
     discard
 
   proc createGraphicsContext(
-    window: Window, 
-    depthBits: int, 
-    stencilBits: int, 
-    msaa: MSAA, 
+    window: Window,
+    depthBits: int,
+    stencilBits: int,
+    msaa: MSAA,
     vsync: bool,
     openglVersion: OpenGLVersion
   ) =
@@ -1231,7 +1232,7 @@ proc newWindow*(
 
     result.style = style
     result.visible = visible
-    
+
 
   except WindyError as e:
     destroy result
