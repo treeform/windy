@@ -10,5 +10,6 @@ nim	major	windy/internal.html#major,OpenGLVersion	proc major(openglVersion: Open
 nim	minor	windy/internal.html#minor,OpenGLVersion	proc minor(openglVersion: OpenGLVersion): int		56
 nim	handleButtonPressTemplate	windy/internal.html#handleButtonPressTemplate.t	template handleButtonPressTemplate()		70
 nim	handleButtonReleaseTemplate	windy/internal.html#handleButtonReleaseTemplate.t	template handleButtonReleaseTemplate()		140
-nim	handleRuneTemplate	windy/internal.html#handleRuneTemplate.t	template handleRuneTemplate()		154
-nim	addDefaultHeaders	windy/internal.html#addDefaultHeaders,seq[HttpHeader]	proc addDefaultHeaders(headers: var seq[HttpHeader])		162
+nim	clearButtonsTemplate	windy/internal.html#clearButtonsTemplate.t	template clearButtonsTemplate()		154
+nim	handleRuneTemplate	windy/internal.html#handleRuneTemplate.t	template handleRuneTemplate()		159
+nim	addDefaultHeaders	windy/internal.html#addDefaultHeaders,seq[HttpHeader]	proc addDefaultHeaders(headers: var seq[HttpHeader])		167
