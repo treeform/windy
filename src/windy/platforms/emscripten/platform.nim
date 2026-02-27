@@ -193,15 +193,9 @@ proc `focused=`*(window: Window, focused: bool) =
   discard  # Focus is controlled by browser
 
 proc updateCanvasSize(window: Window) =
-  let
-    width = get_window_width().int32
-    height = get_window_height().int32
-    contentScale = get_device_pixel_ratio().float32
-    size = ivec2(width, height)
-  set_canvas_size(
-    (size.x.float32 * contentScale).int32,
-    (size.y.float32 * contentScale).int32
-  )
+  ## Update canvas size to match CSS size scaled by device pixel ratio.
+  ## This properly handles fractional scaling (e.g., 1.70x on high-DPI displays).
+  set_canvas_size_with_dpr(window.canvas)
 
 proc contentScale*(window: Window): float32 =
   ## Gets the content scale of the window.
