@@ -110,9 +110,10 @@ proc pollEvents*() =
   emscripten_sleep(0)
 
 proc size*(window: Window): IVec2 =
-  # Get the size of the canvas.
-  result.x = get_window_width() * get_device_pixel_ratio().int32
-  result.y = get_window_height() * get_device_pixel_ratio().int32
+  # Get the size of the canvas in physical pixels (CSS size × DPR).
+  let dpr = get_device_pixel_ratio()
+  result.x = (get_window_width().float32 * dpr).int32
+  result.y = (get_window_height().float32 * dpr).int32
 
 proc `size=`*(window: Window, size: IVec2) =
   ## Size cannot be set on emscripten windows.

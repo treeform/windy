@@ -33,18 +33,6 @@ EM_JS(int, get_canvas_height, (), {
   return Module.canvas.height;
 });
 
-EM_JS(void, get_element_css_size, (const char* target, int* width, int* height), {
-  const canvas = target ? document.querySelector(UTF8ToString(target)) : Module.canvas;
-  if (!canvas) {
-    *width = window.innerWidth;
-    *height = window.innerHeight;
-    return;
-  }
-  const rect = canvas.getBoundingClientRect();
-  *width = rect.width;
-  *height = rect.height;
-});
-
 EM_JS(void, set_canvas_size, (int width, int height), {
   Module.canvas.width = width;
   Module.canvas.height = height;
@@ -59,10 +47,9 @@ EM_JS(void, set_canvas_size_with_dpr, (const char* target), {
     return;
   }
 
-  // Get CSS display size
-  const rect = canvas.getBoundingClientRect();
-  const cssWidth = rect.width;
-  const cssHeight = rect.height;
+  // Get CSS display size from window (not from canvas, which might already be broken)
+  const cssWidth = window.innerWidth;
+  const cssHeight = window.innerHeight;
 
   // Get device pixel ratio
   const dpr = window.devicePixelRatio || 1.0;
@@ -75,9 +62,9 @@ EM_JS(void, set_canvas_size_with_dpr, (const char* target), {
   canvas.width = pixelWidth;
   canvas.height = pixelHeight;
 
-  // Set CSS size to match logical display size
-  canvas.style.width = cssWidth + "px";
-  canvas.style.height = cssHeight + "px";
+  // Set CSS size to 100% to fill the window
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
 });
 
 EM_JS(void, make_canvas_focusable, (), {
@@ -235,7 +222,6 @@ proc get_window_width*(): cint {.importc.}
 proc get_window_height*(): cint {.importc.}
 proc get_canvas_width*(): cint {.importc.}
 proc get_canvas_height*(): cint {.importc.}
-proc get_element_css_size*(target: cstring, width: ptr cint, height: ptr cint) {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
 proc set_canvas_size_with_dpr*(target: cstring) {.importc.}
 proc make_canvas_focusable*() {.importc.}
