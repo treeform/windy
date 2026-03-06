@@ -70,7 +70,6 @@ while not window.closeRequested:
   doAssert not window.minimized
 
   window.minimized = true
-
   waitFor(window.minimized, 30)
   doAssert window.minimized
 
