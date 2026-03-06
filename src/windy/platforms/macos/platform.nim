@@ -174,7 +174,7 @@ proc `fullscreen=`*(window: Window, fullscreen: bool) =
   if window.fullscreen == fullscreen:
     return
   autoreleasepool:
-    window.inner.toggleFullscreen(0.ID)
+    window.inner.toggleFullScreen(0.ID)
 
 proc `floating=`*(window: Window, floating: bool) =
   if window.floating == floating:
