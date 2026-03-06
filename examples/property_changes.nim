@@ -10,6 +10,15 @@ window.onFrame = proc() =
   # Your OpenGL display code here
   window.swapBuffers()
 
+template waitFor(condition: untyped, maxTries: int) =
+  ## Waits for an asynchronous window state transition.
+  when defined(macosx):
+    var tries = 0
+    while not (condition) and tries < maxTries:
+      pollEvents()
+      sleep(16)
+      inc tries
+
 while not window.closeRequested:
   sleep(100)
 
@@ -61,53 +70,23 @@ while not window.closeRequested:
   doAssert not window.minimized
 
   window.minimized = true
-  when defined(macosx):
-    # AppKit updates miniaturized state asynchronously after miniaturize().
-    var tries = 0
-    while not window.minimized and tries < 30:
-      pollEvents()
-      sleep(16)
-      inc tries
+  waitFor(window.minimized, 30)
   doAssert window.minimized
 
   window.minimized = false
-  when defined(macosx):
-    # AppKit updates miniaturized state asynchronously after deminiaturize().
-    var deminiaturizeTries = 0
-    while window.minimized and deminiaturizeTries < 30:
-      pollEvents()
-      sleep(16)
-      inc deminiaturizeTries
+  waitFor(not window.minimized, 30)
   doAssert not window.minimized
 
   window.fullscreen = false
-  when defined(macosx):
-    # Fullscreen transitions are asynchronous on AppKit.
-    var fullscreenOffTries0 = 0
-    while window.fullscreen and fullscreenOffTries0 < 60:
-      pollEvents()
-      sleep(16)
-      inc fullscreenOffTries0
+  waitFor(not window.fullscreen, 60)
   doAssert not window.fullscreen
 
   window.fullscreen = true
-  when defined(macosx):
-    # Fullscreen transitions are asynchronous on AppKit.
-    var fullscreenOnTries = 0
-    while not window.fullscreen and fullscreenOnTries < 600:
-      pollEvents()
-      sleep(16)
-      inc fullscreenOnTries
+  waitFor(window.fullscreen, 600)
   doAssert window.fullscreen
 
   window.fullscreen = false
-  when defined(macosx):
-    # Fullscreen transitions are asynchronous on AppKit.
-    var fullscreenOffTries1 = 0
-    while window.fullscreen and fullscreenOffTries1 < 600:
-      pollEvents()
-      sleep(16)
-      inc fullscreenOffTries1
+  waitFor(not window.fullscreen, 600)
   doAssert not window.fullscreen
 
   echo "SUCCESS!"
