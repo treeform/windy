@@ -16,7 +16,6 @@ jobs:
     - uses: treeform/setup-nim-action@v6
 
     - run: nimby sync -g nimby.lock
-    - run: nimby install -g boxy
 
     # Run tests.
     - run: nim c tests/test.nim
