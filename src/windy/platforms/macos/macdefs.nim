@@ -228,7 +228,7 @@ objc:
   proc makeFirstResponder*(self: NSWindow, x: NSView): bool
   proc styleMask*(self: NSWindow): NSWindowStyleMask
   proc setStyleMask*(self: NSWindow, x: NSWindowStyleMask)
-  proc toggleFullscreen*(self: NSWindow, x: ID)
+  proc toggleFullScreen*(self: NSWindow, x: ID)
   proc invalidateCursorRectsForView*(self: NSWindow, x: NSView)
   proc mouseLocationOutsideOfEventStream*(self: NSWindow): NSPoint
   proc level*(self: NSWindow): NSWindowLevel

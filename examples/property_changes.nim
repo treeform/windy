@@ -10,6 +10,15 @@ window.onFrame = proc() =
   # Your OpenGL display code here
   window.swapBuffers()
 
+template waitFor(condition: untyped, maxTries: int) =
+  ## Waits for an asynchronous window state transition.
+  when defined(macosx):
+    var tries = 0
+    while not (condition) and tries < maxTries:
+      pollEvents()
+      sleep(16)
+      inc tries
+
 while not window.closeRequested:
   sleep(100)
 
@@ -61,17 +70,24 @@ while not window.closeRequested:
   doAssert not window.minimized
 
   window.minimized = true
+  waitFor(window.minimized, 30)
   doAssert window.minimized
 
-  when not defined(macosx):
-    window.fullscreen = false
-    doAssert not window.fullscreen
+  window.minimized = false
+  waitFor(not window.minimized, 30)
+  doAssert not window.minimized
 
-    window.fullscreen = true
-    doAssert window.fullscreen
+  window.fullscreen = false
+  waitFor(not window.fullscreen, 60)
+  doAssert not window.fullscreen
 
-    window.fullscreen = false
-    doAssert not window.fullscreen
+  window.fullscreen = true
+  waitFor(window.fullscreen, 600)
+  doAssert window.fullscreen
+
+  window.fullscreen = false
+  waitFor(not window.fullscreen, 600)
+  doAssert not window.fullscreen
 
   echo "SUCCESS!"
   quit()

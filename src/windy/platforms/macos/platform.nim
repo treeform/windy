@@ -28,6 +28,9 @@ type
     inner: NSWindow
     trackingArea: NSTrackingArea
     markedText: NSString
+    # AppKit applies this state asynchronously via delegate callbacks.
+    fullscreenState: bool
+    minimizedState: bool
 
 const
   decoratedResizableWindowMask =
@@ -79,7 +82,7 @@ proc style*(window: Window): WindowStyle =
       Undecorated
 
 proc fullscreen*(window: Window): bool =
-  (window.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
+  window.fullscreenState
 
 proc floating*(window: Window): bool =
   window.inner.level == NSFloatingWindowLevel
@@ -111,7 +114,7 @@ proc pos*(window: Window): IVec2 =
     ).ivec2
 
 proc minimized*(window: Window): bool =
-  window.inner.isMiniaturized
+  window.minimizedState
 
 proc maximized*(window: Window): bool =
   window.inner.isZoomed
@@ -174,7 +177,7 @@ proc `fullscreen=`*(window: Window, fullscreen: bool) =
   if window.fullscreen == fullscreen:
     return
   autoreleasepool:
-    window.inner.toggleFullscreen(0.ID)
+    window.inner.toggleFullScreen(0.ID)
 
 proc `floating=`*(window: Window, floating: bool) =
   if window.floating == floating:
@@ -326,6 +329,45 @@ proc windowDidMove(
   if window != nil and window.onMove != nil:
     window.onMove()
 
+proc windowDidMiniaturize(
+  self: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSWindow)
+  if window == nil:
+    return
+  window.minimizedState = true
+
+proc windowDidDeminiaturize(
+  self: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSWindow)
+  if window == nil:
+    return
+  window.minimizedState = false
+
+proc windowDidEnterFullScreen(
+  self: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSWindow)
+  if window == nil:
+    return
+  window.fullscreenState = true
+
+proc windowDidExitFullScreen(
+  self: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSWindow)
+  if window == nil:
+    return
+  window.fullscreenState = false
 
 proc canBecomeKeyWindow(
   self: ID,
@@ -716,6 +758,10 @@ proc init() {.raises: [].} =
     addClass "WindyWindow", "NSWindow", WindyWindow:
       addMethod "windowDidResize:", windowDidResize
       addMethod "windowDidMove:", windowDidMove
+      addMethod "windowDidMiniaturize:", windowDidMiniaturize
+      addMethod "windowDidDeminiaturize:", windowDidDeminiaturize
+      addMethod "windowDidEnterFullScreen:", windowDidEnterFullScreen
+      addMethod "windowDidExitFullScreen:", windowDidExitFullScreen
       addMethod "canBecomeKeyWindow:", canBecomeKeyWindow
       addMethod "windowDidBecomeKey:", windowDidBecomeKey
       addMethod "windowDidResignKey:", windowDidResignKey
@@ -955,6 +1001,10 @@ proc newWindow*(
 
     result.style = style
     result.visible = visible
+
+    result.minimizedState = result.inner.isMiniaturized
+    result.fullscreenState =
+      (result.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
 
   pollEvents() # This can cause lots of issues, potential workaround needed
 
