@@ -87,6 +87,7 @@ type
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+    vsync*: bool
     iconHandle: HICON
     customCursor: HCURSOR
 
@@ -1221,6 +1222,7 @@ proc newWindow*(
   result.title = title
   result.hWnd = createWindow(windowClassName, title)
   result.size = size
+  result.vsync = vsync
 
   discard SetPropW(result.hWnd, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
@@ -1244,6 +1246,10 @@ proc newWindow*(
 
 proc title*(window: Window): string =
   window.state.title
+
+proc vsync*(window: Window): bool =
+  ## Returns true when vertical sync is enabled for this window.
+  window.vsync
 
 proc icon*(window: Window): Image =
   window.state.icon
