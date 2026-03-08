@@ -1161,6 +1161,10 @@ elif Backend == DirectXBackend:
   proc loadGraphicsContext() =
     discard
 
+  proc loadExtensions*() =
+    ## No-op in DirectX mode for OpenGL-compatible callers.
+    discard
+
   proc makeContextCurrent*(window: Window) =
     discard
 
