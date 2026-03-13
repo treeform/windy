@@ -40,6 +40,33 @@ EM_JS(void, set_canvas_size, (int width, int height), {
   Module.canvas.style.height = "100%";
 });
 
+EM_JS(void, set_canvas_size_with_dpr, (const char* target), {
+  const canvas = target ? document.querySelector(UTF8ToString(target)) : Module.canvas;
+  if (!canvas) {
+    console.error("Canvas not found");
+    return;
+  }
+
+  // Get CSS display size from window (not from canvas, which might already be broken)
+  const cssWidth = window.innerWidth;
+  const cssHeight = window.innerHeight;
+
+  // Get device pixel ratio
+  const dpr = window.devicePixelRatio || 1.0;
+
+  // Calculate actual pixel dimensions
+  const pixelWidth = Math.round(cssWidth * dpr);
+  const pixelHeight = Math.round(cssHeight * dpr);
+
+  // Set canvas pixel size
+  canvas.width = pixelWidth;
+  canvas.height = pixelHeight;
+
+  // Set CSS size to 100% to fill the window
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+});
+
 EM_JS(void, make_canvas_focusable, (), {
   // Make canvas focusable by setting tabindex
   Module.canvas.tabIndex = 1;
@@ -196,6 +223,7 @@ proc get_window_height*(): cint {.importc.}
 proc get_canvas_width*(): cint {.importc.}
 proc get_canvas_height*(): cint {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
+proc set_canvas_size_with_dpr*(target: cstring) {.importc.}
 proc make_canvas_focusable*() {.importc.}
 proc setup_file_drop_handler*(userData: pointer) {.importc.}
 proc set_document_title*(title: cstring) {.importc.}
