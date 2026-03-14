@@ -4,19 +4,11 @@ import
   pixie/fileformats/bmp, pixie/images,
   urlly, utils, vmath, windefs, zippy
 
-type BackendKind = enum
-  OpenGLBackend
-  DirectXBackend
-
-when defined(windyOpenGl):
-  {.hint: "Using OpenGL backend".}
-  const Backend = OpenGLBackend
-elif defined(useDirectX):
+when defined(useDirectX):
   {.hint: "Using DirectX backend".}
-  const Backend = DirectXBackend
 else:
-  # Use OpenGL by default
-  const Backend = OpenGLBackend
+  # OpenGL
+  {.hint: "Using OpenGL backend".}
 
 const
   windowClassName = "WINDY0"
@@ -229,15 +221,15 @@ proc createWindow(windowClassName, title: string): HWND =
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
 
-when Backend == OpenGLBackend:
+when defined(useDirectX):
+  proc destoryGraphicsContext(window: Window) =
+    discard
+else: # OpenGL
   proc destoryGraphicsContext(window: Window) =
     if window.hglrc != 0:
       discard wglMakeCurrent(window.hdc, 0)
       discard wglDeleteContext(window.hglrc)
       window.hglrc = 0
-elif Backend == DirectXBackend:
-  proc destoryGraphicsContext(window: Window) =
-    discard
 
 proc destroy(window: Window) =
   ## Destroys the window and its graphics context.
@@ -1056,7 +1048,32 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-when Backend == OpenGLBackend:
+when defined(useDirectX):
+
+  proc loadGraphicsContext() =
+    discard
+
+  proc loadExtensions*() =
+    ## No-op in DirectX mode for OpenGL-compatible callers.
+    discard
+
+  proc makeContextCurrent*(window: Window) =
+    discard
+
+  proc swapBuffers*(window: Window) =
+    discard
+
+  proc createGraphicsContext(
+    window: Window,
+    depthBits: int,
+    stencilBits: int,
+    msaa: MSAA,
+    vsync: bool,
+    openglVersion: OpenGLVersion
+  ) =
+    discard ShowWindow(window.hWnd, SW_HIDE)
+
+else: # OpenGL
 
   proc loadGraphicsContext() =
       loadOpenGL()
@@ -1156,31 +1173,6 @@ when Backend == OpenGLBackend:
 
     if wglSwapIntervalEXT(if vsync: 1 else: 0) == 0:
       raise newException(WindyError, "Error setting swap interval")
-
-elif Backend == DirectXBackend:
-
-  proc loadGraphicsContext() =
-    discard
-
-  proc loadExtensions*() =
-    ## No-op in DirectX mode for OpenGL-compatible callers.
-    discard
-
-  proc makeContextCurrent*(window: Window) =
-    discard
-
-  proc swapBuffers*(window: Window) =
-    discard
-
-  proc createGraphicsContext(
-    window: Window,
-    depthBits: int,
-    stencilBits: int,
-    msaa: MSAA,
-    vsync: bool,
-    openglVersion: OpenGLVersion
-  ) =
-    discard ShowWindow(window.hWnd, SW_HIDE)
 
 
 proc init() {.raises: [].} =
