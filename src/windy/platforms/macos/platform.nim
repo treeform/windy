@@ -1,7 +1,13 @@
 import
   std/[os, times, unicode, pathnorm],
-  opengl, pixie/fileformats/png, pixie/images, utils, vmath,
+  pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
+
+when defined(windyMetal):
+  {.hint: "Using Metal backend".}
+else:
+  import opengl
+  {.hint: "Using OpenGL backend".}
 
 # TODO: Use macos native http client, fallback to windy http client.
 import ../../http
@@ -46,6 +52,9 @@ var
   WindyAppDelegate, WindyWindow, WindyView: Class
   windows: seq[Window]
 
+objc:
+  proc initWithFrame(self: NSView, x: NSRect): NSView
+
 proc indexForNSWindow(windows: seq[Window], inner: NSWindow): int =
   ## Returns the window for this handle, else -1
   for i, window in windows:
@@ -71,15 +80,18 @@ proc style*(window: Window): WindowStyle =
     else:
       Decorated
   else:
-    var opaque: GLint
-    window.inner.contentView.NSOpenGLView.openGLContext.getValues(
-      opaque.addr,
-      NSOpenGLContextParameterSurfaceOpacity
-    )
-    if opaque == 0:
-      Transparent
-    else:
+    when defined(windyMetal):
       Undecorated
+    else:
+      var opaque: GLint
+      window.inner.contentView.NSOpenGLView.openGLContext.getValues(
+        opaque.addr,
+        NSOpenGLContextParameterSurfaceOpacity
+      )
+      if opaque == 0:
+        Transparent
+      else:
+        Undecorated
 
 proc fullscreen*(window: Window): bool =
   window.fullscreenState
@@ -166,12 +178,16 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
     of Undecorated, Transparent:
       window.inner.setStyleMask(undecoratedWindowMask)
 
-    var opaque: GLint = if windowStyle == Transparent: 0 else: 1
-    autoreleasepool:
-      window.inner.contentView.NSOpenGLView.openGLContext.setValues(
-        opaque.addr,
-        NSOpenGLContextParameterSurfaceOpacity
-      )
+    when defined(windyMetal):
+      if windowStyle == Transparent:
+        warn "Transparent style is not supported by windyMetal on macOS"
+    else:
+      var opaque: GLint = if windowStyle == Transparent: 0 else: 1
+      autoreleasepool:
+        window.inner.contentView.NSOpenGLView.openGLContext.setValues(
+          opaque.addr,
+          NSOpenGLContextParameterSurfaceOpacity
+        )
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
   if window.fullscreen == fullscreen:
@@ -767,36 +783,68 @@ proc init() {.raises: [].} =
       addMethod "windowDidResignKey:", windowDidResignKey
       addMethod "windowShouldClose:", windowShouldClose
 
-    addClass "WindyView", "NSOpenGLView", WindyView:
-      addProtocol "NSTextInputClient"
-      addMethod "acceptsFirstResponder", acceptsFirstResponder
-      addMethod "canBecomeKeyView", canBecomeKeyView
-      addMethod "acceptsFirstMouse:", acceptsFirstMouse
-      addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
-      addMethod "updateTrackingAreas", updateTrackingAreas
-      addMethod "mouseMoved:", mouseMoved
-      addMethod "mouseDragged:", mouseDragged
-      addMethod "rightMouseDragged:", rightMouseDragged
-      addMethod "otherMouseDragged:", otherMouseDragged
-      addMethod "scrollWheel:", scrollWheel
-      addMethod "mouseDown:", mouseDown
-      addMethod "mouseUp:", mouseUp
-      addMethod "rightMouseDown:", rightMouseDown
-      addMethod "rightMouseUp:", rightMouseUp
-      addMethod "otherMouseDown:", otherMouseDown
-      addMethod "otherMouseUp:", otherMouseUp
-      addMethod "hasMarkedText", hasMarkedText
-      addMethod "markedRange", markedRange
-      addMethod "selectedRange", selectedRange
-      addMethod "setMarkedText:selectedRange:replacementRange:", setMarkedText
-      addMethod "unmarkText", unmarkText
-      addMethod "validAttributesForMarkedText", validAttributesForMarkedText
-      addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
-      addMethod "insertText:replacementRange:", insertText2
-      addMethod "characterIndexForPoint:", characterIndexForPoint
-      addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
-      addMethod "doCommandBySelector:", doCommandBySelector
-      addMethod "resetCursorRects", resetCursorRects
+    when defined(windyMetal):
+      addClass "WindyView", "NSView", WindyView:
+        addProtocol "NSTextInputClient"
+        addMethod "acceptsFirstResponder", acceptsFirstResponder
+        addMethod "canBecomeKeyView", canBecomeKeyView
+        addMethod "acceptsFirstMouse:", acceptsFirstMouse
+        addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
+        addMethod "updateTrackingAreas", updateTrackingAreas
+        addMethod "mouseMoved:", mouseMoved
+        addMethod "mouseDragged:", mouseDragged
+        addMethod "rightMouseDragged:", rightMouseDragged
+        addMethod "otherMouseDragged:", otherMouseDragged
+        addMethod "scrollWheel:", scrollWheel
+        addMethod "mouseDown:", mouseDown
+        addMethod "mouseUp:", mouseUp
+        addMethod "rightMouseDown:", rightMouseDown
+        addMethod "rightMouseUp:", rightMouseUp
+        addMethod "otherMouseDown:", otherMouseDown
+        addMethod "otherMouseUp:", otherMouseUp
+        addMethod "hasMarkedText", hasMarkedText
+        addMethod "markedRange", markedRange
+        addMethod "selectedRange", selectedRange
+        addMethod "setMarkedText:selectedRange:replacementRange:", setMarkedText
+        addMethod "unmarkText", unmarkText
+        addMethod "validAttributesForMarkedText", validAttributesForMarkedText
+        addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
+        addMethod "insertText:replacementRange:", insertText2
+        addMethod "characterIndexForPoint:", characterIndexForPoint
+        addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
+        addMethod "doCommandBySelector:", doCommandBySelector
+        addMethod "resetCursorRects", resetCursorRects
+    else:
+      addClass "WindyView", "NSOpenGLView", WindyView:
+        addProtocol "NSTextInputClient"
+        addMethod "acceptsFirstResponder", acceptsFirstResponder
+        addMethod "canBecomeKeyView", canBecomeKeyView
+        addMethod "acceptsFirstMouse:", acceptsFirstMouse
+        addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
+        addMethod "updateTrackingAreas", updateTrackingAreas
+        addMethod "mouseMoved:", mouseMoved
+        addMethod "mouseDragged:", mouseDragged
+        addMethod "rightMouseDragged:", rightMouseDragged
+        addMethod "otherMouseDragged:", otherMouseDragged
+        addMethod "scrollWheel:", scrollWheel
+        addMethod "mouseDown:", mouseDown
+        addMethod "mouseUp:", mouseUp
+        addMethod "rightMouseDown:", rightMouseDown
+        addMethod "rightMouseUp:", rightMouseUp
+        addMethod "otherMouseDown:", otherMouseDown
+        addMethod "otherMouseUp:", otherMouseUp
+        addMethod "hasMarkedText", hasMarkedText
+        addMethod "markedRange", markedRange
+        addMethod "selectedRange", selectedRange
+        addMethod "setMarkedText:selectedRange:replacementRange:", setMarkedText
+        addMethod "unmarkText", unmarkText
+        addMethod "validAttributesForMarkedText", validAttributesForMarkedText
+        addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
+        addMethod "insertText:replacementRange:", insertText2
+        addMethod "characterIndexForPoint:", characterIndexForPoint
+        addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
+        addMethod "doCommandBySelector:", doCommandBySelector
+        addMethod "resetCursorRects", resetCursorRects
 
     let appDelegate = WindyAppDelegate.new()
     NSApp.setDelegate(appDelegate)
@@ -887,10 +935,16 @@ proc centerWindow(window: Window) =
   window.pos = ivec2(x.int32, y.int32)
 
 proc makeContextCurrent*(window: Window) =
-  window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
+  when defined(windyMetal):
+    discard
+  else:
+    window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
 
 proc swapBuffers*(window: Window) =
-  window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
+  when defined(windyMetal):
+    discard
+  else:
+    window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
 
 proc close*(window: Window) =
   window.onCloseRequest = nil
@@ -931,12 +985,14 @@ proc newWindow*(
 
   init()
 
-  let openGlProfile: uint32 = case openglVersion:
-    of OpenGL4Dot1:
-      NSOpenGLProfileVersion4_1Core
-    else:
-      raise newException(WindyError, "Unsupported OpenGL version")
-
+  when defined(windyMetal):
+    discard
+  else:
+    let openGlProfile: uint32 = case openglVersion:
+      of OpenGL4Dot1:
+        NSOpenGLProfileVersion4_1Core
+      else:
+        raise newException(WindyError, "Unsupported OpenGL version")
 
   autoreleasepool:
     result.inner = WindyWindow.alloc().NSWindow.initWithContentRect(
@@ -946,49 +1002,58 @@ proc newWindow*(
       false
     )
 
-    let
-      pixelFormatAttribs = [
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFASampleBuffers, if msaa != msaaDisabled: 1 else: 0,
-        NSOpenGLPFASamples, msaa.uint32,
-        NSOpenGLPFAAccelerated,
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFAColorSize, 32,
-        NSOpenGLPFAAlphaSize, 8,
-        NSOpenGLPFADepthSize, depthBits.uint32,
-        NSOpenGLPFAStencilSize, stencilBits.uint32,
-        NSOpenGLPFAOpenGLProfile, openGlProfile,
-        0
-      ]
-      pixelFormat = NSOpenGLPixelFormat.alloc().initWithAttributes(
-        pixelFormatAttribs[0].unsafeAddr
+    when defined(windyMetal):
+      let metalView = WindyView.alloc().NSView.initWithFrame(
+        result.inner.contentView.frame
       )
+      result.inner.setDelegate(result.inner.ID)
+      result.inner.setContentView(metalView)
+      discard result.inner.makeFirstResponder(metalView)
+    else:
+      let
+        pixelFormatAttribs = [
+          NSOpenGLPFADoubleBuffer,
+          NSOpenGLPFASampleBuffers, if msaa != msaaDisabled: 1 else: 0,
+          NSOpenGLPFASamples, msaa.uint32,
+          NSOpenGLPFAAccelerated,
+          NSOpenGLPFADoubleBuffer,
+          NSOpenGLPFAColorSize, 32,
+          NSOpenGLPFAAlphaSize, 8,
+          NSOpenGLPFADepthSize, depthBits.uint32,
+          NSOpenGLPFAStencilSize, stencilBits.uint32,
+          NSOpenGLPFAOpenGLProfile, openGlProfile,
+          0
+        ]
+        pixelFormat = NSOpenGLPixelFormat.alloc().initWithAttributes(
+          pixelFormatAttribs[0].unsafeAddr
+        )
 
-    let openglView = WindyView.alloc().NSOpenGLView.initWithFrame(
-      result.inner.contentView.frame,
-      pixelFormat
-    )
-    openglView.setWantsBestResolutionOpenGLSurface(true)
+      let openglView = WindyView.alloc().NSOpenGLView.initWithFrame(
+        result.inner.contentView.frame,
+        pixelFormat
+      )
+      openglView.setWantsBestResolutionOpenGLSurface(true)
 
-    openglView.openGLContext.makeCurrentContext()
+      openglView.openGLContext.makeCurrentContext()
 
-    var swapInterval: GLint = if vsync: 1 else: 0
-    openglView.openGLContext.setValues(
-      swapInterval.addr,
-      NSOpenGLContextParameterSwapInterval
-    )
-
-    # Handle transparency for Transparent style
-    if style == Transparent:
-      var opaque: GLint = 0
+      var swapInterval: GLint = if vsync: 1 else: 0
       openglView.openGLContext.setValues(
-        opaque.addr,
-        NSOpenGLContextParameterSurfaceOpacity
+        swapInterval.addr,
+        NSOpenGLContextParameterSwapInterval
       )
 
-    result.inner.setDelegate(result.inner.ID)
-    result.inner.setContentView(openglView.NSView)
-    discard result.inner.makeFirstResponder(openglView.NSView)
+      # Handle transparency for Transparent style
+      if style == Transparent:
+        var opaque: GLint = 0
+        openglView.openGLContext.setValues(
+          opaque.addr,
+          NSOpenGLContextParameterSurfaceOpacity
+        )
+
+      result.inner.setDelegate(result.inner.ID)
+      result.inner.setContentView(openglView.NSView)
+      discard result.inner.makeFirstResponder(openglView.NSView)
+
     result.inner.setRestorable(false)
 
     windows.add(result)
@@ -1013,6 +1078,14 @@ proc title*(window: Window): string =
 
 proc icon*(window: Window): Image =
   window.state.icon
+
+proc nativeWindow*(window: Window): NSWindow =
+  ## Returns the native AppKit window handle.
+  window.inner
+
+proc nativeView*(window: Window): NSView =
+  ## Returns the native AppKit content view.
+  window.inner.contentView
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
