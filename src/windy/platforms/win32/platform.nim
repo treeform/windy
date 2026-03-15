@@ -11,7 +11,7 @@ type BackendKind = enum
 when defined(windyOpenGl):
   {.hint: "Using OpenGL backend".}
   const Backend = OpenGLBackend
-elif defined(windyDirectX):
+elif defined(useDirectX):
   {.hint: "Using DirectX backend".}
   const Backend = DirectXBackend
 else:

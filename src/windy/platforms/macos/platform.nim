@@ -3,7 +3,7 @@ import
   pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
 
-when defined(windyMetal):
+when defined(useMetal4):
   {.hint: "Using Metal backend".}
 else:
   import opengl
@@ -80,7 +80,7 @@ proc style*(window: Window): WindowStyle =
     else:
       Decorated
   else:
-    when defined(windyMetal):
+    when defined(useMetal4):
       Undecorated
     else:
       var opaque: GLint
@@ -178,9 +178,9 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
     of Undecorated, Transparent:
       window.inner.setStyleMask(undecoratedWindowMask)
 
-    when defined(windyMetal):
+    when defined(useMetal4):
       if windowStyle == Transparent:
-        warn "Transparent style is not supported by windyMetal on macOS"
+        warn "Transparent style is not supported by useMetal4 on macOS"
     else:
       var opaque: GLint = if windowStyle == Transparent: 0 else: 1
       autoreleasepool:
@@ -783,7 +783,7 @@ proc init() {.raises: [].} =
       addMethod "windowDidResignKey:", windowDidResignKey
       addMethod "windowShouldClose:", windowShouldClose
 
-    when defined(windyMetal):
+    when defined(useMetal4):
       addClass "WindyView", "NSView", WindyView:
         addProtocol "NSTextInputClient"
         addMethod "acceptsFirstResponder", acceptsFirstResponder
@@ -935,13 +935,13 @@ proc centerWindow(window: Window) =
   window.pos = ivec2(x.int32, y.int32)
 
 proc makeContextCurrent*(window: Window) =
-  when defined(windyMetal):
+  when defined(useMetal4):
     discard
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
 
 proc swapBuffers*(window: Window) =
-  when defined(windyMetal):
+  when defined(useMetal4):
     discard
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
@@ -985,7 +985,7 @@ proc newWindow*(
 
   init()
 
-  when defined(windyMetal):
+  when defined(useMetal4):
     discard
   else:
     let openGlProfile: uint32 = case openglVersion:
@@ -1002,7 +1002,7 @@ proc newWindow*(
       false
     )
 
-    when defined(windyMetal):
+    when defined(useMetal4):
       let metalView = WindyView.alloc().NSView.initWithFrame(
         result.inner.contentView.frame
       )
