@@ -6,6 +6,8 @@ import
 
 when defined(useDirectX):
   {.hint: "Using DirectX backend".}
+elif defined(useVulkan):
+  {.hint: "Using Vulkan backend".}
 else:
   # OpenGL
   {.hint: "Using OpenGL backend".}
@@ -221,7 +223,7 @@ proc createWindow(windowClassName, title: string): HWND =
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
 
-when defined(useDirectX):
+when defined(useDirectX) or defined(useVulkan):
   proc destoryGraphicsContext(window: Window) =
     discard
 else: # OpenGL
@@ -1048,13 +1050,12 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-when defined(useDirectX):
+when defined(useDirectX) or defined(useVulkan):
 
   proc loadGraphicsContext() =
     discard
 
   proc loadExtensions*() =
-    ## No-op in DirectX mode for OpenGL-compatible callers.
     discard
 
   proc makeContextCurrent*(window: Window) =
