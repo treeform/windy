@@ -4,19 +4,13 @@ import
   pixie/fileformats/bmp, pixie/images,
   urlly, utils, vmath, windefs, zippy
 
-type BackendKind = enum
-  OpenGLBackend
-  DirectXBackend
-
-when defined(windyOpenGl):
-  {.hint: "Using OpenGL backend".}
-  const Backend = OpenGLBackend
-elif defined(useDirectX):
+when defined(useDirectX):
   {.hint: "Using DirectX backend".}
-  const Backend = DirectXBackend
+elif defined(useVulkan):
+  {.hint: "Using Vulkan backend".}
 else:
-  # Use OpenGL by default
-  const Backend = OpenGLBackend
+  # OpenGL
+  {.hint: "Using OpenGL backend".}
 
 const
   windowClassName = "WINDY0"
@@ -87,6 +81,7 @@ type
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+    vsync*: bool
     iconHandle: HICON
     customCursor: HCURSOR
 
@@ -228,15 +223,15 @@ proc createWindow(windowClassName, title: string): HWND =
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
 
-when Backend == OpenGLBackend:
+when defined(useDirectX) or defined(useVulkan):
+  proc destoryGraphicsContext(window: Window) =
+    discard
+else: # OpenGL
   proc destoryGraphicsContext(window: Window) =
     if window.hglrc != 0:
       discard wglMakeCurrent(window.hdc, 0)
       discard wglDeleteContext(window.hglrc)
       window.hglrc = 0
-elif Backend == DirectXBackend:
-  proc destoryGraphicsContext(window: Window) =
-    discard
 
 proc destroy(window: Window) =
   ## Destroys the window and its graphics context.
@@ -1055,7 +1050,31 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-when Backend == OpenGLBackend:
+when defined(useDirectX) or defined(useVulkan):
+
+  proc loadGraphicsContext() =
+    discard
+
+  proc loadExtensions*() =
+    discard
+
+  proc makeContextCurrent*(window: Window) =
+    discard
+
+  proc swapBuffers*(window: Window) =
+    discard
+
+  proc createGraphicsContext(
+    window: Window,
+    depthBits: int,
+    stencilBits: int,
+    msaa: MSAA,
+    vsync: bool,
+    openglVersion: OpenGLVersion
+  ) =
+    discard ShowWindow(window.hWnd, SW_HIDE)
+
+else: # OpenGL
 
   proc loadGraphicsContext() =
       loadOpenGL()
@@ -1156,27 +1175,6 @@ when Backend == OpenGLBackend:
     if wglSwapIntervalEXT(if vsync: 1 else: 0) == 0:
       raise newException(WindyError, "Error setting swap interval")
 
-elif Backend == DirectXBackend:
-
-  proc loadGraphicsContext() =
-    discard
-
-  proc makeContextCurrent*(window: Window) =
-    discard
-
-  proc swapBuffers*(window: Window) =
-    discard
-
-  proc createGraphicsContext(
-    window: Window,
-    depthBits: int,
-    stencilBits: int,
-    msaa: MSAA,
-    vsync: bool,
-    openglVersion: OpenGLVersion
-  ) =
-    discard ShowWindow(window.hWnd, SW_HIDE)
-
 
 proc init() {.raises: [].} =
   if initialized:
@@ -1217,6 +1215,7 @@ proc newWindow*(
   result.title = title
   result.hWnd = createWindow(windowClassName, title)
   result.size = size
+  result.vsync = vsync
 
   discard SetPropW(result.hWnd, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
@@ -1240,6 +1239,10 @@ proc newWindow*(
 
 proc title*(window: Window): string =
   window.state.title
+
+proc vsync*(window: Window): bool =
+  ## Returns true when vertical sync is enabled for this window.
+  window.vsync
 
 proc icon*(window: Window): Image =
   window.state.icon
