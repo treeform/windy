@@ -109,6 +109,15 @@ proc pollEvents*() =
   pollHttp()
   emscripten_sleep(0)
 
+proc run*(window: Window) =
+  proc mainLoop() {.cdecl.} =
+    if mainWindow != nil:
+      if mainWindow.onFrame != nil:
+        mainWindow.onFrame()
+      mainWindow.state.perFrame = PerFrame()
+    pollHttp()
+  emscripten_set_main_loop(mainLoop, 0, true)
+
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas.
   result.x = get_window_width() * get_device_pixel_ratio().int32
