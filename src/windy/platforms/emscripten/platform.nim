@@ -194,9 +194,12 @@ proc `focused=`*(window: Window, focused: bool) =
   discard  # Focus is controlled by browser
 
 proc updateCanvasSize(window: Window) =
-  ## Update canvas size to match CSS size scaled by device pixel ratio.
-  ## This properly handles fractional scaling (e.g., 1.70x on high-DPI displays).
-  set_canvas_size_with_dpr(window.canvas)
+  ## Update canvas size to match window dimensions.
+  ## DPR scaling is applied internally by set_canvas_size().
+  set_canvas_size(
+    get_window_width(),
+    get_window_height()
+  )
 
 proc contentScale*(window: Window): float32 =
   ## Gets the content scale of the window.
