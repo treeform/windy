@@ -34,9 +34,8 @@ EM_JS(int, get_canvas_height, (), {
 });
 
 EM_JS(void, set_canvas_size, (int width, int height), {
-  const dpr = window.devicePixelRatio || 1.0;
-  Module.canvas.width = Math.round(width * dpr);
-  Module.canvas.height = Math.round(height * dpr);
+  Module.canvas.width = width;
+  Module.canvas.height = height;
   Module.canvas.style.width = "100%";
   Module.canvas.style.height = "100%";
 });

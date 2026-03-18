@@ -194,11 +194,11 @@ proc `focused=`*(window: Window, focused: bool) =
   discard  # Focus is controlled by browser
 
 proc updateCanvasSize(window: Window) =
-  ## Update canvas size to match window dimensions.
-  ## DPR scaling is applied internally by set_canvas_size().
+  ## Update canvas size to match window dimensions scaled by device pixel ratio.
+  let dpr = get_device_pixel_ratio()
   set_canvas_size(
-    get_window_width(),
-    get_window_height()
+    (get_window_width().float32 * dpr).round().int32,
+    (get_window_height().float32 * dpr).round().int32
   )
 
 proc contentScale*(window: Window): float32 =
