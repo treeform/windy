@@ -106,8 +106,7 @@ proc pollEvents*() =
     if mainWindow.onFrame != nil:
       mainWindow.onFrame()
     mainWindow.state.perFrame = PerFrame()
-  when defined(windyUseStdHttp):
-    pollHttp()
+  pollHttp()
   emscripten_sleep(0)
 
 proc size*(window: Window): IVec2 =

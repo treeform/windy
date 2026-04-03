@@ -1295,8 +1295,7 @@ proc pollEvents*() =
   for window in windows:
     pollEvents(window)
 
-  when defined(windyUseStdHttp):
-    pollHttp()
+  pollHttp()
 
 proc closeIme*(window: Window) =
   discard

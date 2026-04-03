@@ -2474,8 +2474,7 @@ proc pollEvents*() =
       if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyRightShift)
 
-  when defined(windyUseStdHttp):
-    pollHttp()
+  pollHttp()
 
 proc pollHttp*() =
   ## Polling for HTTP requests happens in the main windows loop.

@@ -921,8 +921,7 @@ proc pollEvents*() =
       # Forward event for app to handle.
       NSApp.sendEvent(event)
 
-  when defined(windyUseStdHttp):
-    pollHttp()
+  pollHttp()
 
 proc centerWindow(window: Window) =
   ## Calculate centered position for a window on the primary screen.
