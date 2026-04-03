@@ -15,8 +15,8 @@ jobs:
     - uses: actions/checkout@v5
     - uses: treeform/setup-nim-action@v6
 
-    - run: nimby sync -g nimby.lock
-    - run: nimby install -g boxy
+    - run: nimby sync nimby.lock
+    - run: nimby install boxy
 
     # Run tests.
     - run: nim c tests/test.nim
