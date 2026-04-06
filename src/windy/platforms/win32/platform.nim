@@ -2393,6 +2393,10 @@ elif compileOption("threads"):
     if state.onOpenCalled and state.onClose != nil:
       state.onClose()
 
+proc pollHttp*() =
+  ## Polling for HTTP requests happens in the main windows loop.
+  discard
+
 proc pollEvents*() =
   # Draw first (in case a message closes a window or similar)
   for window in windows:
@@ -2475,10 +2479,6 @@ proc pollEvents*() =
         activeWindow.handleButtonRelease(KeyRightShift)
 
   pollHttp()
-
-proc pollHttp*() =
-  ## Polling for HTTP requests happens in the main windows loop.
-  discard
 
 proc forceMousePos*(window: Window, mousePos: IVec2) =
   ## Forces mouse position to a place.
