@@ -2393,6 +2393,10 @@ elif compileOption("threads"):
     if state.onOpenCalled and state.onClose != nil:
       state.onClose()
 
+proc pollHttp*() =
+  ## Polling for HTTP requests happens in the main windows loop.
+  discard
+
 proc pollEvents*() =
   # Draw first (in case a message closes a window or similar)
   for window in windows:
@@ -2474,12 +2478,7 @@ proc pollEvents*() =
       if (GetKeyState(VK_RSHIFT) and KF_UP) == 0:
         activeWindow.handleButtonRelease(KeyRightShift)
 
-  when defined(windyUseStdHttp):
-    pollHttp()
-
-proc pollHttp*() =
-  ## Polling for HTTP requests happens in the main windows loop.
-  discard
+  pollHttp()
 
 proc forceMousePos*(window: Window, mousePos: IVec2) =
   ## Forces mouse position to a place.
