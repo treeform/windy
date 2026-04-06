@@ -47,13 +47,13 @@ nim	closeRequested=	windy/platforms/linux/platform.html#closeRequested=,Window,b
 nim	getClipboardString	windy/platforms/linux/platform.html#getClipboardString	proc getClipboardString(): string		1254
 nim	setClipboardString	windy/platforms/linux/platform.html#setClipboardString,string	proc setClipboardString(s: string)		1273
 nim	pollEvents	windy/platforms/linux/platform.html#pollEvents	proc pollEvents()		1278
-nim	closeIme	windy/platforms/linux/platform.html#closeIme,Window	proc closeIme(window: Window)		1301
-nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	proc imeCursorIndex(window: Window): int		1304
-nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1307
-nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1310
-nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1327
-nim	getConfigHome	windy/platforms/linux/platform.html#getConfigHome,string	proc getConfigHome(appName: string): string		1331
-nim	getConfig	windy/platforms/linux/platform.html#getConfig,string,string	proc getConfig(appName: string; fileName: string): string		1340
-nim	setConfig	windy/platforms/linux/platform.html#setConfig,string,string,string	proc setConfig(appName: string; fileName: string; content: string)		1350
-nim	openUrl	windy/platforms/linux/platform.html#openUrl,string	proc openUrl(url: string)		1359
-nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1363
+nim	closeIme	windy/platforms/linux/platform.html#closeIme,Window	proc closeIme(window: Window)		1300
+nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	proc imeCursorIndex(window: Window): int		1303
+nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1306
+nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1309
+nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1326
+nim	getConfigHome	windy/platforms/linux/platform.html#getConfigHome,string	proc getConfigHome(appName: string): string		1330
+nim	getConfig	windy/platforms/linux/platform.html#getConfig,string,string	proc getConfig(appName: string; fileName: string): string		1339
+nim	setConfig	windy/platforms/linux/platform.html#setConfig,string,string,string	proc setConfig(appName: string; fileName: string; content: string)		1349
+nim	openUrl	windy/platforms/linux/platform.html#openUrl,string	proc openUrl(url: string)		1358
+nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1362
