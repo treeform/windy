@@ -320,7 +320,6 @@ proc applicationDidFinishLaunching(
   notification: NSNotification
 ): ID {.cdecl.} =
   NSApp.setPresentationOptions(NSApplicationPresentationDefault)
-  NSApp.setActivationPolicy(NSApplicationActivationPolicyRegular)
   NSApp.activateIgnoringOtherApps(true)
 
 proc windowDidResize(
@@ -845,6 +844,13 @@ proc init() {.raises: [].} =
         addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
         addMethod "doCommandBySelector:", doCommandBySelector
         addMethod "resetCursorRects", resetCursorRects
+
+    # Set activation policy before finishLaunching so the window server has
+    # time to promote this process to a regular GUI app before we try to
+    # activate or show any windows. Setting it inside applicationDidFinish-
+    # Launching is too late — the window server processes policy changes
+    # asynchronously, causing intermittent failures to come to front.
+    NSApp.setActivationPolicy(NSApplicationActivationPolicyRegular)
 
     let appDelegate = WindyAppDelegate.new()
     NSApp.setDelegate(appDelegate)
