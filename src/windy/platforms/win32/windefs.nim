@@ -1086,6 +1086,13 @@ proc WinHttpWebSocketReceive*(
   peBufferType: ptr WINHTTP_WEB_SOCKET_BUFFER_TYPE
 ): DWORD {.dynlib: "winhttp".}
 
+proc WinHttpWebSocketSend*(
+  hWebSocket: HINTERNET,
+  eBufferType: WINHTTP_WEB_SOCKET_BUFFER_TYPE,
+  pvBuffer: pointer,
+  dwBufferLength: DWORD
+): DWORD {.dynlib: "winhttp".}
+
 proc WinHttpWebSocketClose*(
   hWebSocket: HINTERNET,
   usStatus: USHORT,

@@ -2251,9 +2251,14 @@ elif compileOption("threads"):
 
   proc openWebSocket*(
     url: string,
-    deadline = defaultHttpDeadline
+    deadline = defaultHttpDeadline,
+    noDelay = false
   ): WebSocketHandle {.raises: [].} =
     init()
+
+    if noDelay:
+      # WinHTTP does not expose TCP_NODELAY for WebSocket connections.
+      discard
 
     let state = cast[ptr WebSocketState](allocShared0(sizeof(WebSocketState)))
     state.httpRequest = startHttpRequest(
@@ -2363,8 +2368,37 @@ elif compileOption("threads"):
       return
     state.onMessage = callback
 
-  proc send*(msg: string, kind = Utf8Message) =
-    discard
+  proc send*(
+    handle: WebSocketHandle,
+    msg: string,
+    kind = Utf8Message
+  ) {.raises: [].} =
+    let state = webSockets.getOrDefault(handle, nil)
+    if state == nil or state.closed or state.hWebSocket == 0:
+      return
+
+    let bufferKind =
+      case kind
+      of Utf8Message:
+        WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE
+      of BinaryMessage:
+        WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE
+    let data =
+      if msg.len > 0:
+        msg[0].unsafeAddr
+      else:
+        nil
+    let err = WinHttpWebSocketSend(
+      state.hWebSocket,
+      bufferKind,
+      data,
+      msg.len.DWORD
+    )
+    if err != 0:
+      try:
+        handle.onWebSocketError("WinHttpWebSocketSend error: " & $err)
+      except:
+        discard
 
   proc onReadComplete(
     handle: WebSocketHandle,

@@ -1,4 +1,5 @@
-import common, internal, std/asyncdispatch, std/httpclient, std/random, std/strutils, std/tables, ws, std/times, zippy
+import common, internal, std/asyncdispatch, std/asyncnet, std/httpclient,
+  std/nativesockets, std/random, std/strutils, std/tables, std/times, ws, zippy
 
 when defined(emscripten):
   {.error: "windy/http is not supported on emscripten".}
@@ -21,6 +22,7 @@ type
   WebSocketState = ref object
     url: string
     deadline: float64
+    noDelay: bool
     closed: bool
 
     onError: HttpErrorCallback
@@ -162,6 +164,12 @@ proc webSocketTasklet(handle: WebSocketHandle) {.async.} =
   var onOpenCalled: bool
   try:
     state.webSocket = await newWebSocket(state.url)
+    if state.noDelay and state.webSocket != nil:
+      state.webSocket.tcpSocket.setSockOpt(
+        OptNoDelay,
+        true,
+        level = IPPROTO_TCP.cint
+      )
     if state.closed:
       state.webSocket.hangup()
     else:
@@ -201,6 +209,23 @@ proc webSocketTasklet(handle: WebSocketHandle) {.async.} =
 
   if onOpenCalled and state.onClose != nil:
     state.onClose()
+
+proc webSocketSendTasklet(
+  handle: WebSocketHandle,
+  msg: string,
+  kind: WebSocketMessageKind
+) {.async.} =
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil or state.closed or state.webSocket == nil:
+    return
+
+  let opcode =
+    case kind
+    of Utf8Message:
+      Opcode.Text
+    of BinaryMessage:
+      Opcode.Binary
+  await state.webSocket.send(msg, opcode)
 
 proc startTasklet(handle: HttpRequestHandle) =
   try:
@@ -308,13 +333,15 @@ proc `onDownloadProgress=`*(
 
 proc openWebSocket*(
   url: string,
-  deadline = defaultHttpDeadline
+  deadline = defaultHttpDeadline,
+  noDelay = false
 ): WebSocketHandle {.raises: [].} =
   result = newWebSocketHandle()
 
   let state = webSockets.getOrDefault(result, nil)
   state.url = url
   state.deadline = deadline
+  state.noDelay = noDelay
 
   result.startTasklet()
 
@@ -353,3 +380,14 @@ proc `onClose=`*(
   if state == nil:
     return
   state.onClose = callback
+
+proc send*(
+  handle: WebSocketHandle,
+  msg: string,
+  kind = Utf8Message
+) {.raises: [].} =
+  try:
+    usingHttpDispatcher:
+      asyncCheck handle.webSocketSendTasklet(msg, kind)
+  except:
+    discard
