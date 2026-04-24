@@ -33,6 +33,23 @@ EM_JS(int, get_canvas_height, (), {
   return Module.canvas.height;
 });
 
+EM_JS(void, setup_windy_runtime, (), {
+  if (Module.canvas && !Module.canvas.windyContextHandlerAdded) {
+    Module.canvas.addEventListener("webglcontextlost", function(e) {
+      console.error("WebGL context lost. You will need to reload the page.");
+      e.preventDefault();
+    }, false);
+    Module.canvas.windyContextHandlerAdded = true;
+  }
+
+  if (!window.windyErrorHandlerAdded) {
+    window.addEventListener("error", function() {
+      console.info("Exception thrown, see JavaScript console");
+    });
+    window.windyErrorHandlerAdded = true;
+  }
+});
+
 EM_JS(void, set_canvas_size, (int width, int height), {
   Module.canvas.width = width;
   Module.canvas.height = height;
@@ -189,12 +206,98 @@ EM_JS(const char*, get_platform, (), {
   stringToUTF8(s, buf, len);
   return buf;
 });
+
+EM_JS(void, windy_websocket_open, (int handle, const char* url), {
+  if (!Module.windyWebSockets) Module.windyWebSockets = {};
+
+  const urlUtf8 = UTF8ToString(url);
+  let ws;
+  try {
+    ws = new WebSocket(urlUtf8);
+  } catch (err) {
+    const msg = String(err && err.message ? err.message : err);
+    const len = lengthBytesUTF8(msg) + 1;
+    const ptr = _malloc(len);
+    stringToUTF8(msg, ptr, len);
+    Module._windy_websocket_error_callback(handle, ptr);
+    _free(ptr);
+    return;
+  }
+
+  ws.binaryType = "arraybuffer";
+  Module.windyWebSockets[handle] = ws;
+
+  ws.onopen = function() {
+    Module._windy_websocket_open_callback(handle);
+  };
+
+  ws.onmessage = function(event) {
+    if (typeof event.data === "string") {
+      const len = lengthBytesUTF8(event.data);
+      const ptr = _malloc(len + 1);
+      stringToUTF8(event.data, ptr, len + 1);
+      Module._windy_websocket_message_callback(handle, ptr, len, 0);
+      _free(ptr);
+      return;
+    }
+
+    const sendBytes = function(bytes) {
+      const len = bytes.length;
+      const ptr = _malloc(len);
+      HEAPU8.set(bytes, ptr);
+      Module._windy_websocket_message_callback(handle, ptr, len, 1);
+      _free(ptr);
+    };
+
+    if (event.data instanceof ArrayBuffer) {
+      sendBytes(new Uint8Array(event.data));
+    } else if (event.data instanceof Blob) {
+      event.data.arrayBuffer().then(function(buffer) {
+        sendBytes(new Uint8Array(buffer));
+      });
+    }
+  };
+
+  ws.onerror = function() {
+    const msg = "WebSocket error";
+    const len = lengthBytesUTF8(msg) + 1;
+    const ptr = _malloc(len);
+    stringToUTF8(msg, ptr, len);
+    Module._windy_websocket_error_callback(handle, ptr);
+    _free(ptr);
+  };
+
+  ws.onclose = function() {
+    delete Module.windyWebSockets[handle];
+    Module._windy_websocket_close_callback(handle);
+  };
+});
+
+EM_JS(void, windy_websocket_send, (int handle, const char* data, int len, int kind), {
+  const ws = Module.windyWebSockets && Module.windyWebSockets[handle];
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+  if (kind === 0) {
+    ws.send(UTF8ToString(data, len));
+  } else {
+    const bytes = HEAPU8.slice(data, data + len);
+    ws.send(bytes);
+  }
+});
+
+EM_JS(void, windy_websocket_close, (int handle), {
+  const ws = Module.windyWebSockets && Module.windyWebSockets[handle];
+  if (!ws) return;
+  delete Module.windyWebSockets[handle];
+  ws.close();
+});
 """.}
 
 proc get_window_width*(): cint {.importc.}
 proc get_window_height*(): cint {.importc.}
 proc get_canvas_width*(): cint {.importc.}
 proc get_canvas_height*(): cint {.importc.}
+proc setup_windy_runtime*() {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
 proc make_canvas_focusable*() {.importc.}
 proc setup_file_drop_handler*(userData: pointer) {.importc.}
@@ -210,6 +313,14 @@ proc getLocalStorageLength*(key: cstring): cint {.importc: "get_local_storage_le
 proc getLocalStorageInto*(output: cstring, maxLen: cint, key: cstring): cint {.importc: "get_local_storage_into".}
 proc setLocalStorage*(key: cstring, value: cstring) {.importc: "set_local_storage".}
 proc get_platform*(): cstring {.importc.}
+proc windy_websocket_open*(handle: cint, url: cstring) {.importc.}
+proc windy_websocket_send*(
+  handle: cint,
+  data: cstring,
+  len: cint,
+  kind: cint
+) {.importc.}
+proc windy_websocket_close*(handle: cint) {.importc.}
 
 type
   EMSCRIPTEN_RESULT* = cint
