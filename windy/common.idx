@@ -1,4 +1,4 @@
-nimTitle	common	windy/common.html	module src/windy/common		0
+nimTitle	common	windy/common.html	module windy/common		0
 nim	WindyError	windy/common.html#WindyError	object WindyError		4
 nim	OpenGL3Dot0	windy/common.html#OpenGL3Dot0	OpenGLVersion.OpenGL3Dot0		6
 nim	OpenGL3Dot1	windy/common.html#OpenGL3Dot1	OpenGLVersion.OpenGL3Dot1		6

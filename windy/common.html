@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>src/windy/common</title>
+<title>windy/common</title>
 
 <!-- Google fonts -->
 <link href='https://fonts.googleapis.com/css?family=Lato:400,600,900' rel='stylesheet' type='text/css'/>
@@ -16,15 +16,18 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.8">
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.10">
 
 <!-- JS -->
-<script type="text/javascript" src="../dochack.js?v=2.2.8"></script>
+<script type="text/javascript" src="../dochack.js?v=2.2.10"></script>
 </head>
 <body>
   <div class="document" id="documentId">
+    <input type="checkbox" id="nav-toggle" hidden>
+    <label for="nav-toggle" id="nav-burger">&#9776;</label>
+    <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
-      <h1 class="title">src/windy/common</h1>
+      <h1 class="title">windy/common</h1>
       <div class="row">
   <div class="three columns">
     <div class="theme-select-wrapper">
@@ -177,7 +180,7 @@
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
     <div id="Button">
-  <dt><pre><a href="common.html#Button"><span class="Identifier">Button</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#Button"><span class="Identifier">Button</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">ButtonUnknown</span><span class="Other">,</span> <span class="Identifier">MouseLeft</span><span class="Other">,</span> <span class="Identifier">MouseRight</span><span class="Other">,</span> <span class="Identifier">MouseMiddle</span><span class="Other">,</span> <span class="Identifier">MouseButton4</span><span class="Other">,</span> <span class="Identifier">MouseButton5</span><span class="Other">,</span>
   <span class="Identifier">DoubleClick</span><span class="Other">,</span> <span class="Identifier">TripleClick</span><span class="Other">,</span> <span class="Identifier">QuadrupleClick</span><span class="Other">,</span> <span class="Identifier">Key0</span><span class="Other">,</span> <span class="Identifier">Key1</span><span class="Other">,</span> <span class="Identifier">Key2</span><span class="Other">,</span> <span class="Identifier">Key3</span><span class="Other">,</span> <span class="Identifier">Key4</span><span class="Other">,</span> <span class="Identifier">Key5</span><span class="Other">,</span>
   <span class="Identifier">Key6</span><span class="Other">,</span> <span class="Identifier">Key7</span><span class="Other">,</span> <span class="Identifier">Key8</span><span class="Other">,</span> <span class="Identifier">Key9</span><span class="Other">,</span> <span class="Identifier">KeyA</span><span class="Other">,</span> <span class="Identifier">KeyB</span><span class="Other">,</span> <span class="Identifier">KeyC</span><span class="Other">,</span> <span class="Identifier">KeyD</span><span class="Other">,</span> <span class="Identifier">KeyE</span><span class="Other">,</span> <span class="Identifier">KeyF</span><span class="Other">,</span> <span class="Identifier">KeyG</span><span class="Other">,</span> <span class="Identifier">KeyH</span><span class="Other">,</span> <span class="Identifier">KeyI</span><span class="Other">,</span>
@@ -202,7 +205,7 @@
   </dd>
 </div>
 <div id="ButtonCallback">
-  <dt><pre><a href="common.html#ButtonCallback"><span class="Identifier">ButtonCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">button</span><span class="Other">:</span> <a href="common.html#Button"><span class="Identifier">Button</span></a><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#ButtonCallback"><span class="Identifier">ButtonCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">button</span><span class="Other">:</span> <a href="#Button"><span class="Identifier">Button</span></a><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -212,7 +215,7 @@
   </dd>
 </div>
 <div id="ButtonView">
-  <dt><pre><a href="common.html#ButtonView"><span class="Identifier">ButtonView</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">set</span><span class="Other">[</span><a href="common.html#Button"><span class="Identifier">Button</span></a><span class="Other">]</span></pre></dt>
+  <dt><pre><a href="#ButtonView"><span class="Identifier">ButtonView</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">set</span><span class="Other">[</span><a href="#Button"><span class="Identifier">Button</span></a><span class="Other">]</span></pre></dt>
   <dd>
     
     
@@ -222,7 +225,7 @@
   </dd>
 </div>
 <div id="Callback">
-  <dt><pre><a href="common.html#Callback"><span class="Identifier">Callback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#Callback"><span class="Identifier">Callback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -232,7 +235,7 @@
   </dd>
 </div>
 <div id="ClipboardContentKind">
-  <dt><pre><a href="common.html#ClipboardContentKind"><span class="Identifier">ClipboardContentKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#ClipboardContentKind"><span class="Identifier">ClipboardContentKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">TextContent</span><span class="Other">,</span> <span class="Identifier">ImageContent</span></pre></dt>
   <dd>
     
@@ -243,8 +246,8 @@
   </dd>
 </div>
 <div id="Cursor">
-  <dt><pre><a href="common.html#Cursor"><span class="Identifier">Cursor</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Keyword">case</span> <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="common.html#CursorKind"><span class="Identifier">CursorKind</span></a>
+  <dt><pre><a href="#Cursor"><span class="Identifier">Cursor</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <span class="Keyword">case</span> <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#CursorKind"><span class="Identifier">CursorKind</span></a>
   <span class="Keyword">of</span> <span class="Identifier">CustomCursor</span><span class="Other">:</span>
     <span class="Identifier">image</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Image</span>
     <span class="Identifier">hotspot</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">IVec2</span>
@@ -259,7 +262,7 @@
   </dd>
 </div>
 <div id="CursorKind">
-  <dt><pre><a href="common.html#CursorKind"><span class="Identifier">CursorKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#CursorKind"><span class="Identifier">CursorKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">ArrowCursor</span><span class="Other">,</span> <span class="Identifier">PointerCursor</span><span class="Other">,</span> <span class="Identifier">IBeamCursor</span><span class="Other">,</span> <span class="Identifier">CrosshairCursor</span><span class="Other">,</span> <span class="Identifier">ClosedHandCursor</span><span class="Other">,</span>
   <span class="Identifier">OpenHandCursor</span><span class="Other">,</span> <span class="Identifier">ResizeLeftCursor</span><span class="Other">,</span> <span class="Identifier">ResizeRightCursor</span><span class="Other">,</span> <span class="Identifier">ResizeLeftRightCursor</span><span class="Other">,</span>
   <span class="Identifier">ResizeUpCursor</span><span class="Other">,</span> <span class="Identifier">ResizeDownCursor</span><span class="Other">,</span> <span class="Identifier">ResizeUpDownCursor</span><span class="Other">,</span>
@@ -273,7 +276,7 @@
   </dd>
 </div>
 <div id="FileDropCallback">
-  <dt><pre><a href="common.html#FileDropCallback"><span class="Identifier">FileDropCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">fileName</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">fileData</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#FileDropCallback"><span class="Identifier">FileDropCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">fileName</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">fileData</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -283,7 +286,7 @@
   </dd>
 </div>
 <div id="HttpErrorCallback">
-  <dt><pre><a href="common.html#HttpErrorCallback"><span class="Identifier">HttpErrorCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#HttpErrorCallback"><span class="Identifier">HttpErrorCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -293,7 +296,7 @@
   </dd>
 </div>
 <div id="HttpHeader">
-  <dt><pre><a href="common.html#HttpHeader"><span class="Identifier">HttpHeader</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#HttpHeader"><span class="Identifier">HttpHeader</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">key</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
@@ -304,7 +307,7 @@
   </dd>
 </div>
 <div id="HttpProgressCallback">
-  <dt><pre><a href="common.html#HttpProgressCallback"><span class="Identifier">HttpProgressCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">completed</span><span class="Other">,</span> <span class="Identifier">total</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#HttpProgressCallback"><span class="Identifier">HttpProgressCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">completed</span><span class="Other">,</span> <span class="Identifier">total</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -314,7 +317,7 @@
   </dd>
 </div>
 <div id="HttpRequestHandle">
-  <dt><pre><a href="common.html#HttpRequestHandle"><span class="Identifier">HttpRequestHandle</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">int</span></pre></dt>
+  <dt><pre><a href="#HttpRequestHandle"><span class="Identifier">HttpRequestHandle</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">int</span></pre></dt>
   <dd>
     
     
@@ -324,9 +327,9 @@
   </dd>
 </div>
 <div id="HttpResponse">
-  <dt><pre><a href="common.html#HttpResponse"><span class="Identifier">HttpResponse</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#HttpResponse"><span class="Identifier">HttpResponse</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
   <span class="Identifier">code</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
-  <span class="Identifier">headers</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="common.html#HttpHeader"><span class="Identifier">HttpHeader</span></a><span class="Other">]</span>
+  <span class="Identifier">headers</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#HttpHeader"><span class="Identifier">HttpHeader</span></a><span class="Other">]</span>
   <span class="Identifier">body</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
@@ -337,7 +340,7 @@
   </dd>
 </div>
 <div id="HttpResponseCallback">
-  <dt><pre><a href="common.html#HttpResponseCallback"><span class="Identifier">HttpResponseCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">response</span><span class="Other">:</span> <a href="common.html#HttpResponse"><span class="Identifier">HttpResponse</span></a><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#HttpResponseCallback"><span class="Identifier">HttpResponseCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">response</span><span class="Other">:</span> <a href="#HttpResponse"><span class="Identifier">HttpResponse</span></a><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -347,7 +350,7 @@
   </dd>
 </div>
 <div id="MSAA">
-  <dt><pre><a href="common.html#MSAA"><span class="Identifier">MSAA</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#MSAA"><span class="Identifier">MSAA</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">msaaDisabled</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="Identifier">msaa2x</span> <span class="Other">=</span> <span class="DecNumber">2</span><span class="Other">,</span> <span class="Identifier">msaa4x</span> <span class="Other">=</span> <span class="DecNumber">4</span><span class="Other">,</span> <span class="Identifier">msaa8x</span> <span class="Other">=</span> <span class="DecNumber">8</span></pre></dt>
   <dd>
     
@@ -358,7 +361,7 @@
   </dd>
 </div>
 <div id="OpenGLVersion">
-  <dt><pre><a href="common.html#OpenGLVersion"><span class="Identifier">OpenGLVersion</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#OpenGLVersion"><span class="Identifier">OpenGLVersion</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">OpenGL3Dot0</span><span class="Other">,</span> <span class="Identifier">OpenGL3Dot1</span><span class="Other">,</span> <span class="Identifier">OpenGL3Dot2</span><span class="Other">,</span> <span class="Identifier">OpenGL3Dot3</span><span class="Other">,</span> <span class="Identifier">OpenGL4Dot0</span><span class="Other">,</span> <span class="Identifier">OpenGL4Dot1</span><span class="Other">,</span>
   <span class="Identifier">OpenGL4Dot2</span><span class="Other">,</span> <span class="Identifier">OpenGL4Dot3</span><span class="Other">,</span> <span class="Identifier">OpenGL4Dot4</span><span class="Other">,</span> <span class="Identifier">OpenGL4Dot5</span><span class="Other">,</span> <span class="Identifier">OpenGL4Dot6</span></pre></dt>
   <dd>
@@ -370,7 +373,7 @@
   </dd>
 </div>
 <div id="RuneCallback">
-  <dt><pre><a href="common.html#RuneCallback"><span class="Identifier">RuneCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">rune</span><span class="Other">:</span> <span class="Identifier">Rune</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#RuneCallback"><span class="Identifier">RuneCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">rune</span><span class="Other">:</span> <span class="Identifier">Rune</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -380,7 +383,7 @@
   </dd>
 </div>
 <div id="Screen">
-  <dt><pre><a href="common.html#Screen"><span class="Identifier">Screen</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#Screen"><span class="Identifier">Screen</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">left</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">right</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">top</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">bottom</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
   <span class="Identifier">primary</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
   <dd>
@@ -392,7 +395,7 @@
   </dd>
 </div>
 <div id="WebSocketHandle">
-  <dt><pre><a href="common.html#WebSocketHandle"><span class="Identifier">WebSocketHandle</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">int</span></pre></dt>
+  <dt><pre><a href="#WebSocketHandle"><span class="Identifier">WebSocketHandle</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">int</span></pre></dt>
   <dd>
     
     
@@ -402,7 +405,7 @@
   </dd>
 </div>
 <div id="WebSocketMessageCallback">
-  <dt><pre><a href="common.html#WebSocketMessageCallback"><span class="Identifier">WebSocketMessageCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">kind</span><span class="Other">:</span> <a href="common.html#WebSocketMessageKind"><span class="Identifier">WebSocketMessageKind</span></a><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#WebSocketMessageCallback"><span class="Identifier">WebSocketMessageCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">kind</span><span class="Other">:</span> <a href="#WebSocketMessageKind"><span class="Identifier">WebSocketMessageKind</span></a><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -412,7 +415,7 @@
   </dd>
 </div>
 <div id="WebSocketMessageKind">
-  <dt><pre><a href="common.html#WebSocketMessageKind"><span class="Identifier">WebSocketMessageKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#WebSocketMessageKind"><span class="Identifier">WebSocketMessageKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">Utf8Message</span><span class="Other">,</span> <span class="Identifier">BinaryMessage</span></pre></dt>
   <dd>
     
@@ -423,7 +426,7 @@
   </dd>
 </div>
 <div id="WindowStyle">
-  <dt><pre><a href="common.html#WindowStyle"><span class="Identifier">WindowStyle</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#WindowStyle"><span class="Identifier">WindowStyle</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">DecoratedResizable</span><span class="Other">,</span> <span class="Identifier">Decorated</span><span class="Other">,</span> <span class="Identifier">Undecorated</span><span class="Other">,</span> <span class="Identifier">Transparent</span></pre></dt>
   <dd>
     
@@ -434,7 +437,7 @@
   </dd>
 </div>
 <div id="WindyError">
-  <dt><pre><a href="common.html#WindyError"><span class="Identifier">WindyError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">ValueError</span></pre></dt>
+  <dt><pre><a href="#WindyError"><span class="Identifier">WindyError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">ValueError</span></pre></dt>
   <dd>
     
     
@@ -450,7 +453,7 @@
   <h1><a class="toc-backref" href="#10">Consts</a></h1>
   <dl class="item">
     <div id="defaultHttpDeadline">
-  <dt><pre><a href="common.html#defaultHttpDeadline"><span class="Identifier">defaultHttpDeadline</span></a><span class="Other">:</span> <span class="Identifier">float32</span> <span class="Other">=</span> <span class="FloatNumber">-1.0</span></pre></dt>
+  <dt><pre><a href="#defaultHttpDeadline"><span class="Identifier">defaultHttpDeadline</span></a><span class="Other">:</span> <span class="Identifier">float32</span> <span class="Other">=</span> <span class="FloatNumber">-1.0</span></pre></dt>
   <dd>
     
     
@@ -467,7 +470,7 @@
   <dl class="item">
     <div id="==-procs-all">
   <div id="==,HttpRequestHandle,HttpRequestHandle">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle"><span class="Identifier">`==`</span></a><span class="Other">(</span><span class="Identifier">a</span><span class="Other">,</span> <span class="Identifier">b</span><span class="Other">:</span> <a href="common.html#HttpRequestHandle"><span class="Identifier">HttpRequestHandle</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle"><span class="Identifier">`==`</span></a><span class="Other">(</span><span class="Identifier">a</span><span class="Other">,</span> <span class="Identifier">b</span><span class="Other">:</span> <a href="#HttpRequestHandle"><span class="Identifier">HttpRequestHandle</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -477,7 +480,7 @@
   </dd>
 </div>
 <div id="==,WebSocketHandle,WebSocketHandle">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%3D%3D%2CWebSocketHandle%2CWebSocketHandle"><span class="Identifier">`==`</span></a><span class="Other">(</span><span class="Identifier">a</span><span class="Other">,</span> <span class="Identifier">b</span><span class="Other">:</span> <a href="common.html#WebSocketHandle"><span class="Identifier">WebSocketHandle</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#%3D%3D%2CWebSocketHandle%2CWebSocketHandle"><span class="Identifier">`==`</span></a><span class="Other">(</span><span class="Identifier">a</span><span class="Other">,</span> <span class="Identifier">b</span><span class="Other">:</span> <a href="#WebSocketHandle"><span class="Identifier">WebSocketHandle</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -490,7 +493,7 @@
 </div>
 <div id="[]-procs-all">
   <div id="[],ButtonView,Button">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%5B%5D%2CButtonView%2CButton"><span class="Identifier">`[]`</span></a><span class="Other">(</span><span class="Identifier">buttonView</span><span class="Other">:</span> <a href="common.html#ButtonView"><span class="Identifier">ButtonView</span></a><span class="Other">;</span> <span class="Identifier">button</span><span class="Other">:</span> <a href="common.html#Button"><span class="Identifier">Button</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#%5B%5D%2CButtonView%2CButton"><span class="Identifier">`[]`</span></a><span class="Other">(</span><span class="Identifier">buttonView</span><span class="Other">:</span> <a href="#ButtonView"><span class="Identifier">ButtonView</span></a><span class="Other">;</span> <span class="Identifier">button</span><span class="Other">:</span> <a href="#Button"><span class="Identifier">Button</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -501,7 +504,7 @@
   </dd>
 </div>
 <div id="[],seq[HttpHeader],string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%5B%5D%2Cseq%5BHttpHeader%5D%2Cstring"><span class="Identifier">`[]`</span></a><span class="Other">(</span><span class="Identifier">headers</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="common.html#HttpHeader"><span class="Identifier">HttpHeader</span></a><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#%5B%5D%2Cseq%5BHttpHeader%5D%2Cstring"><span class="Identifier">`[]`</span></a><span class="Other">(</span><span class="Identifier">headers</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#HttpHeader"><span class="Identifier">HttpHeader</span></a><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -515,7 +518,7 @@
 </div>
 <div id="[]=-procs-all">
   <div id="[]=,seq[HttpHeader],string,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%5B%5D%3D%2Cseq%5BHttpHeader%5D%2Cstring%2Cstring"><span class="Identifier">`[]=`</span></a><span class="Other">(</span><span class="Identifier">headers</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="common.html#HttpHeader"><span class="Identifier">HttpHeader</span></a><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">,</span> <span class="Identifier">value</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#%5B%5D%3D%2Cseq%5BHttpHeader%5D%2Cstring%2Cstring"><span class="Identifier">`[]=`</span></a><span class="Other">(</span><span class="Identifier">headers</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#HttpHeader"><span class="Identifier">HttpHeader</span></a><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">,</span> <span class="Identifier">value</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -529,7 +532,7 @@
 </div>
 <div id="len-procs-all">
   <div id="len,ButtonView">
-  <dt><pre><span class="Keyword">proc</span> <a href="#len%2CButtonView"><span class="Identifier">len</span></a><span class="Other">(</span><span class="Identifier">buttonView</span><span class="Other">:</span> <a href="common.html#ButtonView"><span class="Identifier">ButtonView</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#len%2CButtonView"><span class="Identifier">len</span></a><span class="Other">(</span><span class="Identifier">buttonView</span><span class="Other">:</span> <a href="#ButtonView"><span class="Identifier">ButtonView</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -542,7 +545,7 @@
 </div>
 <div id="size-procs-all">
   <div id="size,Screen">
-  <dt><pre><span class="Keyword">proc</span> <a href="#size%2CScreen"><span class="Identifier">size</span></a><span class="Other">(</span><span class="Identifier">screen</span><span class="Other">:</span> <a href="common.html#Screen"><span class="Identifier">Screen</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#size%2CScreen"><span class="Identifier">size</span></a><span class="Other">(</span><span class="Identifier">screen</span><span class="Other">:</span> <a href="#Screen"><span class="Identifier">Screen</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Returns the size of the screen.
@@ -576,7 +579,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-07 23:44:19 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-25 04:14:15 UTC</small>
       </div>
     </div>
   </div>

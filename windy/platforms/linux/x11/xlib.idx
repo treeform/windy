@@ -1,4 +1,4 @@
-nimTitle	xlib	windy/platforms/linux/x11/xlib.html	module src/windy/platforms/linux/x11/xlib		0
+nimTitle	xlib	windy/platforms/linux/x11/xlib.html	module windy/platforms/linux/x11/xlib		0
 nim	libX11	windy/platforms/linux/x11/xlib.html#libX11	const libX11		3
 nim	libXExt	windy/platforms/linux/x11/xlib.html#libXExt	const libXExt		9
 nim	Display	windy/platforms/linux/x11/xlib.html#Display	type Display		16

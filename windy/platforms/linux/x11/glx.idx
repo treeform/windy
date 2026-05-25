@@ -1,4 +1,4 @@
-nimTitle	glx	windy/platforms/linux/x11/glx.html	module src/windy/platforms/linux/x11/glx		0
+nimTitle	glx	windy/platforms/linux/x11/glx.html	module windy/platforms/linux/x11/glx		0
 nim	GlxContext	windy/platforms/linux/x11/glx.html#GlxContext	type GlxContext		4
 nim	GlxRgba	windy/platforms/linux/x11/glx.html#GlxRgba	const GlxRgba		7
 nim	GlxDoublebuffer	windy/platforms/linux/x11/glx.html#GlxDoublebuffer	const GlxDoublebuffer		8

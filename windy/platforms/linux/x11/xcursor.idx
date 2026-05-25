@@ -1,4 +1,4 @@
-nimTitle	xcursor	windy/platforms/linux/x11/xcursor.html	module src/windy/platforms/linux/x11/xcursor		0
+nimTitle	xcursor	windy/platforms/linux/x11/xcursor.html	module windy/platforms/linux/x11/xcursor		0
 nim	libXcursor	windy/platforms/linux/x11/xcursor.html#libXcursor	const libXcursor		4
 nim	XcursorPixel	windy/platforms/linux/x11/xcursor.html#XcursorPixel	type XcursorPixel		11
 nim	XcursorDim	windy/platforms/linux/x11/xcursor.html#XcursorDim	type XcursorDim		12

@@ -1,4 +1,4 @@
-nimTitle	x	windy/platforms/linux/x11/x.html	module src/windy/platforms/linux/x11/x		0
+nimTitle	x	windy/platforms/linux/x11/x.html	module windy/platforms/linux/x11/x		0
 nim	XID	windy/platforms/linux/x11/x.html#XID	type XID		2
 nim	Mask	windy/platforms/linux/x11/x.html#Mask	type Mask		3
 nim	Atom	windy/platforms/linux/x11/x.html#Atom	type Atom		4

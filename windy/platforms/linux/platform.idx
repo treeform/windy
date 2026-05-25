@@ -1,4 +1,4 @@
-nimTitle	platform	windy/platforms/linux/platform.html	module src/windy/platforms/linux/platform		0
+nimTitle	platform	windy/platforms/linux/platform.html	module windy/platforms/linux/platform		0
 nim	Window	windy/platforms/linux/platform.html#Window	type Window		13
 nim	quitRequested	windy/platforms/linux/platform.html#quitRequested	var quitRequested		64
 nim	onQuitRequest	windy/platforms/linux/platform.html#onQuitRequest	var onQuitRequest		65

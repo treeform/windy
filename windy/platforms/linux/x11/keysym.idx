@@ -1,4 +1,4 @@
-nimTitle	keysym	windy/platforms/linux/x11/keysym.html	module src/windy/platforms/linux/x11/keysym		0
+nimTitle	keysym	windy/platforms/linux/x11/keysym.html	module windy/platforms/linux/x11/keysym		0
 nim	xk_VoidSymbol	windy/platforms/linux/x11/keysym.html#xk_VoidSymbol	const xk_VoidSymbol		4
 nim	xk_BackSpace	windy/platforms/linux/x11/keysym.html#xk_BackSpace	const xk_BackSpace		6
 nim	xk_Tab	windy/platforms/linux/x11/keysym.html#xk_Tab	const xk_Tab		7

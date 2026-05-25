@@ -1,4 +1,4 @@
-nimTitle	internal	windy/internal.html	module src/windy/internal		0
+nimTitle	internal	windy/internal.html	module windy/internal		0
 nim	CRLF	windy/internal.html#CRLF	const CRLF		5
 nim	WindowState	windy/internal.html#WindowState	object WindowState		8
 nim	PerFrame	windy/internal.html#PerFrame	object PerFrame		29

@@ -1,4 +1,4 @@
-nimTitle	xevent	windy/platforms/linux/x11/xevent.html	module src/windy/platforms/linux/x11/xevent		0
+nimTitle	xevent	windy/platforms/linux/x11/xevent.html	module windy/platforms/linux/x11/xevent		0
 nim	IfEventProc	windy/platforms/linux/x11/xevent.html#IfEventProc	type IfEventProc		4
 nim	ErrorHandleProc	windy/platforms/linux/x11/xevent.html#ErrorHandleProc	type ErrorHandleProc		9
 nim	XEventKind	windy/platforms/linux/x11/xevent.html#XEventKind	enum XEventKind		11

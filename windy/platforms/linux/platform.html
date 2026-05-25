@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>src/windy/platforms/linux/platform</title>
+<title>windy/platforms/linux/platform</title>
 
 <!-- Google fonts -->
 <link href='https://fonts.googleapis.com/css?family=Lato:400,600,900' rel='stylesheet' type='text/css'/>
@@ -16,15 +16,18 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../../../nimdoc.out.css?v=2.2.8">
+<link rel="stylesheet" type="text/css" href="../../../nimdoc.out.css?v=2.2.10">
 
 <!-- JS -->
-<script type="text/javascript" src="../../../dochack.js?v=2.2.8"></script>
+<script type="text/javascript" src="../../../dochack.js?v=2.2.10"></script>
 </head>
 <body>
   <div class="document" id="documentId">
+    <input type="checkbox" id="nav-toggle" hidden>
+    <label for="nav-toggle" id="nav-burger">&#9776;</label>
+    <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
-      <h1 class="title">src/windy/platforms/linux/platform</h1>
+      <h1 class="title">windy/platforms/linux/platform</h1>
       <div class="row">
   <div class="three columns">
     <div class="theme-select-wrapper">
@@ -335,7 +338,7 @@
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
     <div id="Window">
-  <dt><pre><a href="platform.html#Window"><span class="Identifier">Window</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#Window"><span class="Identifier">Window</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
   <span class="Identifier">onCloseRequest</span><span class="Operator">*</span><span class="Other">:</span> <a href="../../common.html#Callback"><span class="Identifier">Callback</span></a>
   <span class="Identifier">onFrame</span><span class="Operator">*</span><span class="Other">:</span> <a href="../../common.html#Callback"><span class="Identifier">Callback</span></a>
   <span class="Identifier">onMove</span><span class="Operator">*</span><span class="Other">:</span> <a href="../../common.html#Callback"><span class="Identifier">Callback</span></a>
@@ -363,7 +366,7 @@
   <h1><a class="toc-backref" href="#8">Vars</a></h1>
   <dl class="item">
     <div id="multiClickInterval">
-  <dt><pre><a href="platform.html#multiClickInterval"><span class="Identifier">multiClickInterval</span></a><span class="Other">:</span> <span class="Identifier">Duration</span> <span class="Other">=</span> <span class="Identifier">initDuration</span><span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">200</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#multiClickInterval"><span class="Identifier">multiClickInterval</span></a><span class="Other">:</span> <span class="Identifier">Duration</span> <span class="Other">=</span> <span class="Identifier">initDuration</span><span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">200</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="DecNumber">0</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -373,7 +376,7 @@
   </dd>
 </div>
 <div id="multiClickRadius">
-  <dt><pre><a href="platform.html#multiClickRadius"><span class="Identifier">multiClickRadius</span></a><span class="Other">:</span> <span class="Identifier">float</span> <span class="Other">=</span> <span class="FloatNumber">4.0</span></pre></dt>
+  <dt><pre><a href="#multiClickRadius"><span class="Identifier">multiClickRadius</span></a><span class="Other">:</span> <span class="Identifier">float</span> <span class="Other">=</span> <span class="FloatNumber">4.0</span></pre></dt>
   <dd>
     
     
@@ -383,7 +386,7 @@
   </dd>
 </div>
 <div id="onQuitRequest">
-  <dt><pre><a href="platform.html#onQuitRequest"><span class="Identifier">onQuitRequest</span></a><span class="Other">:</span> <a href="../../common.html#Callback"><span class="Identifier">Callback</span></a></pre></dt>
+  <dt><pre><a href="#onQuitRequest"><span class="Identifier">onQuitRequest</span></a><span class="Other">:</span> <a href="../../common.html#Callback"><span class="Identifier">Callback</span></a></pre></dt>
   <dd>
     
     
@@ -393,7 +396,7 @@
   </dd>
 </div>
 <div id="quitRequested">
-  <dt><pre><a href="platform.html#quitRequested"><span class="Identifier">quitRequested</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <dt><pre><a href="#quitRequested"><span class="Identifier">quitRequested</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
   <dd>
     
     
@@ -410,7 +413,7 @@
   <dl class="item">
     <div id="buttonDown-procs-all">
   <div id="buttonDown,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#buttonDown%2CWindow"><span class="Identifier">buttonDown</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#buttonDown%2CWindow"><span class="Identifier">buttonDown</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -423,7 +426,7 @@
 </div>
 <div id="buttonPressed-procs-all">
   <div id="buttonPressed,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#buttonPressed%2CWindow"><span class="Identifier">buttonPressed</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#buttonPressed%2CWindow"><span class="Identifier">buttonPressed</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -437,7 +440,7 @@
 </div>
 <div id="buttonReleased-procs-all">
   <div id="buttonReleased,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#buttonReleased%2CWindow"><span class="Identifier">buttonReleased</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#buttonReleased%2CWindow"><span class="Identifier">buttonReleased</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -451,7 +454,7 @@
 </div>
 <div id="buttonToggle-procs-all">
   <div id="buttonToggle,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#buttonToggle%2CWindow"><span class="Identifier">buttonToggle</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#buttonToggle%2CWindow"><span class="Identifier">buttonToggle</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#ButtonView"><span class="Identifier">ButtonView</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -465,7 +468,7 @@
 </div>
 <div id="centerWindow-procs-all">
   <div id="centerWindow,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#centerWindow%2CWindow"><span class="Identifier">centerWindow</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#centerWindow%2CWindow"><span class="Identifier">centerWindow</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Calculate centered position for a window on the primary screen.
@@ -478,7 +481,7 @@
 </div>
 <div id="close-procs-all">
   <div id="close,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#close%2CWindow"><span class="Identifier">close</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#close%2CWindow"><span class="Identifier">close</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -491,7 +494,7 @@
 </div>
 <div id="closed-procs-all">
   <div id="closed,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#closed%2CWindow"><span class="Identifier">closed</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#closed%2CWindow"><span class="Identifier">closed</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -504,7 +507,7 @@
 </div>
 <div id="closeIme-procs-all">
   <div id="closeIme,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#closeIme%2CWindow"><span class="Identifier">closeIme</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#closeIme%2CWindow"><span class="Identifier">closeIme</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -517,7 +520,7 @@
 </div>
 <div id="closeRequested-procs-all">
   <div id="closeRequested,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#closeRequested%2CWindow"><span class="Identifier">closeRequested</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#closeRequested%2CWindow"><span class="Identifier">closeRequested</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -530,7 +533,7 @@
 </div>
 <div id="closeRequested=-procs-all">
   <div id="closeRequested=,Window,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#closeRequested%3D%2CWindow%2Cbool"><span class="Identifier">closeRequested=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#closeRequested%3D%2CWindow%2Cbool"><span class="Identifier">closeRequested=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -544,7 +547,7 @@
 </div>
 <div id="contentScale-procs-all">
   <div id="contentScale,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#contentScale%2CWindow"><span class="Identifier">contentScale</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">float32</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#contentScale%2CWindow"><span class="Identifier">contentScale</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">float32</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -557,7 +560,7 @@
 </div>
 <div id="cursor-procs-all">
   <div id="cursor,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#cursor%2CWindow"><span class="Identifier">cursor</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">common</span><span class="Other">.</span><span class="Identifier">Cursor</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#cursor%2CWindow"><span class="Identifier">cursor</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">common</span><span class="Other">.</span><span class="Identifier">Cursor</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -570,7 +573,7 @@
 </div>
 <div id="cursor=-procs-all">
   <div id="cursor=,Window,">
-  <dt><pre><span class="Keyword">proc</span> <a href="#cursor%3D%2CWindow%2C"><span class="Identifier">cursor=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">common</span><span class="Other">.</span><span class="Identifier">Cursor</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#cursor%3D%2CWindow%2C"><span class="Identifier">cursor=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">common</span><span class="Other">.</span><span class="Identifier">Cursor</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -584,7 +587,7 @@
 </div>
 <div id="focus-procs-all">
   <div id="focus,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#focus%2CWindow"><span class="Identifier">focus</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#focus%2CWindow"><span class="Identifier">focus</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -597,7 +600,7 @@
 </div>
 <div id="focused-procs-all">
   <div id="focused,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#focused%2CWindow"><span class="Identifier">focused</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#focused%2CWindow"><span class="Identifier">focused</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -610,7 +613,7 @@
 </div>
 <div id="framebufferSize-procs-all">
   <div id="framebufferSize,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#framebufferSize%2CWindow"><span class="Identifier">framebufferSize</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#framebufferSize%2CWindow"><span class="Identifier">framebufferSize</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -623,7 +626,7 @@
 </div>
 <div id="fullscreen-procs-all">
   <div id="fullscreen,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#fullscreen%2CWindow"><span class="Identifier">fullscreen</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#fullscreen%2CWindow"><span class="Identifier">fullscreen</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -636,7 +639,7 @@
 </div>
 <div id="fullscreen=-procs-all">
   <div id="fullscreen=,Window,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#fullscreen%3D%2CWindow%2Cbool"><span class="Identifier">fullscreen=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WindyError</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#fullscreen%3D%2CWindow%2Cbool"><span class="Identifier">fullscreen=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WindyError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -691,7 +694,7 @@
 </div>
 <div id="icon=-procs-all">
   <div id="icon=,Window,Image">
-  <dt><pre><span class="Keyword">proc</span> <a href="#icon%3D%2CWindow%2CImage"><span class="Identifier">icon=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">icon</span><span class="Other">:</span> <span class="Identifier">Image</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#icon%3D%2CWindow%2CImage"><span class="Identifier">icon=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">icon</span><span class="Other">:</span> <span class="Identifier">Image</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -704,7 +707,7 @@
 </div>
 <div id="imeCompositionString-procs-all">
   <div id="imeCompositionString,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#imeCompositionString%2CWindow"><span class="Identifier">imeCompositionString</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#imeCompositionString%2CWindow"><span class="Identifier">imeCompositionString</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -718,7 +721,7 @@
 </div>
 <div id="imeCursorIndex-procs-all">
   <div id="imeCursorIndex,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#imeCursorIndex%2CWindow"><span class="Identifier">imeCursorIndex</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#imeCursorIndex%2CWindow"><span class="Identifier">imeCursorIndex</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -731,7 +734,7 @@
 </div>
 <div id="makeContextCurrent-procs-all">
   <div id="makeContextCurrent,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#makeContextCurrent%2CWindow"><span class="Identifier">makeContextCurrent</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#makeContextCurrent%2CWindow"><span class="Identifier">makeContextCurrent</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -744,7 +747,7 @@
 </div>
 <div id="maximized-procs-all">
   <div id="maximized,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#maximized%2CWindow"><span class="Identifier">maximized</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#maximized%2CWindow"><span class="Identifier">maximized</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -757,7 +760,7 @@
 </div>
 <div id="maximized=-procs-all">
   <div id="maximized=,Window,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#maximized%3D%2CWindow%2Cbool"><span class="Identifier">maximized=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WindyError</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#maximized%3D%2CWindow%2Cbool"><span class="Identifier">maximized=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WindyError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -771,7 +774,7 @@
 </div>
 <div id="minimized-procs-all">
   <div id="minimized,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#minimized%2CWindow"><span class="Identifier">minimized</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#minimized%2CWindow"><span class="Identifier">minimized</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -784,7 +787,7 @@
 </div>
 <div id="minimized=-procs-all">
   <div id="minimized=,Window,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#minimized%3D%2CWindow%2Cbool"><span class="Identifier">minimized=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#minimized%3D%2CWindow%2Cbool"><span class="Identifier">minimized=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -798,7 +801,7 @@
 </div>
 <div id="mouseDelta-procs-all">
   <div id="mouseDelta,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#mouseDelta%2CWindow"><span class="Identifier">mouseDelta</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#mouseDelta%2CWindow"><span class="Identifier">mouseDelta</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -811,7 +814,7 @@
 </div>
 <div id="mousePos-procs-all">
   <div id="mousePos,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#mousePos%2CWindow"><span class="Identifier">mousePos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#mousePos%2CWindow"><span class="Identifier">mousePos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -824,7 +827,7 @@
 </div>
 <div id="mousePrevPos-procs-all">
   <div id="mousePrevPos,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#mousePrevPos%2CWindow"><span class="Identifier">mousePrevPos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#mousePrevPos%2CWindow"><span class="Identifier">mousePrevPos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -839,7 +842,7 @@
   <div id="newWindow,string,IVec2,int,int">
   <dt><pre><span class="Keyword">proc</span> <a href="#newWindow%2Cstring%2CIVec2%2Cint%2Cint"><span class="Identifier">newWindow</span></a><span class="Other">(</span><span class="Identifier">title</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">size</span><span class="Other">:</span> <span class="Identifier">IVec2</span><span class="Other">;</span> <span class="Identifier">style</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">;</span>
                <span class="Identifier">visible</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">vsync</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">openglVersion</span> <span class="Other">=</span> <span class="Identifier">OpenGL4Dot1</span><span class="Other">;</span>
-               <span class="Identifier">msaa</span> <span class="Other">=</span> <span class="Identifier">msaaDisabled</span><span class="Other">;</span> <span class="Identifier">depthBits</span> <span class="Other">=</span> <span class="DecNumber">24</span><span class="Other">;</span> <span class="Identifier">stencilBits</span> <span class="Other">=</span> <span class="DecNumber">8</span><span class="Other">)</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a> {.
+               <span class="Identifier">msaa</span> <span class="Other">=</span> <span class="Identifier">msaaDisabled</span><span class="Other">;</span> <span class="Identifier">depthBits</span> <span class="Other">=</span> <span class="DecNumber">24</span><span class="Other">;</span> <span class="Identifier">stencilBits</span> <span class="Other">=</span> <span class="DecNumber">8</span><span class="Other">)</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WindyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -895,7 +898,7 @@
 </div>
 <div id="pos-procs-all">
   <div id="pos,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#pos%2CWindow"><span class="Identifier">pos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#pos%2CWindow"><span class="Identifier">pos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -908,7 +911,7 @@
 </div>
 <div id="pos=-procs-all">
   <div id="pos=,Window,IVec2">
-  <dt><pre><span class="Keyword">proc</span> <a href="#pos%3D%2CWindow%2CIVec2"><span class="Identifier">pos=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">IVec2</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#pos%3D%2CWindow%2CIVec2"><span class="Identifier">pos=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">IVec2</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
                                       <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -922,7 +925,7 @@
 </div>
 <div id="runeInputEnabled-procs-all">
   <div id="runeInputEnabled,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#runeInputEnabled%2CWindow"><span class="Identifier">runeInputEnabled</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#runeInputEnabled%2CWindow"><span class="Identifier">runeInputEnabled</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -935,7 +938,7 @@
 </div>
 <div id="runeInputEnabled=-procs-all">
   <div id="runeInputEnabled=,Window,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#runeInputEnabled%3D%2CWindow%2Cbool"><span class="Identifier">runeInputEnabled=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#runeInputEnabled%3D%2CWindow%2Cbool"><span class="Identifier">runeInputEnabled=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -949,7 +952,7 @@
 </div>
 <div id="scrollDelta-procs-all">
   <div id="scrollDelta,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#scrollDelta%2CWindow"><span class="Identifier">scrollDelta</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#scrollDelta%2CWindow"><span class="Identifier">scrollDelta</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -991,7 +994,7 @@
 </div>
 <div id="size-procs-all">
   <div id="size,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#size%2CWindow"><span class="Identifier">size</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#size%2CWindow"><span class="Identifier">size</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">IVec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -1004,7 +1007,7 @@
 </div>
 <div id="size=-procs-all">
   <div id="size=,Window,IVec2">
-  <dt><pre><span class="Keyword">proc</span> <a href="#size%3D%2CWindow%2CIVec2"><span class="Identifier">size=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">IVec2</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#size%3D%2CWindow%2CIVec2"><span class="Identifier">size=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">IVec2</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
                                        <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -1018,7 +1021,7 @@
 </div>
 <div id="style-procs-all">
   <div id="style,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#style%2CWindow"><span class="Identifier">style</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#WindowStyle"><span class="Identifier">WindowStyle</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#style%2CWindow"><span class="Identifier">style</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <a href="../../common.html#WindowStyle"><span class="Identifier">WindowStyle</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -1031,7 +1034,7 @@
 </div>
 <div id="style=-procs-all">
   <div id="style=,Window,WindowStyle">
-  <dt><pre><span class="Keyword">proc</span> <a href="#style%3D%2CWindow%2CWindowStyle"><span class="Identifier">style=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <a href="../../common.html#WindowStyle"><span class="Identifier">WindowStyle</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#style%3D%2CWindow%2CWindowStyle"><span class="Identifier">style=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <a href="../../common.html#WindowStyle"><span class="Identifier">WindowStyle</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -1045,7 +1048,7 @@
 </div>
 <div id="swapBuffers-procs-all">
   <div id="swapBuffers,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#swapBuffers%2CWindow"><span class="Identifier">swapBuffers</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#swapBuffers%2CWindow"><span class="Identifier">swapBuffers</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -1058,7 +1061,7 @@
 </div>
 <div id="title-procs-all">
   <div id="title,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#title%2CWindow"><span class="Identifier">title</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#title%2CWindow"><span class="Identifier">title</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -1071,7 +1074,7 @@
 </div>
 <div id="title=-procs-all">
   <div id="title=,Window,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#title%3D%2CWindow%2Cstring"><span class="Identifier">title=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#title%3D%2CWindow%2Cstring"><span class="Identifier">title=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -1084,7 +1087,7 @@
 </div>
 <div id="url-procs-all">
   <div id="url,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#url%2CWindow"><span class="Identifier">url</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#url%2CWindow"><span class="Identifier">url</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Url cannot be gotten on linux.
@@ -1097,7 +1100,7 @@
 </div>
 <div id="visible-procs-all">
   <div id="visible,Window">
-  <dt><pre><span class="Keyword">proc</span> <a href="#visible%2CWindow"><span class="Identifier">visible</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#visible%2CWindow"><span class="Identifier">visible</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -1110,7 +1113,7 @@
 </div>
 <div id="visible=-procs-all">
   <div id="visible=,Window,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#visible%3D%2CWindow%2Cbool"><span class="Identifier">visible=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="platform.html#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#visible%3D%2CWindow%2Cbool"><span class="Identifier">visible=</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <a href="#Window"><span class="Identifier">Window</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -1138,7 +1141,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-07 23:44:20 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-25 04:14:16 UTC</small>
       </div>
     </div>
   </div>
