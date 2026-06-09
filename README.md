@@ -3,7 +3,8 @@
 **This library is still in development and is not ready to use.**
 
 Windy is a windowing library for Nim that uses native OS APIs to
-manage windows, set up OpenGL, and receive mouse and keyboard input.
+manage windows, set up OpenGL or CPU pixel presentation, and receive mouse and
+keyboard input.
 
 `nimble install windy`
 
@@ -50,6 +51,12 @@ while not window.closeRequested:
 ```
 
 [Check out more examples here.](https://github.com/treeform/windy/tree/master/examples)
+
+## CPU Pixels
+
+On Windows, compile with `-d:useCpu` to create a plain window without an
+OpenGL context. CPU renderers can update the client area by passing a Pixie
+image to `window.presentPixels(image)`.
 
 
 ### Why not just use GLFW or SDL?

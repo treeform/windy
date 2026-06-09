@@ -8,6 +8,8 @@ when defined(useDirectX):
   {.hint: "Using DirectX backend".}
 elif defined(useVulkan):
   {.hint: "Using Vulkan backend".}
+elif defined(useCpu):
+  {.hint: "Using CPU backend".}
 else:
   # OpenGL
   {.hint: "Using OpenGL backend".}
@@ -81,6 +83,7 @@ type
     hWnd: HWND
     hdc: HDC
     hglrc: HGLRC
+    cpuPresentBuffer: seq[uint8]
     vsync*: bool
     iconHandle: HICON
     customCursor: HCURSOR
@@ -223,7 +226,7 @@ proc createWindow(windowClassName, title: string): HWND =
   if result == 0:
     raise newException(WindyError, "Creating native window failed")
 
-when defined(useDirectX) or defined(useVulkan):
+when defined(useDirectX) or defined(useVulkan) or defined(useCpu):
   proc destoryGraphicsContext(window: Window) =
     discard
 else: # OpenGL
@@ -1050,7 +1053,7 @@ proc wndProc(
 
   DefWindowProcW(hWnd, uMsg, wParam, lParam)
 
-when defined(useDirectX) or defined(useVulkan):
+when defined(useDirectX) or defined(useVulkan) or defined(useCpu):
 
   proc loadGraphicsContext() =
     discard
@@ -1174,6 +1177,69 @@ else: # OpenGL
 
     if wglSwapIntervalEXT(if vsync: 1 else: 0) == 0:
       raise newException(WindyError, "Error setting swap interval")
+
+when defined(useCpu):
+  proc straightChannel(channel, alpha: uint8): uint8 {.inline.} =
+    if alpha == 0:
+      return 0
+    if alpha == 255:
+      return channel
+
+    let value =
+      (channel.uint32 * 255'u32 + alpha.uint32 div 2) div alpha.uint32
+    if value > 255'u32:
+      255'u8
+    else:
+      value.uint8
+
+  proc presentPixels*(window: Window, image: Image) =
+    ## Presents a CPU-rendered Pixie image into the Win32 window client area.
+    if image == nil or image.width <= 0 or image.height <= 0:
+      return
+    if window.hdc == 0:
+      raise newException(WindyError, "Window device context is not available")
+
+    let clientSize = window.size
+    if clientSize.x <= 0 or clientSize.y <= 0:
+      return
+
+    let byteLen = image.width * image.height * 4
+    window.cpuPresentBuffer.setLen(byteLen)
+    for i in 0 ..< image.data.len:
+      let
+        color = image.data[i]
+        dst = i * 4
+      window.cpuPresentBuffer[dst + 0] = straightChannel(color.b, color.a)
+      window.cpuPresentBuffer[dst + 1] = straightChannel(color.g, color.a)
+      window.cpuPresentBuffer[dst + 2] = straightChannel(color.r, color.a)
+      window.cpuPresentBuffer[dst + 3] = color.a
+
+    var bmi: BITMAPINFO
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER).DWORD
+    bmi.bmiHeader.biWidth = image.width.LONG
+    bmi.bmiHeader.biHeight = -image.height.LONG
+    bmi.bmiHeader.biPlanes = 1
+    bmi.bmiHeader.biBitCount = 32
+    bmi.bmiHeader.biCompression = BI_RGB
+    bmi.bmiHeader.biSizeImage = byteLen.DWORD
+
+    let scanLines = StretchDIBits(
+      window.hdc,
+      0,
+      0,
+      clientSize.x,
+      clientSize.y,
+      0,
+      0,
+      image.width.int32,
+      image.height.int32,
+      cast[pointer](window.cpuPresentBuffer[0].addr),
+      bmi.addr,
+      DIB_RGB_COLORS.UINT,
+      SRCCOPY.DWORD
+    )
+    if scanLines == GDI_ERROR:
+      raise newException(WindyError, "Error presenting CPU pixels")
 
 
 proc init() {.raises: [].} =
