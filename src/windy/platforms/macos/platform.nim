@@ -37,8 +37,11 @@ type
     # AppKit applies this state asynchronously via delegate callbacks.
     fullscreenState: bool
     minimizedState: bool
+    activationSettlePolls: int
 
 const
+  ActivationSettlePolls = 60
+  ActivationSettleSeconds = 0.001
   decoratedResizableWindowMask =
     NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or
     NSWindowStyleMaskMiniaturizable or NSWindowStyleMaskResizable
@@ -160,12 +163,25 @@ proc `title=`*(window: Window, title: string) =
 proc `icon=`*(window: Window, icon: Image) =
   window.state.icon = icon
 
+proc requestActivation(window: Window) =
+  ## Shows the window and asks AppKit to activate this app.
+  window.inner.makeKeyAndOrderFront(0.ID)
+  NSApp.activateIgnoringOtherApps(true)
+
+proc settleRunLoop() =
+  ## Gives AppKit a short turn to deliver activation notifications.
+  discard NSRunLoop.currentRunLoop.runMode(
+    NSDefaultRunLoopMode,
+    NSDate.dateWithTimeIntervalSinceNow(ActivationSettleSeconds)
+  )
+
 proc `visible=`*(window: Window, visible: bool) =
   autoreleasepool:
     if visible:
-      window.inner.makeKeyAndOrderFront(0.ID)
-      NSApp.activateIgnoringOtherApps(true)
+      window.activationSettlePolls = ActivationSettlePolls
+      window.requestActivation()
     else:
+      window.activationSettlePolls = 0
       window.inner.orderOut(0.ID)
 
 proc `style=`*(window: Window, windowStyle: WindowStyle) =
@@ -320,7 +336,6 @@ proc applicationDidFinishLaunching(
   notification: NSNotification
 ): ID {.cdecl.} =
   NSApp.setPresentationOptions(NSApplicationPresentationDefault)
-  NSApp.activateIgnoringOtherApps(true)
 
 proc windowDidResize(
   self: ID,
@@ -888,7 +903,22 @@ proc processFlagsChanged(event: NSEvent) =
   else:
     window.handleButtonPress(button)
 
+proc settleActivationRequests() =
+  ## Replays activation while AppKit catches up after delayed startup.
+  var pending = false
+  for window in windows:
+    if window.activationSettlePolls == 0:
+      continue
+    dec window.activationSettlePolls
+    pending = true
+    window.requestActivation()
+  if pending:
+    settleRunLoop()
+
 proc pollEvents*() =
+  autoreleasepool:
+    settleActivationRequests()
+
   # Draw first (in case a message closes a window or similar)
   for window in windows:
     if window.onFrame != nil:
@@ -1076,8 +1106,6 @@ proc newWindow*(
     result.minimizedState = result.inner.isMiniaturized
     result.fullscreenState =
       (result.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
-
-  pollEvents() # This can cause lots of issues, potential workaround needed
 
 proc title*(window: Window): string =
   window.state.title

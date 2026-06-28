@@ -49,6 +49,7 @@ type
   NSNotification* = distinct NSObject
   NSEvent* = distinct NSObject
   NSDate* = distinct NSObject
+  NSRunLoop* = distinct NSObject
   NSRunLoopMode* = distinct NSString
   NSMenu* = distinct NSObject
   NSMenuItem* = distinct NSObject
@@ -190,6 +191,16 @@ objc:
   ): NSEvent
   proc sendEvent*(self: NSApplication, x: NSEvent)
   proc distantPast*(class: typedesc[NSDate]): NSDate
+  proc dateWithTimeIntervalSinceNow*(
+    class: typedesc[NSDate],
+    x: float64
+  ): NSDate
+  proc currentRunLoop*(class: typedesc[NSRunLoop]): NSRunLoop
+  proc runMode*(
+    self: NSRunLoop,
+    x: NSRunLoopMode,
+    beforeDate: NSDate
+  ): bool
   proc addItem*(self: NSMenu, x: NSMenuItem)
   proc initWithTitle*(
     self: NSMenuItem,
