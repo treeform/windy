@@ -21,6 +21,7 @@ const Examples = [
   "property_changes",
   "screens",
   "scrollwheel",
+  "slow_window_start",
   "system_cursors",
   "tray",
   "websocket",
