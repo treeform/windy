@@ -345,6 +345,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const CapRound" href="windy/platforms/linux/x11/x.html#CapRound">x: const CapRound</a></li>
           </ul></dd>
+<dt><a name="captureMouse" href="#captureMouse"><span>captureMouse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc captureMouse(window: Window)" href="windy/platforms/linux/platform.html#captureMouse%2CWindow">platform: proc captureMouse(window: Window)</a></li>
+          </ul></dd>
 <dt><a name="CenterGravity" href="#CenterGravity"><span>CenterGravity:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const CenterGravity" href="windy/platforms/linux/x11/x.html#CenterGravity">x: const CenterGravity</a></li>
@@ -1721,6 +1725,10 @@
 <li><a class="reference external"
           data-doc-search-tag="common: Button.MouseButton5" href="windy/common.html#MouseButton5">common: Button.MouseButton5</a></li>
           </ul></dd>
+<dt><a name="mouseCaptured" href="#mouseCaptured"><span>mouseCaptured:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc mouseCaptured(window: Window): bool" href="windy/platforms/linux/platform.html#mouseCaptured%2CWindow">platform: proc mouseCaptured(window: Window): bool</a></li>
+          </ul></dd>
 <dt><a name="mouseDelta" href="#mouseDelta"><span>mouseDelta:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="platform: proc mouseDelta(window: Window): IVec2" href="windy/platforms/linux/platform.html#mouseDelta%2CWindow">platform: proc mouseDelta(window: Window): IVec2</a></li>
@@ -2029,7 +2037,7 @@
           </ul></dd>
 <dt><a name="openWebSocket" href="#openWebSocket"><span>openWebSocket:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="http: proc openWebSocket(url: string; deadline = defaultHttpDeadline): WebSocketHandle" href="windy/http.html#openWebSocket%2Cstring">http: proc openWebSocket(url: string; deadline = defaultHttpDeadline): WebSocketHandle</a></li>
+          data-doc-search-tag="http: proc openWebSocket(url: string; deadline = defaultHttpDeadline; noDelay = false): WebSocketHandle" href="windy/http.html#openWebSocket%2Cstring">http: proc openWebSocket(url: string; deadline = defaultHttpDeadline; noDelay = false): WebSocketHandle</a></li>
           </ul></dd>
 <dt><a name="OperationNotAllowedCursor" href="#OperationNotAllowedCursor"><span>OperationNotAllowedCursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2139,6 +2147,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const RaiseLowest" href="windy/platforms/linux/x11/x.html#RaiseLowest">x: const RaiseLowest</a></li>
           </ul></dd>
+<dt><a name="releaseMouse" href="#releaseMouse"><span>releaseMouse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc releaseMouse(window: Window)" href="windy/platforms/linux/platform.html#releaseMouse%2CWindow">platform: proc releaseMouse(window: Window)</a></li>
+          </ul></dd>
 <dt><a name="ReplayKeyboard" href="#ReplayKeyboard"><span>ReplayKeyboard:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const ReplayKeyboard" href="windy/platforms/linux/x11/x.html#ReplayKeyboard">x: const ReplayKeyboard</a></li>
@@ -2228,6 +2240,10 @@
 <dt><a name="scrollDelta" href="#scrollDelta"><span>scrollDelta:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="platform: proc scrollDelta(window: Window): Vec2" href="windy/platforms/linux/platform.html#scrollDelta%2CWindow">platform: proc scrollDelta(window: Window): Vec2</a></li>
+          </ul></dd>
+<dt><a name="send" href="#send"><span>send:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc send(handle: WebSocketHandle; msg: string; kind = Utf8Message)" href="windy/http.html#send%2CWebSocketHandle%2Cstring">http: proc send(handle: WebSocketHandle; msg: string; kind = Utf8Message)</a></li>
           </ul></dd>
 <dt><a name="setClipboardString" href="#setClipboardString"><span>setClipboardString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10215,7 +10231,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-06-28 01:54:50 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-10 20:33:13 UTC</small>
       </div>
     </div>
   </div>
