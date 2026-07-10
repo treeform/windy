@@ -287,6 +287,23 @@ proc mousePrevPos*(window: Window): IVec2 =
 proc mouseDelta*(window: Window): IVec2 =
   (window.state.perFrame.mouseDelta.vec2 * window.contentScale).ivec2
 
+proc mouseCaptured*(window: Window): bool =
+  ## Returns true when the mouse is captured for relative look.
+  window.state.mouseCaptured
+
+proc captureMouse*(window: Window) =
+  ## Hide the cursor and report unbounded relative mouse deltas.
+  if window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = true
+  warn "Mouse capture is not implemented on Emscripten yet"
+
+proc releaseMouse*(window: Window) =
+  ## Show the cursor and restore normal absolute mouse tracking.
+  if not window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = false
+
 proc scrollDelta*(window: Window): Vec2 =
   window.state.perFrame.scrollDelta
 
