@@ -48,6 +48,15 @@ type
     fetch*: ptr emscripten_fetch_t
     bodyKeepAlive*: string
 
+  EmsWebSocketState = ref object
+    url: string
+    deadline: float64
+    closed: bool
+
+    onError: HttpErrorCallback
+    onOpen, onClose: Callback
+    onMessage: WebSocketMessageCallback
+
 let
   platform = $get_platform()
 
@@ -62,16 +71,20 @@ var
   currentContext: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE
   mainWindow: Window  # Track the main window for events
   httpRequests: Table[HttpRequestHandle, EmsHttpRequestState]
+  webSockets: Table[WebSocketHandle, EmsWebSocketState]
 
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
 
+proc close*(handle: WebSocketHandle) {.raises: [].}
+
 proc init =
   if initialized:
     return
   initialized = true
+  setup_windy_runtime()
 
 proc makeContextCurrent*(window: Window) =
   if currentContext != 0:
@@ -98,6 +111,15 @@ proc pollHttp() =
       state.completed = true
       if state.onError != nil:
         state.onError("Deadline exceeded")
+  var expiredSockets: seq[WebSocketHandle]
+  for handle, state in webSockets:
+    if not state.closed and state.deadline > 0 and state.deadline <= now:
+      expiredSockets.add(handle)
+  for handle in expiredSockets:
+    let state = webSockets.getOrDefault(handle, nil)
+    if state != nil and state.onError != nil:
+      state.onError("Deadline exceeded")
+    handle.close()
 
 proc pollEvents*() =
   ## Polls for events.
@@ -286,6 +308,23 @@ proc mousePrevPos*(window: Window): IVec2 =
 
 proc mouseDelta*(window: Window): IVec2 =
   (window.state.perFrame.mouseDelta.vec2 * window.contentScale).ivec2
+
+proc mouseCaptured*(window: Window): bool =
+  ## Returns true when the mouse is captured for relative look.
+  window.state.mouseCaptured
+
+proc captureMouse*(window: Window) =
+  ## Hide the cursor and report unbounded relative mouse deltas.
+  if window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = true
+  warn "Mouse capture is not implemented on Emscripten yet"
+
+proc releaseMouse*(window: Window) =
+  ## Show the cursor and restore normal absolute mouse tracking.
+  if not window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = false
 
 proc scrollDelta*(window: Window): Vec2 =
   window.state.perFrame.scrollDelta
@@ -796,6 +835,146 @@ proc `onDownloadProgress=`*(handle: HttpRequestHandle, callback: HttpProgressCal
   let state = httpRequests.getOrDefault(handle, nil)
   if state == nil: return
   state.onDownloadProgress = callback
+
+proc copyData(data: pointer, len: int): string =
+  ## Copies bytes from JavaScript into a Nim string.
+  result = newString(len)
+  if len > 0:
+    copyMem(result[0].addr, data, len)
+
+proc windy_websocket_open_callback(handle: cint) {.cdecl, exportc.} =
+  ## Handles a browser WebSocket open event.
+  let state = webSockets.getOrDefault(handle.WebSocketHandle, nil)
+  if state == nil or state.closed:
+    return
+  if state.onOpen != nil:
+    state.onOpen()
+
+proc windy_websocket_message_callback(
+  handle: cint,
+  data: pointer,
+  len: cint,
+  kind: cint
+) {.cdecl, exportc.} =
+  ## Handles a browser WebSocket message event.
+  let state = webSockets.getOrDefault(handle.WebSocketHandle, nil)
+  if state == nil or state.closed or state.onMessage == nil:
+    return
+  let messageKind =
+    case kind
+    of 0:
+      Utf8Message
+    else:
+      BinaryMessage
+  state.onMessage(copyData(data, len.int), messageKind)
+
+proc windy_websocket_error_callback(
+  handle: cint,
+  msg: cstring
+) {.cdecl, exportc.} =
+  ## Handles a browser WebSocket error event.
+  let state = webSockets.getOrDefault(handle.WebSocketHandle, nil)
+  if state == nil or state.closed:
+    return
+  if state.onError != nil:
+    state.onError($msg)
+
+proc windy_websocket_close_callback(handle: cint) {.cdecl, exportc.} =
+  ## Handles a browser WebSocket close event.
+  let wsHandle = handle.WebSocketHandle
+  let state = webSockets.getOrDefault(wsHandle, nil)
+  if state == nil:
+    return
+  state.closed = true
+  webSockets.del(wsHandle)
+  if state.onClose != nil:
+    state.onClose()
+
+proc openWebSocket*(
+  url: string,
+  deadline = defaultHttpDeadline,
+  noDelay = false
+): WebSocketHandle {.raises: [].} =
+  ## Opens a browser WebSocket.
+  init()
+  if noDelay:
+    # Browsers do not expose TCP_NODELAY for WebSocket connections.
+    discard
+
+  while true:
+    result = windyRand.next().WebSocketHandle
+    if result.HttpRequestHandle notin httpRequests and result notin webSockets:
+      webSockets[result] = EmsWebSocketState()
+      break
+
+  let state = webSockets.getOrDefault(result, nil)
+  state.url = url
+  state.deadline =
+    if deadline >= 0:
+      epochTime() + deadline.float64
+    else:
+      -1
+  windy_websocket_open(result.int.cint, url.cstring)
+
+proc close*(handle: WebSocketHandle) {.raises: [].} =
+  ## Closes a browser WebSocket.
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.closed = true
+  webSockets.del(handle)
+  windy_websocket_close(handle.int.cint)
+
+proc send*(
+  handle: WebSocketHandle,
+  msg: string,
+  kind = Utf8Message
+) {.raises: [].} =
+  ## Sends a browser WebSocket message.
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil or state.closed:
+    return
+  windy_websocket_send(handle.int.cint, msg.cstring, msg.len.cint, kind.ord.cint)
+
+proc `onError=`*(
+  handle: WebSocketHandle,
+  callback: HttpErrorCallback
+) =
+  ## Sets the error callback of a WebSocket.
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onError = callback
+
+proc `onOpen=`*(
+  handle: WebSocketHandle,
+  callback: Callback
+) =
+  ## Sets the open callback of a WebSocket.
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onOpen = callback
+
+proc `onMessage=`*(
+  handle: WebSocketHandle,
+  callback: WebSocketMessageCallback
+) =
+  ## Sets the message callback of a WebSocket.
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onMessage = callback
+
+proc `onClose=`*(
+  handle: WebSocketHandle,
+  callback: Callback
+) =
+  ## Sets the close callback of a WebSocket.
+  let state = webSockets.getOrDefault(handle, nil)
+  if state == nil:
+    return
+  state.onClose = callback
 
 proc getConfigHome*(appName: string): string =
   raise newException(Exception, "getConfigHome is not supported on emscripten")

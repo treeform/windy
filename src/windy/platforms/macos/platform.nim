@@ -40,8 +40,11 @@ type
     fullscreenState: bool
     minimizedState: bool
     cpuImage: NSImage
+    activationSettlePolls: int
 
 const
+  ActivationSettlePolls = 60
+  ActivationSettleSeconds = 0.001
   decoratedResizableWindowMask =
     NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or
     NSWindowStyleMaskMiniaturizable or NSWindowStyleMaskResizable
@@ -163,12 +166,25 @@ proc `title=`*(window: Window, title: string) =
 proc `icon=`*(window: Window, icon: Image) =
   window.state.icon = icon
 
+proc requestActivation(window: Window) =
+  ## Shows the window and asks AppKit to activate this app.
+  window.inner.makeKeyAndOrderFront(0.ID)
+  NSApp.activateIgnoringOtherApps(true)
+
+proc settleRunLoop() =
+  ## Gives AppKit a short turn to deliver activation notifications.
+  discard NSRunLoop.currentRunLoop.runMode(
+    NSDefaultRunLoopMode,
+    NSDate.dateWithTimeIntervalSinceNow(ActivationSettleSeconds)
+  )
+
 proc `visible=`*(window: Window, visible: bool) =
   autoreleasepool:
     if visible:
-      window.inner.makeKeyAndOrderFront(0.ID)
-      NSApp.activateIgnoringOtherApps(true)
+      window.activationSettlePolls = ActivationSettlePolls
+      window.requestActivation()
     else:
+      window.activationSettlePolls = 0
       window.inner.orderOut(0.ID)
 
 proc `style=`*(window: Window, windowStyle: WindowStyle) =
@@ -260,6 +276,44 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   autoreleasepool:
     window.inner.invalidateCursorRectsForView(window.inner.contentView)
 
+proc mouseCaptured*(window: Window): bool =
+  ## Returns true when the mouse is captured for relative look.
+  window.state.mouseCaptured
+
+proc warpCursorToCenter(window: Window) =
+  ## Move the system cursor to the window content center.
+  let
+    view = window.inner.contentView
+    bounds = view.bounds
+    local = NSMakePoint(bounds.size.width / 2, bounds.size.height / 2)
+    inWindow = view.convertPoint(local, 0.NSView)
+    inScreen = window.inner.convertPointToScreen(inWindow)
+    # Cocoa screen space is bottom-left; CG warp is top-left.
+    primary = NSScreen.screens.objectAtIndex(0).NSScreen.frame
+    cgY = primary.origin.y + primary.size.height - inScreen.y
+  cgWarpMouseCursorPosition(inScreen.x, cgY)
+  window.state.mousePos = (vec2(local.x, local.y) * window.contentScale).ivec2
+  window.state.mousePrevPos = window.state.mousePos
+  window.state.hasPrevMouse = false
+
+proc captureMouse*(window: Window) =
+  ## Hide the cursor and report unbounded relative mouse deltas.
+  if window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = true
+  window.warpCursorToCenter()
+  discard CGAssociateMouseAndMouseCursorPosition(false)
+  NSCursor.hide()
+
+proc releaseMouse*(window: Window) =
+  ## Show the cursor and restore normal absolute mouse tracking.
+  if not window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = false
+  discard CGAssociateMouseAndMouseCursorPosition(true)
+  NSCursor.unhide()
+  window.state.hasPrevMouse = false
+
 proc url*(window: Window): string =
   ## Url cannot be gotten on macOS windows.
   warn "Url cannot be gotten on macOS windows"
@@ -279,6 +333,16 @@ proc handleMouseMove(window: Window, location: NSPoint) =
     window.state.perFrame.mouseDelta = ivec2(0, 0)
   window.state.hasPrevMouse = true
 
+  if window.onMouseMove != nil:
+    window.onMouseMove()
+
+proc handleMouseDelta(window: Window, event: NSEvent) =
+  ## Relative deltas while captured. NSEvent deltaY is up-positive.
+  let scale = window.contentScale
+  window.state.perFrame.mouseDelta += ivec2(
+    round(event.deltaX * scale).int32,
+    round(-event.deltaY * scale).int32
+  )
   if window.onMouseMove != nil:
     window.onMouseMove()
 
@@ -323,7 +387,6 @@ proc applicationDidFinishLaunching(
   notification: NSNotification
 ): ID {.cdecl.} =
   NSApp.setPresentationOptions(NSApplicationPresentationDefault)
-  NSApp.activateIgnoringOtherApps(true)
 
 proc windowDidResize(
   self: ID,
@@ -405,7 +468,8 @@ proc windowDidBecomeKey(
   clearButtonsTemplate()
   if window.onFocusChange != nil:
     window.onFocusChange()
-  handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
 
 proc windowDidResignKey(
   self: ID,
@@ -420,6 +484,8 @@ proc windowDidResignKey(
     window.onFocusChange()
   # When loosing focus, prev mouse position is not valid.
   window.state.hasPrevMouse = false
+  # Alt-tab and focus loss always release capture.
+  window.releaseMouse()
 
 proc windowShouldClose(
   self: ID,
@@ -485,7 +551,10 @@ proc mouseMoved(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-  handleMouseMove(window, event.locationInWindow)
+  if window.state.mouseCaptured:
+    handleMouseDelta(window, event)
+  else:
+    handleMouseMove(window, event.locationInWindow)
 
 proc mouseDragged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   mouseMoved(self, cmd, event)
@@ -902,7 +971,22 @@ proc processFlagsChanged(event: NSEvent) =
   else:
     window.handleButtonPress(button)
 
+proc settleActivationRequests() =
+  ## Replays activation while AppKit catches up after delayed startup.
+  var pending = false
+  for window in windows:
+    if window.activationSettlePolls == 0:
+      continue
+    dec window.activationSettlePolls
+    pending = true
+    window.requestActivation()
+  if pending:
+    settleRunLoop()
+
 proc pollEvents*() =
+  autoreleasepool:
+    settleActivationRequests()
+
   # Draw first (in case a message closes a window or similar)
   for window in windows:
     if window.onFrame != nil:
@@ -981,6 +1065,7 @@ proc presentPixels*(window: Window, image: Image) =
     discard
 
 proc close*(window: Window) =
+  window.releaseMouse()
   window.onCloseRequest = nil
   window.onFrame = nil
   window.onMove = nil
@@ -1104,8 +1189,6 @@ proc newWindow*(
     result.minimizedState = result.inner.isMiniaturized
     result.fullscreenState =
       (result.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
-
-  pollEvents() # This can cause lots of issues, potential workaround needed
 
 proc title*(window: Window): string =
   window.state.title

@@ -675,6 +675,60 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   else:
     discard SetCursor(window.customCursor)
 
+proc mouseCaptured*(window: Window): bool =
+  ## Returns true when the mouse is captured for relative look.
+  window.state.mouseCaptured
+
+proc centerCursor(window: Window) =
+  var rect: RECT
+  discard GetClientRect(window.hWnd, rect.addr)
+  var center = POINT(
+    x: (rect.right - rect.left) div 2,
+    y: (rect.bottom - rect.top) div 2
+  )
+  discard ClientToScreen(window.hWnd, center.addr)
+  discard SetCursorPos(center.x, center.y)
+  window.state.mousePos = ivec2(
+    (rect.right - rect.left) div 2,
+    (rect.bottom - rect.top) div 2
+  )
+  window.state.mousePrevPos = window.state.mousePos
+
+proc clipCursorToWindow(window: Window) =
+  var rect: RECT
+  discard GetClientRect(window.hWnd, rect.addr)
+  var
+    topLeft = POINT(x: rect.left, y: rect.top)
+    bottomRight = POINT(x: rect.right, y: rect.bottom)
+  discard ClientToScreen(window.hWnd, topLeft.addr)
+  discard ClientToScreen(window.hWnd, bottomRight.addr)
+  rect = RECT(
+    left: topLeft.x,
+    top: topLeft.y,
+    right: bottomRight.x,
+    bottom: bottomRight.y
+  )
+  discard ClipCursor(rect.addr)
+
+proc captureMouse*(window: Window) =
+  ## Hide the cursor and report unbounded relative mouse deltas.
+  if window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = true
+  while ShowCursor(0) >= 0:
+    discard
+  window.clipCursorToWindow()
+  window.centerCursor()
+
+proc releaseMouse*(window: Window) =
+  ## Show the cursor and restore normal absolute mouse tracking.
+  if not window.state.mouseCaptured:
+    return
+  window.state.mouseCaptured = false
+  discard ClipCursor(nil)
+  while ShowCursor(1) < 0:
+    discard
+
 proc url*(window: Window): string =
   ## Url cannot be gotten on windows.
   warn "Url cannot be gotten on windows"
@@ -888,6 +942,8 @@ proc wndProc(
     return 0
   of WM_SETFOCUS, WM_KILLFOCUS:
     clearButtonsTemplate()
+    if uMsg == WM_KILLFOCUS:
+      window.releaseMouse()
     if window.onFocusChange != nil:
       window.onFocusChange()
     return 0
@@ -914,6 +970,8 @@ proc wndProc(
       window.state.mousePos - window.state.mousePrevPos
     if window.onMouseMove != nil:
       window.onMouseMove()
+    if window.state.mouseCaptured:
+      window.centerCursor()
     if not window.trackMouseEventRegistered:
       var tme: TRACKMOUSEEVENTSTRUCT
       tme.cbSize = sizeof(TRACKMOUSEEVENTSTRUCT).DWORD
@@ -2259,9 +2317,14 @@ elif compileOption("threads"):
 
   proc openWebSocket*(
     url: string,
-    deadline = defaultHttpDeadline
+    deadline = defaultHttpDeadline,
+    noDelay = false
   ): WebSocketHandle {.raises: [].} =
     init()
+
+    if noDelay:
+      # WinHTTP does not expose TCP_NODELAY for WebSocket connections.
+      discard
 
     let state = cast[ptr WebSocketState](allocShared0(sizeof(WebSocketState)))
     state.httpRequest = startHttpRequest(
@@ -2371,8 +2434,37 @@ elif compileOption("threads"):
       return
     state.onMessage = callback
 
-  proc send*(msg: string, kind = Utf8Message) =
-    discard
+  proc send*(
+    handle: WebSocketHandle,
+    msg: string,
+    kind = Utf8Message
+  ) {.raises: [].} =
+    let state = webSockets.getOrDefault(handle, nil)
+    if state == nil or state.closed or state.hWebSocket == 0:
+      return
+
+    let bufferKind =
+      case kind
+      of Utf8Message:
+        WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE
+      of BinaryMessage:
+        WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE
+    let data =
+      if msg.len > 0:
+        msg[0].unsafeAddr
+      else:
+        nil
+    let err = WinHttpWebSocketSend(
+      state.hWebSocket,
+      bufferKind,
+      data,
+      msg.len.DWORD
+    )
+    if err != 0:
+      try:
+        handle.onWebSocketError("WinHttpWebSocketSend error: " & $err)
+      except:
+        discard
 
   proc onReadComplete(
     handle: WebSocketHandle,

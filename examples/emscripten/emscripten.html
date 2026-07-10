@@ -23,30 +23,7 @@
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
     <script type='text/javascript'>
       var Module = {
-        preRun: [],
-        postRun: [],
-        canvas: (function() {
-          var canvas = document.getElementById('canvas');
-          canvas.addEventListener(
-            "webglcontextlost",
-            function(e) {
-              console.error('WebGL context lost. You will need to reload the page.');
-              e.preventDefault();
-            }, false);
-
-          return canvas;
-        })(),
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) {
-        },
-        onRuntimeInitialized: function() {
-          setTimeout(function() {
-            console.info('WASM Runtime Initialized');
-          }, 0);
-        }
-      };
-      window.onerror = function() {
-        console.info('Exception thrown, see JavaScript console');
+        canvas: document.getElementById('canvas')
       };
     </script>
     {{{ SCRIPT }}}
