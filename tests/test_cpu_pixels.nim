@@ -1,4 +1,4 @@
-when defined(useCpu) and defined(windows):
+when defined(useCpu) and (defined(windows) or defined(macosx)):
   import pixie, windy
 
   let window = newWindow(

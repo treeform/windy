@@ -5,6 +5,8 @@ import
 
 when defined(useMetal4):
   {.hint: "Using Metal backend".}
+elif defined(useCpu):
+  {.hint: "Using CPU backend".}
 else:
   import opengl
   {.hint: "Using OpenGL backend".}
@@ -37,6 +39,7 @@ type
     # AppKit applies this state asynchronously via delegate callbacks.
     fullscreenState: bool
     minimizedState: bool
+    cpuImage: NSImage
 
 const
   decoratedResizableWindowMask =
@@ -80,7 +83,7 @@ proc style*(window: Window): WindowStyle =
     else:
       Decorated
   else:
-    when defined(useMetal4):
+    when defined(useMetal4) or defined(useCpu):
       Undecorated
     else:
       var opaque: GLint
@@ -178,9 +181,9 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
     of Undecorated, Transparent:
       window.inner.setStyleMask(undecoratedWindowMask)
 
-    when defined(useMetal4):
+    when defined(useMetal4) or defined(useCpu):
       if windowStyle == Transparent:
-        warn "Transparent style is not supported by useMetal4 on macOS"
+        warn "Transparent style is not supported by this backend on macOS"
     else:
       var opaque: GLint = if windowStyle == Transparent: 0 else: 1
       autoreleasepool:
@@ -759,6 +762,15 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
 
   self.NSView.addCursorRect(self.NSView.bounds, cursor)
 
+proc drawRect(self: ID, cmd: SEL, dirtyRect: NSRect): ID {.cdecl.} =
+  when defined(useCpu):
+    let window = windows.forNSWindow(self.NSView.window)
+    if window == nil or window.cpuImage.int == 0:
+      return
+    window.cpuImage.drawInRect(self.NSView.bounds)
+  else:
+    discard
+
 proc init() {.raises: [].} =
   if initialized:
     return
@@ -782,7 +794,7 @@ proc init() {.raises: [].} =
       addMethod "windowDidResignKey:", windowDidResignKey
       addMethod "windowShouldClose:", windowShouldClose
 
-    when defined(useMetal4):
+    when defined(useMetal4) or defined(useCpu):
       addClass "WindyView", "NSView", WindyView:
         addProtocol "NSTextInputClient"
         addMethod "acceptsFirstResponder", acceptsFirstResponder
@@ -813,6 +825,8 @@ proc init() {.raises: [].} =
         addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
         addMethod "doCommandBySelector:", doCommandBySelector
         addMethod "resetCursorRects", resetCursorRects
+        when defined(useCpu):
+          addMethod "drawRect:", drawRect
     else:
       addClass "WindyView", "NSOpenGLView", WindyView:
         addProtocol "NSTextInputClient"
@@ -941,16 +955,30 @@ proc centerWindow(window: Window) =
   window.pos = ivec2(x.int32, y.int32)
 
 proc makeContextCurrent*(window: Window) =
-  when defined(useMetal4):
+  when defined(useMetal4) or defined(useCpu):
     discard
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.makeCurrentContext()
 
 proc swapBuffers*(window: Window) =
-  when defined(useMetal4):
+  when defined(useMetal4) or defined(useCpu):
     discard
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
+
+proc presentPixels*(window: Window, image: Image) =
+  ## Presents a CPU-rendered Pixie image into the macOS window content view.
+  when defined(useCpu):
+    if image == nil or image.width <= 0 or image.height <= 0:
+      return
+    let encodedPng = image.encodePng()
+    window.cpuImage = NSImage.alloc().initWithData(NSData.dataWithBytes(
+      encodedPng[0].unsafeAddr,
+      encodedPng.len
+    ))
+    window.inner.contentView.setNeedsDisplay(true)
+  else:
+    discard
 
 proc close*(window: Window) =
   window.onCloseRequest = nil
@@ -991,7 +1019,7 @@ proc newWindow*(
 
   init()
 
-  when defined(useMetal4):
+  when defined(useMetal4) or defined(useCpu):
     discard
   else:
     let openGlProfile: uint32 = case openglVersion:
@@ -1008,13 +1036,13 @@ proc newWindow*(
       false
     )
 
-    when defined(useMetal4):
-      let metalView = WindyView.alloc().NSView.initWithFrame(
+    when defined(useMetal4) or defined(useCpu):
+      let nativeView = WindyView.alloc().NSView.initWithFrame(
         result.inner.contentView.frame
       )
       result.inner.setDelegate(result.inner.ID)
-      result.inner.setContentView(metalView)
-      discard result.inner.makeFirstResponder(metalView)
+      result.inner.setContentView(nativeView)
+      discard result.inner.makeFirstResponder(nativeView)
     else:
       let
         pixelFormatAttribs = [
