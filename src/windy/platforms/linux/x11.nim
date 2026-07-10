@@ -46,6 +46,7 @@ type
     closeRequested, closed: bool
     innerDecorated: bool
     innerFocused: bool
+    mouseCaptured: bool
 
     # XDnD state
     xdndSource: XWindow
@@ -1155,6 +1156,23 @@ proc mousePrevPos*(window: Window): IVec2 =
 
 proc mouseDelta*(window: Window): IVec2 =
   window.perFrame.mouseDelta
+
+proc mouseCaptured*(window: Window): bool =
+  ## Returns true when the mouse is captured for relative look.
+  window.mouseCaptured
+
+proc captureMouse*(window: Window) =
+  ## Hide the cursor and report unbounded relative mouse deltas.
+  if window.mouseCaptured:
+    return
+  window.mouseCaptured = true
+  warn "Mouse capture is not implemented on Linux yet"
+
+proc releaseMouse*(window: Window) =
+  ## Show the cursor and restore normal absolute mouse tracking.
+  if not window.mouseCaptured:
+    return
+  window.mouseCaptured = false
 
 proc scrollDelta*(window: Window): Vec2 =
   window.perFrame.scrollDelta

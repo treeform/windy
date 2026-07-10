@@ -784,6 +784,15 @@ proc GetCursorPos*(
   lpPoint: LPPOINT
 ): BOOL {.dynlib: "User32".}
 
+proc SetCursorPos*(
+  x: int32,
+  y: int32
+): BOOL {.dynlib: "User32".}
+
+proc ShowCursor*(bShow: BOOL): int32 {.dynlib: "User32".}
+
+proc ClipCursor*(lpRect: LPRECT): BOOL {.dynlib: "User32".}
+
 proc TrackMouseEvent*(
   lpEventTrack: LPTRACKMOUSEEVENTSTRUCT
 ): BOOL {.dynlib: "User32".}

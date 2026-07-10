@@ -2,6 +2,7 @@ import opengl, objc
 export objc
 
 {.passL: "-framework Cocoa".}
+{.passL: "-framework ApplicationServices".}
 
 type
   CGPoint* {.pure, bycopy.} = object
@@ -143,6 +144,8 @@ objc:
   proc scrollingDeltaX*(self: NSEvent): float64
   proc scrollingDeltaY*(self: NSEvent): float64
   proc hasPreciseScrollingDeltas*(self: NSEvent): bool
+  proc deltaX*(self: NSEvent): float64
+  proc deltaY*(self: NSEvent): float64
   proc locationInWindow*(self: NSEvent): NSPoint
   proc buttonNumber*(self: NSEvent): int
   proc keyCode*(self: NSEvent): uint16
@@ -245,6 +248,8 @@ objc:
   proc level*(self: NSWindow): NSWindowLevel
   proc setLevel*(self: NSWindow, x: NSWindowLevel)
   proc convertRectToBacking*(self: NSView, x: NSRect): NSRect
+  proc convertPoint*(self: NSView, x: NSPoint, toView: NSView): NSPoint
+  proc convertPointToScreen*(self: NSWindow, x: NSPoint): NSPoint
   proc window*(self: NSView): NSWindow
   proc bounds*(self: NSView): NSRect
   proc removeTrackingArea*(self: NSView, x: NSTrackingArea)
@@ -299,6 +304,8 @@ objc:
   proc resizeDownCursor*(class: typedesc[NSCursor]): NSCursor
   proc resizeUpDownCursor*(class: typedesc[NSCursor]): NSCursor
   proc operationNotAllowedCursor*(class: typedesc[NSCursor]): NSCursor
+  proc hide*(class: typedesc[NSCursor])
+  proc unhide*(class: typedesc[NSCursor])
   proc discardMarkedText*(self: NSTextInputContext)
   proc handleEvent*(self: NSTextInputContext, x: NSEvent): bool
   proc deactivate*(self: NSTextInputContext)
@@ -310,6 +317,16 @@ objc:
     x: NSBitmapImageFileType,
     properties: NSDictionary
   ): NSData
+
+proc CGAssociateMouseAndMouseCursorPosition*(
+  connected: bool
+): int32 {.importc, header: "<ApplicationServices/ApplicationServices.h>".}
+
+{.emit: "#include <ApplicationServices/ApplicationServices.h>".}
+
+proc cgWarpMouseCursorPosition*(x, y: float64) =
+  ## Warp the cursor; emit avoids Nim/CGPoint type clash.
+  {.emit: "CGWarpMouseCursorPosition((CGPoint){.x = `x`, .y = `y`});".}
 
 {.push inline.}
 
