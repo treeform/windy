@@ -1,5 +1,10 @@
-import opengl, objc
+import objc
 export objc
+
+when defined(useCpu):
+  type GLint* = int32
+else:
+  import opengl
 
 {.passL: "-framework Cocoa".}
 {.passL: "-framework ApplicationServices".}
@@ -254,6 +259,7 @@ objc:
   proc bounds*(self: NSView): NSRect
   proc removeTrackingArea*(self: NSView, x: NSTrackingArea)
   proc addTrackingArea*(self: NSView, x: NSTrackingArea)
+  proc setNeedsDisplay*(self: NSView, x: bool)
   proc addCursorRect*(self: NSview, x: NSRect, cursor: NSCursor)
   proc inputContext*(self: NSView): NSTextInputContext
   proc initWithAttributes*(
@@ -290,6 +296,7 @@ objc:
     userInfo: ID
   ): NSTrackingArea
   proc initWithData*(self: NSImage, x: NSData): NSImage
+  proc drawInRect*(self: NSImage, x: NSRect)
   proc initWithImage*(self: NSCursor, x: NSImage, hotSpot: NSPoint): NSCursor
   proc arrowCursor*(class: typedesc[NSCursor]): NSCursor
   proc IBeamCursor*(class: typedesc[NSCursor]): NSCursor

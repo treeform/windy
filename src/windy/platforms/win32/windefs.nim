@@ -199,6 +199,26 @@ type
     fEnable*: BOOL
     hRgnBlur*: HRGN
     fTransitionOnMaximized*: BOOL
+  RGBQUAD* {.pure.} = object
+    rgbBlue*: BYTE
+    rgbGreen*: BYTE
+    rgbRed*: BYTE
+    rgbReserved*: BYTE
+  BITMAPINFOHEADER* {.pure.} = object
+    biSize*: DWORD
+    biWidth*: LONG
+    biHeight*: LONG
+    biPlanes*: WORD
+    biBitCount*: WORD
+    biCompression*: DWORD
+    biSizeImage*: DWORD
+    biXPelsPerMeter*: LONG
+    biYPelsPerMeter*: LONG
+    biClrUsed*: DWORD
+    biClrImportant*: DWORD
+  BITMAPINFO* {.pure.} = object
+    bmiHeader*: BITMAPINFOHEADER
+    bmiColors*: array[1, RGBQUAD]
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -541,6 +561,10 @@ const
   ERROR_WINHTTP_HEADER_NOT_FOUND* = WINHTTP_ERROR_BASE + 150
   DWM_BB_ENABLE* = 0x00000001
   DWM_BB_BLURREGION* = 0x00000002
+  BI_RGB* = 0
+  DIB_RGB_COLORS* = 0
+  SRCCOPY* = 0x00CC0020
+  GDI_ERROR* = -1
 
 {.push importc, stdcall.}
 
@@ -923,6 +947,22 @@ proc DescribePixelFormat*(
 ): int32 {.dynlib: "Gdi32".}
 
 proc SwapBuffers*(hdc: HDC): BOOL {.dynlib: "Gdi32".}
+
+proc StretchDIBits*(
+  hdc: HDC,
+  xDest: int32,
+  yDest: int32,
+  DestWidth: int32,
+  DestHeight: int32,
+  xSrc: int32,
+  ySrc: int32,
+  SrcWidth: int32,
+  SrcHeight: int32,
+  lpBits: pointer,
+  lpbmi: ptr BITMAPINFO,
+  iUsage: UINT,
+  rop: DWORD
+): int32 {.dynlib: "Gdi32".}
 
 proc CreateRectRgn*(
   x1: int32,
