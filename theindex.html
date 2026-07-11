@@ -711,6 +711,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const FamilyServerInterpreted" href="windy/platforms/linux/x11/x.html#FamilyServerInterpreted">x: const FamilyServerInterpreted</a></li>
           </ul></dd>
+<dt><a name="FileDialogFilter" href="#FileDialogFilter"><span>FileDialogFilter:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: object FileDialogFilter" href="windy/common.html#FileDialogFilter">common: object FileDialogFilter</a></li>
+          </ul></dd>
 <dt><a name="FileDropCallback" href="#FileDropCallback"><span>FileDropCallback:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: type FileDropCallback" href="windy/common.html#FileDropCallback">common: type FileDropCallback</a></li>
@@ -1975,6 +1979,12 @@
 <li><a class="reference external"
           data-doc-search-tag="http: proc onUploadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)" href="windy/http.html#onUploadProgress%3D%2CHttpRequestHandle%2CHttpProgressCallback">http: proc onUploadProgress=(handle: HttpRequestHandle; callback: HttpProgressCallback)</a></li>
           </ul></dd>
+<dt><a name="openFileDialog" href="#openFileDialog"><span>openFileDialog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc openFileDialog(title = &quot;Open File&quot;; filters: seq[FileDialogFilter] = @[];
+               defaultPath = &quot;&quot;): string" href="windy/platforms/linux/platform.html#openFileDialog%2Cstring%2Cseq%5BFileDialogFilter%5D%2Cstring">platform: proc openFileDialog(title = &quot;Open File&quot;; filters: seq[FileDialogFilter] = @[];
+               defaultPath = &quot;&quot;): string</a></li>
+          </ul></dd>
 <dt><a name="OpenGL3Dot0" href="#OpenGL3Dot0"><span>OpenGL3Dot0:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: OpenGLVersion.OpenGL3Dot0" href="windy/common.html#OpenGL3Dot0">common: OpenGLVersion.OpenGL3Dot0</a></li>
@@ -2218,6 +2228,12 @@
 <dt><a name="runeInputEnabled%3D" href="#runeInputEnabled%3D"><span>runeInputEnabled=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="platform: proc runeInputEnabled=(window: Window; v: bool)" href="windy/platforms/linux/platform.html#runeInputEnabled%3D%2CWindow%2Cbool">platform: proc runeInputEnabled=(window: Window; v: bool)</a></li>
+          </ul></dd>
+<dt><a name="saveFileDialog" href="#saveFileDialog"><span>saveFileDialog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc saveFileDialog(title = &quot;Save File&quot;; filters: seq[FileDialogFilter] = @[];
+               defaultPath = &quot;&quot;; defaultName = &quot;&quot;): string" href="windy/platforms/linux/platform.html#saveFileDialog%2Cstring%2Cseq%5BFileDialogFilter%5D%2Cstring%2Cstring">platform: proc saveFileDialog(title = &quot;Save File&quot;; filters: seq[FileDialogFilter] = @[];
+               defaultPath = &quot;&quot;; defaultName = &quot;&quot;): string</a></li>
           </ul></dd>
 <dt><a name="Screen" href="#Screen"><span>Screen:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10231,7 +10247,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-10 23:50:45 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-11 19:51:54 UTC</small>
       </div>
     </div>
   </div>
