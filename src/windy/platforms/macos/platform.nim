@@ -1,5 +1,5 @@
 import
-  std/[os, times, unicode, pathnorm],
+  std/[os, strutils, times, unicode, pathnorm],
   pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
 
@@ -1373,3 +1373,89 @@ proc openTempTextFile*(title, text: string) =
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
   discard execShellCmd("open " & url)
+
+proc fileDialogExtensions(filters: seq[FileDialogFilter]): seq[string] =
+  ## Collects unique file extensions without wildcards or dots.
+  for filter in filters:
+    for part in filter.extensions.split({';', ','}):
+      var ext = part.strip()
+      while ext.startsWith("*"):
+        ext.removePrefix("*")
+      while ext.startsWith("."):
+        ext.removePrefix(".")
+      if ext.len > 0 and ext != "*" and ext notin result:
+        result.add(ext)
+
+proc directoryURLForDialog(path: string): NSURL =
+  ## Returns a directory URL for dialogs, using the parent if needed.
+  if path.len == 0:
+    return 0.NSURL
+  var dirPath = path
+  var isDir = false
+  let exists = NSFileManager.defaultManager().fileExistsAtPath(
+    @dirPath,
+    isDir.addr
+  )
+  if exists and not isDir:
+    dirPath = $((@dirPath).stringByDeletingLastPathComponent())
+  result = NSURL.fileURLWithPath(@dirPath, true)
+
+proc allowedFileTypes(filters: seq[FileDialogFilter]): NSArray =
+  ## Builds an NSArray of allowed file extensions for panels.
+  let exts = fileDialogExtensions(filters)
+  if exts.len == 0:
+    return 0.NSArray
+  result = (@(exts.join(","))).componentsSeparatedByString(@",")
+
+proc openFileDialog*(
+  title = "Open File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = ""
+): string =
+  ## Shows a native open-file dialog. Returns "" if canceled.
+  init()
+  result = ""
+  autoreleasepool:
+    let panel = NSOpenPanel.openPanel()
+    panel.setCanChooseFiles(true)
+    panel.setCanChooseDirectories(false)
+    panel.setAllowsMultipleSelection(false)
+    panel.setTitle(@title)
+    let dirUrl = directoryURLForDialog(defaultPath)
+    if dirUrl.int != 0:
+      panel.setDirectoryURL(dirUrl)
+    let types = allowedFileTypes(filters)
+    if types.int != 0:
+      panel.setAllowedFileTypes(types)
+    if panel.runModal() == NSModalResponseOK:
+      let urls = panel.URLs()
+      if urls.int != 0 and urls.count > 0:
+        let url = urls.firstObject().NSURL
+        if url.int != 0:
+          result = $url.path()
+
+proc saveFileDialog*(
+  title = "Save File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = "",
+  defaultName = ""
+): string =
+  ## Shows a native save-file dialog. Returns "" if canceled.
+  init()
+  result = ""
+  autoreleasepool:
+    let panel = NSSavePanel.savePanel()
+    panel.setCanCreateDirectories(true)
+    panel.setTitle(@title)
+    if defaultName.len > 0:
+      panel.setNameFieldStringValue(@defaultName)
+    let dirUrl = directoryURLForDialog(defaultPath)
+    if dirUrl.int != 0:
+      panel.setDirectoryURL(dirUrl)
+    let types = allowedFileTypes(filters)
+    if types.int != 0:
+      panel.setAllowedFileTypes(types)
+    if panel.runModal() == NSModalResponseOK:
+      let url = panel.URL()
+      if url.int != 0:
+        result = $url.path()

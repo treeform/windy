@@ -72,6 +72,10 @@ type
   NSTextInputClient* = distinct int
   NSBitmapImageRep* = distinct NSObject
   NSDictionary* = distinct NSObject
+  NSOpenPanel* = distinct NSObject
+  NSSavePanel* = distinct NSObject
+  NSURL* = distinct NSObject
+  NSFileManager* = distinct NSObject
 
 const
   NSNotFound* = int.high
@@ -115,6 +119,7 @@ const
   NSBitmapImageFileTypePNG* = 4.NSBitmapImageFileType
   NSNormalWindowLevel* = 0.NSWindowLevel
   NSFloatingWindowLevel* = 3.NSWindowLevel
+  NSModalResponseOK* = 1
 
 type
   NSEventType* = enum
@@ -163,7 +168,39 @@ objc:
   proc array*(class: typedesc[NSArray]): NSArray
   proc count*(self: NSArray): uint
   proc objectAtIndex*(self: NSArray, x: uint): ID
+  proc firstObject*(self: NSArray): ID
   proc containsObject*(self: NSArray, x: ID): bool
+  proc componentsSeparatedByString*(self: NSString, x: NSString): NSArray
+  proc openPanel*(class: typedesc[NSOpenPanel]): NSOpenPanel
+  proc savePanel*(class: typedesc[NSSavePanel]): NSSavePanel
+  proc setCanChooseFiles*(self: NSOpenPanel, x: bool)
+  proc setCanChooseDirectories*(self: NSOpenPanel, x: bool)
+  proc setAllowsMultipleSelection*(self: NSOpenPanel, x: bool)
+  proc setCanCreateDirectories*(self: NSSavePanel, x: bool)
+  proc setTitle*(self: NSOpenPanel, x: NSString)
+  proc setTitle*(self: NSSavePanel, x: NSString)
+  proc setNameFieldStringValue*(self: NSSavePanel, x: NSString)
+  proc setDirectoryURL*(self: NSOpenPanel, x: NSURL)
+  proc setDirectoryURL*(self: NSSavePanel, x: NSURL)
+  proc setAllowedFileTypes*(self: NSOpenPanel, x: NSArray)
+  proc setAllowedFileTypes*(self: NSSavePanel, x: NSArray)
+  proc runModal*(self: NSOpenPanel): int
+  proc runModal*(self: NSSavePanel): int
+  proc URLs*(self: NSOpenPanel): NSArray
+  proc URL*(self: NSSavePanel): NSURL
+  proc path*(self: NSURL): NSString
+  proc fileURLWithPath*(
+    class: typedesc[NSURL],
+    x: NSString,
+    isDirectory: bool
+  ): NSURL
+  proc stringByDeletingLastPathComponent*(self: NSString): NSString
+  proc fileExistsAtPath*(
+    self: NSFileManager,
+    x: NSString,
+    isDirectory: ptr bool
+  ): bool
+  proc defaultManager*(class: typedesc[NSFileManager]): NSFileManager
   proc screens*(class: typedesc[NSScreen]): NSArray
   proc frame*(self: NSScreen): NSRect
   proc frame*(self: NSWindow): NSRect

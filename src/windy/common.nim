@@ -62,6 +62,12 @@ type
   ClipboardContentKind* = enum
     TextContent, ImageContent
 
+  FileDialogFilter* = object
+    ## One named group of extensions for open/save dialogs.
+    ## Use extensions like "*.vox;*.qb" or "vox,qb".
+    name*: string
+    extensions*: string
+
   MSAA* = enum
     msaaDisabled = 0, msaa2x = 2, msaa4x = 4, msaa8x = 8
 

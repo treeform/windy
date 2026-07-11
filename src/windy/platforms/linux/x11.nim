@@ -1,5 +1,5 @@
 import
-  std/[os, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
+  std/[os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
   ../../[common, internal],
   vmath, pixie,
   x11/[glx, keysym, x, xevent, xlib, xcursor]
@@ -1383,3 +1383,52 @@ proc openTempTextFile*(title, text: string) =
     createDir("tmp")
   writeFile("tmp/" & title, text)
   discard execShellCmd("xdg-open tmp/" & title)
+
+proc runZenity(args: seq[string]): string =
+  ## Runs zenity and returns stdout, or "" on cancel/error.
+  try:
+    let output = execProcess(
+      "zenity",
+      args = args,
+      options = {poUsePath, poStdErrToStdOut}
+    )
+    result = output.strip()
+  except OSError, IOError:
+    result = ""
+
+proc openFileDialog*(
+  title = "Open File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = ""
+): string =
+  ## Shows a zenity open-file dialog. Returns "" if canceled.
+  var args = @["--file-selection", "--title=" & title]
+  if defaultPath.len > 0:
+    args.add("--filename=" & defaultPath)
+  for filter in filters:
+    args.add("--file-filter=" & filter.name & " | " &
+      filter.extensions.replace(";", " ").replace(",", " "))
+  result = runZenity(args)
+
+proc saveFileDialog*(
+  title = "Save File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = "",
+  defaultName = ""
+): string =
+  ## Shows a zenity save-file dialog. Returns "" if canceled.
+  var args = @["--file-selection", "--save", "--confirm-overwrite",
+    "--title=" & title]
+  let startPath =
+    if defaultPath.len > 0 and defaultName.len > 0:
+      defaultPath / defaultName
+    elif defaultName.len > 0:
+      defaultName
+    else:
+      defaultPath
+  if startPath.len > 0:
+    args.add("--filename=" & startPath)
+  for filter in filters:
+    args.add("--file-filter=" & filter.name & " | " &
+      filter.extensions.replace(";", " ").replace(",", " "))
+  result = runZenity(args)
