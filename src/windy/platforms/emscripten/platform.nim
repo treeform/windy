@@ -1002,3 +1002,29 @@ proc openTempTextFile*(title, text: string) =
 proc openUrl*(url: string) =
   ## Open a URL in a new browser tab.
   open_url(url.cstring)
+
+proc openFileDialog*(
+  title = "Open File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = ""
+): string =
+  ## File dialogs are not available on Emscripten.
+  discard title
+  discard filters
+  discard defaultPath
+  warn("openFileDialog is not supported on emscripten")
+  result = ""
+
+proc saveFileDialog*(
+  title = "Save File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = "",
+  defaultName = ""
+): string =
+  ## File dialogs are not available on Emscripten.
+  discard title
+  discard filters
+  discard defaultPath
+  discard defaultName
+  warn("saveFileDialog is not supported on emscripten")
+  result = ""

@@ -1422,6 +1422,118 @@ proc alertDialog*(title, message: string) =
     0
   )
 
+proc fileDialogExtensions(filters: seq[FileDialogFilter]): seq[string] =
+  ## Collects unique file extensions without wildcards or dots.
+  for filter in filters:
+    for part in filter.extensions.split({';', ','}):
+      var ext = part.strip()
+      while ext.startsWith("*"):
+        ext.removePrefix("*")
+      while ext.startsWith("."):
+        ext.removePrefix(".")
+      if ext.len > 0 and ext != "*" and ext notin result:
+        result.add(ext)
+
+proc windowsFilterString(filters: seq[FileDialogFilter]): string =
+  ## Builds a Windows double-null-terminated ANSI filter string.
+  if filters.len == 0:
+    return "All Files\0*.*\0\0"
+  for filter in filters:
+    var patterns: seq[string]
+    for part in filter.extensions.split({';', ','}):
+      var ext = part.strip()
+      if ext.len == 0:
+        continue
+      if not ext.startsWith("*"):
+        if ext.startsWith("."):
+          ext = "*" & ext
+        else:
+          ext = "*." & ext
+      patterns.add(ext)
+    if patterns.len == 0:
+      patterns.add("*.*")
+    result.add(filter.name)
+    result.add('\0')
+    result.add(patterns.join(";"))
+    result.add('\0')
+  result.add('\0')
+
+proc openFileDialog*(
+  title = "Open File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = ""
+): string =
+  ## Shows a native open-file dialog. Returns "" if canceled.
+  init()
+  var
+    ofn: OPENFILENAMEW
+    buf = newSeq[WCHAR](4096)
+  let
+    titleW = title.wstr()
+    filterA = windowsFilterString(filters)
+    filterW = filterA.wstr()
+    dirW =
+      if defaultPath.len > 0:
+        defaultPath.wstr()
+      else:
+        ""
+  ofn.lStructSize = sizeof(ofn).DWORD
+  ofn.lpstrFilter = cast[LPCWSTR](filterW[0].addr)
+  ofn.lpstrFile = addr buf[0]
+  ofn.nMaxFile = buf.len.DWORD
+  ofn.lpstrTitle = cast[LPCWSTR](titleW[0].addr)
+  ofn.Flags = OFN_FILEMUSTEXIST or OFN_PATHMUSTEXIST or
+    OFN_EXPLORER or OFN_NOCHANGEDIR
+  if dirW.len > 0:
+    ofn.lpstrInitialDir = cast[LPCWSTR](dirW[0].addr)
+  if GetOpenFileNameW(ofn.addr) != 0:
+    result = $(addr buf[0])
+
+proc saveFileDialog*(
+  title = "Save File",
+  filters: seq[FileDialogFilter] = @[],
+  defaultPath = "",
+  defaultName = ""
+): string =
+  ## Shows a native save-file dialog. Returns "" if canceled.
+  init()
+  var
+    ofn: OPENFILENAMEW
+    buf = newSeq[WCHAR](4096)
+  if defaultName.len > 0:
+    let nameW = defaultName.wstr()
+    let bytes = min(nameW.len, (buf.len - 1) * sizeof(WCHAR))
+    if bytes > 0:
+      copyMem(buf[0].addr, nameW[0].addr, bytes)
+  let
+    titleW = title.wstr()
+    filterA = windowsFilterString(filters)
+    filterW = filterA.wstr()
+    dirW =
+      if defaultPath.len > 0:
+        defaultPath.wstr()
+      else:
+        ""
+    exts = fileDialogExtensions(filters)
+    defExtW =
+      if exts.len > 0:
+        exts[0].wstr()
+      else:
+        ""
+  ofn.lStructSize = sizeof(ofn).DWORD
+  ofn.lpstrFilter = cast[LPCWSTR](filterW[0].addr)
+  ofn.lpstrFile = addr buf[0]
+  ofn.nMaxFile = buf.len.DWORD
+  ofn.lpstrTitle = cast[LPCWSTR](titleW[0].addr)
+  ofn.Flags = OFN_OVERWRITEPROMPT or OFN_PATHMUSTEXIST or
+    OFN_EXPLORER or OFN_NOCHANGEDIR
+  if dirW.len > 0:
+    ofn.lpstrInitialDir = cast[LPCWSTR](dirW[0].addr)
+  if defExtW.len > 0:
+    ofn.lpstrDefExt = cast[LPCWSTR](defExtW[0].addr)
+  if GetSaveFileNameW(ofn.addr) != 0:
+    result = $(addr buf[0])
+
 proc getAvailableClipboardFormats(): seq[UINT] =
   var format = 0.UINT
   while true:

@@ -1156,4 +1156,45 @@ proc CloseHandle*(
   hObject: HANDLE
 ): BOOL {.dynlib: "kernel32".}
 
+type
+  OPENFILENAMEW* {.pure.} = object
+    lStructSize*: DWORD
+    hwndOwner*: HWND
+    hInstance*: HINSTANCE
+    lpstrFilter*: LPCWSTR
+    lpstrCustomFilter*: LPWSTR
+    nMaxCustFilter*: DWORD
+    nFilterIndex*: DWORD
+    lpstrFile*: LPWSTR
+    nMaxFile*: DWORD
+    lpstrFileTitle*: LPWSTR
+    nMaxFileTitle*: DWORD
+    lpstrInitialDir*: LPCWSTR
+    lpstrTitle*: LPCWSTR
+    Flags*: DWORD
+    nFileOffset*: WORD
+    nFileExtension*: WORD
+    lpstrDefExt*: LPCWSTR
+    lCustData*: LPARAM
+    lpfnHook*: pointer
+    lpTemplateName*: LPCWSTR
+    pvReserved*: pointer
+    dwReserved*: DWORD
+    FlagsEx*: DWORD
+
+const
+  OFN_OVERWRITEPROMPT* = 0x00000002.DWORD
+  OFN_NOCHANGEDIR* = 0x00000008.DWORD
+  OFN_PATHMUSTEXIST* = 0x00000800.DWORD
+  OFN_FILEMUSTEXIST* = 0x00001000.DWORD
+  OFN_EXPLORER* = 0x00080000.DWORD
+
+proc GetOpenFileNameW*(
+  ofn: ptr OPENFILENAMEW
+): BOOL {.dynlib: "Comdlg32", importc.}
+
+proc GetSaveFileNameW*(
+  ofn: ptr OPENFILENAMEW
+): BOOL {.dynlib: "Comdlg32", importc.}
+
 {.pop.}
