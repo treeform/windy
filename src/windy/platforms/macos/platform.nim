@@ -1407,6 +1407,15 @@ proc allowedFileTypes(filters: seq[FileDialogFilter]): NSArray =
     return 0.NSArray
   result = (@(exts.join(","))).componentsSeparatedByString(@",")
 
+proc alertDialog*(title, message: string) =
+  ## Pops a blocking alert dialog.
+  init()
+  autoreleasepool:
+    let alert = NSAlert.new()
+    alert.setMessageText(@title)
+    alert.setInformativeText(@message)
+    discard alert.runModal()
+
 proc openFileDialog*(
   title = "Open File",
   filters: seq[FileDialogFilter] = @[],

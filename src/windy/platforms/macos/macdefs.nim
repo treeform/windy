@@ -74,6 +74,7 @@ type
   NSDictionary* = distinct NSObject
   NSOpenPanel* = distinct NSObject
   NSSavePanel* = distinct NSObject
+  NSAlert* = distinct NSObject
   NSURL* = distinct NSObject
   NSFileManager* = distinct NSObject
 
@@ -186,6 +187,9 @@ objc:
   proc setAllowedFileTypes*(self: NSSavePanel, x: NSArray)
   proc runModal*(self: NSOpenPanel): int
   proc runModal*(self: NSSavePanel): int
+  proc setMessageText*(self: NSAlert, x: NSString)
+  proc setInformativeText*(self: NSAlert, x: NSString)
+  proc runModal*(self: NSAlert): int
   proc URLs*(self: NSOpenPanel): NSArray
   proc URL*(self: NSSavePanel): NSURL
   proc path*(self: NSURL): NSString
