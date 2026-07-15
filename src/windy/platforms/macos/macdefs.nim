@@ -51,6 +51,8 @@ type
   NSScreen* = distinct NSObject
   NSPasteboard* = distinct NSObject
   NSPasteboardType* = distinct NSString
+  NSDraggingInfo* = distinct NSObject
+  NSDragOperation* = uint
   NSApplication* = distinct NSObject
   NSNotification* = distinct NSObject
   NSEvent* = distinct NSObject
@@ -131,10 +133,15 @@ type
     NSEventTypeKeyUp              = 11,
     NSEventTypeFlagsChanged       = 12,
 
+const
+  NSDragOperationNone* = 0.NSDragOperation
+  NSDragOperationCopy* = 1.NSDragOperation
+
 var
   NSApp* {.importc.}: NSApplication
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSPasteboardTypeTIFF* {.importc.}: NSPasteboardType
+  NSFilenamesPboardType* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
 
 objc:
@@ -170,10 +177,17 @@ objc:
   proc bytes*(self: NSData): pointer
   proc length*(self: NSString): uint
   proc array*(class: typedesc[NSArray]): NSArray
+  proc arrayWithObject*(class: typedesc[NSArray], x: ID): NSArray
   proc count*(self: NSArray): uint
   proc objectAtIndex*(self: NSArray, x: uint): ID
   proc firstObject*(self: NSArray): ID
   proc containsObject*(self: NSArray, x: ID): bool
+  proc registerForDraggedTypes*(self: NSView, x: NSArray)
+  proc draggingPasteboard*(self: NSDraggingInfo): NSPasteboard
+  proc propertyListForType*(
+    self: NSPasteboard,
+    x: NSPasteboardType
+  ): ID
   proc componentsSeparatedByString*(self: NSString, x: NSString): NSArray
   proc openPanel*(class: typedesc[NSOpenPanel]): NSOpenPanel
   proc savePanel*(class: typedesc[NSSavePanel]): NSSavePanel

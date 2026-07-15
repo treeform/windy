@@ -556,6 +556,42 @@ proc mouseMoved(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   else:
     handleMouseMove(window, event.locationInWindow)
 
+proc draggingEntered(
+  self: ID,
+  cmd: SEL,
+  sender: NSDraggingInfo
+): NSDragOperation {.cdecl.} =
+  ## Accept Finder file drops onto the content view.
+  let pboard = sender.draggingPasteboard()
+  let types = pboard.types()
+  if types.int != 0 and types.containsObject(NSFilenamesPboardType.ID):
+    return NSDragOperationCopy
+  NSDragOperationNone
+
+proc performDragOperation(
+  self: ID,
+  cmd: SEL,
+  sender: NSDraggingInfo
+): bool {.cdecl.} =
+  ## Deliver dropped file paths and contents to onFileDrop.
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil or window.onFileDrop == nil:
+    return false
+  let
+    pboard = sender.draggingPasteboard()
+    list = pboard.propertyListForType(NSFilenamesPboardType).NSArray
+  if list.int == 0:
+    return false
+  for i in 0 ..< list.count.int:
+    let path = $list[i].NSString
+    if path.len == 0:
+      continue
+    try:
+      window.onFileDrop(path, readFile(path))
+    except CatchableError:
+      window.onFileDrop(path, "")
+  true
+
 proc mouseDragged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   mouseMoved(self, cmd, event)
 
@@ -882,6 +918,8 @@ proc init() {.raises: [].} =
         addMethod "rightMouseUp:", rightMouseUp
         addMethod "otherMouseDown:", otherMouseDown
         addMethod "otherMouseUp:", otherMouseUp
+        addMethod "draggingEntered:", draggingEntered
+        addMethod "performDragOperation:", performDragOperation
         addMethod "hasMarkedText", hasMarkedText
         addMethod "markedRange", markedRange
         addMethod "selectedRange", selectedRange
@@ -915,6 +953,8 @@ proc init() {.raises: [].} =
         addMethod "rightMouseUp:", rightMouseUp
         addMethod "otherMouseDown:", otherMouseDown
         addMethod "otherMouseUp:", otherMouseUp
+        addMethod "draggingEntered:", draggingEntered
+        addMethod "performDragOperation:", performDragOperation
         addMethod "hasMarkedText", hasMarkedText
         addMethod "markedRange", markedRange
         addMethod "selectedRange", selectedRange
@@ -1077,6 +1117,7 @@ proc close*(window: Window) =
   window.onButtonRelease = nil
   window.onRune = nil
   window.onImeChange = nil
+  window.onFileDrop = nil
 
   if window.inner.int != 0:
     autoreleasepool:
@@ -1128,6 +1169,9 @@ proc newWindow*(
       result.inner.setDelegate(result.inner.ID)
       result.inner.setContentView(nativeView)
       discard result.inner.makeFirstResponder(nativeView)
+      nativeView.registerForDraggedTypes(
+        NSArray.arrayWithObject(NSFilenamesPboardType.ID)
+      )
     else:
       let
         pixelFormatAttribs = [
@@ -1172,6 +1216,9 @@ proc newWindow*(
       result.inner.setDelegate(result.inner.ID)
       result.inner.setContentView(openglView.NSView)
       discard result.inner.makeFirstResponder(openglView.NSView)
+      openglView.NSView.registerForDraggedTypes(
+        NSArray.arrayWithObject(NSFilenamesPboardType.ID)
+      )
 
     result.inner.setRestorable(false)
 
