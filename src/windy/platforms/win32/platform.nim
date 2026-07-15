@@ -1422,6 +1422,32 @@ proc alertDialog*(title, message: string) =
     0
   )
 
+proc unsavedChangesDialog*(documentName: string): ConfirmKind =
+  ## Ask whether to save, discard, or cancel before losing edits.
+  const
+    MbYesNoCancel = 0x00000003'u32
+    MbIconWarning = 0x00000030'u32
+    IdYes = 6'u32
+    IdNo = 7'u32
+  let
+    title = "Do you want to save your changes?"
+    message =
+      "Your changes to \"" & documentName &
+      "\" will be lost if you don't save them."
+    response = MessageBoxW(
+      0,
+      message.wstr().cstring,
+      title.wstr().cstring,
+      (MbYesNoCancel or MbIconWarning).UINT
+    )
+  case response
+  of IdYes:
+    ConfirmYes
+  of IdNo:
+    ConfirmNo
+  else:
+    ConfirmCancel
+
 proc fileDialogExtensions(filters: seq[FileDialogFilter]): seq[string] =
   ## Collects unique file extensions without wildcards or dots.
   for filter in filters:

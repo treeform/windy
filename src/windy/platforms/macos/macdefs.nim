@@ -121,6 +121,9 @@ const
   NSNormalWindowLevel* = 0.NSWindowLevel
   NSFloatingWindowLevel* = 3.NSWindowLevel
   NSModalResponseOK* = 1
+  NSAlertFirstButtonReturn* = 1000
+  NSAlertSecondButtonReturn* = 1001
+  NSAlertThirdButtonReturn* = 1002
 
 type
   NSEventType* = enum
@@ -189,6 +192,7 @@ objc:
   proc runModal*(self: NSSavePanel): int
   proc setMessageText*(self: NSAlert, x: NSString)
   proc setInformativeText*(self: NSAlert, x: NSString)
+  proc addButtonWithTitle*(self: NSAlert, x: NSString): NSObject
   proc runModal*(self: NSAlert): int
   proc URLs*(self: NSOpenPanel): NSArray
   proc URL*(self: NSSavePanel): NSURL

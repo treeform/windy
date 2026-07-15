@@ -1416,6 +1416,28 @@ proc alertDialog*(title, message: string) =
     alert.setInformativeText(@message)
     discard alert.runModal()
 
+proc unsavedChangesDialog*(documentName: string): ConfirmKind =
+  ## Ask whether to save, discard, or cancel before losing edits.
+  init()
+  result = ConfirmCancel
+  autoreleasepool:
+    let alert = NSAlert.new()
+    alert.setMessageText(@"Do you want to save your changes?")
+    alert.setInformativeText(
+      @("Your changes to \"" & documentName &
+        "\" will be lost if you don't save them.")
+    )
+    discard alert.addButtonWithTitle(@"Save")
+    discard alert.addButtonWithTitle(@"Don't Save")
+    discard alert.addButtonWithTitle(@"Cancel")
+    case alert.runModal()
+    of NSAlertFirstButtonReturn:
+      result = ConfirmYes
+    of NSAlertSecondButtonReturn:
+      result = ConfirmNo
+    else:
+      result = ConfirmCancel
+
 proc openFileDialog*(
   title = "Open File",
   filters: seq[FileDialogFilter] = @[],

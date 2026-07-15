@@ -68,6 +68,12 @@ type
     name*: string
     extensions*: string
 
+  ## Result of an unsaved-changes confirm dialog.
+  ConfirmKind* = enum
+    ConfirmCancel
+    ConfirmNo
+    ConfirmYes
+
   MSAA* = enum
     msaaDisabled = 0, msaa2x = 2, msaa4x = 4, msaa8x = 8
 
