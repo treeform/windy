@@ -1293,6 +1293,14 @@ proc setClipboardString*(s: string) =
   clipboardContent = s
   display.XSetSelectionOwner(xaClipboard, clipboardWindow)
 
+proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  ## Image clipboard is not implemented on X11 yet.
+  discard
+
+proc getClipboardImage*(): Image =
+  ## Image clipboard is not implemented on X11 yet.
+  nil
+
 proc pollEvents*() =
   for window in windows:
     if window.onFrame != nil:

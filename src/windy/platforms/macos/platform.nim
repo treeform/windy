@@ -1305,10 +1305,12 @@ proc getClipboardContentKinds*(): set[ClipboardContentKind] =
 
     if types.containsObject(NSPasteboardTypeString.ID):
       result.incl TextContent
-    if types.containsObject(NSPasteboardTypeTIFF.ID):
+    if types.containsObject(NSPasteboardTypePNG.ID) or
+        types.containsObject(NSPasteboardTypeTIFF.ID):
       result.incl ImageContent
 
 proc getClipboardImage*(): Image =
+  ## Reads a PNG or TIFF image from the system pasteboard.
   init()
   autoreleasepool:
     let
@@ -1317,6 +1319,14 @@ proc getClipboardImage*(): Image =
 
     if types.int == 0:
       return
+
+    if types.containsObject(NSPasteboardTypePNG.ID):
+      let data = pboard.dataForType(NSPasteboardTypePNG)
+      if data.int != 0:
+        try:
+          return decodePng(data.bytes, data.length.int).convertToImage()
+        except:
+          discard
 
     if not types.containsObject(NSPasteboardTypeTIFF.ID):
       return

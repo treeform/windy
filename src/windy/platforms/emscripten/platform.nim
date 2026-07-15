@@ -473,6 +473,14 @@ proc getClipboardString*(): string =
     "getClipboardString is not supported on emscripten"
   )
 
+proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  ## Image clipboard is not implemented on Emscripten yet.
+  discard
+
+proc getClipboardImage*(): Image =
+  ## Image clipboard is not implemented on Emscripten yet.
+  nil
+
 proc closeIme*(window: Window) =
   if window.state.imeCompositionString.len > 0:
     window.state.imeCompositionString = ""
