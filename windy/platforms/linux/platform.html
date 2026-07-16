@@ -170,6 +170,14 @@
   <li><a class="reference" href="#fullscreen%3D%2CWindow%2Cbool" title="fullscreen=(window: Window; v: bool)">fullscreen=(window: Window; v: bool)</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">getClipboardContentKinds
+  <li><a class="reference" href="#getClipboardContentKinds" title="getClipboardContentKinds(): set[ClipboardContentKind]">getClipboardContentKinds(): set[ClipboardContentKind]</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">getClipboardImage
+  <li><a class="reference" href="#getClipboardImage" title="getClipboardImage(): Image">getClipboardImage(): Image</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">getClipboardString
   <li><a class="reference" href="#getClipboardString" title="getClipboardString(): string">getClipboardString(): string</a></li>
 
@@ -548,8 +556,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1318" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1318" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1326" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1326" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -688,6 +696,33 @@
 </div>
 
 </div>
+<div id="getClipboardContentKinds-procs-all">
+  <div id="getClipboardContentKinds">
+  <dt><pre><span class="Keyword">proc</span> <a href="#getClipboardContentKinds"><span class="Identifier">getClipboardContentKinds</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">set</span><span class="Other">[</span><a href="../../common.html#ClipboardContentKind"><span class="Identifier">ClipboardContentKind</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Image clipboard is not implemented on X11 yet.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1296" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1296" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="getClipboardImage-procs-all">
+  <div id="getClipboardImage">
+  <dt><pre><span class="Keyword">proc</span> <a href="#getClipboardImage"><span class="Identifier">getClipboardImage</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Image</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Image clipboard is not implemented on X11 yet.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1300" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1300" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="getClipboardString-procs-all">
   <div id="getClipboardString">
   <dt><pre><span class="Keyword">proc</span> <a href="#getClipboardString"><span class="Identifier">getClipboardString</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -708,8 +743,8 @@
   <dd>
     
     Returns the contents of a config file for the given app and filename. Returns empty string if the file doesn't exist.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1357" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1357" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1365" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1365" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -722,8 +757,8 @@
   <dd>
     
     Returns the platform-appropriate user config directory for the given app name. For Linux: Honors XDG_CONFIG_HOME, defaults to ~/.config/&lt;appName&gt;.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1348" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1348" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1356" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1356" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -735,8 +770,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1327" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1327" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1335" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1335" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -749,8 +784,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1324" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1324" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1332" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1332" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -762,8 +797,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1321" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1321" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1329" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1329" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -912,8 +947,8 @@
   <dd>
     
     Shows a zenity open-file dialog. Returns &quot;&quot; if canceled.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1399" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1399" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1407" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1407" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -927,8 +962,8 @@
   <dd>
     
     Open a text file in the default text editor.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1380" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1380" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1388" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1388" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -940,8 +975,8 @@
   <dd>
     
     Open a URL in the default browser.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1376" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1376" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1384" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1384" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -954,8 +989,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1296" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1296" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1304" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1304" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1036,8 +1071,8 @@
   <dd>
     
     Shows a zenity save-file dialog. Returns &quot;&quot; if canceled.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1413" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1413" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1421" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1421" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1078,8 +1113,8 @@
   <dd>
     
     Saves content to a config file for the given app and filename. Creates the config directory if it doesn't exist.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1367" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1367" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1375" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1375" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1184,8 +1219,8 @@
   <dd>
     
     Url cannot be gotten on linux.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1344" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1344" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1352" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1352" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1234,7 +1269,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-15 20:10:04 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-16 18:38:57 UTC</small>
       </div>
     </div>
   </div>
