@@ -141,6 +141,7 @@ var
   NSApp* {.importc.}: NSApplication
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSPasteboardTypeTIFF* {.importc.}: NSPasteboardType
+  NSPasteboardTypePNG* {.importc.}: NSPasteboardType
   NSFilenamesPboardType* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
 
