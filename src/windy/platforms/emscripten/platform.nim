@@ -73,10 +73,16 @@ var
   httpRequests: Table[HttpRequestHandle, EmsHttpRequestState]
   webSockets: Table[WebSocketHandle, EmsWebSocketState]
 
+  # Browser events can arrive while Asyncify has suspended onFrame.
+  frameDispatchActive: bool
+  pendingResize: bool
+  pendingFocusChange: bool
+
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
+proc drainDeferredWindowEvents()  # Forward declaration
 
 proc close*(handle: WebSocketHandle) {.raises: [].}
 
@@ -126,8 +132,13 @@ proc pollEvents*() =
   ## Note: Will block to match frames per second.
   if mainWindow != nil:
     if mainWindow.onFrame != nil:
-      mainWindow.onFrame()
+      frameDispatchActive = true
+      try:
+        mainWindow.onFrame()
+      finally:
+        frameDispatchActive = false
     mainWindow.state.perFrame = PerFrame()
+  drainDeferredWindowEvents()
   pollHttp()
   emscripten_sleep(0)
 
@@ -639,23 +650,46 @@ proc onKeyPress(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData
 
 proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  if frameDispatchActive:
+    pendingFocusChange = true
+    return 1
   if window.onFocusChange != nil:
     window.onFocusChange()
   return 1
 
 proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  if frameDispatchActive:
+    pendingFocusChange = true
+    return 1
   if window.onFocusChange != nil:
     window.onFocusChange()
   return 1
 
 proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  if frameDispatchActive:
+    pendingResize = true
+    return 1
   window.updateCanvasSize()
 
   if window.onResize != nil:
     window.onResize()
   return 1
+
+proc drainDeferredWindowEvents() =
+  ## Runs window callbacks deferred while onFrame was suspended.
+  if mainWindow == nil:
+    return
+  if pendingResize:
+    pendingResize = false
+    mainWindow.updateCanvasSize()
+    if mainWindow.onResize != nil:
+      mainWindow.onResize()
+  if pendingFocusChange:
+    pendingFocusChange = false
+    if mainWindow.onFocusChange != nil:
+      mainWindow.onFocusChange()
 
 proc setupEventHandlers(window: Window) =
   # Mouse events
