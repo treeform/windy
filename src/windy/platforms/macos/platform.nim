@@ -450,12 +450,76 @@ proc windowDidExitFullScreen(
     return
   window.fullscreenState = false
 
-proc canBecomeKeyWindow(
-  self: ID,
-  cmd: SEL,
-  notification: NSNotification
-): bool {.cdecl.} =
+proc canBecomeKeyWindow(self: ID, cmd: SEL): bool {.cdecl.} =
   true
+
+const
+  # NSEventModifierFlags class bits.
+  ModifierClassShift = 1.uint shl 17
+  ModifierClassControl = 1.uint shl 18
+  ModifierClassOption = 1.uint shl 19
+  ModifierClassCommand = 1.uint shl 20
+  # Device-dependent bits distinguishing left/right keys (IOKit NX_DEVICE*).
+  DeviceLeftControl = 0x00000001.uint
+  DeviceLeftShift = 0x00000002.uint
+  DeviceRightShift = 0x00000004.uint
+  DeviceLeftCommand = 0x00000008.uint
+  DeviceRightCommand = 0x00000010.uint
+  DeviceLeftOption = 0x00000020.uint
+  DeviceRightOption = 0x00000040.uint
+  DeviceRightControl = 0x00002000.uint
+
+proc syncModifierButton(window: Window, button: Button, down: bool) =
+  if down and button notin window.state.buttonDown:
+    window.handleButtonPress(button)
+  elif not down and button in window.state.buttonDown:
+    window.handleButtonRelease(button)
+
+proc syncModifierClass(
+  window: Window,
+  flags: uint,
+  classMask, leftMask, rightMask: uint,
+  leftButton, rightButton: Button,
+  changed = ButtonUnknown
+) =
+  ## Applies the absolute modifier state carried by NSEvent modifierFlags.
+  ## The class bit is authoritative for "any key of this modifier down";
+  ## the device-dependent bits pick the physical side. A missed edge (a
+  ## transition delivered while another window was key) can therefore never
+  ## latch an inverted modifier: the next flagsChanged resynchronizes.
+  if (flags and classMask) == 0:
+    window.syncModifierButton(leftButton, false)
+    window.syncModifierButton(rightButton, false)
+  elif (flags and (leftMask or rightMask)) != 0:
+    window.syncModifierButton(leftButton, (flags and leftMask) != 0)
+    window.syncModifierButton(rightButton, (flags and rightMask) != 0)
+  elif changed != ButtonUnknown:
+    # Some virtual keyboards omit the device bits; fall back to treating the
+    # changed key as the pressed one without disturbing its sibling.
+    window.syncModifierButton(changed, true)
+
+proc syncModifierState(window: Window, flags: uint, changed = ButtonUnknown) =
+  window.syncModifierClass(
+    flags, ModifierClassShift, DeviceLeftShift, DeviceRightShift,
+    KeyLeftShift, KeyRightShift,
+    if changed in {KeyLeftShift, KeyRightShift}: changed else: ButtonUnknown
+  )
+  window.syncModifierClass(
+    flags, ModifierClassControl, DeviceLeftControl, DeviceRightControl,
+    KeyLeftControl, KeyRightControl,
+    if changed in {KeyLeftControl, KeyRightControl}: changed
+    else: ButtonUnknown
+  )
+  window.syncModifierClass(
+    flags, ModifierClassOption, DeviceLeftOption, DeviceRightOption,
+    KeyLeftAlt, KeyRightAlt,
+    if changed in {KeyLeftAlt, KeyRightAlt}: changed else: ButtonUnknown
+  )
+  window.syncModifierClass(
+    flags, ModifierClassCommand, DeviceLeftCommand, DeviceRightCommand,
+    KeyLeftSuper, KeyRightSuper,
+    if changed in {KeyLeftSuper, KeyRightSuper}: changed else: ButtonUnknown
+  )
 
 proc windowDidBecomeKey(
   self: ID,
@@ -466,6 +530,10 @@ proc windowDidBecomeKey(
   if window == nil:
     return
   clearButtonsTemplate()
+  # Seed the modifier keys from the current hardware state so a modifier held
+  # across the focus gain (Cmd-Tab, focus stolen mid-chord) is tracked as
+  # down and its upcoming release cannot register as a phantom press.
+  window.syncModifierState(NSEvent.modifierFlags())
   if window.onFocusChange != nil:
     window.onFocusChange()
   if not window.state.mouseCaptured:
@@ -894,7 +962,10 @@ proc init() {.raises: [].} =
       addMethod "windowDidDeminiaturize:", windowDidDeminiaturize
       addMethod "windowDidEnterFullScreen:", windowDidEnterFullScreen
       addMethod "windowDidExitFullScreen:", windowDidExitFullScreen
-      addMethod "canBecomeKeyWindow:", canBecomeKeyWindow
+      # The NSWindow key-eligibility check is the zero-argument getter
+      # `canBecomeKeyWindow`; registering it with a trailing colon never
+      # overrides it, which leaves borderless windows unable to become key.
+      addMethod "canBecomeKeyWindow", canBecomeKeyWindow
       addMethod "windowDidBecomeKey:", windowDidBecomeKey
       addMethod "windowDidResignKey:", windowDidResignKey
       addMethod "windowShouldClose:", windowShouldClose
@@ -1006,10 +1077,23 @@ proc processFlagsChanged(event: NSEvent) =
     return
 
   let button = keyCodeToButton[event.keyCode]
-  if button in window.state.buttonDown:
-    window.handleButtonRelease(button)
+  if button in {
+    KeyLeftShift, KeyRightShift, KeyLeftControl, KeyRightControl,
+    KeyLeftAlt, KeyRightAlt, KeyLeftSuper, KeyRightSuper
+  }:
+    # Shift/Control/Option/Command carry absolute state in modifierFlags.
+    # Deriving up/down from that state (instead of toggling per event)
+    # self-corrects after any edge missed while the window was not key;
+    # the old toggle latched such a miss as an inverted modifier for the
+    # rest of the session, which silently retargeted every subsequent
+    # unmodified key chord (e.g. SPACE resolving as CTRL-SPACE).
+    window.syncModifierState(event.modifierFlags(), button)
   else:
-    window.handleButtonPress(button)
+    # CapsLock and other lock-style keys keep the toggle semantics.
+    if button in window.state.buttonDown:
+      window.handleButtonRelease(button)
+    else:
+      window.handleButtonPress(button)
 
 proc settleActivationRequests() =
   ## Replays activation while AppKit catches up after delayed startup.
