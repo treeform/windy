@@ -89,6 +89,10 @@ proc init =
   if initialized:
     return
   initialized = true
+  # Browsers do not expose the user's double click speed, so use a
+  # common default. Without this DoubleClick never fires because the
+  # interval stays at zero.
+  platformDoubleClickInterval = 0.5
   setup_windy_runtime()
 
 proc makeContextCurrent*(window: Window) =
