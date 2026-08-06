@@ -171,6 +171,8 @@ objc:
   proc locationInWindow*(self: NSEvent): NSPoint
   proc buttonNumber*(self: NSEvent): int
   proc keyCode*(self: NSEvent): uint16
+  proc modifierFlags*(self: NSEvent): uint
+  proc modifierFlags*(class: typedesc[NSEvent]): uint
   proc type*(self: NSEvent): NSEventType
   proc window*(self: NSEvent): NSWindow
   proc dataWithBytes*(class: typedesc[NSData], x: pointer, length: int): NSData
