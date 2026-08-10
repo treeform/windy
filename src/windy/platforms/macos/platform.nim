@@ -41,6 +41,7 @@ type
     minimizedState: bool
     cpuImage: NSImage
     activationSettlePolls: int
+    vsyncEnabled: bool
 
 const
   ActivationSettlePolls = 60
@@ -1090,6 +1091,23 @@ proc swapBuffers*(window: Window) =
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
 
+proc vsync*(window: Window): bool =
+  ## Returns true when vertical sync is enabled for this window.
+  window.vsyncEnabled
+
+proc `vsync=`*(window: Window, enabled: bool) =
+  ## Changes the OpenGL swap interval without recreating the window.
+  if window.vsyncEnabled == enabled:
+    return
+  when not defined(useMetal4) and not defined(useCpu):
+    window.makeContextCurrent()
+    var swapInterval: GLint = if enabled: 1 else: 0
+    window.inner.contentView.NSOpenGLView.openGLContext.setValues(
+      swapInterval.addr,
+      NSOpenGLContextParameterSwapInterval
+    )
+  window.vsyncEnabled = enabled
+
 proc presentPixels*(window: Window, image: Image) =
   ## Presents a CPU-rendered Pixie image into the macOS window content view.
   when defined(useCpu):
@@ -1142,6 +1160,7 @@ proc newWindow*(
   stencilBits = 8
 ): Window =
   result = Window()
+  result.vsyncEnabled = vsync
 
   init()
 

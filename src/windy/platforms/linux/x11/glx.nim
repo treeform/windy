@@ -30,5 +30,5 @@ proc glXSwapBuffers*(d: Display, drawable: Drawable) {.libglx.}
 
 proc glXSwapIntervalEXT*(d: Display, drawable: Drawable,
     interval: cint) {.libglx.}
-proc glXSwapIntervalMESA*(interval: cint) {.libglx.}
-proc glXSwapIntervalSGI*(interval: cint) {.libglx.}
+proc glXSwapIntervalMESA*(interval: cint): cint {.libglx.}
+proc glXSwapIntervalSGI*(interval: cint): cint {.libglx.}

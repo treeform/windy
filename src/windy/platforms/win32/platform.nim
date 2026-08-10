@@ -84,7 +84,7 @@ type
     hdc: HDC
     hglrc: HGLRC
     cpuPresentBuffer: seq[uint8]
-    vsync*: bool
+    vsyncEnabled: bool
     iconHandle: HICON
     customCursor: HCURSOR
 
@@ -1339,7 +1339,7 @@ proc newWindow*(
   result.title = title
   result.hWnd = createWindow(windowClassName, title)
   result.size = size
-  result.vsync = vsync
+  result.vsyncEnabled = vsync
 
   discard SetPropW(result.hWnd, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
@@ -1366,7 +1366,17 @@ proc title*(window: Window): string =
 
 proc vsync*(window: Window): bool =
   ## Returns true when vertical sync is enabled for this window.
-  window.vsync
+  window.vsyncEnabled
+
+proc `vsync=`*(window: Window, enabled: bool) =
+  ## Changes the OpenGL swap interval without recreating the window.
+  if window.vsyncEnabled == enabled:
+    return
+  when not defined(useDirectX) and not defined(useVulkan) and not defined(useCpu):
+    window.makeContextCurrent()
+    if wglSwapIntervalEXT(if enabled: 1 else: 0) == 0:
+      raise newException(WindyError, "Error setting swap interval")
+  window.vsyncEnabled = enabled
 
 proc icon*(window: Window): Image =
   window.state.icon
