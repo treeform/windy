@@ -18,10 +18,22 @@ proc emscripten_sleep*(ms: cuint) {.importc.}
 #include <GLES2/gl2.h>
 
 EM_JS(int, get_window_width, (), {
+  var canvas = (typeof Module !== 'undefined' && Module.canvas)
+    ? Module.canvas
+    : document.getElementById('canvas');
+  if (canvas && canvas.clientWidth > 0) {
+    return canvas.clientWidth;
+  }
   return window.innerWidth;
 });
 
 EM_JS(int, get_window_height, (), {
+  var canvas = (typeof Module !== 'undefined' && Module.canvas)
+    ? Module.canvas
+    : document.getElementById('canvas');
+  if (canvas && canvas.clientHeight > 0) {
+    return canvas.clientHeight;
+  }
   return window.innerHeight;
 });
 
@@ -40,6 +52,15 @@ EM_JS(void, setup_windy_runtime, (), {
       e.preventDefault();
     }, false);
     Module.canvas.windyContextHandlerAdded = true;
+  }
+
+  if (Module.canvas && !Module.canvas.windyResizeObserverAdded &&
+      typeof ResizeObserver !== 'undefined') {
+    var observer = new ResizeObserver(function() {
+      window.dispatchEvent(new Event('resize'));
+    });
+    observer.observe(Module.canvas);
+    Module.canvas.windyResizeObserverAdded = true;
   }
 
   if (!window.windyErrorHandlerAdded) {
