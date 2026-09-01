@@ -72,6 +72,7 @@
   closeRequested*, closed*: bool
   hasPrevMouse*: bool
   mouseCaptured*: bool
+  mouseInside*: bool
   mousePos*, mousePrevPos*: IVec2
   buttonDown*, buttonToggle*: set[Button]
   perFrame*: PerFrame
@@ -183,8 +184,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L30" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L30" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L31" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L31" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -196,6 +197,7 @@
   <span class="Identifier">closeRequested</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">closed</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">hasPrevMouse</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">mouseCaptured</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+  <span class="Identifier">mouseInside</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">mousePos</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">mousePrevPos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">IVec2</span>
   <span class="Identifier">buttonDown</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">buttonToggle</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">set</span><span class="Other">[</span><a href="common.html#Button"><span class="Identifier">Button</span></a><span class="Other">]</span>
   <span class="Identifier">perFrame</span><span class="Operator">*</span><span class="Other">:</span> <a href="#PerFrame"><span class="Identifier">PerFrame</span></a>
@@ -226,8 +228,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L36" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L36" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L37" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L37" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -236,8 +238,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L37" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L37" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L38" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L38" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -246,8 +248,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L38" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L38" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L39" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L39" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -280,8 +282,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L168" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L168" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L169" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L169" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -294,8 +296,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L43" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L43" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L44" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L44" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -308,8 +310,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L57" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L57" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L58" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L58" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -321,8 +323,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L40" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L40" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L41" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L41" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -340,8 +342,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L155" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L155" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L156" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L156" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -353,8 +355,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L71" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L71" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L72" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L72" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -366,8 +368,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L141" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L141" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L142" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L142" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -379,8 +381,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L160" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L160" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/internal.nim#L161" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/internal.nim#L161" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -396,7 +398,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-26 21:25:31 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-01 17:32:05 UTC</small>
       </div>
     </div>
   </div>
