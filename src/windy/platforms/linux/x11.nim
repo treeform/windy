@@ -1038,12 +1038,20 @@ proc pollEvents(window: Window) =
     of xeMotion:
       window.mousePrevPos = window.mousePos
       window.mousePos = ev.motion.pos
+      window.state.mouseInside = true
       window.perFrame.mouseDelta += window.mousePos - window.mousePrevPos
       if (window.mousePos - window.lastClickPosition).vec2.length > multiClickRadius:
         window.buttonClicking = {}
         window.clickSeqLen = 0
       if window.onMouseMove != nil:
         window.onMouseMove()
+
+    of xeEnter:
+      if ev.crossing.mode == 0:
+        window.state.mouseInside = true
+    of xeLeave:
+      if ev.crossing.mode == 0:
+        window.state.mouseInside = false
 
     of xeButtonPress, xeButtonRelease:
 
@@ -1150,6 +1158,10 @@ proc pollEvents(window: Window) =
 
 proc mousePos*(window: Window): IVec2 =
   window.mousePos
+
+proc mouseInside*(window: Window): bool =
+  ## True while the cursor is over this window's content.
+  window.state.mouseInside
 
 proc mousePrevPos*(window: Window): IVec2 =
   window.mousePrevPos

@@ -21,6 +21,7 @@ const Examples = [
   "fixedsize",
   "fullscreen",
   "icon",
+  "mouse_inside",
   "opengl_version",
   "openurl",
   "property_changes",
