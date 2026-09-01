@@ -325,6 +325,7 @@ proc handleMouseMove(window: Window, location: NSPoint) =
 
   window.state.mousePrevPos = window.state.mousePos
   window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
+  window.state.mouseInside = true
 
   # Prevent a jump in the mouse delta when focusing a window.
   if window.state.hasPrevMouse:
@@ -614,6 +615,20 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
   self.NSView.addTrackingArea(window.trackingArea)
 
   callSuper(self, cmd)
+
+proc mouseEntered(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil:
+    return
+  window.state.mouseInside = true
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
+
+proc mouseExited(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil:
+    return
+  window.state.mouseInside = false
 
 proc mouseMoved(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
@@ -978,6 +993,8 @@ proc init() {.raises: [].} =
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
         addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
         addMethod "updateTrackingAreas", updateTrackingAreas
+        addMethod "mouseEntered:", mouseEntered
+        addMethod "mouseExited:", mouseExited
         addMethod "mouseMoved:", mouseMoved
         addMethod "mouseDragged:", mouseDragged
         addMethod "rightMouseDragged:", rightMouseDragged
@@ -1013,6 +1030,8 @@ proc init() {.raises: [].} =
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
         addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
         addMethod "updateTrackingAreas", updateTrackingAreas
+        addMethod "mouseEntered:", mouseEntered
+        addMethod "mouseExited:", mouseExited
         addMethod "mouseMoved:", mouseMoved
         addMethod "mouseDragged:", mouseDragged
         addMethod "rightMouseDragged:", rightMouseDragged
@@ -1337,6 +1356,10 @@ proc nativeView*(window: Window): NSView =
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
+
+proc mouseInside*(window: Window): bool =
+  ## True while the cursor is over this window's content.
+  window.state.mouseInside
 
 proc mousePrevPos*(window: Window): IVec2 =
   window.state.mousePrevPos

@@ -12,6 +12,7 @@ type
     closeRequested*, closed*: bool
     hasPrevMouse*: bool
     mouseCaptured*: bool
+    mouseInside*: bool
     mousePos*, mousePrevPos*: IVec2
     buttonDown*, buttonToggle*: set[Button]
     perFrame*: PerFrame

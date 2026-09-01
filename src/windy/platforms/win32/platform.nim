@@ -966,6 +966,7 @@ proc wndProc(
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
     window.state.mousePos = ivec2(pos.x, pos.y)
+    window.state.mouseInside = true
     window.state.perFrame.mouseDelta +=
       window.state.mousePos - window.state.mousePrevPos
     if window.onMouseMove != nil:
@@ -982,6 +983,7 @@ proc wndProc(
     return 0
   of WM_MOUSELEAVE:
     window.trackMouseEventRegistered = false
+    window.state.mouseInside = false
     return 0
   of WM_SETCURSOR:
     if LOWORD(lParam) == HTCLIENT:
@@ -1373,6 +1375,10 @@ proc icon*(window: Window): Image =
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
+
+proc mouseInside*(window: Window): bool =
+  ## True while the cursor is over this window's content.
+  window.state.mouseInside
 
 proc mousePrevPos*(window: Window): IVec2 =
   window.state.mousePrevPos

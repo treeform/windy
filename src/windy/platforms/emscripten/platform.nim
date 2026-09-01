@@ -325,6 +325,10 @@ proc newWindow*(
 proc mousePos*(window: Window): IVec2 =
   (window.state.mousePos.vec2 * window.contentScale).ivec2
 
+proc mouseInside*(window: Window): bool =
+  ## True while the cursor is over this window's content.
+  window.state.mouseInside
+
 proc mousePrevPos*(window: Window): IVec2 =
   (window.state.mousePrevPos.vec2 * window.contentScale).ivec2
 
@@ -618,9 +622,20 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
   window.state.mousePrevPos = window.state.mousePos
   # Use clientX/clientY as they are more reliably populated
   window.state.mousePos = ivec2(mouseEvent.clientX.int32, mouseEvent.clientY.int32)
+  window.state.mouseInside = true
   window.state.perFrame.mouseDelta += window.state.mousePos - window.state.mousePrevPos
   if window.onMouseMove != nil:
     window.onMouseMove()
+  return 1
+
+proc onMouseEnter(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.state.mouseInside = true
+  return 1
+
+proc onMouseLeave(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.state.mouseInside = false
   return 1
 
 proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
@@ -707,6 +722,8 @@ proc setupEventHandlers(window: Window) =
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mouseup_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mousemove_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseMove, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mouseenter_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseEnter, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mouseleave_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseLeave, EM_CALLBACK_THREAD_CONTEXT)
 
   # Wheel event
   discard emscripten_set_wheel_callback_on_thread(window.canvas, cast[pointer](window), 1, onWheel, EM_CALLBACK_THREAD_CONTEXT)

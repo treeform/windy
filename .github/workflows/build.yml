@@ -42,6 +42,7 @@ jobs:
     - run: nim c examples/fixedsize.nim
     - run: nim c examples/fullscreen.nim
     - run: nim c examples/icon.nim
+    - run: nim c examples/mouse_inside.nim
     - run: nim c examples/opengl_version.nim
     - run: nim c examples/openurl.nim
     - run: nim c examples/property_changes.nim
@@ -81,6 +82,8 @@ jobs:
     - run: nim c -d:emscripten examples/fullscreen.nim
       if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/icon.nim
+      if: matrix.os == 'ubuntu-latest'
+    - run: nim c -d:emscripten examples/mouse_inside.nim
       if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/opengl_version.nim
       if: matrix.os == 'ubuntu-latest'
