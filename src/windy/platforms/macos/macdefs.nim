@@ -248,6 +248,7 @@ objc:
     x: NSApplicationPresentationOptions
   )
   proc activateIgnoringOtherApps*(self: NSApplication, x: bool)
+  proc isActive*(self: NSApplication): bool
   proc setDelegate*(self: NSApplication, x: ID)
   proc setDelegate*(self: NSWindow, x: ID)
   proc setMainMenu*(self: NSApplication, x: NSMenu)

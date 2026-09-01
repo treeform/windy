@@ -40,11 +40,11 @@ type
     fullscreenState: bool
     minimizedState: bool
     cpuImage: NSImage
-    activationSettlePolls: int
 
 const
-  ActivationSettlePolls = 60
-  ActivationSettleSeconds = 0.001
+  ActivationTurnSeconds = 0.001
+  ActivationPumpSeconds = 0.25
+  ActivationRescueSeconds = 2.0
   decoratedResizableWindowMask =
     NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or
     NSWindowStyleMaskMiniaturizable or NSWindowStyleMaskResizable
@@ -57,6 +57,12 @@ const
 var
   WindyAppDelegate, WindyWindow, WindyView: Class
   windows: seq[Window]
+  # App activation is process-level, not per-window. While this deadline
+  # is in the future, pollEvents re-requests activation until it succeeds.
+  activationRescueDeadline: float64
+
+proc drainEvents()
+proc pumpActivation()
 
 objc:
   proc initWithFrame(self: NSView, x: NSRect): NSView
@@ -166,25 +172,28 @@ proc `title=`*(window: Window, title: string) =
 proc `icon=`*(window: Window, icon: Image) =
   window.state.icon = icon
 
-proc requestActivation(window: Window) =
-  ## Shows the window and asks AppKit to activate this app.
-  window.inner.makeKeyAndOrderFront(0.ID)
-  NSApp.activateIgnoringOtherApps(true)
-
-proc settleRunLoop() =
-  ## Gives AppKit a short turn to deliver activation notifications.
+proc runLoopTurn() =
+  ## Gives AppKit a short turn to exchange messages with the window server.
   discard NSRunLoop.currentRunLoop.runMode(
     NSDefaultRunLoopMode,
-    NSDate.dateWithTimeIntervalSinceNow(ActivationSettleSeconds)
+    NSDate.dateWithTimeIntervalSinceNow(ActivationTurnSeconds)
   )
 
 proc `visible=`*(window: Window, visible: bool) =
   autoreleasepool:
     if visible:
-      window.activationSettlePolls = ActivationSettlePolls
-      window.requestActivation()
+      window.inner.makeKeyAndOrderFront(0.ID)
+      NSApp.activateIgnoringOtherApps(true)
+      # The window server only honors this activation request while it is
+      # fresh, and completing it is a handshake that needs run loop turns.
+      # If we return without pumping and the app blocks (loading assets,
+      # etc.), the grant expires and the process is stuck as a background
+      # app: window front and clickable, but undecorated and never key.
+      # So finish the handshake now, before giving control back.
+      activationRescueDeadline = epochTime() + ActivationRescueSeconds
+      pumpActivation()
     else:
-      window.activationSettlePolls = 0
+      activationRescueDeadline = 0
       window.inner.orderOut(0.ID)
 
 proc `style=`*(window: Window, windowStyle: WindowStyle) =
@@ -1070,6 +1079,16 @@ proc init() {.raises: [].} =
 
     NSApp.finishLaunching()
 
+    # Give the window server a moment to finish promoting the process to a
+    # regular GUI app before any window is created. A window created while
+    # the process is still a background process comes up unmanaged: no
+    # traffic light buttons and it can never become key.
+    # No windows or user callbacks exist yet, so nothing here can raise.
+    {.cast(raises: []).}:
+      for _ in 0 ..< 10:
+        drainEvents()
+        runLoopTurn()
+
     platformDoubleClickInterval = NSEvent.doubleClickInterval
 
   initialized = true
@@ -1114,31 +1133,8 @@ proc processFlagsChanged(event: NSEvent) =
     else:
       window.handleButtonPress(button)
 
-proc settleActivationRequests() =
-  ## Replays activation while AppKit catches up after delayed startup.
-  var pending = false
-  for window in windows:
-    if window.activationSettlePolls == 0:
-      continue
-    dec window.activationSettlePolls
-    pending = true
-    window.requestActivation()
-  if pending:
-    settleRunLoop()
-
-proc pollEvents*() =
-  autoreleasepool:
-    settleActivationRequests()
-
-  # Draw first (in case a message closes a window or similar)
-  for window in windows:
-    if window.onFrame != nil:
-      window.onFrame()
-
-  # Clear all per-frame data
-  for window in windows:
-    window.state.perFrame = PerFrame()
-
+proc drainEvents() =
+  ## Dequeues and dispatches all pending AppKit events.
   autoreleasepool:
     while true:
       let event = NSApp.nextEventMatchingMask(
@@ -1167,6 +1163,46 @@ proc pollEvents*() =
 
       # Forward event for app to handle.
       NSApp.sendEvent(event)
+
+proc pumpActivation() =
+  ## Services the run loop until the app-activation handshake completes,
+  ## bounded by ActivationPumpSeconds. Normally finishes in a couple of
+  ## milliseconds; times out when macOS declines to activate us (e.g. the
+  ## user is actively working in another app).
+  let deadline = epochTime() + ActivationPumpSeconds
+  while not NSApp.isActive and epochTime() < deadline:
+    drainEvents()
+    runLoopTurn()
+
+proc rescueActivation() =
+  ## Cooperative activation (macOS 14+) drops requests made while the user
+  ## is interacting with another app; a fresh request right after they stop
+  ## is granted. So for a short time after showing a window, re-request
+  ## activation until it succeeds. Once we are active (or the deadline
+  ## passes) this never fires again, so focus is not stolen back from the
+  ## user later.
+  if activationRescueDeadline == 0:
+    return
+  if NSApp.isActive or epochTime() > activationRescueDeadline:
+    activationRescueDeadline = 0
+    return
+  NSApp.activateIgnoringOtherApps(true)
+  runLoopTurn()
+
+proc pollEvents*() =
+  autoreleasepool:
+    rescueActivation()
+
+  # Draw first (in case a message closes a window or similar)
+  for window in windows:
+    if window.onFrame != nil:
+      window.onFrame()
+
+  # Clear all per-frame data
+  for window in windows:
+    window.state.perFrame = PerFrame()
+
+  drainEvents()
 
   pollHttp()
 
