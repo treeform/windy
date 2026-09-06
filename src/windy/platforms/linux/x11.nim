@@ -1395,7 +1395,10 @@ proc setConfig*(appName: string, fileName: string, content: string) =
 
 proc openUrl*(url: string) =
   ## Open a URL in the default browser.
-  discard execShellCmd("xdg-open " & url)
+  let process = startProcess("xdg-open", args = [url],
+    options = {poUsePath, poParentStreams})
+  defer: process.close()
+  discard process.waitForExit()
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.

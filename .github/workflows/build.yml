@@ -25,6 +25,7 @@ jobs:
 
     # Run tests.
     - run: nim c tests/test.nim
+    - run: nim r tests/test_openurl.nim
     - run: nim r -d:useCpu tests/test_cpu_pixels.nim
       if: matrix.os == 'windows-latest'
 

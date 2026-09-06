@@ -4,6 +4,8 @@ import
   pixie/fileformats/bmp, pixie/images,
   urlly, utils, vmath, windefs, zippy
 
+from std/winlean import shellExecuteW
+
 when defined(useDirectX):
   {.hint: "Using DirectX backend".}
 elif defined(useVulkan):
@@ -2823,7 +2825,9 @@ proc setConfig*(appName: string, fileName: string, content: string) =
 
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
-  discard execShellCmd("start " & url)
+  # Windows resolves URL associations through ShellExecute, not CreateProcess.
+  discard shellExecuteW(0, newWideCString("open"), newWideCString(url),
+    nil, nil, SW_SHOWNORMAL)
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.
