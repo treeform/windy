@@ -1574,10 +1574,21 @@ proc setConfig*(appName: string, fileName: string, content: string) =
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.
-  if not dirExists("tmp"):
+  try:
     createDir("tmp")
-  writeFile("tmp/" & title, text)
-  discard execShellCmd("open -a TextEdit tmp/" & title)
+    let path = "tmp" / title
+    writeFile(path, text)
+    let process = startProcess(
+      "open",
+      args = ["-a", "TextEdit", "--", path],
+      options = {poUsePath, poParentStreams}
+    )
+    defer:
+      process.close()
+    if process.waitForExit() != 0:
+      raise newException(WindyError, "Unable to open temporary text file")
+  except IOError, OSError:
+    raise newException(WindyError, getCurrentExceptionMsg())
 
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
