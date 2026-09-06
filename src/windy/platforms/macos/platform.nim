@@ -328,13 +328,18 @@ proc url*(window: Window): string =
   warn "Url cannot be gotten on macOS windows"
 
 proc handleMouseMove(window: Window, location: NSPoint) =
+  ## Updates pixel coordinates and containment from unrounded view points.
   let
-    x = round(location.x)
-    y = round(window.inner.contentView.bounds.size.height - location.y)
+    bounds = window.inner.contentView.bounds
+    x = location.x
+    y = bounds.size.height - location.y
 
   window.state.mousePrevPos = window.state.mousePos
-  window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
-  window.state.mouseInside = true
+  window.state.mousePos =
+    (vec2(round(x), round(y)) * window.contentScale).ivec2
+  window.state.mouseInside =
+    x >= 0 and x < bounds.size.width and
+    y >= 0 and y < bounds.size.height
 
   # Prevent a jump in the mouse delta when focusing a window.
   if window.state.hasPrevMouse:

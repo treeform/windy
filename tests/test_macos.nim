@@ -164,6 +164,31 @@ when defined(macosx):
         doAssert abs(dx) <= 1 and abs(dy) <= 1
 
   testWindowCenter()
+
+  proc testMouseInside() =
+    ## Checks containment for drags outside each edge and focus updates.
+    let
+      window = newWindow("Mouse bounds", ivec2(100, 100), visible = false)
+      bounds = window.inner.contentView.bounds
+      width = bounds.size.width
+      height = bounds.size.height
+    defer:
+      window.close()
+    for point in [
+      NSMakePoint(-0.1, height / 2),
+      NSMakePoint(width, height / 2),
+      NSMakePoint(width / 2, height + 0.1),
+      NSMakePoint(width / 2, 0)
+    ]:
+      handleMouseMove(window, NSMakePoint(width / 2, height / 2))
+      doAssert window.mouseInside
+      handleMouseMove(window, point)
+      doAssert not window.mouseInside
+    handleMouseMove(window, NSMakePoint(0, height))
+    doAssert window.mouseInside
+    doAssert window.mousePos == ivec2(0, 0)
+
+  testMouseInside()
   echo "Windy macOS regression tests passed"
 else:
   echo "Windy macOS regression tests skipped"
