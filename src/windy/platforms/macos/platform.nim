@@ -1157,13 +1157,13 @@ proc drainEvents() =
       # - https://github.com/andlabs/ui/blob/bc848f5c4078b999dbe6ef1cd90e16290a0d1c3a/delegateuitask_darwin.m#L46
       if event.`type`() == NSEventTypeKeyDown:
         processKeyDown(event)
-        break
+        continue
       elif event.`type`() == NSEventTypeKeyUp:
         processKeyUp(event)
-        break
+        continue
       elif event.`type`() == NSEventTypeFlagsChanged:
         processFlagsChanged(event)
-        break
+        continue
 
       # Forward event for app to handle.
       NSApp.sendEvent(event)

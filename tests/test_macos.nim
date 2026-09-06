@@ -3,6 +3,21 @@ when defined(macosx):
 
   objc:
     proc retainCount(self: ID): uint
+    proc windowNumber(self: NSWindow): int
+    proc postEvent(self: NSApplication, x: NSEvent, atStart: bool)
+    proc keyEventWithType(
+      class: typedesc[NSEvent],
+      x: uint,
+      location: NSPoint,
+      modifierFlags: uint,
+      timestamp: float64,
+      windowNumber: int,
+      context: ID,
+      characters: NSString,
+      charactersIgnoringModifiers: NSString,
+      isARepeat: bool,
+      keyCode: uint16
+    ): NSEvent
 
   when defined(useCpu):
     proc testCpuImages() =
@@ -88,6 +103,44 @@ when defined(macosx):
     doAssert window.trackingArea.int == 0
 
   testWindowOwnership()
+
+  proc testKeyboardQueue() =
+    ## Checks that one poll delivers all queued key transitions in order.
+    let window = newWindow("Keyboard queue", ivec2(32, 32), visible = false)
+    defer:
+      window.close()
+    var presses, releases: seq[Button]
+    window.onButtonPress = proc(button: Button) =
+      ## Records press order.
+      presses.add(button)
+    window.onButtonRelease = proc(button: Button) =
+      ## Records release order.
+      releases.add(button)
+    autoreleasepool:
+      for keyCode in [0.uint16, 11, 8]:
+        for eventType in [10.uint, 11]:
+          let event = NSEvent.keyEventWithType(
+            eventType,
+            NSMakePoint(0, 0),
+            0,
+            0,
+            window.inner.windowNumber(),
+            0.ID,
+            @"a",
+            @"a",
+            false,
+            keyCode
+          )
+          NSApp.postEvent(event, false)
+      pollEvents()
+    doAssert presses == @[KeyA, KeyB, KeyC]
+    doAssert releases == presses
+    for button in presses:
+      doAssert window.buttonPressed[button]
+      doAssert window.buttonReleased[button]
+      doAssert not window.buttonDown[button]
+
+  testKeyboardQueue()
   echo "Windy macOS regression tests passed"
 else:
   echo "Windy macOS regression tests skipped"
