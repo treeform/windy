@@ -32,6 +32,38 @@ when defined(macosx):
 
     testCpuImages()
 
+  proc testFrameClosures() =
+    ## Checks closing and creating windows during frame callbacks.
+    let
+      first = newWindow("First", ivec2(32, 32), visible = false)
+      second = newWindow("Second", ivec2(32, 32), visible = false)
+      third = newWindow("Third", ivec2(32, 32), visible = false)
+    var
+      child: Window
+      thirdFrames, childFrames: int
+    first.onFrame = proc() =
+      ## Closes the current and next windows and creates another window.
+      first.close()
+      second.close()
+      child = newWindow("Child", ivec2(32, 32), visible = false)
+      child.onFrame = proc() =
+        ## Counts frames for the newly created window.
+        inc childFrames
+    second.onFrame = proc() =
+      ## Rejects callbacks for a window closed earlier in this frame.
+      doAssert false, "Closed window received a frame"
+    third.onFrame = proc() =
+      ## Counts frames for the surviving window.
+      inc thirdFrames
+    pollEvents()
+    doAssert first.closed and second.closed
+    doAssert thirdFrames == 1 and childFrames == 0
+    pollEvents()
+    doAssert thirdFrames == 2 and childFrames == 1
+    third.close()
+    child.close()
+
+  testFrameClosures()
   echo "Windy macOS regression tests passed"
 else:
   echo "Windy macOS regression tests skipped"

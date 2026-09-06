@@ -1193,10 +1193,12 @@ proc pollEvents*() =
   autoreleasepool:
     rescueActivation()
 
-  # Draw first (in case a message closes a window or similar)
-  for window in windows:
-    if window.onFrame != nil:
-      window.onFrame()
+  # Callbacks may close or create windows while this frame is being drawn.
+  let frameWindows = windows
+  for window in frameWindows:
+    let onFrame = window.onFrame
+    if not window.state.closed and onFrame != nil:
+      onFrame()
 
   # Clear all per-frame data
   for window in windows:
