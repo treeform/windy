@@ -29,6 +29,7 @@ else:
 proc main() =
   let urls = [
     "https://example.com/",
+    "mailto:test@example.com?subject=Hello&body=World",
     "https://example.com/?first=1&second=2#fragment",
     "https://example.com/a b/\"quoted\"/'single'",
     "https://example.com/$(echo injected > windy-openurl-injected)",

@@ -1051,15 +1051,6 @@ proc Shell_NotifyIconW*(
   lpData: PNOTIFYICONDATAW
 ): BOOL {.dynlib: "shell32".}
 
-proc ShellExecuteW*(
-  hwnd: HWND,
-  lpOperation: LPCWSTR,
-  lpFile: LPCWSTR,
-  lpParameters: LPCWSTR,
-  lpDirectory: LPCWSTR,
-  nShowCmd: int32
-): HINSTANCE {.dynlib: "shell32".}
-
 proc WinHttpOpen*(
   lpszAgent: LPCWSTR,
   dwAccessType: DWORD,
