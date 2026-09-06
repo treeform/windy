@@ -64,6 +64,30 @@ when defined(macosx):
     child.close()
 
   testFrameClosures()
+
+  proc testWindowOwnership() =
+    ## Checks that closing releases the view and its tracking area.
+    let
+      window = newWindow("View ownership", ivec2(32, 32), visible = false)
+      view = window.inner.contentView.ID
+    view.retain()
+    defer:
+      view.release()
+    autoreleasepool:
+      discard updateTrackingAreas(view, s"updateTrackingAreas")
+    let tracking = window.trackingArea.ID
+    doAssert tracking.int != 0
+    tracking.retain()
+    defer:
+      tracking.release()
+    window.close()
+    for i in 0 ..< 5:
+      drainEvents()
+    doAssert view.retainCount() == 1
+    doAssert tracking.retainCount() == 1
+    doAssert window.trackingArea.int == 0
+
+  testWindowOwnership()
   echo "Windy macOS regression tests passed"
 else:
   echo "Windy macOS regression tests skipped"

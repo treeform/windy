@@ -1275,6 +1275,13 @@ proc close*(window: Window) =
 
   if window.inner.int != 0:
     autoreleasepool:
+      window.inner.setDelegate(0.ID)
+      if window.trackingArea.int != 0:
+        window.inner.contentView.removeTrackingArea(window.trackingArea)
+        window.trackingArea.ID.release()
+        window.trackingArea = 0.NSTrackingArea
+      window.markedText.ID.release()
+      window.markedText = 0.NSString
       window.inner.close()
 
     let index = windows.indexForNSWindow(window.inner)
@@ -1320,6 +1327,8 @@ proc newWindow*(
       let nativeView = WindyView.alloc().NSView.initWithFrame(
         result.inner.contentView.frame
       )
+      defer:
+        nativeView.ID.release()
       result.inner.setDelegate(result.inner.ID)
       result.inner.setContentView(nativeView)
       discard result.inner.makeFirstResponder(nativeView)
@@ -1344,11 +1353,15 @@ proc newWindow*(
         pixelFormat = NSOpenGLPixelFormat.alloc().initWithAttributes(
           pixelFormatAttribs[0].unsafeAddr
         )
+      defer:
+        pixelFormat.ID.release()
 
       let openglView = WindyView.alloc().NSOpenGLView.initWithFrame(
         result.inner.contentView.frame,
         pixelFormat
       )
+      defer:
+        openglView.ID.release()
       openglView.setWantsBestResolutionOpenGLSurface(true)
 
       openglView.openGLContext.makeCurrentContext()
