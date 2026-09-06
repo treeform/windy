@@ -1232,19 +1232,28 @@ proc swapBuffers*(window: Window) =
 proc presentPixels*(window: Window, image: Image) =
   ## Presents a CPU-rendered Pixie image into the macOS window content view.
   when defined(useCpu):
-    if image == nil or image.width <= 0 or image.height <= 0:
-      return
-    let encodedPng = image.encodePng()
-    window.cpuImage = NSImage.alloc().initWithData(NSData.dataWithBytes(
-      encodedPng[0].unsafeAddr,
-      encodedPng.len
-    ))
-    window.inner.contentView.setNeedsDisplay(true)
+    if window.state.closed or image == nil or
+      image.width <= 0 or image.height <= 0:
+        return
+    autoreleasepool:
+      let
+        encodedPng = image.encodePng()
+        nativeImage = NSImage.alloc().initWithData(NSData.dataWithBytes(
+          encodedPng[0].unsafeAddr,
+          encodedPng.len
+        ))
+      if nativeImage.int == 0:
+        raise newException(WindyError, "Unable to create CPU frame image")
+      window.cpuImage.ID.release()
+      window.cpuImage = nativeImage
+      window.inner.contentView.setNeedsDisplay(true)
   else:
     discard
 
 proc close*(window: Window) =
   window.releaseMouse()
+  window.cpuImage.ID.release()
+  window.cpuImage = 0.NSImage
   window.onCloseRequest = nil
   window.onFrame = nil
   window.onMove = nil
