@@ -955,9 +955,13 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
           window.state.cursor.hotspot.x.float,
           window.state.cursor.hotspot.y.float
         )
+      defer:
+        image.ID.release()
       NSCursor.alloc().initWithImage(image, hotspot)
 
   self.NSView.addCursorRect(self.NSView.bounds, cursor)
+  if window.state.cursor.kind == CustomCursor:
+    cursor.ID.release()
 
 proc drawRect(self: ID, cmd: SEL, dirtyRect: NSRect): ID {.cdecl.} =
   when defined(useCpu):
