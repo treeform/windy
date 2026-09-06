@@ -354,5 +354,6 @@ proc XSyncCreateCounter*(d: Display, v: XSyncValue): XSyncCounter
 proc XSyncDestroyCounter*(d: Display, c: XSyncCounter)
 
 proc XSyncSetCounter*(d: Display, c: XSyncCounter; v: XSyncValue)
+proc XSyncQueryCounter*(d: Display, c: XSyncCounter; v: ptr XSyncValue): cint
 
 {.pop.}
