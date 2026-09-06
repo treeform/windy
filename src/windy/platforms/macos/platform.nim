@@ -1509,6 +1509,8 @@ proc getClipboardImage*(): Image =
     let bitmap = NSBitmapImageRep.alloc().initWithData(data)
     if bitmap.int == 0:
       return
+    defer:
+      bitmap.ID.release()
 
     let pngData = bitmap.representationUsingType(
       NSBitmapImageFileTypePNG,
