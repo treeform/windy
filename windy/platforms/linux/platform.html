@@ -964,8 +964,8 @@
   <dd>
     
     Shows a zenity open-file dialog. Returns &quot;&quot; if canceled.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1419" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1419" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1422" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1422" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -979,8 +979,8 @@
   <dd>
     
     Open a text file in the default text editor.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1400" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1400" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1403" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1403" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -988,7 +988,9 @@
 </div>
 <div id="openUrl-procs-all">
   <div id="openUrl,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#openUrl%2Cstring"><span class="Identifier">openUrl</span></a><span class="Other">(</span><span class="Identifier">url</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ExecIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#openUrl%2Cstring"><span class="Identifier">openUrl</span></a><span class="Other">(</span><span class="Identifier">url</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+    <span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+                            <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Open a URL in the default browser.
@@ -1088,8 +1090,8 @@
   <dd>
     
     Shows a zenity save-file dialog. Returns &quot;&quot; if canceled.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1433" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1433" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11.nim#L1436" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11.nim#L1436" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1286,7 +1288,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-06 01:31:55 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-06 05:16:29 UTC</small>
       </div>
     </div>
   </div>

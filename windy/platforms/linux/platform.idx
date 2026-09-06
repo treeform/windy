@@ -62,6 +62,6 @@ nim	getConfigHome	windy/platforms/linux/platform.html#getConfigHome,string	proc 
 nim	getConfig	windy/platforms/linux/platform.html#getConfig,string,string	proc getConfig(appName: string; fileName: string): string		1377
 nim	setConfig	windy/platforms/linux/platform.html#setConfig,string,string,string	proc setConfig(appName: string; fileName: string; content: string)		1387
 nim	openUrl	windy/platforms/linux/platform.html#openUrl,string	proc openUrl(url: string)		1396
-nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1400
-nim	openFileDialog	windy/platforms/linux/platform.html#openFileDialog,string,seq[FileDialogFilter],string	proc openFileDialog(title = "Open File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""): string		1419
-nim	saveFileDialog	windy/platforms/linux/platform.html#saveFileDialog,string,seq[FileDialogFilter],string,string	proc saveFileDialog(title = "Save File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""; defaultName = ""): string		1433
+nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1403
+nim	openFileDialog	windy/platforms/linux/platform.html#openFileDialog,string,seq[FileDialogFilter],string	proc openFileDialog(title = "Open File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""): string		1422
+nim	saveFileDialog	windy/platforms/linux/platform.html#saveFileDialog,string,seq[FileDialogFilter],string,string	proc saveFileDialog(title = "Save File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""; defaultName = ""): string		1436
