@@ -328,13 +328,18 @@ proc url*(window: Window): string =
   warn "Url cannot be gotten on macOS windows"
 
 proc handleMouseMove(window: Window, location: NSPoint) =
+  ## Updates pixel coordinates and containment from unrounded view points.
   let
-    x = round(location.x)
-    y = round(window.inner.contentView.bounds.size.height - location.y)
+    bounds = window.inner.contentView.bounds
+    x = location.x
+    y = bounds.size.height - location.y
 
   window.state.mousePrevPos = window.state.mousePos
-  window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
-  window.state.mouseInside = true
+  window.state.mousePos =
+    (vec2(round(x), round(y)) * window.contentScale).ivec2
+  window.state.mouseInside =
+    x >= 0 and x < bounds.size.width and
+    y >= 0 and y < bounds.size.height
 
   # Prevent a jump in the mouse delta when focusing a window.
   if window.state.hasPrevMouse:
@@ -955,9 +960,13 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
           window.state.cursor.hotspot.x.float,
           window.state.cursor.hotspot.y.float
         )
+      defer:
+        image.ID.release()
       NSCursor.alloc().initWithImage(image, hotspot)
 
   self.NSView.addCursorRect(self.NSView.bounds, cursor)
+  if window.state.cursor.kind == CustomCursor:
+    cursor.ID.release()
 
 proc drawRect(self: ID, cmd: SEL, dirtyRect: NSRect): ID {.cdecl.} =
   when defined(useCpu):
@@ -1153,13 +1162,13 @@ proc drainEvents() =
       # - https://github.com/andlabs/ui/blob/bc848f5c4078b999dbe6ef1cd90e16290a0d1c3a/delegateuitask_darwin.m#L46
       if event.`type`() == NSEventTypeKeyDown:
         processKeyDown(event)
-        break
+        continue
       elif event.`type`() == NSEventTypeKeyUp:
         processKeyUp(event)
-        break
+        continue
       elif event.`type`() == NSEventTypeFlagsChanged:
         processFlagsChanged(event)
-        break
+        continue
 
       # Forward event for app to handle.
       NSApp.sendEvent(event)
@@ -1193,10 +1202,12 @@ proc pollEvents*() =
   autoreleasepool:
     rescueActivation()
 
-  # Draw first (in case a message closes a window or similar)
-  for window in windows:
-    if window.onFrame != nil:
-      window.onFrame()
+  # Callbacks may close or create windows while this frame is being drawn.
+  let frameWindows = windows
+  for window in frameWindows:
+    let onFrame = window.onFrame
+    if not window.state.closed and onFrame != nil:
+      onFrame()
 
   # Clear all per-frame data
   for window in windows:
@@ -1207,15 +1218,18 @@ proc pollEvents*() =
   pollHttp()
 
 proc centerWindow(window: Window) =
-  ## Calculate centered position for a window on the primary screen.
-  let
-    screenFrame = window.inner.screen.frame
-    screenWidth = screenFrame.size.width.int
-    screenHeight = screenFrame.size.height.int
-    # Calculate center position.
-    x = screenFrame.origin.x.int + (screenWidth - window.size.x) div 2
-    y = screenFrame.origin.y.int + (screenHeight - window.size.y) div 2
-  window.pos = ivec2(x.int32, y.int32)
+  ## Centers the native window frame using screen point coordinates.
+  autoreleasepool:
+    let
+      screenFrame = window.inner.screen.frame
+      windowFrame = window.inner.frame
+      origin = NSMakePoint(
+        screenFrame.origin.x +
+          (screenFrame.size.width - windowFrame.size.width) / 2,
+        screenFrame.origin.y +
+          (screenFrame.size.height - windowFrame.size.height) / 2
+      )
+    window.inner.setFrameOrigin(origin)
 
 proc makeContextCurrent*(window: Window) =
   when defined(useMetal4) or defined(useCpu):
@@ -1232,19 +1246,28 @@ proc swapBuffers*(window: Window) =
 proc presentPixels*(window: Window, image: Image) =
   ## Presents a CPU-rendered Pixie image into the macOS window content view.
   when defined(useCpu):
-    if image == nil or image.width <= 0 or image.height <= 0:
-      return
-    let encodedPng = image.encodePng()
-    window.cpuImage = NSImage.alloc().initWithData(NSData.dataWithBytes(
-      encodedPng[0].unsafeAddr,
-      encodedPng.len
-    ))
-    window.inner.contentView.setNeedsDisplay(true)
+    if window.state.closed or image == nil or
+      image.width <= 0 or image.height <= 0:
+        return
+    autoreleasepool:
+      let
+        encodedPng = image.encodePng()
+        nativeImage = NSImage.alloc().initWithData(NSData.dataWithBytes(
+          encodedPng[0].unsafeAddr,
+          encodedPng.len
+        ))
+      if nativeImage.int == 0:
+        raise newException(WindyError, "Unable to create CPU frame image")
+      window.cpuImage.ID.release()
+      window.cpuImage = nativeImage
+      window.inner.contentView.setNeedsDisplay(true)
   else:
     discard
 
 proc close*(window: Window) =
   window.releaseMouse()
+  window.cpuImage.ID.release()
+  window.cpuImage = 0.NSImage
   window.onCloseRequest = nil
   window.onFrame = nil
   window.onMove = nil
@@ -1260,6 +1283,13 @@ proc close*(window: Window) =
 
   if window.inner.int != 0:
     autoreleasepool:
+      window.inner.setDelegate(0.ID)
+      if window.trackingArea.int != 0:
+        window.inner.contentView.removeTrackingArea(window.trackingArea)
+        window.trackingArea.ID.release()
+        window.trackingArea = 0.NSTrackingArea
+      window.markedText.ID.release()
+      window.markedText = 0.NSString
       window.inner.close()
 
     let index = windows.indexForNSWindow(window.inner)
@@ -1305,6 +1335,8 @@ proc newWindow*(
       let nativeView = WindyView.alloc().NSView.initWithFrame(
         result.inner.contentView.frame
       )
+      defer:
+        nativeView.ID.release()
       result.inner.setDelegate(result.inner.ID)
       result.inner.setContentView(nativeView)
       discard result.inner.makeFirstResponder(nativeView)
@@ -1329,11 +1361,15 @@ proc newWindow*(
         pixelFormat = NSOpenGLPixelFormat.alloc().initWithAttributes(
           pixelFormatAttribs[0].unsafeAddr
         )
+      defer:
+        pixelFormat.ID.release()
 
       let openglView = WindyView.alloc().NSOpenGLView.initWithFrame(
         result.inner.contentView.frame,
         pixelFormat
       )
+      defer:
+        openglView.ID.release()
       openglView.setWantsBestResolutionOpenGLSurface(true)
 
       openglView.openGLContext.makeCurrentContext()
@@ -1365,11 +1401,11 @@ proc newWindow*(
 
     result.title = title
     result.size = size
+    result.style = style
 
     # Center window on screen by default (macOS standard behavior).
     result.centerWindow()
 
-    result.style = style
     result.visible = visible
 
     result.minimizedState = result.inner.isMiniaturized
@@ -1481,6 +1517,8 @@ proc getClipboardImage*(): Image =
     let bitmap = NSBitmapImageRep.alloc().initWithData(data)
     if bitmap.int == 0:
       return
+    defer:
+      bitmap.ID.release()
 
     let pngData = bitmap.representationUsingType(
       NSBitmapImageFileTypePNG,
@@ -1565,10 +1603,21 @@ proc setConfig*(appName: string, fileName: string, content: string) =
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.
-  if not dirExists("tmp"):
+  try:
     createDir("tmp")
-  writeFile("tmp/" & title, text)
-  discard execShellCmd("open -a TextEdit tmp/" & title)
+    let path = "tmp" / title
+    writeFile(path, text)
+    let process = startProcess(
+      "open",
+      args = ["-a", "TextEdit", "--", path],
+      options = {poUsePath, poParentStreams}
+    )
+    defer:
+      process.close()
+    if process.waitForExit() != 0:
+      raise newException(WindyError, "Unable to open temporary text file")
+  except IOError, OSError:
+    raise newException(WindyError, getCurrentExceptionMsg())
 
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
