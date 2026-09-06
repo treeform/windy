@@ -2823,7 +2823,17 @@ proc setConfig*(appName: string, fileName: string, content: string) =
 
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
-  discard execShellCmd("start " & url)
+  let
+    operation = wstr("open")
+    target = wstr(url)
+  discard ShellExecuteW(
+    0,
+    cast[LPCWSTR](operation[0].addr),
+    cast[LPCWSTR](target[0].addr),
+    nil,
+    nil,
+    SW_SHOWNORMAL
+  )
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.

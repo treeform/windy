@@ -1,5 +1,5 @@
 import
-  std/[os, strutils, times, unicode, pathnorm],
+  std/[os, osproc, strutils, times, unicode, pathnorm],
   pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
 
@@ -1572,7 +1572,10 @@ proc openTempTextFile*(title, text: string) =
 
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
-  discard execShellCmd("open " & url)
+  let process = startProcess("open", args = ["--", url],
+    options = {poUsePath, poParentStreams})
+  defer: process.close()
+  discard process.waitForExit()
 
 proc fileDialogExtensions(filters: seq[FileDialogFilter]): seq[string] =
   ## Collects unique file extensions without wildcards or dots.
