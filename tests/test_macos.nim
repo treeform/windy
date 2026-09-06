@@ -141,6 +141,29 @@ when defined(macosx):
       doAssert not window.buttonDown[button]
 
   testKeyboardQueue()
+
+  proc testWindowCenter() =
+    ## Checks that native frame centers agree on Retina and 1x screens.
+    for size in [ivec2(320, 200), ivec2(800, 600)]:
+      for style in [DecoratedResizable, Decorated, Undecorated]:
+        let window = newWindow(
+          "Centered window",
+          size,
+          style = style,
+          visible = false
+        )
+        defer:
+          window.close()
+        let
+          frame = window.inner.frame
+          screen = window.inner.screen.frame
+          dx = frame.origin.x + frame.size.width / 2 -
+            (screen.origin.x + screen.size.width / 2)
+          dy = frame.origin.y + frame.size.height / 2 -
+            (screen.origin.y + screen.size.height / 2)
+        doAssert abs(dx) <= 1 and abs(dy) <= 1
+
+  testWindowCenter()
   echo "Windy macOS regression tests passed"
 else:
   echo "Windy macOS regression tests skipped"

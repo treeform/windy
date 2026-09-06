@@ -1213,15 +1213,18 @@ proc pollEvents*() =
   pollHttp()
 
 proc centerWindow(window: Window) =
-  ## Calculate centered position for a window on the primary screen.
-  let
-    screenFrame = window.inner.screen.frame
-    screenWidth = screenFrame.size.width.int
-    screenHeight = screenFrame.size.height.int
-    # Calculate center position.
-    x = screenFrame.origin.x.int + (screenWidth - window.size.x) div 2
-    y = screenFrame.origin.y.int + (screenHeight - window.size.y) div 2
-  window.pos = ivec2(x.int32, y.int32)
+  ## Centers the native window frame using screen point coordinates.
+  autoreleasepool:
+    let
+      screenFrame = window.inner.screen.frame
+      windowFrame = window.inner.frame
+      origin = NSMakePoint(
+        screenFrame.origin.x +
+          (screenFrame.size.width - windowFrame.size.width) / 2,
+        screenFrame.origin.y +
+          (screenFrame.size.height - windowFrame.size.height) / 2
+      )
+    window.inner.setFrameOrigin(origin)
 
 proc makeContextCurrent*(window: Window) =
   when defined(useMetal4) or defined(useCpu):
@@ -1393,11 +1396,11 @@ proc newWindow*(
 
     result.title = title
     result.size = size
+    result.style = style
 
     # Center window on screen by default (macOS standard behavior).
     result.centerWindow()
 
-    result.style = style
     result.visible = visible
 
     result.minimizedState = result.inner.isMiniaturized
