@@ -30,7 +30,6 @@ else:
         value.addr, NSOpenGLContextParameterSwapInterval)
       value.int
   elif defined(windows):
-    import windy/platforms/win32/windefs
     proc currentContext(): pointer {.stdcall, importc: "wglGetCurrentContext",
       dynlib: "opengl32.dll".}
     proc address(name: cstring): pointer {.stdcall, importc: "wglGetProcAddress",
@@ -68,7 +67,17 @@ else:
     except WindyError:
       doAssert currentContext() == previous
       when defined(linux):
-        doAssert enabled or window.vsync, "initial disabled state must work"
+        let display = glXGetCurrentDisplay()
+        let extensions = strutils.splitWhitespace(
+          $display.glXQueryExtensionsString(display.defaultScreen))
+        doAssert "GLX_EXT_swap_control" notin extensions and
+          "GLX_MESA_swap_control" notin extensions,
+          "a supported swap-control path must succeed"
+        if enabled:
+          doAssert "GLX_SGI_swap_control" notin extensions
+        else:
+          doAssert "GLX_SGI_swap_control" in extensions and window.vsync,
+            "initial disabled state must work"
         echo "Driver cannot change VSync to ", enabled
         continue
       else: raise
