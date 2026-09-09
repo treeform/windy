@@ -23,6 +23,15 @@ jobs:
     - run: nim r -d:useCpu tests/test_cpu_pixels.nim
       if: matrix.os == 'windows-latest'
 
+    - name: Check two X11 monitors
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        xvfb-run -a -s "-noreset -screen 0 1600x600x24" sh -ec '
+          xrandr --setmonitor LEFT 800/200x600/150+0+0 screen
+          xrandr --setmonitor RIGHT 800/200x600/150+800+0 none
+          nim r --parallelBuild:1 tests/test_screens.nim
+        '
+
     # Build native examples.
     - run: nim c examples/basic.nim
     - run: nim c examples/basic_boxy.nim

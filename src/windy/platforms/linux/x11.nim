@@ -2,7 +2,7 @@ import
   std/[os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
   ../../[common, internal],
   vmath, pixie,
-  x11/[glx, keysym, x, xevent, xlib, xcursor]
+  x11/[glx, keysym, x, xevent, xlib, xcursor, xrandr]
 
 import ../../http
 export http
@@ -626,21 +626,25 @@ proc `title=`*(window: Window, v: string) =
   display.Xutf8SetWMProperties(window.handle, v, v, nil, 0, nil, nil, nil)
 
 proc getScreens*(): seq[common.Screen] =
-  ## Returns the default X11 screen as primary.
+  ## Returns active X11 monitors and their desktop positions (RandR 1.5).
   init()
-
-  let screen = display.screen(display.defaultScreen)
-  if screen == nil:
+  var major, minor, count: cint
+  if display.XRRQueryVersion(major.addr, minor.addr) == 0 or
+      (major == 1 and minor < 5) or major < 1:
+    raise WindyError.newException("Screen enumeration requires RandR 1.5")
+  let monitors = display.XRRGetMonitors(display.defaultRootWindow, 1, count.addr)
+  if monitors == nil:
     return
-
-  let size = screen.size
-  result.add common.Screen(
-    left: 0,
-    top: 0,
-    right: size.x,
-    bottom: size.y,
-    primary: true
-  )
+  defer: XRRFreeMonitors(monitors)
+  for i in 0 ..< count:
+    let monitor = monitors[i]
+    result.add common.Screen(
+      left: monitor.x,
+      top: monitor.y,
+      right: monitor.x + monitor.width,
+      bottom: monitor.y + monitor.height,
+      primary: monitor.primary != 0
+    )
 
 proc contentScale*(window: Window): float32 =
   const defaultScreenDpi = 96.0
