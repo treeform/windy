@@ -660,6 +660,12 @@ proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData:
   let window = cast[Window](userData)
   let button = keyCodeToButton(keyEvent.keyCode)
   window.handleButtonPress(button)
+  # Canceling a printable keydown suppresses the keypress that delivers runes.
+  # Keep navigation and shortcuts captured; onKeyPress consumes text input.
+  if window.runeInputEnabled and not keyEvent.ctrlKey and not keyEvent.metaKey:
+    let key = $cast[cstring](keyEvent.key[0].addr)
+    if key.runeLen == 1:
+      return 0
   return 1
 
 proc onKeyUp(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
