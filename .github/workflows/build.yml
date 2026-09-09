@@ -25,6 +25,7 @@ jobs:
 
     # Run tests.
     - run: nim c tests/test.nim
+    - run: nim c tests/manual_inputs.nim
     - run: nim r tests/test_openurl.nim
     - run: nim r tests/test_macos.nim
       if: matrix.os == 'macos-latest'
@@ -64,6 +65,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
 
     # Build Emscripten examples on Ubuntu only.
+    - run: nim c -d:emscripten tests/manual_inputs.nim
+      if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/basic.nim
       if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/basic_boxy.nim
