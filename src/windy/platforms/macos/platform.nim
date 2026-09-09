@@ -1092,21 +1092,25 @@ proc swapBuffers*(window: Window) =
     window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
 
 proc vsync*(window: Window): bool =
-  ## Returns true when vertical sync is enabled for this window.
-  window.vsyncEnabled
+  ## Returns the OpenGL swap interval; other backends retain the constructor option.
+  when defined(useMetal4) or defined(useCpu):
+    window.vsyncEnabled
+  else:
+    var interval: GLint
+    window.inner.contentView.NSOpenGLView.openGLContext.getValues(
+      interval.addr, NSOpenGLContextParameterSwapInterval)
+    interval != 0
 
 proc `vsync=`*(window: Window, enabled: bool) =
-  ## Changes the OpenGL swap interval without recreating the window.
-  if window.vsyncEnabled == enabled:
-    return
-  when not defined(useMetal4) and not defined(useCpu):
-    window.makeContextCurrent()
-    var swapInterval: GLint = if enabled: 1 else: 0
+  ## Changes this window's OpenGL swap interval, preserving the current context.
+  when defined(useMetal4) or defined(useCpu):
+    raise WindyError.newException("The application controls VSync on this backend")
+  else:
+    var interval: GLint = if enabled: 1 else: 0
     window.inner.contentView.NSOpenGLView.openGLContext.setValues(
-      swapInterval.addr,
-      NSOpenGLContextParameterSwapInterval
-    )
-  window.vsyncEnabled = enabled
+      interval.addr, NSOpenGLContextParameterSwapInterval)
+    if window.vsync != enabled:
+      raise WindyError.newException("Error setting the OpenGL swap interval")
 
 proc presentPixels*(window: Window, image: Image) =
   ## Presents a CPU-rendered Pixie image into the macOS window content view.

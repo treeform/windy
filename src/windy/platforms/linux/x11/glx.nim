@@ -32,3 +32,13 @@ proc glXSwapIntervalEXT*(d: Display, drawable: Drawable,
     interval: cint) {.libglx.}
 proc glXSwapIntervalMESA*(interval: cint): cint {.libglx.}
 proc glXSwapIntervalSGI*(interval: cint): cint {.libglx.}
+
+proc glXGetCurrentDisplay*(): Display {.libglx.}
+proc glXGetCurrentDrawable*(): Drawable {.libglx.}
+proc glXGetCurrentReadDrawable*(): Drawable {.libglx.}
+proc glXMakeContextCurrent*(d: Display, draw, read: Drawable,
+    ctx: GlxContext): cint {.libglx.}
+proc glXQueryExtensionsString*(d: Display, screen: cint): cstring {.libglx.}
+proc glXQueryDrawable*(d: Display, drawable: Drawable,
+    attribute: cint, value: ptr cuint) {.libglx.}
+proc glXGetSwapIntervalMESA*(): cint {.libglx.}
