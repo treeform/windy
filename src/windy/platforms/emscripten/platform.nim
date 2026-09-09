@@ -668,6 +668,7 @@ proc keyEventToButton(event: ptr EmscriptenKeyboardEvent): Button =
   of "NumpadDivide": NumpadDivide
   of "NumpadEqual": NumpadEqual
   else:
+    # Android browsers can omit event.code despite supporting WebGL2.
     let button = keyCodeToButton(event.keyCode)
     if event.location == 2:
       case button
