@@ -51,7 +51,7 @@ jobs:
         Invoke-WebRequest https://github.com/pal1000/mesa-dist-win/releases/download/26.2.0/mesa3d-26.2.0-release-msvc.7z -OutFile "$env:RUNNER_TEMP/mesa.7z"
         7z x "$env:RUNNER_TEMP/mesa.7z" "-o$env:RUNNER_TEMP/mesa"
         Copy-Item "$env:RUNNER_TEMP/mesa/x64/*.dll" tests/
-        nim r --parallelBuild:1 tests/test_vsync.nim
+        nim r --parallelBuild:1 --out:tests/test_vsync.exe tests/test_vsync.nim
 
     # Build native examples.
     - run: nim c examples/basic.nim
