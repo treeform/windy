@@ -9,7 +9,6 @@
 *.wasm
 *.html
 *.js
-tests/test_browser_inputs.cjs
 *.data
 nimcache
 *.pdb
