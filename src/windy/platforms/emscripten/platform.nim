@@ -656,9 +656,15 @@ proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: po
     window.onScroll()
   return 1
 
+proc keyEventToButton(event: ptr EmscriptenKeyboardEvent): Button =
+  case $cast[cstring](event.code[0].addr)
+  of "MetaLeft": KeyLeftSuper
+  of "MetaRight": KeyRightSuper
+  else: keyCodeToButton(event.keyCode)
+
 proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  let button = keyCodeToButton(keyEvent.keyCode)
+  let button = keyEventToButton(keyEvent)
   window.handleButtonPress(button)
   # Canceling a printable keydown suppresses the keypress that delivers runes.
   # Keep navigation and shortcuts captured; onKeyPress consumes text input.
@@ -670,7 +676,7 @@ proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData:
 
 proc onKeyUp(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  let button = keyCodeToButton(keyEvent.keyCode)
+  let button = keyEventToButton(keyEvent)
   window.handleButtonRelease(button)
   return 1
 
