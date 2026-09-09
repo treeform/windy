@@ -1243,6 +1243,12 @@ proc swapBuffers*(window: Window) =
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
 
+when defined(useMetal4) or defined(useCpu):
+  proc loadExtensions*() =
+    ## Nothing to load without OpenGL. Exported so callers can call
+    ## loadExtensions() on every backend, as Win32 and Emscripten already allow.
+    discard
+
 proc presentPixels*(window: Window, image: Image) =
   ## Presents a CPU-rendered Pixie image into the macOS window content view.
   when defined(useCpu):
