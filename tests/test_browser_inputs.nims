@@ -8,9 +8,10 @@ when defined(emscripten):
   switch("exceptions", "goto")
   switch("define", "noSignalHandler")
   switch("nimcache", "tmp/browser-inputs")
+  switch("out", "tmp/test_browser_inputs.cjs")
   switch(
     "passL",
-    "-o tmp/test_browser_inputs.cjs -s SINGLE_FILE=1 " &
+    "-s SINGLE_FILE=1 " &
     "-s ENVIRONMENT=node -s EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH " &
     "-s EXPORTED_FUNCTIONS=_main,_malloc,_free"
   )
