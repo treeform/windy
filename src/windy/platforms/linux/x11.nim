@@ -47,6 +47,7 @@ type
     innerDecorated: bool
     innerFocused: bool
     mouseCaptured: bool
+    vsyncEnabled: bool
 
     # XDnD state
     xdndSource: XWindow
@@ -405,6 +406,47 @@ proc makeContextCurrent*(window: Window) =
 
 proc swapBuffers*(window: Window) =
   display.glXSwapBuffers(window.handle)
+
+proc applyVsync(window: Window, enabled: bool) =
+  let
+    extensions = strutils.splitWhitespace($display.glXQueryExtensionsString(display.defaultScreen))
+    interval = if enabled: 1.cint else: 0.cint
+  if "GLX_EXT_swap_control" in extensions:
+    display.glXSwapIntervalEXT(window.handle, interval)
+    var actual: cuint
+    display.glXQueryDrawable(window.handle, 0x20F1, actual.addr)
+    if actual != interval.cuint:
+      raise WindyError.newException("Error setting the GLX swap interval")
+  elif "GLX_MESA_swap_control" in extensions or "GLX_SGI_swap_control" in extensions:
+    let
+      previousDisplay = glXGetCurrentDisplay()
+      previousDraw = glXGetCurrentDrawable()
+      previousRead = glXGetCurrentReadDrawable()
+      previousContext = glXGetCurrentContext()
+    window.makeContextCurrent()
+    defer:
+      discard glXMakeContextCurrent(
+        if previousDisplay == nil: display else: previousDisplay,
+        previousDraw, previousRead, previousContext)
+    if "GLX_MESA_swap_control" in extensions:
+      if glXSwapIntervalMESA(interval) != 0 or glXGetSwapIntervalMESA() != interval:
+        raise WindyError.newException("Error setting the GLX swap interval")
+    elif enabled:
+      if glXSwapIntervalSGI(interval) != 0:
+        raise WindyError.newException("Error setting the GLX swap interval")
+    elif window.vsyncEnabled:
+      raise WindyError.newException("GLX_SGI_swap_control cannot disable VSync")
+  elif enabled:
+    raise WindyError.newException("VSync control is not supported")
+  window.vsyncEnabled = enabled
+
+proc vsync*(window: Window): bool =
+  ## Returns the last accepted interval. SGI cannot read its interval back.
+  window.vsyncEnabled
+
+proc `vsync=`*(window: Window, enabled: bool) =
+  ## Changes the GLX swap interval, preserving the caller's current context.
+  window.applyVsync(enabled)
 
 template blockUntil(expression: untyped) {.dirty.} =
   ## In X11 many properties are async, you change them and then it takes
@@ -819,15 +861,7 @@ proc newWindow*(
 
   makeContextCurrent result
 
-  if vsync:
-    if glXSwapIntervalEXT != nil:
-      display.glXSwapIntervalEXT(result.handle, 1)
-    elif glXSwapIntervalMESA != nil:
-      glXSwapIntervalMESA(1)
-    elif glXSwapIntervalSGI != nil:
-      glXSwapIntervalSGI(1)
-    else:
-      raise WindyError.newException("VSync is not supported")
+  result.applyVsync(vsync)
 
   if visible:
     result.visible = true
