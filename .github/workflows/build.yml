@@ -54,6 +54,17 @@ jobs:
     - run: nim c examples/openurl.nim
     - run: nim c examples/property_changes.nim
     - run: nim c examples/screens.nim
+    - name: Check two X11 monitors
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y x11-xserver-utils
+        xvfb-run -a -s "-noreset -screen 0 1600x600x24" sh -ec '
+          xrandr --setmonitor LEFT 800/200x600/150+0+0 screen
+          xrandr --setmonitor RIGHT 800/200x600/150+800+0 none
+          nim r --parallelBuild:1 tests/test_screens.nim
+        '
+
     - run: nim c examples/scrollwheel.nim
     - run: nim c examples/system_cursors.nim
     - run: nim c examples/tray.nim
