@@ -36,7 +36,6 @@ type
     requestBody: string
     deadline: float64
     startTime: float64
-    canceled: bool
     completed: bool
 
     onError: HttpErrorCallback
@@ -73,10 +72,16 @@ var
   httpRequests: Table[HttpRequestHandle, EmsHttpRequestState]
   webSockets: Table[WebSocketHandle, EmsWebSocketState]
 
+  # Browser events can arrive while Asyncify has suspended onFrame.
+  frameDispatchActive: bool
+  pendingResize: bool
+  pendingFocusChange: bool
+
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
 proc handleRune(window: Window, rune: Rune)
 proc setupEventHandlers(window: Window)  # Forward declaration
+proc drainDeferredWindowEvents()  # Forward declaration
 
 proc close*(handle: WebSocketHandle) {.raises: [].}
 
@@ -84,6 +89,10 @@ proc init =
   if initialized:
     return
   initialized = true
+  # Browsers do not expose the user's double click speed, so use a
+  # common default. Without this DoubleClick never fires because the
+  # interval stays at zero.
+  platformDoubleClickInterval = 0.5
   setup_windy_runtime()
 
 proc makeContextCurrent*(window: Window) =
@@ -101,6 +110,13 @@ proc close*(window: Window) =
 proc closeRequested*(window: Window): bool =
   return false
 
+proc abortFetch(state: EmsHttpRequestState) =
+  let fetch = state.fetch
+  if fetch == nil:
+    return
+  state.fetch = nil
+  emscripten_fetch_close(fetch)
+
 proc pollHttp() =
   ## Poll HTTP requests.
   let now = epochTime()
@@ -109,6 +125,7 @@ proc pollHttp() =
     if state.completed: continue
     if state.deadline > 0 and state.deadline <= now:
       state.completed = true
+      state.abortFetch()
       if state.onError != nil:
         state.onError("Deadline exceeded")
   var expiredSockets: seq[WebSocketHandle]
@@ -126,8 +143,13 @@ proc pollEvents*() =
   ## Note: Will block to match frames per second.
   if mainWindow != nil:
     if mainWindow.onFrame != nil:
-      mainWindow.onFrame()
+      frameDispatchActive = true
+      try:
+        mainWindow.onFrame()
+      finally:
+        frameDispatchActive = false
     mainWindow.state.perFrame = PerFrame()
+  drainDeferredWindowEvents()
   pollHttp()
   emscripten_sleep(0)
 
@@ -302,6 +324,10 @@ proc newWindow*(
 
 proc mousePos*(window: Window): IVec2 =
   (window.state.mousePos.vec2 * window.contentScale).ivec2
+
+proc mouseInside*(window: Window): bool =
+  ## True while the cursor is over this window's content.
+  window.state.mouseInside
 
 proc mousePrevPos*(window: Window): IVec2 =
   (window.state.mousePrevPos.vec2 * window.contentScale).ivec2
@@ -596,9 +622,20 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
   window.state.mousePrevPos = window.state.mousePos
   # Use clientX/clientY as they are more reliably populated
   window.state.mousePos = ivec2(mouseEvent.clientX.int32, mouseEvent.clientY.int32)
+  window.state.mouseInside = true
   window.state.perFrame.mouseDelta += window.state.mousePos - window.state.mousePrevPos
   if window.onMouseMove != nil:
     window.onMouseMove()
+  return 1
+
+proc onMouseEnter(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.state.mouseInside = true
+  return 1
+
+proc onMouseLeave(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  let window = cast[Window](userData)
+  window.state.mouseInside = false
   return 1
 
 proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: pointer): EM_BOOL {.cdecl.} =
@@ -639,29 +676,54 @@ proc onKeyPress(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData
 
 proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  if frameDispatchActive:
+    pendingFocusChange = true
+    return 1
   if window.onFocusChange != nil:
     window.onFocusChange()
   return 1
 
 proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  if frameDispatchActive:
+    pendingFocusChange = true
+    return 1
   if window.onFocusChange != nil:
     window.onFocusChange()
   return 1
 
 proc onResize(eventType: cint, uiEvent: ptr EmscriptenUiEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  if frameDispatchActive:
+    pendingResize = true
+    return 1
   window.updateCanvasSize()
 
   if window.onResize != nil:
     window.onResize()
   return 1
 
+proc drainDeferredWindowEvents() =
+  ## Runs window callbacks deferred while onFrame was suspended.
+  if mainWindow == nil:
+    return
+  if pendingResize:
+    pendingResize = false
+    mainWindow.updateCanvasSize()
+    if mainWindow.onResize != nil:
+      mainWindow.onResize()
+  if pendingFocusChange:
+    pendingFocusChange = false
+    if mainWindow.onFocusChange != nil:
+      mainWindow.onFocusChange()
+
 proc setupEventHandlers(window: Window) =
   # Mouse events
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mouseup_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mousemove_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseMove, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mouseenter_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseEnter, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mouseleave_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseLeave, EM_CALLBACK_THREAD_CONTEXT)
 
   # Wheel event
   discard emscripten_set_wheel_callback_on_thread(window.canvas, cast[pointer](window), 1, onWheel, EM_CALLBACK_THREAD_CONTEXT)
@@ -711,8 +773,10 @@ proc getState(fetch: ptr emscripten_fetch_t): EmsHttpRequestState =
 
 proc onFetchSuccess(fetch: ptr emscripten_fetch_t) {.cdecl.} =
   let state = getState(fetch)
-  if state == nil: return
+  if state == nil or state.completed:
+    return
   state.completed = true
+  state.fetch = nil
   var response = HttpResponse()
   response.code = int(fetch.status)
   if fetch.numBytes > 0 and fetch.data != nil:
@@ -726,8 +790,10 @@ proc onFetchSuccess(fetch: ptr emscripten_fetch_t) {.cdecl.} =
 
 proc onFetchError(fetch: ptr emscripten_fetch_t) {.cdecl.} =
   let state = getState(fetch)
-  if state == nil: return
+  if state == nil or state.completed:
+    return
   state.completed = true
+  state.fetch = nil
   if state.onError != nil:
     var msg = $fetch.status & " "
     for c in fetch.statusText:
@@ -738,7 +804,7 @@ proc onFetchError(fetch: ptr emscripten_fetch_t) {.cdecl.} =
 
 proc onFetchProgress(fetch: ptr emscripten_fetch_t) {.cdecl.} =
   let state = getState(fetch)
-  if state == nil: return
+  if state == nil or state.completed: return
   if state.onDownloadProgress != nil:
     let completed = int(fetch.dataOffset + fetch.numBytes)
     let total = (if fetch.totalBytes == 0: -1 else: int(fetch.totalBytes))
@@ -796,17 +862,15 @@ proc startHttpRequest*(
   # Headers array (optional): omit for now to avoid pointer array complexities
   attr.requestHeaders = nil
 
-  discard emscripten_fetch(addr attr, url.cstring)
+  state.fetch = emscripten_fetch(addr attr, url.cstring)
   result = handle
 
 proc cancel*(handle: HttpRequestHandle) {.raises: [].} =
   ## Cancel an HTTP request.
   let state = httpRequests.getOrDefault(handle, nil)
-  if state == nil: return
-  state.canceled = true
-  # There is no direct cancel from C API here; closing will abort if still active
-  if state.fetch != nil:
-    emscripten_fetch_close(state.fetch)
+  if state == nil or state.completed: return
+  state.completed = true
+  state.abortFetch()
 
 proc deadline*(handle: HttpRequestHandle): float64 =
   ## Get the deadline of an HTTP request.

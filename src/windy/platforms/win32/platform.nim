@@ -4,6 +4,8 @@ import
   pixie/fileformats/bmp, pixie/images,
   urlly, utils, vmath, windefs, zippy
 
+from std/winlean import shellExecuteW
+
 when defined(useDirectX):
   {.hint: "Using DirectX backend".}
 elif defined(useVulkan):
@@ -966,6 +968,7 @@ proc wndProc(
     discard GetCursorPos(pos.addr)
     discard ScreenToClient(window.hWnd, pos.addr)
     window.state.mousePos = ivec2(pos.x, pos.y)
+    window.state.mouseInside = true
     window.state.perFrame.mouseDelta +=
       window.state.mousePos - window.state.mousePrevPos
     if window.onMouseMove != nil:
@@ -982,6 +985,7 @@ proc wndProc(
     return 0
   of WM_MOUSELEAVE:
     window.trackMouseEventRegistered = false
+    window.state.mouseInside = false
     return 0
   of WM_SETCURSOR:
     if LOWORD(lParam) == HTCLIENT:
@@ -1373,6 +1377,10 @@ proc icon*(window: Window): Image =
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
+
+proc mouseInside*(window: Window): bool =
+  ## True while the cursor is over this window's content.
+  window.state.mouseInside
 
 proc mousePrevPos*(window: Window): IVec2 =
   window.state.mousePrevPos
@@ -2817,7 +2825,9 @@ proc setConfig*(appName: string, fileName: string, content: string) =
 
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
-  discard execShellCmd("start " & url)
+  # Windows resolves URL associations through ShellExecute, not CreateProcess.
+  discard shellExecuteW(0, newWideCString("open"), newWideCString(url),
+    nil, nil, SW_SHOWNORMAL)
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.

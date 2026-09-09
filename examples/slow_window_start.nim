@@ -78,10 +78,19 @@ echo "Slow window start repro."
 echo "The window is visible before the event loop is allowed to run."
 echo "After the delay, move the mouse and click the square."
 
+echo "Focused right after newWindow: ", window.focused
+
 drawFrame()
 echo "Delaying for 3,500 ms."
 sleep(SlowStartMs)
 echo "Delay done."
+
+pollEvents()
+if window.focused:
+  echo "PASS: window is focused after the delay, no zombie state."
+else:
+  echo "FAIL: window is not focused after the delay (zombie state), unless"
+  echo "another app was being used while this example started."
 
 while not window.closeRequested:
   pollEvents()

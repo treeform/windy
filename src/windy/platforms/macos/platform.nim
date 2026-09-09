@@ -1,5 +1,5 @@
 import
-  std/[os, strutils, times, unicode, pathnorm],
+  std/[os, osproc, strutils, times, unicode, pathnorm],
   pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
 
@@ -40,11 +40,11 @@ type
     fullscreenState: bool
     minimizedState: bool
     cpuImage: NSImage
-    activationSettlePolls: int
 
 const
-  ActivationSettlePolls = 60
-  ActivationSettleSeconds = 0.001
+  ActivationTurnSeconds = 0.001
+  ActivationPumpSeconds = 0.25
+  ActivationRescueSeconds = 2.0
   decoratedResizableWindowMask =
     NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or
     NSWindowStyleMaskMiniaturizable or NSWindowStyleMaskResizable
@@ -57,6 +57,12 @@ const
 var
   WindyAppDelegate, WindyWindow, WindyView: Class
   windows: seq[Window]
+  # App activation is process-level, not per-window. While this deadline
+  # is in the future, pollEvents re-requests activation until it succeeds.
+  activationRescueDeadline: float64
+
+proc drainEvents()
+proc pumpActivation()
 
 objc:
   proc initWithFrame(self: NSView, x: NSRect): NSView
@@ -166,25 +172,28 @@ proc `title=`*(window: Window, title: string) =
 proc `icon=`*(window: Window, icon: Image) =
   window.state.icon = icon
 
-proc requestActivation(window: Window) =
-  ## Shows the window and asks AppKit to activate this app.
-  window.inner.makeKeyAndOrderFront(0.ID)
-  NSApp.activateIgnoringOtherApps(true)
-
-proc settleRunLoop() =
-  ## Gives AppKit a short turn to deliver activation notifications.
+proc runLoopTurn() =
+  ## Gives AppKit a short turn to exchange messages with the window server.
   discard NSRunLoop.currentRunLoop.runMode(
     NSDefaultRunLoopMode,
-    NSDate.dateWithTimeIntervalSinceNow(ActivationSettleSeconds)
+    NSDate.dateWithTimeIntervalSinceNow(ActivationTurnSeconds)
   )
 
 proc `visible=`*(window: Window, visible: bool) =
   autoreleasepool:
     if visible:
-      window.activationSettlePolls = ActivationSettlePolls
-      window.requestActivation()
+      window.inner.makeKeyAndOrderFront(0.ID)
+      NSApp.activateIgnoringOtherApps(true)
+      # The window server only honors this activation request while it is
+      # fresh, and completing it is a handshake that needs run loop turns.
+      # If we return without pumping and the app blocks (loading assets,
+      # etc.), the grant expires and the process is stuck as a background
+      # app: window front and clickable, but undecorated and never key.
+      # So finish the handshake now, before giving control back.
+      activationRescueDeadline = epochTime() + ActivationRescueSeconds
+      pumpActivation()
     else:
-      window.activationSettlePolls = 0
+      activationRescueDeadline = 0
       window.inner.orderOut(0.ID)
 
 proc `style=`*(window: Window, windowStyle: WindowStyle) =
@@ -319,12 +328,18 @@ proc url*(window: Window): string =
   warn "Url cannot be gotten on macOS windows"
 
 proc handleMouseMove(window: Window, location: NSPoint) =
+  ## Updates pixel coordinates and containment from unrounded view points.
   let
-    x = round(location.x)
-    y = round(window.inner.contentView.bounds.size.height - location.y)
+    bounds = window.inner.contentView.bounds
+    x = location.x
+    y = bounds.size.height - location.y
 
   window.state.mousePrevPos = window.state.mousePos
-  window.state.mousePos = (vec2(x, y) * window.contentScale).ivec2
+  window.state.mousePos =
+    (vec2(round(x), round(y)) * window.contentScale).ivec2
+  window.state.mouseInside =
+    x >= 0 and x < bounds.size.width and
+    y >= 0 and y < bounds.size.height
 
   # Prevent a jump in the mouse delta when focusing a window.
   if window.state.hasPrevMouse:
@@ -450,12 +465,76 @@ proc windowDidExitFullScreen(
     return
   window.fullscreenState = false
 
-proc canBecomeKeyWindow(
-  self: ID,
-  cmd: SEL,
-  notification: NSNotification
-): bool {.cdecl.} =
+proc canBecomeKeyWindow(self: ID, cmd: SEL): bool {.cdecl.} =
   true
+
+const
+  # NSEventModifierFlags class bits.
+  ModifierClassShift = 1.uint shl 17
+  ModifierClassControl = 1.uint shl 18
+  ModifierClassOption = 1.uint shl 19
+  ModifierClassCommand = 1.uint shl 20
+  # Device-dependent bits distinguishing left/right keys (IOKit NX_DEVICE*).
+  DeviceLeftControl = 0x00000001.uint
+  DeviceLeftShift = 0x00000002.uint
+  DeviceRightShift = 0x00000004.uint
+  DeviceLeftCommand = 0x00000008.uint
+  DeviceRightCommand = 0x00000010.uint
+  DeviceLeftOption = 0x00000020.uint
+  DeviceRightOption = 0x00000040.uint
+  DeviceRightControl = 0x00002000.uint
+
+proc syncModifierButton(window: Window, button: Button, down: bool) =
+  if down and button notin window.state.buttonDown:
+    window.handleButtonPress(button)
+  elif not down and button in window.state.buttonDown:
+    window.handleButtonRelease(button)
+
+proc syncModifierClass(
+  window: Window,
+  flags: uint,
+  classMask, leftMask, rightMask: uint,
+  leftButton, rightButton: Button,
+  changed = ButtonUnknown
+) =
+  ## Applies the absolute modifier state carried by NSEvent modifierFlags.
+  ## The class bit is authoritative for "any key of this modifier down";
+  ## the device-dependent bits pick the physical side. A missed edge (a
+  ## transition delivered while another window was key) can therefore never
+  ## latch an inverted modifier: the next flagsChanged resynchronizes.
+  if (flags and classMask) == 0:
+    window.syncModifierButton(leftButton, false)
+    window.syncModifierButton(rightButton, false)
+  elif (flags and (leftMask or rightMask)) != 0:
+    window.syncModifierButton(leftButton, (flags and leftMask) != 0)
+    window.syncModifierButton(rightButton, (flags and rightMask) != 0)
+  elif changed != ButtonUnknown:
+    # Some virtual keyboards omit the device bits; fall back to treating the
+    # changed key as the pressed one without disturbing its sibling.
+    window.syncModifierButton(changed, true)
+
+proc syncModifierState(window: Window, flags: uint, changed = ButtonUnknown) =
+  window.syncModifierClass(
+    flags, ModifierClassShift, DeviceLeftShift, DeviceRightShift,
+    KeyLeftShift, KeyRightShift,
+    if changed in {KeyLeftShift, KeyRightShift}: changed else: ButtonUnknown
+  )
+  window.syncModifierClass(
+    flags, ModifierClassControl, DeviceLeftControl, DeviceRightControl,
+    KeyLeftControl, KeyRightControl,
+    if changed in {KeyLeftControl, KeyRightControl}: changed
+    else: ButtonUnknown
+  )
+  window.syncModifierClass(
+    flags, ModifierClassOption, DeviceLeftOption, DeviceRightOption,
+    KeyLeftAlt, KeyRightAlt,
+    if changed in {KeyLeftAlt, KeyRightAlt}: changed else: ButtonUnknown
+  )
+  window.syncModifierClass(
+    flags, ModifierClassCommand, DeviceLeftCommand, DeviceRightCommand,
+    KeyLeftSuper, KeyRightSuper,
+    if changed in {KeyLeftSuper, KeyRightSuper}: changed else: ButtonUnknown
+  )
 
 proc windowDidBecomeKey(
   self: ID,
@@ -466,6 +545,10 @@ proc windowDidBecomeKey(
   if window == nil:
     return
   clearButtonsTemplate()
+  # Seed the modifier keys from the current hardware state so a modifier held
+  # across the focus gain (Cmd-Tab, focus stolen mid-chord) is tracked as
+  # down and its upcoming release cannot register as a phantom press.
+  window.syncModifierState(NSEvent.modifierFlags())
   if window.onFocusChange != nil:
     window.onFocusChange()
   if not window.state.mouseCaptured:
@@ -546,6 +629,20 @@ proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
   self.NSView.addTrackingArea(window.trackingArea)
 
   callSuper(self, cmd)
+
+proc mouseEntered(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil:
+    return
+  window.state.mouseInside = true
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
+
+proc mouseExited(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil:
+    return
+  window.state.mouseInside = false
 
 proc mouseMoved(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
@@ -863,9 +960,13 @@ proc resetCursorRects(self: ID, cmd: SEL): ID {.cdecl.} =
           window.state.cursor.hotspot.x.float,
           window.state.cursor.hotspot.y.float
         )
+      defer:
+        image.ID.release()
       NSCursor.alloc().initWithImage(image, hotspot)
 
   self.NSView.addCursorRect(self.NSView.bounds, cursor)
+  if window.state.cursor.kind == CustomCursor:
+    cursor.ID.release()
 
 proc drawRect(self: ID, cmd: SEL, dirtyRect: NSRect): ID {.cdecl.} =
   when defined(useCpu):
@@ -894,7 +995,10 @@ proc init() {.raises: [].} =
       addMethod "windowDidDeminiaturize:", windowDidDeminiaturize
       addMethod "windowDidEnterFullScreen:", windowDidEnterFullScreen
       addMethod "windowDidExitFullScreen:", windowDidExitFullScreen
-      addMethod "canBecomeKeyWindow:", canBecomeKeyWindow
+      # The NSWindow key-eligibility check is the zero-argument getter
+      # `canBecomeKeyWindow`; registering it with a trailing colon never
+      # overrides it, which leaves borderless windows unable to become key.
+      addMethod "canBecomeKeyWindow", canBecomeKeyWindow
       addMethod "windowDidBecomeKey:", windowDidBecomeKey
       addMethod "windowDidResignKey:", windowDidResignKey
       addMethod "windowShouldClose:", windowShouldClose
@@ -907,6 +1011,8 @@ proc init() {.raises: [].} =
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
         addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
         addMethod "updateTrackingAreas", updateTrackingAreas
+        addMethod "mouseEntered:", mouseEntered
+        addMethod "mouseExited:", mouseExited
         addMethod "mouseMoved:", mouseMoved
         addMethod "mouseDragged:", mouseDragged
         addMethod "rightMouseDragged:", rightMouseDragged
@@ -942,6 +1048,8 @@ proc init() {.raises: [].} =
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
         addMethod "viewDidChangeBackingProperties", viewDidChangeBackingProperties
         addMethod "updateTrackingAreas", updateTrackingAreas
+        addMethod "mouseEntered:", mouseEntered
+        addMethod "mouseExited:", mouseExited
         addMethod "mouseMoved:", mouseMoved
         addMethod "mouseDragged:", mouseDragged
         addMethod "rightMouseDragged:", rightMouseDragged
@@ -980,6 +1088,16 @@ proc init() {.raises: [].} =
 
     NSApp.finishLaunching()
 
+    # Give the window server a moment to finish promoting the process to a
+    # regular GUI app before any window is created. A window created while
+    # the process is still a background process comes up unmanaged: no
+    # traffic light buttons and it can never become key.
+    # No windows or user callbacks exist yet, so nothing here can raise.
+    {.cast(raises: []).}:
+      for _ in 0 ..< 10:
+        drainEvents()
+        runLoopTurn()
+
     platformDoubleClickInterval = NSEvent.doubleClickInterval
 
   initialized = true
@@ -1006,36 +1124,26 @@ proc processFlagsChanged(event: NSEvent) =
     return
 
   let button = keyCodeToButton[event.keyCode]
-  if button in window.state.buttonDown:
-    window.handleButtonRelease(button)
+  if button in {
+    KeyLeftShift, KeyRightShift, KeyLeftControl, KeyRightControl,
+    KeyLeftAlt, KeyRightAlt, KeyLeftSuper, KeyRightSuper
+  }:
+    # Shift/Control/Option/Command carry absolute state in modifierFlags.
+    # Deriving up/down from that state (instead of toggling per event)
+    # self-corrects after any edge missed while the window was not key;
+    # the old toggle latched such a miss as an inverted modifier for the
+    # rest of the session, which silently retargeted every subsequent
+    # unmodified key chord (e.g. SPACE resolving as CTRL-SPACE).
+    window.syncModifierState(event.modifierFlags(), button)
   else:
-    window.handleButtonPress(button)
+    # CapsLock and other lock-style keys keep the toggle semantics.
+    if button in window.state.buttonDown:
+      window.handleButtonRelease(button)
+    else:
+      window.handleButtonPress(button)
 
-proc settleActivationRequests() =
-  ## Replays activation while AppKit catches up after delayed startup.
-  var pending = false
-  for window in windows:
-    if window.activationSettlePolls == 0:
-      continue
-    dec window.activationSettlePolls
-    pending = true
-    window.requestActivation()
-  if pending:
-    settleRunLoop()
-
-proc pollEvents*() =
-  autoreleasepool:
-    settleActivationRequests()
-
-  # Draw first (in case a message closes a window or similar)
-  for window in windows:
-    if window.onFrame != nil:
-      window.onFrame()
-
-  # Clear all per-frame data
-  for window in windows:
-    window.state.perFrame = PerFrame()
-
+proc drainEvents() =
+  ## Dequeues and dispatches all pending AppKit events.
   autoreleasepool:
     while true:
       let event = NSApp.nextEventMatchingMask(
@@ -1054,29 +1162,74 @@ proc pollEvents*() =
       # - https://github.com/andlabs/ui/blob/bc848f5c4078b999dbe6ef1cd90e16290a0d1c3a/delegateuitask_darwin.m#L46
       if event.`type`() == NSEventTypeKeyDown:
         processKeyDown(event)
-        break
+        continue
       elif event.`type`() == NSEventTypeKeyUp:
         processKeyUp(event)
-        break
+        continue
       elif event.`type`() == NSEventTypeFlagsChanged:
         processFlagsChanged(event)
-        break
+        continue
 
       # Forward event for app to handle.
       NSApp.sendEvent(event)
 
+proc pumpActivation() =
+  ## Services the run loop until the app-activation handshake completes,
+  ## bounded by ActivationPumpSeconds. Normally finishes in a couple of
+  ## milliseconds; times out when macOS declines to activate us (e.g. the
+  ## user is actively working in another app).
+  let deadline = epochTime() + ActivationPumpSeconds
+  while not NSApp.isActive and epochTime() < deadline:
+    drainEvents()
+    runLoopTurn()
+
+proc rescueActivation() =
+  ## Cooperative activation (macOS 14+) drops requests made while the user
+  ## is interacting with another app; a fresh request right after they stop
+  ## is granted. So for a short time after showing a window, re-request
+  ## activation until it succeeds. Once we are active (or the deadline
+  ## passes) this never fires again, so focus is not stolen back from the
+  ## user later.
+  if activationRescueDeadline == 0:
+    return
+  if NSApp.isActive or epochTime() > activationRescueDeadline:
+    activationRescueDeadline = 0
+    return
+  NSApp.activateIgnoringOtherApps(true)
+  runLoopTurn()
+
+proc pollEvents*() =
+  autoreleasepool:
+    rescueActivation()
+
+  # Callbacks may close or create windows while this frame is being drawn.
+  let frameWindows = windows
+  for window in frameWindows:
+    let onFrame = window.onFrame
+    if not window.state.closed and onFrame != nil:
+      onFrame()
+
+  # Clear all per-frame data
+  for window in windows:
+    window.state.perFrame = PerFrame()
+
+  drainEvents()
+
   pollHttp()
 
 proc centerWindow(window: Window) =
-  ## Calculate centered position for a window on the primary screen.
-  let
-    screenFrame = window.inner.screen.frame
-    screenWidth = screenFrame.size.width.int
-    screenHeight = screenFrame.size.height.int
-    # Calculate center position.
-    x = screenFrame.origin.x.int + (screenWidth - window.size.x) div 2
-    y = screenFrame.origin.y.int + (screenHeight - window.size.y) div 2
-  window.pos = ivec2(x.int32, y.int32)
+  ## Centers the native window frame using screen point coordinates.
+  autoreleasepool:
+    let
+      screenFrame = window.inner.screen.frame
+      windowFrame = window.inner.frame
+      origin = NSMakePoint(
+        screenFrame.origin.x +
+          (screenFrame.size.width - windowFrame.size.width) / 2,
+        screenFrame.origin.y +
+          (screenFrame.size.height - windowFrame.size.height) / 2
+      )
+    window.inner.setFrameOrigin(origin)
 
 proc makeContextCurrent*(window: Window) =
   when defined(useMetal4) or defined(useCpu):
@@ -1090,22 +1243,37 @@ proc swapBuffers*(window: Window) =
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
 
+when defined(useMetal4) or defined(useCpu):
+  proc loadExtensions*() =
+    ## Nothing to load without OpenGL. Exported so callers can call
+    ## loadExtensions() on every backend, as Win32 and Emscripten already allow.
+    discard
+
 proc presentPixels*(window: Window, image: Image) =
   ## Presents a CPU-rendered Pixie image into the macOS window content view.
   when defined(useCpu):
-    if image == nil or image.width <= 0 or image.height <= 0:
-      return
-    let encodedPng = image.encodePng()
-    window.cpuImage = NSImage.alloc().initWithData(NSData.dataWithBytes(
-      encodedPng[0].unsafeAddr,
-      encodedPng.len
-    ))
-    window.inner.contentView.setNeedsDisplay(true)
+    if window.state.closed or image == nil or
+      image.width <= 0 or image.height <= 0:
+        return
+    autoreleasepool:
+      let
+        encodedPng = image.encodePng()
+        nativeImage = NSImage.alloc().initWithData(NSData.dataWithBytes(
+          encodedPng[0].unsafeAddr,
+          encodedPng.len
+        ))
+      if nativeImage.int == 0:
+        raise newException(WindyError, "Unable to create CPU frame image")
+      window.cpuImage.ID.release()
+      window.cpuImage = nativeImage
+      window.inner.contentView.setNeedsDisplay(true)
   else:
     discard
 
 proc close*(window: Window) =
   window.releaseMouse()
+  window.cpuImage.ID.release()
+  window.cpuImage = 0.NSImage
   window.onCloseRequest = nil
   window.onFrame = nil
   window.onMove = nil
@@ -1121,6 +1289,13 @@ proc close*(window: Window) =
 
   if window.inner.int != 0:
     autoreleasepool:
+      window.inner.setDelegate(0.ID)
+      if window.trackingArea.int != 0:
+        window.inner.contentView.removeTrackingArea(window.trackingArea)
+        window.trackingArea.ID.release()
+        window.trackingArea = 0.NSTrackingArea
+      window.markedText.ID.release()
+      window.markedText = 0.NSString
       window.inner.close()
 
     let index = windows.indexForNSWindow(window.inner)
@@ -1166,6 +1341,8 @@ proc newWindow*(
       let nativeView = WindyView.alloc().NSView.initWithFrame(
         result.inner.contentView.frame
       )
+      defer:
+        nativeView.ID.release()
       result.inner.setDelegate(result.inner.ID)
       result.inner.setContentView(nativeView)
       discard result.inner.makeFirstResponder(nativeView)
@@ -1190,11 +1367,15 @@ proc newWindow*(
         pixelFormat = NSOpenGLPixelFormat.alloc().initWithAttributes(
           pixelFormatAttribs[0].unsafeAddr
         )
+      defer:
+        pixelFormat.ID.release()
 
       let openglView = WindyView.alloc().NSOpenGLView.initWithFrame(
         result.inner.contentView.frame,
         pixelFormat
       )
+      defer:
+        openglView.ID.release()
       openglView.setWantsBestResolutionOpenGLSurface(true)
 
       openglView.openGLContext.makeCurrentContext()
@@ -1226,11 +1407,11 @@ proc newWindow*(
 
     result.title = title
     result.size = size
+    result.style = style
 
     # Center window on screen by default (macOS standard behavior).
     result.centerWindow()
 
-    result.style = style
     result.visible = visible
 
     result.minimizedState = result.inner.isMiniaturized
@@ -1253,6 +1434,10 @@ proc nativeView*(window: Window): NSView =
 
 proc mousePos*(window: Window): IVec2 =
   window.state.mousePos
+
+proc mouseInside*(window: Window): bool =
+  ## True while the cursor is over this window's content.
+  window.state.mouseInside
 
 proc mousePrevPos*(window: Window): IVec2 =
   window.state.mousePrevPos
@@ -1338,6 +1523,8 @@ proc getClipboardImage*(): Image =
     let bitmap = NSBitmapImageRep.alloc().initWithData(data)
     if bitmap.int == 0:
       return
+    defer:
+      bitmap.ID.release()
 
     let pngData = bitmap.representationUsingType(
       NSBitmapImageFileTypePNG,
@@ -1422,14 +1609,28 @@ proc setConfig*(appName: string, fileName: string, content: string) =
 
 proc openTempTextFile*(title, text: string) =
   ## Open a text file in the default text editor.
-  if not dirExists("tmp"):
+  try:
     createDir("tmp")
-  writeFile("tmp/" & title, text)
-  discard execShellCmd("open -a TextEdit tmp/" & title)
+    let path = "tmp" / title
+    writeFile(path, text)
+    let process = startProcess(
+      "open",
+      args = ["-a", "TextEdit", "--", path],
+      options = {poUsePath, poParentStreams}
+    )
+    defer:
+      process.close()
+    if process.waitForExit() != 0:
+      raise newException(WindyError, "Unable to open temporary text file")
+  except IOError, OSError:
+    raise newException(WindyError, getCurrentExceptionMsg())
 
 proc openUrl*(url: string) =
   ## Open a URL in the default web browser.
-  discard execShellCmd("open " & url)
+  let process = startProcess("open", args = ["--", url],
+    options = {poUsePath, poParentStreams})
+  defer: process.close()
+  discard process.waitForExit()
 
 proc fileDialogExtensions(filters: seq[FileDialogFilter]): seq[string] =
   ## Collects unique file extensions without wildcards or dots.
