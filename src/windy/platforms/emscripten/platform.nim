@@ -646,7 +646,7 @@ proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: po
   # very different magnitudes. Use a flat OS-based multiplier instead.
   let scale =
     if "Mac" in platform: -1.0f
-    else: 0.2f
+    else: -0.2f
   let
     x = wheelEvent.deltaX.float32 * scale
     y = wheelEvent.deltaY.float32 * scale
