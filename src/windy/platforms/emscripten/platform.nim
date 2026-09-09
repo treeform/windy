@@ -527,6 +527,7 @@ proc loadExtensions*() =
 
 # Convert JavaScript key codes to windy Button enum
 proc keyCodeToButton(keyCode: culong): Button =
+  ## Maps legacy key codes when the browser has no physical key code.
   case keyCode:
   of 27: KeyEscape
   of 32: KeySpace
@@ -572,6 +573,8 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 88: KeyX
   of 89: KeyY
   of 90: KeyZ
+  of 91, 92: KeyLeftSuper
+  of 93: KeyRightSuper
   of 48: Key0
   of 49: Key1
   of 50: Key2
@@ -594,6 +597,119 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 221: KeyRightBracket
   of 222: KeyApostrophe
   else: ButtonUnknown
+
+proc keyEventToButton(event: ptr EmscriptenKeyboardEvent): Button =
+  ## Maps physical browser keys independently of the keyboard layout.
+  let code = $cast[cstring](addr event.code[0])
+  if code.len == 4 and code.startsWith("Key") and code[3] in 'A' .. 'Z':
+    return Button(KeyA.ord + code[3].ord - 'A'.ord)
+  if code.len == 6 and code.startsWith("Digit") and code[5] in '0' .. '9':
+    return Button(Key0.ord + code[5].ord - '0'.ord)
+  if code.len == 7 and code.startsWith("Numpad") and code[6] in '0' .. '9':
+    return Button(Numpad0.ord + code[6].ord - '0'.ord)
+  case code
+  of "Backquote": KeyBacktick
+  of "Minus": KeyMinus
+  of "Equal": KeyEqual
+  of "Backspace": KeyBackspace
+  of "Tab": KeyTab
+  of "BracketLeft": KeyLeftBracket
+  of "BracketRight": KeyRightBracket
+  of "Backslash", "IntlBackslash": KeyBackslash
+  of "CapsLock": KeyCapsLock
+  of "Semicolon": KeySemicolon
+  of "Quote": KeyApostrophe
+  of "Enter": KeyEnter
+  of "ShiftLeft": KeyLeftShift
+  of "Comma": KeyComma
+  of "Period": KeyPeriod
+  of "Slash": KeySlash
+  of "ShiftRight": KeyRightShift
+  of "ControlLeft": KeyLeftControl
+  of "MetaLeft", "OSLeft": KeyLeftSuper
+  of "AltLeft": KeyLeftAlt
+  of "Space": KeySpace
+  of "AltRight": KeyRightAlt
+  of "MetaRight", "OSRight": KeyRightSuper
+  of "ContextMenu": KeyMenu
+  of "ControlRight": KeyRightControl
+  of "Delete": KeyDelete
+  of "Home": KeyHome
+  of "End": KeyEnd
+  of "Insert": KeyInsert
+  of "PageUp": KeyPageUp
+  of "PageDown": KeyPageDown
+  of "Escape": KeyEscape
+  of "ArrowUp": KeyUp
+  of "ArrowDown": KeyDown
+  of "ArrowLeft": KeyLeft
+  of "ArrowRight": KeyRight
+  of "PrintScreen": KeyPrintScreen
+  of "ScrollLock": KeyScrollLock
+  of "Pause": KeyPause
+  of "F1": KeyF1
+  of "F2": KeyF2
+  of "F3": KeyF3
+  of "F4": KeyF4
+  of "F5": KeyF5
+  of "F6": KeyF6
+  of "F7": KeyF7
+  of "F8": KeyF8
+  of "F9": KeyF9
+  of "F10": KeyF10
+  of "F11": KeyF11
+  of "F12": KeyF12
+  of "NumLock": KeyNumLock
+  of "NumpadDecimal": NumpadDecimal
+  of "NumpadEnter": NumpadEnter
+  of "NumpadAdd": NumpadAdd
+  of "NumpadSubtract": NumpadSubtract
+  of "NumpadMultiply": NumpadMultiply
+  of "NumpadDivide": NumpadDivide
+  of "NumpadEqual": NumpadEqual
+  else:
+    let button = keyCodeToButton(event.keyCode)
+    if event.location == 2:
+      case button
+      of KeyLeftShift: return KeyRightShift
+      of KeyLeftControl: return KeyRightControl
+      of KeyLeftAlt: return KeyRightAlt
+      of KeyLeftSuper: return KeyRightSuper
+      else: discard
+    button
+
+proc syncModifiers(
+  window: Window,
+  event: ptr EmscriptenKeyboardEvent,
+  button = ButtonUnknown,
+  pressed = false
+) =
+  ## Makes the event's modifier state visible before any callbacks run.
+  let previous = window.state.buttonDown
+  for (left, right, held) in [
+    (KeyLeftControl, KeyRightControl, event.ctrlKey),
+    (KeyLeftShift, KeyRightShift, event.shiftKey),
+    (KeyLeftAlt, KeyRightAlt, event.altKey),
+    (KeyLeftSuper, KeyRightSuper, event.metaKey)
+  ]:
+    if button in {left, right}:
+      if pressed:
+        window.state.buttonDown.incl(button)
+      else:
+        window.state.buttonDown.excl(button)
+    if not held:
+      window.state.buttonDown.excl(left)
+      window.state.buttonDown.excl(right)
+    elif left notin window.state.buttonDown and
+      right notin window.state.buttonDown:
+        window.state.buttonDown.incl(left)
+  let current = window.state.buttonDown
+  for changed in previous - current:
+    if changed != button:
+      window.handleButtonRelease(changed)
+  for changed in current - previous:
+    if changed != button:
+      window.handleButtonPress(changed)
 
 proc mouseButtonToButton(button: cushort): Button =
   case button:
@@ -657,21 +773,47 @@ proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: po
   return 1
 
 proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
-  let window = cast[Window](userData)
-  let button = keyCodeToButton(keyEvent.keyCode)
-  window.handleButtonPress(button)
+  ## Delivers key presses and lets printable keys produce a text event.
+  let
+    window = cast[Window](userData)
+    button = keyEventToButton(keyEvent)
+    key = $cast[cstring](addr keyEvent.key[0])
+  window.syncModifiers(keyEvent, button, pressed = true)
+  if button != ButtonUnknown:
+    window.handleButtonPress(button)
+  if window.runeInputEnabled and not keyEvent.metaKey and
+    (not keyEvent.ctrlKey or keyEvent.altKey) and
+    (key.runeLen == 1 or key == "Dead" or key == "Process"):
+      # Cancelling keydown also suppresses the browser's keypress event.
+      return 0
   return 1
 
 proc onKeyUp(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
-  let window = cast[Window](userData)
-  let button = keyCodeToButton(keyEvent.keyCode)
-  window.handleButtonRelease(button)
+  ## Delivers releases with up-to-date modifier state.
+  let
+    window = cast[Window](userData)
+    button = keyEventToButton(keyEvent)
+  window.syncModifiers(keyEvent, button)
+  if button != ButtonUnknown:
+    window.handleButtonRelease(button)
+  if button in {KeyLeftSuper, KeyRightSuper} and not keyEvent.metaKey:
+    # Browsers can omit releases for keys used in Command shortcuts.
+    let held = window.state.buttonDown - {
+      KeyLeftControl, KeyRightControl, KeyLeftShift, KeyRightShift,
+      KeyLeftAlt, KeyRightAlt, KeyLeftSuper, KeyRightSuper
+    }
+    for released in held:
+      if released >= Key0:
+        window.handleButtonRelease(released)
   return 1
 
 proc onKeyPress(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  ## Delivers text once through the shared desktop rune handler.
   let window = cast[Window](userData)
-  if keyEvent.charCode > 0:
-    window.handleRune(Rune(keyEvent.charCode))
+  window.syncModifiers(keyEvent)
+  if not keyEvent.metaKey and
+    (not keyEvent.ctrlKey or keyEvent.altKey) and keyEvent.charCode > 0:
+      window.handleRune(Rune(keyEvent.charCode))
   return 1
 
 proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
@@ -684,7 +826,9 @@ proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: po
   return 1
 
 proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  ## Releases held input before notifying the application of focus loss.
   let window = cast[Window](userData)
+  clearButtonsTemplate()
   if frameDispatchActive:
     pendingFocusChange = true
     return 1

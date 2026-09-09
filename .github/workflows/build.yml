@@ -63,6 +63,12 @@ jobs:
     - uses: mymindstorm/setup-emsdk@v14
       if: matrix.os == 'ubuntu-latest'
 
+    - name: Test browser input callbacks in WASM
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        nim c -d:emscripten tests/test_browser_inputs.nim
+        node tests/run_browser_inputs.cjs
+
     # Build Emscripten examples on Ubuntu only.
     - run: nim c -d:emscripten examples/basic.nim
       if: matrix.os == 'ubuntu-latest'
