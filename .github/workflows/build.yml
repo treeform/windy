@@ -35,6 +35,10 @@ jobs:
       if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_cpu_pixels.nim
       if: matrix.os == 'windows-latest'
+    - run: |
+        sudo apt-get install -y xvfb libgl1-mesa-dri
+        LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a nim r tests/test_x11.nim
+      if: matrix.os == 'ubuntu-latest'
 
     # Build native examples.
     - run: nim c examples/basic.nim
