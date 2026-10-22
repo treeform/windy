@@ -7,12 +7,19 @@ import
 import ../../http
 export http
 
+import ./backends
+when HasDirect:
+  import ./native/state
+
 type
   XWindow = x.Window
 
   Window* = ref object
+    when HasDirect:
+      direct*: DirectWindowState
     onCloseRequest*: Callback
     onFrame*: Callback
+    onTouch*: TouchCallback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -734,7 +741,8 @@ proc newWindow*(
   openglVersion = OpenGL4Dot1,
   msaa = msaaDisabled,
   depthBits = 24,
-  stencilBits = 8
+  stencilBits = 8,
+  linuxOptions = LinuxWindowOptions()
 ): Window =
   ## Creates a new window. Intitializes Windy if needed.
   init()
@@ -802,10 +810,10 @@ proc newWindow*(
   var gcv: XGCValues
   result.gc = display.XCreateGC(result.handle, GCForeground or GCBackground, gcv.addr)
 
-  result.ctx = display.glXCreateContext(vi.addr, nil, 1)
-
-  if result.ctx == nil:
-    raise WindyError.newException("Error creating OpenGL context")
+  when not defined(useCpu):
+    result.ctx = display.glXCreateContext(vi.addr, nil, 1)
+    if result.ctx == nil:
+      raise WindyError.newException("Error creating OpenGL context")
 
   result.title = title
 
@@ -817,18 +825,17 @@ proc newWindow*(
   const xdndVersion = 5'u32
   result.handle.setProperty(xaXdndAware, xaCardinal, 32, @[xdndVersion].asString)
 
-  makeContextCurrent result
-
-  if vsync:
-    if glXSwapIntervalEXT != nil:
-      display.glXSwapIntervalEXT(result.handle, 1)
-    elif glXSwapIntervalMESA != nil:
-      glXSwapIntervalMESA(1)
-    elif glXSwapIntervalSGI != nil:
-      glXSwapIntervalSGI(1)
-    else:
-      raise WindyError.newException("VSync is not supported")
-
+  when not defined(useCpu):
+    makeContextCurrent result
+    if vsync:
+      if glXSwapIntervalEXT != nil:
+        display.glXSwapIntervalEXT(result.handle, 1)
+      elif glXSwapIntervalMESA != nil:
+        glXSwapIntervalMESA(1)
+      elif glXSwapIntervalSGI != nil:
+        glXSwapIntervalSGI(1)
+      else:
+        raise WindyError.newException("VSync is not supported")
   if visible:
     result.visible = true
 
@@ -1455,3 +1462,62 @@ proc saveFileDialog*(
     args.add("--file-filter=" & filter.name & " | " &
       filter.extensions.replace(";", " ").replace(",", " "))
   result = runZenity(args)
+
+proc touches*(window: Window): seq[TouchContact] =
+  @[]
+when defined(useCpu):
+  type CpuImage = object
+    width, height, xoffset, format: cint
+    data: cstring
+    byteOrder, bitmapUnit, bitmapBitOrder, bitmapPad, depth: cint
+    bytesPerLine, bitsPerPixel: cint
+    redMask, greenMask, blueMask: culong
+    obdata: pointer
+    functions: array[6, pointer]
+  proc createImage(d: Display, visual: ptr Visual, depth: cuint, format: cint,
+    offset: cint, data: cstring, width, height: cuint, pad, stride: cint): ptr CpuImage
+    {.cdecl, importc: "XCreateImage", dynlib: libX11.}
+  proc putImage(d: Display, window: XWindow, gc: GC, image: ptr CpuImage,
+    sx, sy, dx, dy: cint, width, height: cuint): cint
+    {.cdecl, importc: "XPutImage", dynlib: libX11.}
+  proc putPixel(image: ptr CpuImage, x, y: cint, pixel: culong): cint
+    {.cdecl, importc: "XPutPixel", dynlib: libX11.}
+  proc destroyImage(image: ptr CpuImage): cint
+    {.cdecl, importc: "XDestroyImage", dynlib: libX11.}
+  proc malloc(size: csize_t): pointer {.importc, header: "<stdlib.h>".}
+
+  proc channel(value: uint8, mask: culong): culong =
+    var bits = mask
+    var shift = 0
+    while bits != 0 and (bits and 1) == 0:
+      bits = bits shr 1
+      inc shift
+    ((culong(value) * bits + 127) div 255 shl shift) and mask
+
+  proc presentPixels*(window: Window, image: Image) =
+    if window.closed:
+      raise newException(WindyError, "Cannot present to a closed window")
+    if image == nil or image.width <= 0 or image.height <= 0:
+      raise newException(WindyError, "Invalid pixel image")
+    var attributes: XWindowAttributes
+    display.XGetWindowAttributes(window.handle, addr attributes)
+    let native = createImage(display, attributes.visual, cuint(attributes.depth),
+      2, 0, nil, cuint(image.width), cuint(image.height), 32, 0)
+    if native == nil:
+      raise newException(WindyError, "Cannot create X11 pixel image")
+    defer: discard destroyImage(native)
+    native.data = cast[cstring](malloc(csize_t(native.bytesPerLine) * csize_t(image.height)))
+    if native.data == nil:
+      raise newException(WindyError, "Cannot allocate X11 pixel image")
+    for y in 0 ..< image.height:
+      for x in 0 ..< image.width:
+        let pixel = image.data[y * image.width + x]
+        discard putPixel(native, cint(x), cint(y), channel(pixel.r, native.redMask) or
+          channel(pixel.g, native.greenMask) or channel(pixel.b, native.blueMask))
+    discard putImage(display, window.handle, window.gc, native, 0, 0, 0, 0,
+      cuint(image.width), cuint(image.height))
+    display.XFlush()
+
+proc hasWindows*(): bool =
+  for window in windows:
+    if not window.closed: return true

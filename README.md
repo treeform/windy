@@ -54,9 +54,12 @@ while not window.closeRequested:
 
 ## CPU Pixels
 
-On Windows, compile with `-d:useCpu` to create a plain window without an
+On Windows and X11 Linux, compile with `-d:useCpu` to create a plain window without an
 OpenGL context. CPU renderers can update the client area by passing a Pixie
 image to `window.presentPixels(image)`.
+
+Linux also has experimental [fbdev, DRM and evdev touch backends](docs/linux-direct.md)
+for applications running without a window server.
 
 
 ### Why not just use GLFW or SDL?

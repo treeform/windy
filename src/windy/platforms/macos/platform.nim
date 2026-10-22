@@ -19,6 +19,7 @@ type
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
+    onTouch*: TouchCallback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -1748,3 +1749,6 @@ proc saveFileDialog*(
       let url = panel.URL()
       if url.int != 0:
         result = $url.path()
+
+proc touches*(window: Window): seq[TouchContact] =
+  @[]
