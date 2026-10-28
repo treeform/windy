@@ -872,8 +872,8 @@ proc pollEvents(window: Window) =
     d: Display,
     event: ptr XEvent,
     userData: pointer
-  ): bool {.cdecl.} =
-    event.any.window == cast[Window](userData).handle
+  ): cint {.cdecl.} =
+    cint(event.any.window == cast[Window](userData).handle)
 
   template pushButtonEvent(
     button: Button,
@@ -895,7 +895,7 @@ proc pollEvents(window: Window) =
   proc handleRune(window: Window, rune: Rune) =
     handleRuneTemplate()
 
-  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
+  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)) != 0:
     case ev.kind
 
     of xeClientMessage:
@@ -1231,12 +1231,12 @@ proc processClipboardEvents: bool =
     d: Display,
     event: ptr XEvent,
     userData: pointer
-  ): bool {.cdecl.} =
-    event.any.window == cast[XWindow](userData)
+  ): cint {.cdecl.} =
+    cint(event.any.window == cast[XWindow](userData))
 
   while display.XCheckIfEvent(
     ev.addr, checkEvent, cast[pointer](clipboardWindow)
-  ):
+  ) != 0:
     case ev.kind
     of xeSelection:
       template e: untyped = ev.selection

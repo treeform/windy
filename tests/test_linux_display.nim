@@ -38,6 +38,18 @@ when HasX11:
       doAssert getPixel(captured, cint(x), cint(y)) == expected
   discard destroyImage(captured)
   discard closeDisplay(d)
+  let other = newWindow("Windy second CPU window", ivec2(64, 48), vsync = false)
+  other.focus()
+  for attempt in 0 ..< 20:
+    pollEvents()
+    sleep(1)
+  doAssert other.focused and not window.focused
+  window.focus()
+  for attempt in 0 ..< 20:
+    pollEvents()
+    sleep(1)
+  doAssert window.focused and not other.focused
+  other.close()
   when HasDirect:
     var rejected = false
     try: setLinuxBackend(FbdevBackend)
