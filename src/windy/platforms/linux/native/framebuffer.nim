@@ -113,15 +113,30 @@ proc present*(fb: Framebuffer, image: Image) =
     bytesPerPixel = int(fb.variable.bits_per_pixel div 8)
     stride = int(fb.fixed.line_length)
   fb.touched = true
-  for y in 0 ..< image.height:
-    for x in 0 ..< image.width:
+  if cpuEndian == littleEndian and bytesPerPixel == 4 and stride mod 4 == 0 and fb.rotation == 0 and
+      fb.variable.red.length == 8 and fb.variable.green.length == 8 and
+      fb.variable.blue.length == 8:
+    let alpha = packPixel(0, fb.variable.red, fb.variable.green,
+      fb.variable.blue, fb.variable.transp)
+    for y in 0 ..< image.height:
       let
-        point = rotatedPoint(x, y, image.width, image.height, fb.rotation)
-        offset = point.y * stride + point.x * bytesPerPixel
-        pixel = packPixel(rgb(image.data[y * image.width + x]), fb.variable.red,
-          fb.variable.green, fb.variable.blue, fb.variable.transp)
-      for index in 0 ..< bytesPerPixel:
-        destination[offset + index] = byte((pixel shr (index * 8)) and 255)
+        source = cast[ptr UncheckedArray[ColorRGBX]](unsafeAddr image.data[y * image.width])
+        row = cast[ptr UncheckedArray[uint32]](addr destination[y * stride])
+      for x in 0 ..< image.width:
+        let pixel = source[x]
+        row[x] = uint32(pixel.r) shl fb.variable.red.offset or
+          uint32(pixel.g) shl fb.variable.green.offset or
+          uint32(pixel.b) shl fb.variable.blue.offset or alpha
+  else:
+    for y in 0 ..< image.height:
+      for x in 0 ..< image.width:
+        let
+          point = rotatedPoint(x, y, image.width, image.height, fb.rotation)
+          offset = point.y * stride + point.x * bytesPerPixel
+          pixel = packPixel(rgb(image.data[y * image.width + x]), fb.variable.red,
+            fb.variable.green, fb.variable.blue, fb.variable.transp)
+        for index in 0 ..< bytesPerPixel:
+          destination[offset + index] = byte((pixel shr (index * 8)) and 255)
   if not fb.activated:
     fb.variable.xoffset = 0
     fb.variable.yoffset = 0
