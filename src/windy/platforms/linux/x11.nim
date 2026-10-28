@@ -1466,6 +1466,8 @@ proc saveFileDialog*(
 proc touches*(window: Window): seq[TouchContact] =
   @[]
 when defined(useCpu):
+  const NativeByteOrder = when cpuEndian == littleEndian: 0 else: 1
+
   type CpuImage = object
     width, height, xoffset, format: cint
     data: cstring
@@ -1509,11 +1511,23 @@ when defined(useCpu):
     native.data = cast[cstring](malloc(csize_t(native.bytesPerLine) * csize_t(image.height)))
     if native.data == nil:
       raise newException(WindyError, "Cannot allocate X11 pixel image")
+    let direct = native.bitsPerPixel == 32 and native.byteOrder == NativeByteOrder
+    var channels: array[3, array[256, culong]]
+    for value in 0 .. 255:
+      channels[0][value] = channel(uint8(value), native.redMask)
+      channels[1][value] = channel(uint8(value), native.greenMask)
+      channels[2][value] = channel(uint8(value), native.blueMask)
+    let destination = cast[ptr UncheckedArray[byte]](native.data)
     for y in 0 ..< image.height:
+      let row = cast[ptr UncheckedArray[uint32]](addr destination[y * int(native.bytesPerLine)])
       for x in 0 ..< image.width:
-        let pixel = image.data[y * image.width + x]
-        discard putPixel(native, cint(x), cint(y), channel(pixel.r, native.redMask) or
-          channel(pixel.g, native.greenMask) or channel(pixel.b, native.blueMask))
+        let
+          pixel = image.data[y * image.width + x]
+          packed = channels[0][pixel.r] or channels[1][pixel.g] or channels[2][pixel.b]
+        if direct:
+          row[x] = uint32(packed)
+        else:
+          discard putPixel(native, cint(x), cint(y), packed)
     discard putImage(display, window.handle, window.gc, native, 0, 0, 0, 0,
       cuint(image.width), cuint(image.height))
     display.XFlush()
