@@ -1,5 +1,5 @@
 import
-  std/[tables, strutils, unicode, times],
+  std/[base64, tables, strutils, unicode, times],
   ../../common, ../../internal, vmath, pixie
 
 # include for EMSCRIPTEN_KEEPALIVE
@@ -395,6 +395,7 @@ proc cursor*(window: Window): Cursor =
   window.state.cursor
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
+  ## Sets the cursor displayed over the canvas.
   window.state.cursor = cursor
   case cursor.kind:
   of ArrowCursor:
@@ -426,8 +427,22 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   of WaitCursor:
     set_cursor("wait")
   of CustomCursor:
-    # TODO base64 encode Image?
-    set_cursor("auto")
+    if cursor.image == nil:
+      set_cursor("auto")
+    else:
+      let
+        data =
+          try:
+            base64.encode(cursor.image.encodeImage(PngFormat))
+          except PixieError as error:
+            raise newException(
+              WindyError,
+              "Unable to encode cursor image: " & error.msg,
+              error
+            )
+        value = "url(\"data:image/png;base64," & data & "\") " &
+          $cursor.hotspot.x & " " & $cursor.hotspot.y & ", crosshair"
+      set_cursor(value.cstring)
 
 # Style functions
 proc style*(window: Window): WindowStyle =
