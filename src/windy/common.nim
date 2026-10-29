@@ -3,6 +3,16 @@ import pixie, std/strutils, std/unicode
 type
   WindyError* = object of ValueError
 
+  TouchPhase* = enum
+    TouchBegin, TouchMove, TouchEnd, TouchCancel
+  TouchContact* = object
+    id*: int32
+    position*: Vec2
+  TouchEvent* = object
+    contact*: TouchContact
+    phase*: TouchPhase
+  TouchCallback* = proc(event: TouchEvent)
+
   OpenGLVersion* = enum
     OpenGL3Dot0
     OpenGL3Dot1

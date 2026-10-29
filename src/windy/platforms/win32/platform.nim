@@ -65,6 +65,7 @@ type
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
+    onTouch*: TouchCallback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -2835,3 +2836,6 @@ proc openTempTextFile*(title, text: string) =
     createDir("tmp")
   writeFile("tmp/" & title, text)
   discard execShellCmd("notepad tmp/" & title)
+
+proc touches*(window: Window): seq[TouchContact] =
+  @[]

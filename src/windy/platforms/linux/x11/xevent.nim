@@ -5,7 +5,7 @@ type
     d: Display,
     event: ptr XEvent,
     p: pointer
-  ): bool {.cdecl.}
+  ): cint {.cdecl.}
   ErrorHandleProc* = proc (d: Display, event: ptr XErrorEvent): bool {.cdecl.}
 
   XEventKind* {.size: cint.sizeof.} = enum
@@ -432,7 +432,7 @@ type
 {.push, cdecl, dynlib: libX11, importc.}
 
 proc XCheckIfEvent*(d: Display; e: ptr XEvent, cb: IfEventProc,
-    userData: pointer): bool
+    userData: pointer): cint
 proc XSendEvent*(d: Display; window: Window, propogate: bool, mask: clong, e: ptr XEvent)
 
 proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint,
