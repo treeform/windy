@@ -46,9 +46,9 @@ else:
         return x11.newWindow(title, size, style, visible, vsync, openglVersion,
           msaa, depthBits, stencilBits, linuxOptions)
       else: raise newException(WindyError, "X11 backend was not compiled")
-    if vsync:
-      raise newException(WindyError, "Direct pixel presentation requires vsync=false")
-    direct.newDirectWindow(title, selected, linuxOptions)
+    if vsync and selected == FbdevBackend:
+      raise newException(WindyError, "Framebuffer pixel presentation requires vsync=false")
+    direct.newDirectWindow(title, selected, linuxOptions, vsync)
 
   proc pollEvents*() =
     if selected == X11Backend:

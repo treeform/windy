@@ -20,7 +20,7 @@ Select the backend before creating windows:
 import pixie, windy
 
 setLinuxBackend(DrmBackend)
-let window = newWindow("Panel", ivec2(0, 0), vsync = false,
+let window = newWindow("Panel", ivec2(0, 0), vsync = true,
   linuxOptions = LinuxWindowOptions(
     device: "/dev/dri/card0",
     output: "DSI-1",
@@ -52,8 +52,17 @@ desktop operations such as resizing, clipboard access or OpenGL contexts raise
 `WindyError`. Keyboard, mouse and controller input are not supplied by these
 direct backends; use the application's input library for controllers.
 
-Presentation copies into scanout memory. There is no page-flip queue or vblank
-pacing, so `vsync` must be false and tearing is possible. Normal close restores
+DRM windows with `vsync=true` use two buffers. Presentation uploads into the
+non-visible buffer and queues a switch at vblank. A subsequent upload waits for
+the previous switch before reusing storage, with at most one pending flip per
+screen. Outputs remain independent; the backend dispatches completion events for
+all windows sharing the DRM device. Applications still control their frame rate.
+Page-flip errors and a one-second completion timeout propagate to the caller.
+Each additional buffer uses the panel's native width, pitch and height (about
+3 MiB for a 1024×768 32-bit panel).
+
+DRM with `vsync=false` and fbdev use direct scanout writes, which can tear.
+fbdev requires `vsync=false`. Normal close waits for pending DRM flips and restores
 the saved display state when it is still available. If the kernel retired the
 previous DRM framebuffer, the output is disabled instead.
 

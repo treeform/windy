@@ -51,7 +51,7 @@ proc close*(window: Window) =
           break
 
 proc newDirectWindow*(title: string, backend: LinuxBackend,
-    options: LinuxWindowOptions): Window =
+    options: LinuxWindowOptions, vsync = false): Window =
   let path = if options.device.len > 0: options.device
     elif backend == FbdevBackend: "/dev/fb0" else: "/dev/dri/card0"
   result = Window(direct: DirectWindowState(title: title, device: path, backend: backend))
@@ -71,7 +71,7 @@ proc newDirectWindow*(title: string, backend: LinuxBackend,
           break
       if data.drm == nil:
         data.drm = openDrm(path)
-      data.drm.openOutput(@[options.output], options.rotation)
+      data.drm.openOutput(@[options.output], options.rotation, vsync)
       data.screen = data.drm.screens[^1]
     if options.touchDevice.len > 0:
       for window in windows:

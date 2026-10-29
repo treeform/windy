@@ -1,5 +1,5 @@
 import
-  std/[dynlib, os, posix, strformat, strutils],
+  std/[dynlib, monotimes, os, posix, strformat, strutils, times],
   pixie,
   ./[framebuffer, pixels]
 
@@ -68,6 +68,16 @@ type
     enums: pointer
     countBlobs: cint
     blobs: pointer
+  FlipHandler = proc(fd: cint, sequence, seconds, microseconds: cuint,
+    data: pointer) {.cdecl.}
+  EventContext = object
+    # Version 2 uses only this prefix of libdrm's extensible event context.
+    version: cint
+    vblankHandler, pageFlipHandler: FlipHandler
+  Scanout = object
+    buffer: DumbBuffer
+    memory: pointer
+    framebuffer: uint32
   DrmApi = object
     library: LibHandle
     getResources: proc(fd: cint): ptr Resources {.cdecl.}
@@ -80,6 +90,9 @@ type
     freeCrtc: proc(value: ptr Crtc) {.cdecl.}
     setCrtc: proc(fd: cint, id, buffer, x, y: uint32, connectors: ptr uint32,
       count: cint, mode: ptr ModeInfo): cint {.cdecl.}
+    pageFlip: proc(fd: cint, crtc, framebuffer, flags: uint32,
+      data: pointer): cint {.cdecl.}
+    handleEvent: proc(fd: cint, context: ptr EventContext): cint {.cdecl.}
     addFb: proc(fd: cint, width, height: uint32, depth, bpp: uint8,
       pitch, handle: uint32, id: ptr uint32): cint {.cdecl.}
     removeFb: proc(fd: cint, id: uint32): cint {.cdecl.}
@@ -101,12 +114,13 @@ type
     name*: string
     width*, height*: int
     rotation: int
-    connector, crtc, framebuffer: uint32
+    connector, crtc: uint32
     mode: ModeInfo
     original: Crtc
     originalConnectors: seq[uint32]
-    buffer: DumbBuffer
-    memory: pointer
+    buffers: seq[Scanout]
+    front, draw: int
+    vsync, pending: bool
     pixels: seq[uint32]
     rgba: bool
     activated: bool
@@ -115,8 +129,11 @@ type
     fd: cint
     master: bool
     screens*: seq[DrmScreen]
+    retiredScreens: seq[DrmScreen]
 
 const
+  FlipEvent = 1'u32
+  FlipTimeoutMs = 1000
   CreateDumb = 0xc02064b2.culong
   MapDumb = 0xc01064b3.culong
   DestroyDumb = 0xc00464b4.culong
@@ -141,6 +158,7 @@ static:
   doAssert sizeof(MapBuffer) == 16
   doAssert sizeof(FramebufferInfo) == 28
   doAssert sizeof(GemClose) == 8
+  doAssert sizeof(EventContext) == 24
 
 proc loadDrm(): DrmApi =
   ## Load DRM only when a DRM display is requested.
@@ -161,6 +179,8 @@ proc loadDrm(): DrmApi =
   bindSymbol(getCrtc, "drmModeGetCrtc")
   bindSymbol(freeCrtc, "drmModeFreeCrtc")
   bindSymbol(setCrtc, "drmModeSetCrtc")
+  bindSymbol(pageFlip, "drmModePageFlip")
+  bindSymbol(handleEvent, "drmHandleEvent")
   bindSymbol(addFb, "drmModeAddFB")
   bindSymbol(removeFb, "drmModeRmFB")
   bindSymbol(getFb, "drmModeGetFB")
@@ -207,8 +227,42 @@ proc rgbaFormat(display: DrmDisplay, crtcIndex: int): uint32 =
         for formatIndex in 0 ..< int(plane.countFormats):
           if plane.formats[formatIndex] == format: return format
 
+proc flipComplete(fd: cint, sequence, seconds, microseconds: cuint,
+    data: pointer) {.cdecl.} =
+  ## Mark a screen's queued buffer as scanned out after its vblank event.
+  let screen = cast[DrmScreen](data)
+  screen.front = screen.draw
+  screen.pending = false
+
+proc waitForFlip(display: DrmDisplay, screen: DrmScreen) =
+  ## Wait before reusing scanout storage, dispatching events for every output.
+  if not screen.pending: return
+  let deadline = getMonoTime() + initDuration(milliseconds = FlipTimeoutMs)
+  var context = EventContext(version: 2, pageFlipHandler: flipComplete)
+  while screen.pending:
+    let remaining = (deadline - getMonoTime()).inMilliseconds
+    if remaining <= 0:
+      raise newException(IOError, "Timed out waiting for DRM page flip on " & screen.name)
+    var descriptor = TPollfd(fd: display.fd, events: POLLIN)
+    let count = poll(addr descriptor, 1, cint(remaining))
+    if count < 0:
+      if osLastError() == OSErrorCode(EINTR): continue
+      raiseOSError(osLastError(), "Waiting for DRM page flip")
+    if count == 0: continue
+    if (descriptor.revents and (POLLERR or POLLHUP or POLLNVAL)) != 0:
+      raise newException(IOError, "DRM event descriptor became unavailable")
+    if display.api.handleEvent(display.fd, addr context) < 0:
+      if osLastError() == OSErrorCode(EINTR): continue
+      raiseOSError(osLastError(), "Reading DRM page flip events")
+
 proc closeScreen*(display: DrmDisplay, screen: DrmScreen) =
   var errors: seq[string]
+  try:
+    display.waitForFlip(screen)
+  except CatchableError as error:
+    errors.add error.msg
+    # A late event still contains this screen's address until the DRM fd closes.
+    display.retiredScreens.add screen
   if screen.activated:
     var
       original = screen.original
@@ -238,18 +292,19 @@ proc closeScreen*(display: DrmDisplay, screen: DrmScreen) =
         original.y, connectorPointer, count, modePointer) < 0:
       errors.add "Restoring " & screen.name
     screen.activated = false
-  if screen.memory != nil:
-    if munmap(screen.memory, int(screen.buffer.size)) < 0:
-      errors.add "Unmapping " & screen.name
-    screen.memory = nil
-  if screen.framebuffer != 0:
-    if display.api.removeFb(display.fd, screen.framebuffer) < 0:
-      errors.add "Removing framebuffer for " & screen.name
-    screen.framebuffer = 0
-  if screen.buffer.handle != 0:
-    if deviceIoctl(display.fd, DestroyDumb, addr screen.buffer.handle) < 0:
-      errors.add "Destroying buffer for " & screen.name
-    screen.buffer.handle = 0
+  for scanout in screen.buffers.mitems:
+    if scanout.memory != nil:
+      if munmap(scanout.memory, int(scanout.buffer.size)) < 0:
+        errors.add "Unmapping " & screen.name
+      scanout.memory = nil
+    if scanout.framebuffer != 0:
+      if display.api.removeFb(display.fd, scanout.framebuffer) < 0:
+        errors.add "Removing framebuffer for " & screen.name
+      scanout.framebuffer = 0
+    if scanout.buffer.handle != 0:
+      if deviceIoctl(display.fd, DestroyDumb, addr scanout.buffer.handle) < 0:
+        errors.add "Destroying buffer for " & screen.name
+      scanout.buffer.handle = 0
 
   if errors.len > 0:
     raise newException(IOError, errors.join("; "))
@@ -267,6 +322,7 @@ proc close*(display: DrmDisplay) =
     if posix.close(display.fd) < 0:
       errors.add "Closing DRM device"
     display.fd = -1
+  display.retiredScreens.setLen(0)
   if display.api.library != nil:
     unloadLib(display.api.library)
     display.api.library = nil
@@ -291,7 +347,7 @@ proc chooseCrtc*(ids: openArray[uint32], current, possible: uint32,
       return id
   raise newException(IOError, "No independent display controller is available")
 
-proc openOutput*(result: DrmDisplay, outputs: seq[string], rotation: int) =
+proc openOutput*(result: DrmDisplay, outputs: seq[string], rotation: int, vsync = false) =
   ## Prepare independent CPU scanout buffers without changing the active display.
   if rotation notin [0, 90, 180, 270]:
     raise newException(ValueError, "Rotation must be 0, 90, 180 or 270")
@@ -362,7 +418,7 @@ proc openOutput*(result: DrmDisplay, outputs: seq[string], rotation: int) =
       if original == nil:
         raiseOSError(osLastError(), "Saving DRM scanout")
       let screen = DrmScreen(name: name, connector: connector.id, crtc: id,
-        original: original[], mode: connector.modes[0], rotation: rotation)
+        original: original[], mode: connector.modes[0], rotation: rotation, vsync: vsync)
       api.freeCrtc(original)
       result.screens.add screen
       used.add id
@@ -382,35 +438,37 @@ proc openOutput*(result: DrmDisplay, outputs: seq[string], rotation: int) =
           api.freeEncoder(encoder)
       screen.width = int(if rotation in [90, 270]: screen.mode.vdisplay else: screen.mode.hdisplay)
       screen.height = int(if rotation in [90, 270]: screen.mode.hdisplay else: screen.mode.vdisplay)
-      screen.buffer = DumbBuffer(width: uint32(screen.mode.hdisplay),
-        height: uint32(screen.mode.vdisplay), bpp: 32)
-      if deviceIoctl(result.fd, CreateDumb, addr screen.buffer) < 0:
-        raiseOSError(osLastError(), "Allocating DRM scanout buffer")
-      if screen.buffer.pitch < screen.buffer.width * 4 or
-          screen.buffer.size < uint64(screen.buffer.pitch) * screen.buffer.height or
-          screen.buffer.size > MaximumBufferBytes:
-        raise newException(IOError, "Unsupported DRM buffer geometry")
       let format = result.rgbaFormat(crtcs.find(id))
       screen.rgba = format != 0
-      if screen.rgba:
-        var
-          handles = [screen.buffer.handle, 0'u32, 0, 0]
-          pitches = [screen.buffer.pitch, 0'u32, 0, 0]
-          offsets: array[4, uint32]
-        if api.addFb2(result.fd, screen.buffer.width, screen.buffer.height, format,
-            addr handles[0], addr pitches[0], addr offsets[0], addr screen.framebuffer, 0) < 0:
-          raiseOSError(osLastError(), "Registering RGBA DRM framebuffer")
-      elif api.addFb(result.fd, screen.buffer.width, screen.buffer.height, 24, 32,
-          screen.buffer.pitch, screen.buffer.handle, addr screen.framebuffer) < 0:
-          raiseOSError(osLastError(), "Registering DRM framebuffer")
-      var mapping = MapBuffer(handle: screen.buffer.handle)
-      if deviceIoctl(result.fd, MapDumb, addr mapping) < 0:
-        raiseOSError(osLastError(), "Mapping DRM buffer")
-      screen.memory = mmap(nil, int(screen.buffer.size), PROT_READ or PROT_WRITE,
-        MAP_SHARED, result.fd, Off(mapping.offset))
-      if screen.memory == MAP_FAILED:
-        screen.memory = nil
-        raiseOSError(osLastError(), "Mapping DRM scanout memory")
+      screen.buffers.setLen(if vsync: 2 else: 1)
+      for scanout in screen.buffers.mitems:
+        scanout.buffer = DumbBuffer(width: uint32(screen.mode.hdisplay),
+          height: uint32(screen.mode.vdisplay), bpp: 32)
+        if deviceIoctl(result.fd, CreateDumb, addr scanout.buffer) < 0:
+          raiseOSError(osLastError(), "Allocating DRM scanout buffer")
+        if scanout.buffer.pitch < scanout.buffer.width * 4 or
+            scanout.buffer.size < uint64(scanout.buffer.pitch) * scanout.buffer.height or
+            scanout.buffer.size > MaximumBufferBytes:
+          raise newException(IOError, "Unsupported DRM buffer geometry")
+        if screen.rgba:
+          var
+            handles = [scanout.buffer.handle, 0'u32, 0, 0]
+            pitches = [scanout.buffer.pitch, 0'u32, 0, 0]
+            offsets: array[4, uint32]
+          if api.addFb2(result.fd, scanout.buffer.width, scanout.buffer.height, format,
+              addr handles[0], addr pitches[0], addr offsets[0], addr scanout.framebuffer, 0) < 0:
+            raiseOSError(osLastError(), "Registering RGBA DRM framebuffer")
+        elif api.addFb(result.fd, scanout.buffer.width, scanout.buffer.height, 24, 32,
+            scanout.buffer.pitch, scanout.buffer.handle, addr scanout.framebuffer) < 0:
+            raiseOSError(osLastError(), "Registering DRM framebuffer")
+        var mapping = MapBuffer(handle: scanout.buffer.handle)
+        if deviceIoctl(result.fd, MapDumb, addr mapping) < 0:
+          raiseOSError(osLastError(), "Mapping DRM buffer")
+        scanout.memory = mmap(nil, int(scanout.buffer.size), PROT_READ or PROT_WRITE,
+          MAP_SHARED, result.fd, Off(mapping.offset))
+        if scanout.memory == MAP_FAILED:
+          scanout.memory = nil
+          raiseOSError(osLastError(), "Mapping DRM scanout memory")
   except:
     while result.screens.len > originalCount:
       let screen = result.screens.pop()
@@ -418,14 +476,17 @@ proc openOutput*(result: DrmDisplay, outputs: seq[string], rotation: int) =
     raise
 
 proc upload*(display: DrmDisplay, index: int, image: Image) =
-  ## Copy pixels into scanout memory without changing the active controller.
+  ## Upload a frame, waiting before reusing storage still owned by scanout.
   let screen = display.screens[index]
   if image.width != screen.width or image.height != screen.height:
     raise newException(ValueError, "Canvas does not match DRM screen")
-  let destination = cast[ptr UncheckedArray[uint32]](screen.memory)
+  display.waitForFlip(screen)
+  screen.draw = if screen.vsync and screen.activated: 1 - screen.front else: 0
+  let scanout = screen.buffers[screen.draw]
+  let destination = cast[ptr UncheckedArray[uint32]](scanout.memory)
   if screen.rgba and screen.rotation == 0:
     for row in 0 ..< image.height:
-      copyMem(addr destination[row * int(screen.buffer.pitch) div 4],
+      copyMem(addr destination[row * int(scanout.buffer.pitch) div 4],
         unsafeAddr image.data[row * image.width], image.width * 4)
     return
   screen.pixels.setLen(image.data.len)
@@ -436,12 +497,12 @@ proc upload*(display: DrmDisplay, index: int, image: Image) =
     for y in 0 ..< image.height:
       for x in 0 ..< image.width:
         let point = rotatedPoint(x, y, image.width, image.height, screen.rotation)
-        screen.pixels[point.y * int(screen.buffer.width) + point.x] =
+        screen.pixels[point.y * int(scanout.buffer.width) + point.x] =
           (if screen.rgba: cast[uint32](image.data[y * image.width + x])
           else: rgb(image.data[y * image.width + x]))
-  for row in 0 ..< int(screen.buffer.height):
-    copyMem(addr destination[row * int(screen.buffer.pitch) div 4],
-      addr screen.pixels[row * int(screen.buffer.width)], int(screen.buffer.width) * 4)
+  for row in 0 ..< int(scanout.buffer.height):
+    copyMem(addr destination[row * int(scanout.buffer.pitch) div 4],
+      addr screen.pixels[row * int(scanout.buffer.width)], int(scanout.buffer.width) * 4)
 
 proc present*(display: DrmDisplay, index: int, image: Image) =
   display.upload(index, image)
@@ -451,10 +512,16 @@ proc present*(display: DrmDisplay, index: int, image: Image) =
       if display.api.setMaster(display.fd) < 0:
         raiseOSError(osLastError(), "Acquiring DRM master; another display application may be running")
       display.master = true
-    if display.api.setCrtc(display.fd, screen.crtc, screen.framebuffer, 0, 0,
+    if display.api.setCrtc(display.fd, screen.crtc, screen.buffers[screen.draw].framebuffer, 0, 0,
         addr screen.connector, 1, addr screen.mode) < 0:
       raiseOSError(osLastError(), "Displaying " & screen.name)
     screen.activated = true
+    screen.front = screen.draw
+  elif screen.vsync:
+    if display.api.pageFlip(display.fd, screen.crtc,
+        screen.buffers[screen.draw].framebuffer, FlipEvent, cast[pointer](screen)) < 0:
+      raiseOSError(osLastError(), "Queuing DRM page flip on " & screen.name)
+    screen.pending = true
 
 proc describe*(screen: DrmScreen): string =
   ## Describe the selected connector, logical geometry and controller.
