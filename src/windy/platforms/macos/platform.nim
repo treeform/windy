@@ -361,6 +361,13 @@ proc handleMouseDelta(window: Window, event: NSEvent) =
   if window.onMouseMove != nil:
     window.onMouseMove()
 
+proc updateMousePosition(window: Window, event: NSEvent) =
+  ## Button events carry the authoritative pointer location.
+  let location = event.locationInWindow()
+  let height = window.inner.contentView.bounds.size.height
+  window.state.mousePos = (vec2(round(location.x), round(height - location.y)) *
+    window.contentScale).ivec2
+
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
 
@@ -728,24 +735,28 @@ proc mouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  window.updateMousePosition(event)
   window.handleButtonPress(MouseLeft)
 
 proc mouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  window.updateMousePosition(event)
   window.handleButtonRelease(MouseLeft)
 
 proc rightMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  window.updateMousePosition(event)
   window.handleButtonPress(MouseRight)
 
 proc rightMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  window.updateMousePosition(event)
   window.handleButtonRelease(MouseRight)
 
 proc otherMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
@@ -755,10 +766,13 @@ proc otherMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
 
   case event.buttonNumber:
   of 2:
+    window.updateMousePosition(event)
     window.handleButtonPress(MouseMiddle)
   of 3:
+    window.updateMousePosition(event)
     window.handleButtonPress(MouseButton4)
   of 4:
+    window.updateMousePosition(event)
     window.handleButtonPress(MouseButton5)
   else:
     discard
@@ -770,10 +784,13 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
 
   case event.buttonNumber:
   of 2:
+    window.updateMousePosition(event)
     window.handleButtonRelease(MouseMiddle)
   of 3:
+    window.updateMousePosition(event)
     window.handleButtonRelease(MouseButton4)
   of 4:
+    window.updateMousePosition(event)
     window.handleButtonRelease(MouseButton5)
   else:
     discard
