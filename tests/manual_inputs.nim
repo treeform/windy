@@ -36,6 +36,12 @@ window.onButtonPress = proc(button: Button) =
     window.runeInputEnabled = not window.runeInputEnabled
   of KeyEscape:
     text.setLen(0)
+  of KeyV:
+    if window.runeInputEnabled and
+      (set[Button](window.buttonDown) * {
+        KeyLeftControl, KeyRightControl, KeyLeftSuper, KeyRightSuper
+      }) != {}:
+        text.add(getClipboardString().toRunes())
   else:
     discard
   updateTitle()
