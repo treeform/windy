@@ -86,7 +86,7 @@ type
     hdc: HDC
     hglrc: HGLRC
     cpuPresentBuffer: seq[uint8]
-    vsync*: bool
+    vsyncEnabled: bool
     iconHandle: HICON
     customCursor: HCURSOR
 
@@ -1343,7 +1343,7 @@ proc newWindow*(
   result.title = title
   result.hWnd = createWindow(windowClassName, title)
   result.size = size
-  result.vsync = vsync
+  result.vsyncEnabled = vsync
 
   discard SetPropW(result.hWnd, cast[ptr WCHAR](windowPropKey[0].addr), 1)
 
@@ -1369,8 +1369,33 @@ proc title*(window: Window): string =
   window.state.title
 
 proc vsync*(window: Window): bool =
-  ## Returns true when vertical sync is enabled for this window.
-  window.vsync
+  ## Returns the OpenGL swap interval; other backends retain the constructor option.
+  when defined(useDirectX) or defined(useVulkan) or defined(useCpu):
+    window.vsyncEnabled
+  else:
+    let previousDC = wglGetCurrentDC()
+    let previousContext = wglGetCurrentContext()
+    window.makeContextCurrent()
+    defer: makeContextCurrent(previousDC, previousContext)
+    let getInterval = cast[proc(): int32 {.stdcall, raises: [].}](
+      wglGetProcAddress("wglGetSwapIntervalEXT"))
+    if getInterval == nil:
+      raise WindyError.newException("VSync readback is not supported")
+    getInterval() != 0
+
+proc `vsync=`*(window: Window, enabled: bool) =
+  ## Changes this window's OpenGL swap interval, preserving the current context.
+  when defined(useDirectX) or defined(useVulkan) or defined(useCpu):
+    raise WindyError.newException("The application controls VSync on this backend")
+  else:
+    let previousDC = wglGetCurrentDC()
+    let previousContext = wglGetCurrentContext()
+    window.makeContextCurrent()
+    defer: makeContextCurrent(previousDC, previousContext)
+    if wglSwapIntervalEXT(if enabled: 1 else: 0) == 0:
+      raise WindyError.newException("Error setting swap interval")
+    if window.vsync != enabled:
+      raise WindyError.newException("Error reading back the swap interval")
 
 proc icon*(window: Window): Image =
   window.state.icon
