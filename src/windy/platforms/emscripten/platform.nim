@@ -76,6 +76,7 @@ var
   frameDispatchActive: bool
   pendingResize: bool
   pendingFocusChange: bool
+  clipboardText: string
 
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
@@ -375,7 +376,8 @@ proc buttonToggle*(window: Window): ButtonView =
 
 # Clipboard functions
 proc clipboardContent*(): string =
-  ""  # Would need JavaScript interop
+  ## Returns the text supplied by the latest browser paste event.
+  clipboardText
 
 proc `clipboardContent=`*(content: string) =
   discard  # Would need JavaScript interop
@@ -508,11 +510,8 @@ proc setClipboardString*(s: string) =
   )
 
 proc getClipboardString*(): string =
-  # TODO: Implement clipboard with Emscripten.
-  raise newException(
-    Exception,
-    "getClipboardString is not supported on emscripten"
-  )
+  ## Returns the text supplied by the latest browser paste event.
+  clipboardText
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
   ## Image clipboard is not implemented on Emscripten yet.
@@ -795,6 +794,10 @@ proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData:
     button = keyEventToButton(keyEvent)
     key = $cast[cstring](addr keyEvent.key[0])
   window.syncModifiers(keyEvent, button, pressed = true)
+  if window.runeInputEnabled and button == KeyV and
+    (keyEvent.metaKey or (keyEvent.ctrlKey and not keyEvent.altKey)):
+      # Let the browser deliver clipboard text before notifying the editor.
+      return 0
   if button != ButtonUnknown:
     window.handleButtonPress(button)
   if window.runeInputEnabled and not keyEvent.metaKey and
@@ -902,6 +905,7 @@ proc setupEventHandlers(window: Window) =
 
   # Drag and drop handler
   setup_drag_drop_handlers_internal(window.canvas, cast[pointer](window))
+  setup_paste_handler(window.canvas, cast[pointer](window))
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -911,6 +915,23 @@ proc handleButtonRelease(window: Window, button: Button) =
 
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
+
+proc windy_paste_callback(userData: pointer, text: cstring): cint {.
+  exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#"
+.} =
+  ## Delivers browser clipboard text as one editor paste operation.
+  let window = cast[Window](userData)
+  if window == nil or not window.runeInputEnabled:
+    return 0
+  clipboardText = $text
+  let previous = window.state.buttonDown
+  window.state.buttonDown.excl(KeyLeftAlt)
+  window.state.buttonDown.excl(KeyRightAlt)
+  window.state.buttonDown.incl(KeyLeftControl)
+  window.handleButtonPress(KeyV)
+  window.handleButtonRelease(KeyV)
+  window.state.buttonDown = previous
+  return 1
 
 proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
   ## callback to handle the file drop event.
