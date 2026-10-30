@@ -7,6 +7,9 @@ import
 import ../../http
 export http
 
+proc XkbSetDetectableAutoRepeat(display: Display, detectable: cint,
+    supported: ptr cint): cint {.cdecl, importc, dynlib: libX11.}
+
 type
   XWindow = x.Window
 
@@ -153,6 +156,9 @@ proc init =
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
 
   display.initConstants()
+
+  var detectableRepeatSupported: cint
+  discard XkbSetDetectableAutoRepeat(display, 1, detectableRepeatSupported.addr)
 
   wmForDecoratedKind =
     if (decoratedAtom = atomIfExist"_MOTIF_WM_HINTS"; decoratedAtom != 0):
