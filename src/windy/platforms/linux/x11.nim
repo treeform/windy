@@ -42,6 +42,8 @@ type
     im: XIM
     xSyncCounter: XSyncCounter
     lastSync: XSyncValue
+    syncState: SyncState
+    syncDeadline: float64
 
     closeRequested, closed: bool
     innerDecorated: bool
@@ -60,6 +62,16 @@ type
     motiv
     kwm
     other
+
+  SyncState = enum
+    ## Where a window is in the _NET_WM_SYNC_REQUEST handshake.
+    SyncIdle ## No request outstanding.
+    SyncRequested ## Request received, waiting for its ConfigureNotify.
+    SyncConfigured ## ConfigureNotify handled, acknowledge after the next frame.
+
+const
+  syncConfigureTimeout = 0.010
+    ## Seconds to wait for the ConfigureNotify that follows a sync request.
 
 var
   quitRequested*: bool
@@ -856,8 +868,13 @@ proc pollEvents(window: Window) =
   window.buttonPressed = {}
   window.buttonReleased = {}
 
-  # signal that frame was drawn
-  display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
+  # Signal that the frame for the last _NET_WM_SYNC_REQUEST was drawn. This
+  # only happens once the matching ConfigureNotify was handled and a frame has
+  # gone by, otherwise a compositor such as KWin shows a frame that is still
+  # the old size.
+  if window.syncState == SyncConfigured:
+    display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
+    window.syncState = SyncIdle
 
   var ev: XEvent
 
@@ -888,7 +905,16 @@ proc pollEvents(window: Window) =
   proc handleRune(window: Window, rune: Rune) =
     handleRuneTemplate()
 
-  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
+  while true:
+    if not display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
+      if window.syncState == SyncRequested and
+        epochTime() < window.syncDeadline:
+        # The window manager sends the ConfigureNotify right after the sync
+        # request. Wait for it so the next frame is already the new size.
+        sleep(1)
+        continue
+      break
+
     case ev.kind
 
     of xeClientMessage:
@@ -903,6 +929,8 @@ proc pollEvents(window: Window) =
           lo: cast[uint32](ev.client.data.l[2]),
           hi: cast[int32](ev.client.data.l[3])
         )
+        window.syncState = SyncRequested
+        window.syncDeadline = epochTime() + syncConfigureTimeout
 
       elif ev.client.messageType == xaXdndEnter:
         # XDnD drag entered.
@@ -1034,6 +1062,9 @@ proc pollEvents(window: Window) =
           window.onResize()
         if window.onFrame != nil:
           window.onFrame()
+
+      if window.syncState == SyncRequested:
+        window.syncState = SyncConfigured
 
     of xeMotion:
       window.mousePrevPos = window.mousePos
