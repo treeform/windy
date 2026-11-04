@@ -5,7 +5,15 @@ import
 # include for EMSCRIPTEN_KEEPALIVE
 {.emit: """
 #include <emscripten.h>
+EM_JS(double, windy_canvas_left, (), {
+  return Module.canvas.getBoundingClientRect().left;
+});
+EM_JS(double, windy_canvas_top, (), {
+  return Module.canvas.getBoundingClientRect().top;
+});
 """.}
+proc windy_canvas_left(): cdouble {.importc, nodecl.}
+proc windy_canvas_top(): cdouble {.importc, nodecl.}
 
 import emdefs
 
@@ -734,10 +742,24 @@ proc mouseButtonToButton(button: cushort): Button =
   else: MouseButton4
 
 # Event handlers
+proc updateMousePosition(window: Window, mouseEvent: ptr EmscriptenMouseEvent) =
+  ## Use canvas-relative coordinates for both canvas and document events.
+  let position = ivec2(
+    int32(mouseEvent.clientX.float64 - windy_canvas_left()),
+    int32(mouseEvent.clientY.float64 - windy_canvas_top())
+  )
+  window.state.mousePrevPos = window.state.mousePos
+  if window.state.hasPrevMouse:
+    window.state.perFrame.mouseDelta += position - window.state.mousePos
+  window.state.mousePos = position
+  window.state.hasPrevMouse = true
+
 proc onMouseDown(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   # Ensure canvas has focus when clicked
   make_canvas_focusable()
+  window.updateMousePosition(mouseEvent)
+  window.state.mouseInside = true
   let button = mouseButtonToButton(mouseEvent.button)
   window.handleButtonPress(button)
   return 1
@@ -745,16 +767,18 @@ proc onMouseDown(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
 proc onMouseUp(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   let button = mouseButtonToButton(mouseEvent.button)
+  if button notin window.state.buttonDown:
+    return 0
+  window.updateMousePosition(mouseEvent)
   window.handleButtonRelease(button)
   return 1
 
 proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  window.state.mousePrevPos = window.state.mousePos
-  # Use clientX/clientY as they are more reliably populated
-  window.state.mousePos = ivec2(mouseEvent.clientX.int32, mouseEvent.clientY.int32)
-  window.state.mouseInside = true
-  window.state.perFrame.mouseDelta += window.state.mousePos - window.state.mousePrevPos
+  if not window.state.mouseInside and
+      window.state.buttonDown * {MouseLeft, MouseMiddle, MouseRight, MouseButton4} == {}:
+    return 0
+  window.updateMousePosition(mouseEvent)
   if window.onMouseMove != nil:
     window.onMouseMove()
   return 1
@@ -762,6 +786,8 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
 proc onMouseEnter(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   window.state.mouseInside = true
+  window.state.hasPrevMouse = false
+  window.updateMousePosition(mouseEvent)
   return 1
 
 proc onMouseLeave(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
@@ -848,6 +874,8 @@ proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: poi
   ## Releases held input before notifying the application of focus loss.
   let window = cast[Window](userData)
   clearButtonsTemplate()
+  window.state.hasPrevMouse = false
+  window.state.perFrame.mouseDelta = ivec2(0)
   if frameDispatchActive:
     pendingFocusChange = true
     return 1
@@ -883,8 +911,8 @@ proc drainDeferredWindowEvents() =
 proc setupEventHandlers(window: Window) =
   # Mouse events
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
-  discard emscripten_set_mouseup_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)
-  discard emscripten_set_mousemove_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseMove, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mouseup_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mousemove_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, cast[pointer](window), 1, onMouseMove, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mouseenter_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseEnter, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mouseleave_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseLeave, EM_CALLBACK_THREAD_CONTEXT)
 
