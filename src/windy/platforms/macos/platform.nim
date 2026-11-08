@@ -40,6 +40,7 @@ type
     fullscreenState: bool
     minimizedState: bool
     cpuImage: NSImage
+    vsyncEnabled: bool
 
 const
   ActivationTurnSeconds = 0.001
@@ -1243,6 +1244,27 @@ proc swapBuffers*(window: Window) =
   else:
     window.inner.contentView.NSOpenGLView.openGLContext.flushBuffer()
 
+proc vsync*(window: Window): bool =
+  ## Returns the OpenGL swap interval; other backends retain the constructor option.
+  when defined(useMetal4) or defined(useCpu):
+    window.vsyncEnabled
+  else:
+    var interval: GLint
+    window.inner.contentView.NSOpenGLView.openGLContext.getValues(
+      interval.addr, NSOpenGLContextParameterSwapInterval)
+    interval != 0
+
+proc `vsync=`*(window: Window, enabled: bool) =
+  ## Changes this window's OpenGL swap interval, preserving the current context.
+  when defined(useMetal4) or defined(useCpu):
+    raise WindyError.newException("The application controls VSync on this backend")
+  else:
+    var interval: GLint = if enabled: 1 else: 0
+    window.inner.contentView.NSOpenGLView.openGLContext.setValues(
+      interval.addr, NSOpenGLContextParameterSwapInterval)
+    if window.vsync != enabled:
+      raise WindyError.newException("Error setting the OpenGL swap interval")
+
 when defined(useMetal4) or defined(useCpu):
   proc loadExtensions*() =
     ## Nothing to load without OpenGL. Exported so callers can call
@@ -1317,6 +1339,7 @@ proc newWindow*(
   stencilBits = 8
 ): Window =
   result = Window()
+  result.vsyncEnabled = vsync
 
   init()
 
