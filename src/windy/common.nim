@@ -83,6 +83,35 @@ type
   Callback* = proc()
   ButtonCallback* = proc(button: Button)
   RuneCallback* = proc(rune: Rune)
+  TextInputCallback* = proc(text: string)
+    ## Receives committed text as one edit, instead of individual onRune calls.
+    ## Takes priority over onRune and requires runeInputEnabled.
+    ## Native commits may contain multiple runes and line breaks.
+  TextInputState* = object
+    ## Describes the focused editor for native text services on macOS.
+    ## Selection and visible ranges use half-open rune offsets.
+    id*: string
+      ## A nonempty field identity activates the editor; an empty one clears it.
+    text*: string
+    selectionStart*, selectionEnd*: int
+    visibleStart*, visibleEnd*: int
+    bounds*: Rect
+      ## Bounds use framebuffer pixels measured from the window's top-left.
+    multiline*, password*: bool
+
+  TextInputEditKind* = enum
+    ReplaceText, SelectText
+
+  TextInputEdit* = object
+    ## Requests an edit over a half-open range of rune offsets.
+    kind*: TextInputEditKind
+    text*: string
+    start*, length*: int
+
+  TextInputEditCallback* = proc(edit: TextInputEdit)
+    ## Receives native selection or replacement requests on macOS.
+    ## Apply the request to the editor, then publish its state again.
+    ## Requires runeInputEnabled and an active, nonsecure TextInputState.
   HttpErrorCallback* = proc(msg: string)
   HttpResponseCallback* = proc(response: HttpResponse)
   HttpProgressCallback* = proc(completed, total: int)
