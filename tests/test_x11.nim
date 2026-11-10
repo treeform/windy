@@ -81,8 +81,18 @@ when defined(linux):
     glGetIntegerv(GL_MAJOR_VERSION, major.addr)
     glGetIntegerv(GL_MINOR_VERSION, minor.addr)
     glGetIntegerv(GL_CONTEXT_PROFILE_MASK, profile.addr)
-    glGetIntegerv(GL_DEPTH_BITS, depth.addr)
-    glGetIntegerv(GL_STENCIL_BITS, stencil.addr)
+    glGetFramebufferAttachmentParameteriv(
+      GL_FRAMEBUFFER,
+      GL_DEPTH,
+      GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE,
+      depth.addr
+    )
+    glGetFramebufferAttachmentParameteriv(
+      GL_FRAMEBUFFER,
+      GL_STENCIL,
+      GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE,
+      stencil.addr
+    )
     doAssert major > 3 or (major == 3 and minor >= 3)
     doAssert (profile and GL_CONTEXT_CORE_PROFILE_BIT.GLint) != 0
     doAssert depth >= 24 and stencil >= 8
