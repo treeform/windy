@@ -1,0 +1,7 @@
+nimTitle	pixels	windy/platforms/linux/native/pixels.html	module windy/platforms/linux/native/pixels		0
+nim	PixelRegion	windy/platforms/linux/native/pixels.html#PixelRegion	object PixelRegion		3
+nim	rgb	windy/platforms/linux/native/pixels.html#rgb,ColorRGBX	proc rgb(pixel: ColorRGBX): uint32		6
+nim	rotatedPoint	windy/platforms/linux/native/pixels.html#rotatedPoint,int,int,int,int,int	proc rotatedPoint(x, y, width, height, rotation: int): tuple[x, y: int]		9
+nim	validateRegions	windy/platforms/linux/native/pixels.html#validateRegions,int,int,array[,PixelRegion]	proc validateRegions(width, height: int; regions: array[2, PixelRegion])		17
+nim	pixelViewport	windy/platforms/linux/native/pixels.html#pixelViewport,PixelRegion,int,int	proc pixelViewport(region: PixelRegion; width, height: int): PixelRegion		27
+nim	pixelVertices	windy/platforms/linux/native/pixels.html#pixelVertices,int,int,array[,PixelRegion]	proc pixelVertices(width, height: int; regions: array[2, PixelRegion]): array[48,\n    cfloat]		37

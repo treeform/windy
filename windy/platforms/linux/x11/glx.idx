@@ -34,5 +34,5 @@ nim	glXMakeCurrent	windy/platforms/linux/x11/glx.html#glXMakeCurrent,Display,Dra
 nim	glXGetCurrentContext	windy/platforms/linux/x11/glx.html#glXGetCurrentContext	proc glXGetCurrentContext(): GlxContext		76
 nim	glXSwapBuffers	windy/platforms/linux/x11/glx.html#glXSwapBuffers,Display,Drawable	proc glXSwapBuffers(d: Display; drawable: Drawable)		78
 nim	glXSwapIntervalEXT	windy/platforms/linux/x11/glx.html#glXSwapIntervalEXT,Display,Drawable,cint	proc glXSwapIntervalEXT(d: Display; drawable: Drawable; interval: cint)		80
-nim	glXSwapIntervalMESA	windy/platforms/linux/x11/glx.html#glXSwapIntervalMESA,cint	proc glXSwapIntervalMESA(interval: cint)		82
-nim	glXSwapIntervalSGI	windy/platforms/linux/x11/glx.html#glXSwapIntervalSGI,cint	proc glXSwapIntervalSGI(interval: cint)		83
+nim	glXSwapIntervalMESA	windy/platforms/linux/x11/glx.html#glXSwapIntervalMESA,cuint	proc glXSwapIntervalMESA(interval: cuint): cint		82
+nim	glXSwapIntervalSGI	windy/platforms/linux/x11/glx.html#glXSwapIntervalSGI,cint	proc glXSwapIntervalSGI(interval: cint): cint		83

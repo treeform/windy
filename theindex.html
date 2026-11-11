@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/backends.html">windy/platforms/linux/backends</a>, <a href="windy/platforms/linux/native/pixels.html">windy/platforms/linux/native/pixels</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/x11.html">windy/platforms/linux/x11</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%3D%3D%60" href="#%60%3D%3D%60"><span>`==`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: proc `==`(a, b: HttpRequestHandle): bool" href="windy/common.html#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle">common: proc `==`(a, b: HttpRequestHandle): bool</a></li>
@@ -283,7 +283,7 @@
           </ul></dd>
 <dt><a name="buttonDown" href="#buttonDown"><span>buttonDown:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc buttonDown(window: Window): ButtonView" href="windy/platforms/linux/platform.html#buttonDown%2CWindow">platform: proc buttonDown(window: Window): ButtonView</a></li>
+          data-doc-search-tag="x11: proc buttonDown(window: Window): ButtonView" href="windy/platforms/linux/x11.html#buttonDown%2CWindow">x11: proc buttonDown(window: Window): ButtonView</a></li>
           </ul></dd>
 <dt><a name="ButtonMotionMask" href="#ButtonMotionMask"><span>ButtonMotionMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -291,7 +291,7 @@
           </ul></dd>
 <dt><a name="buttonPressed" href="#buttonPressed"><span>buttonPressed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc buttonPressed(window: Window): ButtonView" href="windy/platforms/linux/platform.html#buttonPressed%2CWindow">platform: proc buttonPressed(window: Window): ButtonView</a></li>
+          data-doc-search-tag="x11: proc buttonPressed(window: Window): ButtonView" href="windy/platforms/linux/x11.html#buttonPressed%2CWindow">x11: proc buttonPressed(window: Window): ButtonView</a></li>
           </ul></dd>
 <dt><a name="ButtonPressMask" href="#ButtonPressMask"><span>ButtonPressMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -299,7 +299,7 @@
           </ul></dd>
 <dt><a name="buttonReleased" href="#buttonReleased"><span>buttonReleased:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc buttonReleased(window: Window): ButtonView" href="windy/platforms/linux/platform.html#buttonReleased%2CWindow">platform: proc buttonReleased(window: Window): ButtonView</a></li>
+          data-doc-search-tag="x11: proc buttonReleased(window: Window): ButtonView" href="windy/platforms/linux/x11.html#buttonReleased%2CWindow">x11: proc buttonReleased(window: Window): ButtonView</a></li>
           </ul></dd>
 <dt><a name="ButtonReleaseMask" href="#ButtonReleaseMask"><span>ButtonReleaseMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -307,7 +307,7 @@
           </ul></dd>
 <dt><a name="buttonToggle" href="#buttonToggle"><span>buttonToggle:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc buttonToggle(window: Window): ButtonView" href="windy/platforms/linux/platform.html#buttonToggle%2CWindow">platform: proc buttonToggle(window: Window): ButtonView</a></li>
+          data-doc-search-tag="x11: proc buttonToggle(window: Window): ButtonView" href="windy/platforms/linux/x11.html#buttonToggle%2CWindow">x11: proc buttonToggle(window: Window): ButtonView</a></li>
           </ul></dd>
 <dt><a name="ButtonUnknown" href="#ButtonUnknown"><span>ButtonUnknown:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -347,7 +347,7 @@
           </ul></dd>
 <dt><a name="captureMouse" href="#captureMouse"><span>captureMouse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc captureMouse(window: Window)" href="windy/platforms/linux/platform.html#captureMouse%2CWindow">platform: proc captureMouse(window: Window)</a></li>
+          data-doc-search-tag="x11: proc captureMouse(window: Window)" href="windy/platforms/linux/x11.html#captureMouse%2CWindow">x11: proc captureMouse(window: Window)</a></li>
           </ul></dd>
 <dt><a name="CenterGravity" href="#CenterGravity"><span>CenterGravity:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -355,7 +355,7 @@
           </ul></dd>
 <dt><a name="centerWindow" href="#centerWindow"><span>centerWindow:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc centerWindow(window: Window)" href="windy/platforms/linux/platform.html#centerWindow%2CWindow">platform: proc centerWindow(window: Window)</a></li>
+          data-doc-search-tag="x11: proc centerWindow(window: Window)" href="windy/platforms/linux/x11.html#centerWindow%2CWindow">x11: proc centerWindow(window: Window)</a></li>
           </ul></dd>
 <dt><a name="clearButtonsTemplate" href="#clearButtonsTemplate"><span>clearButtonsTemplate:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -373,11 +373,13 @@
 <li><a class="reference external"
           data-doc-search-tag="http: proc close(handle: WebSocketHandle)" href="windy/http.html#close%2CWebSocketHandle">http: proc close(handle: WebSocketHandle)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="platform: proc close(window: Window)" href="windy/platforms/linux/platform.html#close%2CWindow">platform: proc close(window: Window)</a></li>
+          data-doc-search-tag="x11: proc close(window: Window)" href="windy/platforms/linux/x11.html#close%2CWindow">x11: proc close(window: Window)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="x11: proc close(presenter: X11PixelPresenter)" href="windy/platforms/linux/x11.html#close%2CX11PixelPresenter">x11: proc close(presenter: X11PixelPresenter)</a></li>
           </ul></dd>
 <dt><a name="closed" href="#closed"><span>closed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc closed(window: Window): bool" href="windy/platforms/linux/platform.html#closed%2CWindow">platform: proc closed(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc closed(window: Window): bool" href="windy/platforms/linux/x11.html#closed%2CWindow">x11: proc closed(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="ClosedHandCursor" href="#ClosedHandCursor"><span>ClosedHandCursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -385,15 +387,15 @@
           </ul></dd>
 <dt><a name="closeIme" href="#closeIme"><span>closeIme:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc closeIme(window: Window)" href="windy/platforms/linux/platform.html#closeIme%2CWindow">platform: proc closeIme(window: Window)</a></li>
+          data-doc-search-tag="x11: proc closeIme(window: Window)" href="windy/platforms/linux/x11.html#closeIme%2CWindow">x11: proc closeIme(window: Window)</a></li>
           </ul></dd>
 <dt><a name="closeRequested" href="#closeRequested"><span>closeRequested:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc closeRequested(window: Window): bool" href="windy/platforms/linux/platform.html#closeRequested%2CWindow">platform: proc closeRequested(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc closeRequested(window: Window): bool" href="windy/platforms/linux/x11.html#closeRequested%2CWindow">x11: proc closeRequested(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="closeRequested%3D" href="#closeRequested%3D"><span>closeRequested=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc closeRequested=(window: Window; v: bool)" href="windy/platforms/linux/platform.html#closeRequested%3D%2CWindow%2Cbool">platform: proc closeRequested=(window: Window; v: bool)</a></li>
+          data-doc-search-tag="x11: proc closeRequested=(window: Window; v: bool)" href="windy/platforms/linux/x11.html#closeRequested%3D%2CWindow%2Cbool">x11: proc closeRequested=(window: Window; v: bool)</a></li>
           </ul></dd>
 <dt><a name="Colormap" href="#Colormap"><span>Colormap:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -433,7 +435,7 @@
           </ul></dd>
 <dt><a name="contentScale" href="#contentScale"><span>contentScale:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc contentScale(window: Window): float32" href="windy/platforms/linux/platform.html#contentScale%2CWindow">platform: proc contentScale(window: Window): float32</a></li>
+          data-doc-search-tag="x11: proc contentScale(window: Window): float32" href="windy/platforms/linux/x11.html#contentScale%2CWindow">x11: proc contentScale(window: Window): float32</a></li>
           </ul></dd>
 <dt><a name="ControlMapIndex" href="#ControlMapIndex"><span>ControlMapIndex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -477,7 +479,7 @@
           </ul></dd>
 <dt><a name="cursor" href="#cursor"><span>cursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc cursor(window: Window): common.Cursor" href="windy/platforms/linux/platform.html#cursor%2CWindow">platform: proc cursor(window: Window): common.Cursor</a></li>
+          data-doc-search-tag="x11: proc cursor(window: Window): common.Cursor" href="windy/platforms/linux/x11.html#cursor%2CWindow">x11: proc cursor(window: Window): common.Cursor</a></li>
           </ul></dd>
 <dt><a name="Cursor" href="#Cursor"><span>Cursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -485,7 +487,7 @@
           </ul></dd>
 <dt><a name="cursor%3D" href="#cursor%3D"><span>cursor=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc cursor=(window: Window; v: common.Cursor)" href="windy/platforms/linux/platform.html#cursor%3D%2CWindow%2C">platform: proc cursor=(window: Window; v: common.Cursor)</a></li>
+          data-doc-search-tag="x11: proc cursor=(window: Window; v: common.Cursor)" href="windy/platforms/linux/x11.html#cursor%3D%2CWindow%2C">x11: proc cursor=(window: Window; v: common.Cursor)</a></li>
           </ul></dd>
 <dt><a name="CursorKind" href="#CursorKind"><span>CursorKind:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -683,6 +685,16 @@
 <li><a class="reference external"
           data-doc-search-tag="x: type Drawable" href="windy/platforms/linux/x11/x.html#Drawable">x: type Drawable</a></li>
           </ul></dd>
+<dt><a name="drawPixels" href="#drawPixels"><span>drawPixels:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc drawPixels(presenter: X11PixelPresenter; image: Image; region: PixelRegion;
+           changed = true; scale = 0; fitDown = false)" href="windy/platforms/linux/x11.html#drawPixels%2CX11PixelPresenter%2CImage%2CPixelRegion%2Cint">x11: proc drawPixels(presenter: X11PixelPresenter; image: Image; region: PixelRegion;
+           changed = true; scale = 0; fitDown = false)</a></li>
+          </ul></dd>
+<dt><a name="DrmBackend" href="#DrmBackend"><span>DrmBackend:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: LinuxBackend.DrmBackend" href="windy/platforms/linux/backends.html#DrmBackend">backends: LinuxBackend.DrmBackend</a></li>
+          </ul></dd>
 <dt><a name="EastGravity" href="#EastGravity"><span>EastGravity:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const EastGravity" href="windy/platforms/linux/x11/x.html#EastGravity">x: const EastGravity</a></li>
@@ -727,6 +739,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const FamilyServerInterpreted" href="windy/platforms/linux/x11/x.html#FamilyServerInterpreted">x: const FamilyServerInterpreted</a></li>
           </ul></dd>
+<dt><a name="FbdevBackend" href="#FbdevBackend"><span>FbdevBackend:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: LinuxBackend.FbdevBackend" href="windy/platforms/linux/backends.html#FbdevBackend">backends: LinuxBackend.FbdevBackend</a></li>
+          </ul></dd>
 <dt><a name="FileDialogFilter" href="#FileDialogFilter"><span>FileDialogFilter:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: object FileDialogFilter" href="windy/common.html#FileDialogFilter">common: object FileDialogFilter</a></li>
@@ -757,7 +773,7 @@
           </ul></dd>
 <dt><a name="focus" href="#focus"><span>focus:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc focus(window: Window)" href="windy/platforms/linux/platform.html#focus%2CWindow">platform: proc focus(window: Window)</a></li>
+          data-doc-search-tag="x11: proc focus(window: Window)" href="windy/platforms/linux/x11.html#focus%2CWindow">x11: proc focus(window: Window)</a></li>
           </ul></dd>
 <dt><a name="FocusChangeMask" href="#FocusChangeMask"><span>FocusChangeMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -765,7 +781,7 @@
           </ul></dd>
 <dt><a name="focused" href="#focused"><span>focused:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc focused(window: Window): bool" href="windy/platforms/linux/platform.html#focused%2CWindow">platform: proc focused(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc focused(window: Window): bool" href="windy/platforms/linux/x11.html#focused%2CWindow">x11: proc focused(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="Font" href="#Font"><span>Font:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -789,15 +805,15 @@
           </ul></dd>
 <dt><a name="framebufferSize" href="#framebufferSize"><span>framebufferSize:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc framebufferSize(window: Window): IVec2" href="windy/platforms/linux/platform.html#framebufferSize%2CWindow">platform: proc framebufferSize(window: Window): IVec2</a></li>
+          data-doc-search-tag="x11: proc framebufferSize(window: Window): IVec2" href="windy/platforms/linux/x11.html#framebufferSize%2CWindow">x11: proc framebufferSize(window: Window): IVec2</a></li>
           </ul></dd>
 <dt><a name="fullscreen" href="#fullscreen"><span>fullscreen:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc fullscreen(window: Window): bool" href="windy/platforms/linux/platform.html#fullscreen%2CWindow">platform: proc fullscreen(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc fullscreen(window: Window): bool" href="windy/platforms/linux/x11.html#fullscreen%2CWindow">x11: proc fullscreen(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="fullscreen%3D" href="#fullscreen%3D"><span>fullscreen=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc fullscreen=(window: Window; v: bool)" href="windy/platforms/linux/platform.html#fullscreen%3D%2CWindow%2Cbool">platform: proc fullscreen=(window: Window; v: bool)</a></li>
+          data-doc-search-tag="x11: proc fullscreen=(window: Window; v: bool)" href="windy/platforms/linux/x11.html#fullscreen%3D%2CWindow%2Cbool">x11: proc fullscreen=(window: Window; v: bool)</a></li>
           </ul></dd>
 <dt><a name="GC" href="#GC"><span>GC:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -905,23 +921,23 @@
           </ul></dd>
 <dt><a name="getClipboardContentKinds" href="#getClipboardContentKinds"><span>getClipboardContentKinds:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc getClipboardContentKinds(): set[ClipboardContentKind]" href="windy/platforms/linux/platform.html#getClipboardContentKinds">platform: proc getClipboardContentKinds(): set[ClipboardContentKind]</a></li>
+          data-doc-search-tag="x11: proc getClipboardContentKinds(): set[ClipboardContentKind]" href="windy/platforms/linux/x11.html#getClipboardContentKinds">x11: proc getClipboardContentKinds(): set[ClipboardContentKind]</a></li>
           </ul></dd>
 <dt><a name="getClipboardImage" href="#getClipboardImage"><span>getClipboardImage:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc getClipboardImage(): Image" href="windy/platforms/linux/platform.html#getClipboardImage">platform: proc getClipboardImage(): Image</a></li>
+          data-doc-search-tag="x11: proc getClipboardImage(): Image" href="windy/platforms/linux/x11.html#getClipboardImage">x11: proc getClipboardImage(): Image</a></li>
           </ul></dd>
 <dt><a name="getClipboardString" href="#getClipboardString"><span>getClipboardString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc getClipboardString(): string" href="windy/platforms/linux/platform.html#getClipboardString">platform: proc getClipboardString(): string</a></li>
+          data-doc-search-tag="x11: proc getClipboardString(): string" href="windy/platforms/linux/x11.html#getClipboardString">x11: proc getClipboardString(): string</a></li>
           </ul></dd>
 <dt><a name="getConfig" href="#getConfig"><span>getConfig:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc getConfig(appName: string; fileName: string): string" href="windy/platforms/linux/platform.html#getConfig%2Cstring%2Cstring">platform: proc getConfig(appName: string; fileName: string): string</a></li>
+          data-doc-search-tag="x11: proc getConfig(appName: string; fileName: string): string" href="windy/platforms/linux/x11.html#getConfig%2Cstring%2Cstring">x11: proc getConfig(appName: string; fileName: string): string</a></li>
           </ul></dd>
 <dt><a name="getConfigHome" href="#getConfigHome"><span>getConfigHome:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc getConfigHome(appName: string): string" href="windy/platforms/linux/platform.html#getConfigHome%2Cstring">platform: proc getConfigHome(appName: string): string</a></li>
+          data-doc-search-tag="x11: proc getConfigHome(appName: string): string" href="windy/platforms/linux/x11.html#getConfigHome%2Cstring">x11: proc getConfigHome(appName: string): string</a></li>
           </ul></dd>
 <dt><a name="GlxAlphaSize" href="#GlxAlphaSize"><span>GlxAlphaSize:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1053,11 +1069,11 @@
           </ul></dd>
 <dt><a name="glXSwapIntervalMESA" href="#glXSwapIntervalMESA"><span>glXSwapIntervalMESA:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="glx: proc glXSwapIntervalMESA(interval: cint)" href="windy/platforms/linux/x11/glx.html#glXSwapIntervalMESA%2Ccint">glx: proc glXSwapIntervalMESA(interval: cint)</a></li>
+          data-doc-search-tag="glx: proc glXSwapIntervalMESA(interval: cuint): cint" href="windy/platforms/linux/x11/glx.html#glXSwapIntervalMESA%2Ccuint">glx: proc glXSwapIntervalMESA(interval: cuint): cint</a></li>
           </ul></dd>
 <dt><a name="glXSwapIntervalSGI" href="#glXSwapIntervalSGI"><span>glXSwapIntervalSGI:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="glx: proc glXSwapIntervalSGI(interval: cint)" href="windy/platforms/linux/x11/glx.html#glXSwapIntervalSGI%2Ccint">glx: proc glXSwapIntervalSGI(interval: cint)</a></li>
+          data-doc-search-tag="glx: proc glXSwapIntervalSGI(interval: cint): cint" href="windy/platforms/linux/x11/glx.html#glXSwapIntervalSGI%2Ccint">glx: proc glXSwapIntervalSGI(interval: cint): cint</a></li>
           </ul></dd>
 <dt><a name="GlxTrueColor" href="#GlxTrueColor"><span>GlxTrueColor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1074,6 +1090,10 @@
 <dt><a name="GlxXVisualType" href="#GlxXVisualType"><span>GlxXVisualType:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="glx: const GlxXVisualType" href="windy/platforms/linux/x11/glx.html#GlxXVisualType">glx: const GlxXVisualType</a></li>
+          </ul></dd>
+<dt><a name="gpuPixelVsync" href="#gpuPixelVsync"><span>gpuPixelVsync:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc gpuPixelVsync(window: Window): bool" href="windy/platforms/linux/x11.html#gpuPixelVsync%2CWindow">x11: proc gpuPixelVsync(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="GrabFrozen" href="#GrabFrozen"><span>GrabFrozen:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1183,6 +1203,30 @@
 <li><a class="reference external"
           data-doc-search-tag="internal: template handleTextInputTemplate(value: string)" href="windy/internal.html#handleTextInputTemplate.t%2Cstring">internal: template handleTextInputTemplate(value: string)</a></li>
           </ul></dd>
+<dt><a name="HasDirect" href="#HasDirect"><span>HasDirect:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: const HasDirect" href="windy/platforms/linux/backends.html#HasDirect">backends: const HasDirect</a></li>
+          </ul></dd>
+<dt><a name="HasDrm" href="#HasDrm"><span>HasDrm:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: const HasDrm" href="windy/platforms/linux/backends.html#HasDrm">backends: const HasDrm</a></li>
+          </ul></dd>
+<dt><a name="HasFbdev" href="#HasFbdev"><span>HasFbdev:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: const HasFbdev" href="windy/platforms/linux/backends.html#HasFbdev">backends: const HasFbdev</a></li>
+          </ul></dd>
+<dt><a name="hasGpuPixelContext" href="#hasGpuPixelContext"><span>hasGpuPixelContext:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc hasGpuPixelContext(window: Window): bool" href="windy/platforms/linux/x11.html#hasGpuPixelContext%2CWindow">x11: proc hasGpuPixelContext(window: Window): bool</a></li>
+          </ul></dd>
+<dt><a name="hasWindows" href="#hasWindows"><span>hasWindows:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc hasWindows(): bool" href="windy/platforms/linux/x11.html#hasWindows">x11: proc hasWindows(): bool</a></li>
+          </ul></dd>
+<dt><a name="HasX11" href="#HasX11"><span>HasX11:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: const HasX11" href="windy/platforms/linux/backends.html#HasX11">backends: const HasX11</a></li>
+          </ul></dd>
 <dt><a name="HostDelete" href="#HostDelete"><span>HostDelete:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const HostDelete" href="windy/platforms/linux/x11/x.html#HostDelete">x: const HostDelete</a></li>
@@ -1221,7 +1265,7 @@
           </ul></dd>
 <dt><a name="icon%3D" href="#icon%3D"><span>icon=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc icon=(window: Window; icon: Image)" href="windy/platforms/linux/platform.html#icon%3D%2CWindow%2CImage">platform: proc icon=(window: Window; icon: Image)</a></li>
+          data-doc-search-tag="x11: proc icon=(window: Window; icon: Image)" href="windy/platforms/linux/x11.html#icon%3D%2CWindow%2CImage">x11: proc icon=(window: Window; icon: Image)</a></li>
           </ul></dd>
 <dt><a name="IfEventProc" href="#IfEventProc"><span>IfEventProc:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1233,11 +1277,11 @@
           </ul></dd>
 <dt><a name="imeCompositionString" href="#imeCompositionString"><span>imeCompositionString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc imeCompositionString(window: Window): string" href="windy/platforms/linux/platform.html#imeCompositionString%2CWindow">platform: proc imeCompositionString(window: Window): string</a></li>
+          data-doc-search-tag="x11: proc imeCompositionString(window: Window): string" href="windy/platforms/linux/x11.html#imeCompositionString%2CWindow">x11: proc imeCompositionString(window: Window): string</a></li>
           </ul></dd>
 <dt><a name="imeCursorIndex" href="#imeCursorIndex"><span>imeCursorIndex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc imeCursorIndex(window: Window): int" href="windy/platforms/linux/platform.html#imeCursorIndex%2CWindow">platform: proc imeCursorIndex(window: Window): int</a></li>
+          data-doc-search-tag="x11: proc imeCursorIndex(window: Window): int" href="windy/platforms/linux/x11.html#imeCursorIndex%2CWindow">x11: proc imeCursorIndex(window: Window): int</a></li>
           </ul></dd>
 <dt><a name="IncludeInferiors" href="#IncludeInferiors"><span>IncludeInferiors:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1739,6 +1783,14 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const LineSolid" href="windy/platforms/linux/x11/x.html#LineSolid">x: const LineSolid</a></li>
           </ul></dd>
+<dt><a name="LinuxBackend" href="#LinuxBackend"><span>LinuxBackend:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: enum LinuxBackend" href="windy/platforms/linux/backends.html#LinuxBackend">backends: enum LinuxBackend</a></li>
+          </ul></dd>
+<dt><a name="LinuxWindowOptions" href="#LinuxWindowOptions"><span>LinuxWindowOptions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: object LinuxWindowOptions" href="windy/platforms/linux/backends.html#LinuxWindowOptions">backends: object LinuxWindowOptions</a></li>
+          </ul></dd>
 <dt><a name="LockMapIndex" href="#LockMapIndex"><span>LockMapIndex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const LockMapIndex" href="windy/platforms/linux/x11/x.html#LockMapIndex">x: const LockMapIndex</a></li>
@@ -1757,7 +1809,7 @@
           </ul></dd>
 <dt><a name="makeContextCurrent" href="#makeContextCurrent"><span>makeContextCurrent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc makeContextCurrent(window: Window)" href="windy/platforms/linux/platform.html#makeContextCurrent%2CWindow">platform: proc makeContextCurrent(window: Window)</a></li>
+          data-doc-search-tag="x11: proc makeContextCurrent(window: Window)" href="windy/platforms/linux/x11.html#makeContextCurrent%2CWindow">x11: proc makeContextCurrent(window: Window)</a></li>
           </ul></dd>
 <dt><a name="MappingBusy" href="#MappingBusy"><span>MappingBusy:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1789,19 +1841,19 @@
           </ul></dd>
 <dt><a name="maximized" href="#maximized"><span>maximized:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc maximized(window: Window): bool" href="windy/platforms/linux/platform.html#maximized%2CWindow">platform: proc maximized(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc maximized(window: Window): bool" href="windy/platforms/linux/x11.html#maximized%2CWindow">x11: proc maximized(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="maximized%3D" href="#maximized%3D"><span>maximized=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc maximized=(window: Window; v: bool)" href="windy/platforms/linux/platform.html#maximized%3D%2CWindow%2Cbool">platform: proc maximized=(window: Window; v: bool)</a></li>
+          data-doc-search-tag="x11: proc maximized=(window: Window; v: bool)" href="windy/platforms/linux/x11.html#maximized%3D%2CWindow%2Cbool">x11: proc maximized=(window: Window; v: bool)</a></li>
           </ul></dd>
 <dt><a name="minimized" href="#minimized"><span>minimized:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc minimized(window: Window): bool" href="windy/platforms/linux/platform.html#minimized%2CWindow">platform: proc minimized(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc minimized(window: Window): bool" href="windy/platforms/linux/x11.html#minimized%2CWindow">x11: proc minimized(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="minimized%3D" href="#minimized%3D"><span>minimized=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc minimized=(window: Window; v: bool)" href="windy/platforms/linux/platform.html#minimized%3D%2CWindow%2Cbool">platform: proc minimized=(window: Window; v: bool)</a></li>
+          data-doc-search-tag="x11: proc minimized=(window: Window; v: bool)" href="windy/platforms/linux/x11.html#minimized%3D%2CWindow%2Cbool">x11: proc minimized=(window: Window; v: bool)</a></li>
           </ul></dd>
 <dt><a name="minor" href="#minor"><span>minor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1857,15 +1909,15 @@
           </ul></dd>
 <dt><a name="mouseCaptured" href="#mouseCaptured"><span>mouseCaptured:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc mouseCaptured(window: Window): bool" href="windy/platforms/linux/platform.html#mouseCaptured%2CWindow">platform: proc mouseCaptured(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc mouseCaptured(window: Window): bool" href="windy/platforms/linux/x11.html#mouseCaptured%2CWindow">x11: proc mouseCaptured(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="mouseDelta" href="#mouseDelta"><span>mouseDelta:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc mouseDelta(window: Window): IVec2" href="windy/platforms/linux/platform.html#mouseDelta%2CWindow">platform: proc mouseDelta(window: Window): IVec2</a></li>
+          data-doc-search-tag="x11: proc mouseDelta(window: Window): IVec2" href="windy/platforms/linux/x11.html#mouseDelta%2CWindow">x11: proc mouseDelta(window: Window): IVec2</a></li>
           </ul></dd>
 <dt><a name="mouseInside" href="#mouseInside"><span>mouseInside:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc mouseInside(window: Window): bool" href="windy/platforms/linux/platform.html#mouseInside%2CWindow">platform: proc mouseInside(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc mouseInside(window: Window): bool" href="windy/platforms/linux/x11.html#mouseInside%2CWindow">x11: proc mouseInside(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="MouseLeft" href="#MouseLeft"><span>MouseLeft:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1877,11 +1929,11 @@
           </ul></dd>
 <dt><a name="mousePos" href="#mousePos"><span>mousePos:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc mousePos(window: Window): IVec2" href="windy/platforms/linux/platform.html#mousePos%2CWindow">platform: proc mousePos(window: Window): IVec2</a></li>
+          data-doc-search-tag="x11: proc mousePos(window: Window): IVec2" href="windy/platforms/linux/x11.html#mousePos%2CWindow">x11: proc mousePos(window: Window): IVec2</a></li>
           </ul></dd>
 <dt><a name="mousePrevPos" href="#mousePrevPos"><span>mousePrevPos:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc mousePrevPos(window: Window): IVec2" href="windy/platforms/linux/platform.html#mousePrevPos%2CWindow">platform: proc mousePrevPos(window: Window): IVec2</a></li>
+          data-doc-search-tag="x11: proc mousePrevPos(window: Window): IVec2" href="windy/platforms/linux/x11.html#mousePrevPos%2CWindow">x11: proc mousePrevPos(window: Window): IVec2</a></li>
           </ul></dd>
 <dt><a name="MouseRight" href="#MouseRight"><span>MouseRight:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1909,19 +1961,25 @@
           </ul></dd>
 <dt><a name="multiClickInterval" href="#multiClickInterval"><span>multiClickInterval:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: var multiClickInterval" href="windy/platforms/linux/platform.html#multiClickInterval">platform: var multiClickInterval</a></li>
+          data-doc-search-tag="x11: var multiClickInterval" href="windy/platforms/linux/x11.html#multiClickInterval">x11: var multiClickInterval</a></li>
           </ul></dd>
 <dt><a name="multiClickRadius" href="#multiClickRadius"><span>multiClickRadius:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: var multiClickRadius" href="windy/platforms/linux/platform.html#multiClickRadius">platform: var multiClickRadius</a></li>
+          data-doc-search-tag="x11: var multiClickRadius" href="windy/platforms/linux/x11.html#multiClickRadius">x11: var multiClickRadius</a></li>
           </ul></dd>
 <dt><a name="newWindow" href="#newWindow"><span>newWindow:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc newWindow(title: string; size: IVec2; style = DecoratedResizable;
+          data-doc-search-tag="x11: proc newWindow(title: string; size: IVec2; style = DecoratedResizable;
           visible = true; vsync = true; openglVersion = OpenGL4Dot1;
-          msaa = msaaDisabled; depthBits = 24; stencilBits = 8): Window" href="windy/platforms/linux/platform.html#newWindow%2Cstring%2CIVec2%2Cint%2Cint">platform: proc newWindow(title: string; size: IVec2; style = DecoratedResizable;
+          msaa = msaaDisabled; depthBits = 24; stencilBits = 8;
+          linuxOptions = LinuxWindowOptions()): Window" href="windy/platforms/linux/x11.html#newWindow%2Cstring%2CIVec2%2Cint%2Cint">x11: proc newWindow(title: string; size: IVec2; style = DecoratedResizable;
           visible = true; vsync = true; openglVersion = OpenGL4Dot1;
-          msaa = msaaDisabled; depthBits = 24; stencilBits = 8): Window</a></li>
+          msaa = msaaDisabled; depthBits = 24; stencilBits = 8;
+          linuxOptions = LinuxWindowOptions()): Window</a></li>
+          </ul></dd>
+<dt><a name="newX11PixelPresenter" href="#newX11PixelPresenter"><span>newX11PixelPresenter:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc newX11PixelPresenter(window: Window): X11PixelPresenter" href="windy/platforms/linux/x11.html#newX11PixelPresenter%2CWindow">x11: proc newX11PixelPresenter(window: Window): X11PixelPresenter</a></li>
           </ul></dd>
 <dt><a name="next" href="#next"><span>next:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2099,7 +2157,7 @@
           </ul></dd>
 <dt><a name="onQuitRequest" href="#onQuitRequest"><span>onQuitRequest:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: var onQuitRequest" href="windy/platforms/linux/platform.html#onQuitRequest">platform: var onQuitRequest</a></li>
+          data-doc-search-tag="x11: var onQuitRequest" href="windy/platforms/linux/x11.html#onQuitRequest">x11: var onQuitRequest</a></li>
           </ul></dd>
 <dt><a name="onResponse%3D" href="#onResponse%3D"><span>onResponse=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2111,8 +2169,8 @@
           </ul></dd>
 <dt><a name="openFileDialog" href="#openFileDialog"><span>openFileDialog:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc openFileDialog(title = &quot;Open File&quot;; filters: seq[FileDialogFilter] = @[];
-               defaultPath = &quot;&quot;): string" href="windy/platforms/linux/platform.html#openFileDialog%2Cstring%2Cseq%5BFileDialogFilter%5D%2Cstring">platform: proc openFileDialog(title = &quot;Open File&quot;; filters: seq[FileDialogFilter] = @[];
+          data-doc-search-tag="x11: proc openFileDialog(title = &quot;Open File&quot;; filters: seq[FileDialogFilter] = @[];
+               defaultPath = &quot;&quot;): string" href="windy/platforms/linux/x11.html#openFileDialog%2Cstring%2Cseq%5BFileDialogFilter%5D%2Cstring">x11: proc openFileDialog(title = &quot;Open File&quot;; filters: seq[FileDialogFilter] = @[];
                defaultPath = &quot;&quot;): string</a></li>
           </ul></dd>
 <dt><a name="OpenGL3Dot0" href="#OpenGL3Dot0"><span>OpenGL3Dot0:</span></a></dt><dd><ul class="simple">
@@ -2169,11 +2227,11 @@
           </ul></dd>
 <dt><a name="openTempTextFile" href="#openTempTextFile"><span>openTempTextFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc openTempTextFile(title, text: string)" href="windy/platforms/linux/platform.html#openTempTextFile%2Cstring%2Cstring">platform: proc openTempTextFile(title, text: string)</a></li>
+          data-doc-search-tag="x11: proc openTempTextFile(title, text: string)" href="windy/platforms/linux/x11.html#openTempTextFile%2Cstring%2Cstring">x11: proc openTempTextFile(title, text: string)</a></li>
           </ul></dd>
 <dt><a name="openUrl" href="#openUrl"><span>openUrl:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc openUrl(url: string)" href="windy/platforms/linux/platform.html#openUrl%2Cstring">platform: proc openUrl(url: string)</a></li>
+          data-doc-search-tag="x11: proc openUrl(url: string)" href="windy/platforms/linux/x11.html#openUrl%2Cstring">x11: proc openUrl(url: string)</a></li>
           </ul></dd>
 <dt><a name="openWebSocket" href="#openWebSocket"><span>openWebSocket:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2198,6 +2256,20 @@
 <dt><a name="PerFrame" href="#PerFrame"><span>PerFrame:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="internal: object PerFrame" href="windy/internal.html#PerFrame">internal: object PerFrame</a></li>
+          </ul></dd>
+<dt><a name="PixelRegion" href="#PixelRegion"><span>PixelRegion:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="pixels: object PixelRegion" href="windy/platforms/linux/native/pixels.html#PixelRegion">pixels: object PixelRegion</a></li>
+          </ul></dd>
+<dt><a name="pixelVertices" href="#pixelVertices"><span>pixelVertices:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="pixels: proc pixelVertices(width, height: int; regions: array[2, PixelRegion]): array[48,
+    cfloat]" href="windy/platforms/linux/native/pixels.html#pixelVertices%2Cint%2Cint%2Carray%5B%2CPixelRegion%5D">pixels: proc pixelVertices(width, height: int; regions: array[2, PixelRegion]): array[48,
+    cfloat]</a></li>
+          </ul></dd>
+<dt><a name="pixelViewport" href="#pixelViewport"><span>pixelViewport:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="pixels: proc pixelViewport(region: PixelRegion; width, height: int): PixelRegion" href="windy/platforms/linux/native/pixels.html#pixelViewport%2CPixelRegion%2Cint%2Cint">pixels: proc pixelViewport(region: PixelRegion; width, height: int): PixelRegion</a></li>
           </ul></dd>
 <dt><a name="Pixmap" href="#Pixmap"><span>Pixmap:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2237,7 +2309,7 @@
           </ul></dd>
 <dt><a name="pollEvents" href="#pollEvents"><span>pollEvents:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc pollEvents()" href="windy/platforms/linux/platform.html#pollEvents">platform: proc pollEvents()</a></li>
+          data-doc-search-tag="x11: proc pollEvents()" href="windy/platforms/linux/x11.html#pollEvents">x11: proc pollEvents()</a></li>
           </ul></dd>
 <dt><a name="pollHttp" href="#pollHttp"><span>pollHttp:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2245,11 +2317,11 @@
           </ul></dd>
 <dt><a name="pos" href="#pos"><span>pos:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc pos(window: Window): IVec2" href="windy/platforms/linux/platform.html#pos%2CWindow">platform: proc pos(window: Window): IVec2</a></li>
+          data-doc-search-tag="x11: proc pos(window: Window): IVec2" href="windy/platforms/linux/x11.html#pos%2CWindow">x11: proc pos(window: Window): IVec2</a></li>
           </ul></dd>
 <dt><a name="pos%3D" href="#pos%3D"><span>pos=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc pos=(window: Window; v: IVec2)" href="windy/platforms/linux/platform.html#pos%3D%2CWindow%2CIVec2">platform: proc pos=(window: Window; v: IVec2)</a></li>
+          data-doc-search-tag="x11: proc pos=(window: Window; v: IVec2)" href="windy/platforms/linux/x11.html#pos%3D%2CWindow%2CIVec2">x11: proc pos=(window: Window; v: IVec2)</a></li>
           </ul></dd>
 <dt><a name="PreferBlanking" href="#PreferBlanking"><span>PreferBlanking:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2281,7 +2353,7 @@
           </ul></dd>
 <dt><a name="quitRequested" href="#quitRequested"><span>quitRequested:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: var quitRequested" href="windy/platforms/linux/platform.html#quitRequested">platform: var quitRequested</a></li>
+          data-doc-search-tag="x11: var quitRequested" href="windy/platforms/linux/x11.html#quitRequested">x11: var quitRequested</a></li>
           </ul></dd>
 <dt><a name="RaiseLowest" href="#RaiseLowest"><span>RaiseLowest:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2289,7 +2361,7 @@
           </ul></dd>
 <dt><a name="releaseMouse" href="#releaseMouse"><span>releaseMouse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc releaseMouse(window: Window)" href="windy/platforms/linux/platform.html#releaseMouse%2CWindow">platform: proc releaseMouse(window: Window)</a></li>
+          data-doc-search-tag="x11: proc releaseMouse(window: Window)" href="windy/platforms/linux/x11.html#releaseMouse%2CWindow">x11: proc releaseMouse(window: Window)</a></li>
           </ul></dd>
 <dt><a name="ReplaceText" href="#ReplaceText"><span>ReplaceText:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2343,6 +2415,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: enum RevertTo" href="windy/platforms/linux/x11/x.html#RevertTo">x: enum RevertTo</a></li>
           </ul></dd>
+<dt><a name="rgb" href="#rgb"><span>rgb:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="pixels: proc rgb(pixel: ColorRGBX): uint32" href="windy/platforms/linux/native/pixels.html#rgb%2CColorRGBX">pixels: proc rgb(pixel: ColorRGBX): uint32</a></li>
+          </ul></dd>
 <dt><a name="rightToLeft" href="#rightToLeft"><span>rightToLeft:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: ByteOrder.rightToLeft" href="windy/platforms/linux/x11/x.html#rightToLeft">x: ByteOrder.rightToLeft</a></li>
@@ -2351,22 +2427,26 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc RootWindow(d: Display; window: Window): Window" href="windy/platforms/linux/x11/xlib.html#RootWindow%2CDisplay%2CWindow">xlib: proc RootWindow(d: Display; window: Window): Window</a></li>
           </ul></dd>
+<dt><a name="rotatedPoint" href="#rotatedPoint"><span>rotatedPoint:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="pixels: proc rotatedPoint(x, y, width, height, rotation: int): tuple[x, y: int]" href="windy/platforms/linux/native/pixels.html#rotatedPoint%2Cint%2Cint%2Cint%2Cint%2Cint">pixels: proc rotatedPoint(x, y, width, height, rotation: int): tuple[x, y: int]</a></li>
+          </ul></dd>
 <dt><a name="RuneCallback" href="#RuneCallback"><span>RuneCallback:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: type RuneCallback" href="windy/common.html#RuneCallback">common: type RuneCallback</a></li>
           </ul></dd>
 <dt><a name="runeInputEnabled" href="#runeInputEnabled"><span>runeInputEnabled:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc runeInputEnabled(window: Window): bool" href="windy/platforms/linux/platform.html#runeInputEnabled%2CWindow">platform: proc runeInputEnabled(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc runeInputEnabled(window: Window): bool" href="windy/platforms/linux/x11.html#runeInputEnabled%2CWindow">x11: proc runeInputEnabled(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="runeInputEnabled%3D" href="#runeInputEnabled%3D"><span>runeInputEnabled=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc runeInputEnabled=(window: Window; v: bool)" href="windy/platforms/linux/platform.html#runeInputEnabled%3D%2CWindow%2Cbool">platform: proc runeInputEnabled=(window: Window; v: bool)</a></li>
+          data-doc-search-tag="x11: proc runeInputEnabled=(window: Window; v: bool)" href="windy/platforms/linux/x11.html#runeInputEnabled%3D%2CWindow%2Cbool">x11: proc runeInputEnabled=(window: Window; v: bool)</a></li>
           </ul></dd>
 <dt><a name="saveFileDialog" href="#saveFileDialog"><span>saveFileDialog:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc saveFileDialog(title = &quot;Save File&quot;; filters: seq[FileDialogFilter] = @[];
-               defaultPath = &quot;&quot;; defaultName = &quot;&quot;): string" href="windy/platforms/linux/platform.html#saveFileDialog%2Cstring%2Cseq%5BFileDialogFilter%5D%2Cstring%2Cstring">platform: proc saveFileDialog(title = &quot;Save File&quot;; filters: seq[FileDialogFilter] = @[];
+          data-doc-search-tag="x11: proc saveFileDialog(title = &quot;Save File&quot;; filters: seq[FileDialogFilter] = @[];
+               defaultPath = &quot;&quot;; defaultName = &quot;&quot;): string" href="windy/platforms/linux/x11.html#saveFileDialog%2Cstring%2Cseq%5BFileDialogFilter%5D%2Cstring%2Cstring">x11: proc saveFileDialog(title = &quot;Save File&quot;; filters: seq[FileDialogFilter] = @[];
                defaultPath = &quot;&quot;; defaultName = &quot;&quot;): string</a></li>
           </ul></dd>
 <dt><a name="Screen" href="#Screen"><span>Screen:</span></a></dt><dd><ul class="simple">
@@ -2389,7 +2469,7 @@
           </ul></dd>
 <dt><a name="scrollDelta" href="#scrollDelta"><span>scrollDelta:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc scrollDelta(window: Window): Vec2" href="windy/platforms/linux/platform.html#scrollDelta%2CWindow">platform: proc scrollDelta(window: Window): Vec2</a></li>
+          data-doc-search-tag="x11: proc scrollDelta(window: Window): Vec2" href="windy/platforms/linux/x11.html#scrollDelta%2CWindow">x11: proc scrollDelta(window: Window): Vec2</a></li>
           </ul></dd>
 <dt><a name="SelectText" href="#SelectText"><span>SelectText:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2401,11 +2481,15 @@
           </ul></dd>
 <dt><a name="setClipboardString" href="#setClipboardString"><span>setClipboardString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc setClipboardString(s: string)" href="windy/platforms/linux/platform.html#setClipboardString%2Cstring">platform: proc setClipboardString(s: string)</a></li>
+          data-doc-search-tag="x11: proc setClipboardString(s: string)" href="windy/platforms/linux/x11.html#setClipboardString%2Cstring">x11: proc setClipboardString(s: string)</a></li>
           </ul></dd>
 <dt><a name="setConfig" href="#setConfig"><span>setConfig:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc setConfig(appName: string; fileName: string; content: string)" href="windy/platforms/linux/platform.html#setConfig%2Cstring%2Cstring%2Cstring">platform: proc setConfig(appName: string; fileName: string; content: string)</a></li>
+          data-doc-search-tag="x11: proc setConfig(appName: string; fileName: string; content: string)" href="windy/platforms/linux/x11.html#setConfig%2Cstring%2Cstring%2Cstring">x11: proc setConfig(appName: string; fileName: string; content: string)</a></li>
+          </ul></dd>
+<dt><a name="setLinuxBackend" href="#setLinuxBackend"><span>setLinuxBackend:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="platform: proc setLinuxBackend(backend: LinuxBackend)" href="windy/platforms/linux/platform.html#setLinuxBackend%2CLinuxBackend">platform: proc setLinuxBackend(backend: LinuxBackend)</a></li>
           </ul></dd>
 <dt><a name="SetModeDelete" href="#SetModeDelete"><span>SetModeDelete:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2431,11 +2515,11 @@
 <li><a class="reference external"
           data-doc-search-tag="common: proc size(screen: Screen): IVec2" href="windy/common.html#size%2CScreen">common: proc size(screen: Screen): IVec2</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="platform: proc size(window: Window): IVec2" href="windy/platforms/linux/platform.html#size%2CWindow">platform: proc size(window: Window): IVec2</a></li>
+          data-doc-search-tag="x11: proc size(window: Window): IVec2" href="windy/platforms/linux/x11.html#size%2CWindow">x11: proc size(window: Window): IVec2</a></li>
           </ul></dd>
 <dt><a name="size%3D" href="#size%3D"><span>size=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc size=(window: Window; v: IVec2)" href="windy/platforms/linux/platform.html#size%3D%2CWindow%2CIVec2">platform: proc size=(window: Window; v: IVec2)</a></li>
+          data-doc-search-tag="x11: proc size=(window: Window; v: IVec2)" href="windy/platforms/linux/x11.html#size%3D%2CWindow%2CIVec2">x11: proc size=(window: Window; v: IVec2)</a></li>
           </ul></dd>
 <dt><a name="SouthEastGravity" href="#SouthEastGravity"><span>SouthEastGravity:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2481,11 +2565,11 @@
           </ul></dd>
 <dt><a name="style" href="#style"><span>style:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc style(window: Window): WindowStyle" href="windy/platforms/linux/platform.html#style%2CWindow">platform: proc style(window: Window): WindowStyle</a></li>
+          data-doc-search-tag="x11: proc style(window: Window): WindowStyle" href="windy/platforms/linux/x11.html#style%2CWindow">x11: proc style(window: Window): WindowStyle</a></li>
           </ul></dd>
 <dt><a name="style%3D" href="#style%3D"><span>style=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc style=(window: Window; v: WindowStyle)" href="windy/platforms/linux/platform.html#style%3D%2CWindow%2CWindowStyle">platform: proc style=(window: Window; v: WindowStyle)</a></li>
+          data-doc-search-tag="x11: proc style=(window: Window; v: WindowStyle)" href="windy/platforms/linux/x11.html#style%3D%2CWindow%2CWindowStyle">x11: proc style=(window: Window; v: WindowStyle)</a></li>
           </ul></dd>
 <dt><a name="SubstructureNotifyMask" href="#SubstructureNotifyMask"><span>SubstructureNotifyMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2499,9 +2583,13 @@
 <li><a class="reference external"
           data-doc-search-tag="x: Status.success" href="windy/platforms/linux/x11/x.html#success">x: Status.success</a></li>
           </ul></dd>
+<dt><a name="swap" href="#swap"><span>swap:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc swap(presenter: X11PixelPresenter)" href="windy/platforms/linux/x11.html#swap%2CX11PixelPresenter">x11: proc swap(presenter: X11PixelPresenter)</a></li>
+          </ul></dd>
 <dt><a name="swapBuffers" href="#swapBuffers"><span>swapBuffers:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc swapBuffers(window: Window)" href="windy/platforms/linux/platform.html#swapBuffers%2CWindow">platform: proc swapBuffers(window: Window)</a></li>
+          data-doc-search-tag="x11: proc swapBuffers(window: Window)" href="windy/platforms/linux/x11.html#swapBuffers%2CWindow">x11: proc swapBuffers(window: Window)</a></li>
           </ul></dd>
 <dt><a name="SyncBoth" href="#SyncBoth"><span>SyncBoth:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2549,15 +2637,51 @@
           </ul></dd>
 <dt><a name="title" href="#title"><span>title:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc title(window: Window): string" href="windy/platforms/linux/platform.html#title%2CWindow">platform: proc title(window: Window): string</a></li>
+          data-doc-search-tag="x11: proc title(window: Window): string" href="windy/platforms/linux/x11.html#title%2CWindow">x11: proc title(window: Window): string</a></li>
           </ul></dd>
 <dt><a name="title%3D" href="#title%3D"><span>title=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc title=(window: Window; v: string)" href="windy/platforms/linux/platform.html#title%3D%2CWindow%2Cstring">platform: proc title=(window: Window; v: string)</a></li>
+          data-doc-search-tag="x11: proc title=(window: Window; v: string)" href="windy/platforms/linux/x11.html#title%3D%2CWindow%2Cstring">x11: proc title=(window: Window; v: string)</a></li>
           </ul></dd>
 <dt><a name="TopIf" href="#TopIf"><span>TopIf:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const TopIf" href="windy/platforms/linux/x11/x.html#TopIf">x: const TopIf</a></li>
+          </ul></dd>
+<dt><a name="TouchBegin" href="#TouchBegin"><span>TouchBegin:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: TouchPhase.TouchBegin" href="windy/common.html#TouchBegin">common: TouchPhase.TouchBegin</a></li>
+          </ul></dd>
+<dt><a name="TouchCallback" href="#TouchCallback"><span>TouchCallback:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: type TouchCallback" href="windy/common.html#TouchCallback">common: type TouchCallback</a></li>
+          </ul></dd>
+<dt><a name="TouchCancel" href="#TouchCancel"><span>TouchCancel:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: TouchPhase.TouchCancel" href="windy/common.html#TouchCancel">common: TouchPhase.TouchCancel</a></li>
+          </ul></dd>
+<dt><a name="TouchContact" href="#TouchContact"><span>TouchContact:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: object TouchContact" href="windy/common.html#TouchContact">common: object TouchContact</a></li>
+          </ul></dd>
+<dt><a name="TouchEnd" href="#TouchEnd"><span>TouchEnd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: TouchPhase.TouchEnd" href="windy/common.html#TouchEnd">common: TouchPhase.TouchEnd</a></li>
+          </ul></dd>
+<dt><a name="touches" href="#touches"><span>touches:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc touches(window: Window): seq[TouchContact]" href="windy/platforms/linux/x11.html#touches%2CWindow">x11: proc touches(window: Window): seq[TouchContact]</a></li>
+          </ul></dd>
+<dt><a name="TouchEvent" href="#TouchEvent"><span>TouchEvent:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: object TouchEvent" href="windy/common.html#TouchEvent">common: object TouchEvent</a></li>
+          </ul></dd>
+<dt><a name="TouchMove" href="#TouchMove"><span>TouchMove:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: TouchPhase.TouchMove" href="windy/common.html#TouchMove">common: TouchPhase.TouchMove</a></li>
+          </ul></dd>
+<dt><a name="TouchPhase" href="#TouchPhase"><span>TouchPhase:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: enum TouchPhase" href="windy/common.html#TouchPhase">common: enum TouchPhase</a></li>
           </ul></dd>
 <dt><a name="Transparent" href="#Transparent"><span>Transparent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2585,11 +2709,15 @@
           </ul></dd>
 <dt><a name="url" href="#url"><span>url:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc url(window: Window): string" href="windy/platforms/linux/platform.html#url%2CWindow">platform: proc url(window: Window): string</a></li>
+          data-doc-search-tag="x11: proc url(window: Window): string" href="windy/platforms/linux/x11.html#url%2CWindow">x11: proc url(window: Window): string</a></li>
           </ul></dd>
 <dt><a name="Utf8Message" href="#Utf8Message"><span>Utf8Message:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: WebSocketMessageKind.Utf8Message" href="windy/common.html#Utf8Message">common: WebSocketMessageKind.Utf8Message</a></li>
+          </ul></dd>
+<dt><a name="validateRegions" href="#validateRegions"><span>validateRegions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="pixels: proc validateRegions(width, height: int; regions: array[2, PixelRegion])" href="windy/platforms/linux/native/pixels.html#validateRegions%2Cint%2Cint%2Carray%5B%2CPixelRegion%5D">pixels: proc validateRegions(width, height: int; regions: array[2, PixelRegion])</a></li>
           </ul></dd>
 <dt><a name="VisibilityChangeMask" href="#VisibilityChangeMask"><span>VisibilityChangeMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2609,11 +2737,11 @@
           </ul></dd>
 <dt><a name="visible" href="#visible"><span>visible:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc visible(window: Window): bool" href="windy/platforms/linux/platform.html#visible%2CWindow">platform: proc visible(window: Window): bool</a></li>
+          data-doc-search-tag="x11: proc visible(window: Window): bool" href="windy/platforms/linux/x11.html#visible%2CWindow">x11: proc visible(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="visible%3D" href="#visible%3D"><span>visible=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: proc visible=(window: Window; v: bool)" href="windy/platforms/linux/platform.html#visible%3D%2CWindow%2Cbool">platform: proc visible=(window: Window; v: bool)</a></li>
+          data-doc-search-tag="x11: proc visible=(window: Window; v: bool)" href="windy/platforms/linux/x11.html#visible%3D%2CWindow%2Cbool">x11: proc visible=(window: Window; v: bool)</a></li>
           </ul></dd>
 <dt><a name="Visual" href="#Visual"><span>Visual:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2657,7 +2785,7 @@
           </ul></dd>
 <dt><a name="Window" href="#Window"><span>Window:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="platform: type Window" href="windy/platforms/linux/platform.html#Window">platform: type Window</a></li>
+          data-doc-search-tag="x11: type Window" href="windy/platforms/linux/x11.html#Window">x11: type Window</a></li>
           <li><a class="reference external"
           data-doc-search-tag="x: type Window" href="windy/platforms/linux/x11/x.html#Window">x: type Window</a></li>
           </ul></dd>
@@ -2669,6 +2797,10 @@
 <li><a class="reference external"
           data-doc-search-tag="common: enum WindowStyle" href="windy/common.html#WindowStyle">common: enum WindowStyle</a></li>
           </ul></dd>
+<dt><a name="windyBackends" href="#windyBackends"><span>windyBackends:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: const windyBackends" href="windy/platforms/linux/backends.html#windyBackends">backends: const windyBackends</a></li>
+          </ul></dd>
 <dt><a name="WindyError" href="#WindyError"><span>WindyError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: object WindyError" href="windy/common.html#WindyError">common: object WindyError</a></li>
@@ -2676,6 +2808,14 @@
 <dt><a name="windyRand" href="#windyRand"><span>windyRand:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="internal: var windyRand" href="windy/internal.html#windyRand">internal: var windyRand</a></li>
+          </ul></dd>
+<dt><a name="X11Backend" href="#X11Backend"><span>X11Backend:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="backends: LinuxBackend.X11Backend" href="windy/platforms/linux/backends.html#X11Backend">backends: LinuxBackend.X11Backend</a></li>
+          </ul></dd>
+<dt><a name="X11PixelPresenter" href="#X11PixelPresenter"><span>X11PixelPresenter:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: type X11PixelPresenter" href="windy/platforms/linux/x11.html#X11PixelPresenter">x11: type X11PixelPresenter</a></li>
           </ul></dd>
 <dt><a name="xaArc" href="#xaArc"><span>xaArc:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3045,7 +3185,7 @@
           </ul></dd>
 <dt><a name="XCheckIfEvent" href="#XCheckIfEvent"><span>XCheckIfEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="xevent: proc XCheckIfEvent(d: Display; e: ptr XEvent; cb: IfEventProc; userData: pointer): bool" href="windy/platforms/linux/x11/xevent.html#XCheckIfEvent%2CDisplay%2Cptr.XEvent%2CIfEventProc%2Cpointer">xevent: proc XCheckIfEvent(d: Display; e: ptr XEvent; cb: IfEventProc; userData: pointer): bool</a></li>
+          data-doc-search-tag="xevent: proc XCheckIfEvent(d: Display; e: ptr XEvent; cb: IfEventProc; userData: pointer): cint" href="windy/platforms/linux/x11/xevent.html#XCheckIfEvent%2CDisplay%2Cptr.XEvent%2CIfEventProc%2Cpointer">xevent: proc XCheckIfEvent(d: Display; e: ptr XEvent; cb: IfEventProc; userData: pointer): cint</a></li>
           </ul></dd>
 <dt><a name="XCirculateEvent" href="#XCirculateEvent"><span>XCirculateEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10441,7 +10581,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-11 19:33:49 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-11 22:48:24 UTC</small>
       </div>
     </div>
   </div>

@@ -1,0 +1,11 @@
+nimTitle	backends	windy/platforms/linux/backends.html	module windy/platforms/linux/backends		0
+nim	windyBackends	windy/platforms/linux/backends.html#windyBackends	const windyBackends		4
+nim	HasX11	windy/platforms/linux/backends.html#HasX11	const HasX11		5
+nim	HasFbdev	windy/platforms/linux/backends.html#HasFbdev	const HasFbdev		6
+nim	HasDrm	windy/platforms/linux/backends.html#HasDrm	const HasDrm		7
+nim	HasDirect	windy/platforms/linux/backends.html#HasDirect	const HasDirect		8
+nim	X11Backend	windy/platforms/linux/backends.html#X11Backend	LinuxBackend.X11Backend		11
+nim	FbdevBackend	windy/platforms/linux/backends.html#FbdevBackend	LinuxBackend.FbdevBackend		11
+nim	DrmBackend	windy/platforms/linux/backends.html#DrmBackend	LinuxBackend.DrmBackend		11
+nim	LinuxBackend	windy/platforms/linux/backends.html#LinuxBackend	enum LinuxBackend		11
+nim	LinuxWindowOptions	windy/platforms/linux/backends.html#LinuxWindowOptions	object LinuxWindowOptions		13
