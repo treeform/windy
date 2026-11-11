@@ -12,4 +12,5 @@ nim	handleButtonPressTemplate	windy/internal.html#handleButtonPressTemplate.t	te
 nim	handleButtonReleaseTemplate	windy/internal.html#handleButtonReleaseTemplate.t	template handleButtonReleaseTemplate()		142
 nim	clearButtonsTemplate	windy/internal.html#clearButtonsTemplate.t	template clearButtonsTemplate()		156
 nim	handleRuneTemplate	windy/internal.html#handleRuneTemplate.t	template handleRuneTemplate()		161
-nim	addDefaultHeaders	windy/internal.html#addDefaultHeaders,seq[HttpHeader]	proc addDefaultHeaders(headers: var seq[HttpHeader])		169
+nim	handleTextInputTemplate	windy/internal.html#handleTextInputTemplate.t,string	template handleTextInputTemplate(value: string)		171
+nim	addDefaultHeaders	windy/internal.html#addDefaultHeaders,seq[HttpHeader]	proc addDefaultHeaders(headers: var seq[HttpHeader])		182

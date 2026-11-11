@@ -1,1 +1,2 @@
 nimTitle	windy	windy.html	module windy		0
+nim	setTextInputState	windy.html#setTextInputState,Window,TextInputState	proc setTextInputState(window: Window; state: TextInputState)		15
