@@ -58,7 +58,7 @@ On Windows and X11 Linux, compile with `-d:useCpu` to create a plain window with
 OpenGL context. CPU renderers can update the client area by passing a Pixie
 image to `window.presentPixels(image)`.
 
-Linux also has experimental [fbdev, DRM and evdev touch backends](docs/linux-direct.md)
+Linux also has experimental fbdev, DRM and evdev touch backends
 for applications running without a window server.
 
 
