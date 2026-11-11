@@ -1,18 +1,26 @@
 import
-  std/[os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
+  std/[math, os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
   ../../[common, internal],
-  vmath, pixie,
-  x11/[glx, keysym, x, xevent, xlib, xcursor]
+  opengl, vmath, pixie,
+  x11/[glx, keysym, x, xevent, xlib, xcursor],
+  ./native/pixels
 
 import ../../http
 export http
+
+import ./backends
+when HasDirect:
+  import ./native/state
 
 type
   XWindow = x.Window
 
   Window* = ref object
+    when HasDirect:
+      direct*: DirectWindowState
     onCloseRequest*: Callback
     onFrame*: Callback
+    onTouch*: TouchCallback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -40,6 +48,8 @@ type
     handle: XWindow
     colormap: Colormap
     ctx: GlxContext
+    gpuPixelOptIn: bool
+    gpuPixelVsyncState: bool
     gc: GC
     ic: XIC
     im: XIM
@@ -419,11 +429,14 @@ proc releaseMouse*(window: Window) =
 
 proc destroy(window: Window) =
   ## Releases native resources and any active pointer grab.
+  if window.closed:
+    return
   window.releaseMouse()
   if window.ctx != nil:
     if glXGetCurrentContext() == window.ctx:
-      display.glXMakeCurrent(0, nil)
+      display.glXMakeCurrent(0.Drawable, nil)
     display.glXDestroyContext(window.ctx)
+    window.ctx = nil
   if window.ic != nil:
     XDestroyIC(window.ic)
   if window.im != nil:
@@ -445,6 +458,14 @@ proc close*(window: Window) =
   window.onTextInput = nil
   window.onTextEdit = nil
   destroy window
+
+proc hasGpuPixelContext*(window: Window): bool =
+  ## True when GPU pixels were opted in, a GLX context is present, and the window is open.
+  window != nil and window.gpuPixelOptIn and window.ctx != nil and not window.closed
+
+proc gpuPixelVsync*(window: Window): bool =
+  ## True only if opt-in GPU vsync was successfully configured.
+  window != nil and not window.closed and window.gpuPixelVsyncState
 
 proc makeContextCurrent*(window: Window) =
   display.glXMakeCurrent(window.handle, window.ctx)
@@ -772,6 +793,15 @@ proc `cursor=`*(window: Window, v: common.Cursor) =
   window.state.cursor = v
   window.applyCursor()
 
+proc hasGlxExtension(name: string): bool =
+  ## True when the GLX server advertises this exact extension name.
+  let raw = display.glXQueryExtensionsString(display.defaultScreen)
+  if raw == nil:
+    return false
+  for part in split($raw):
+    if part == name:
+      return true
+
 proc createContext(
   style: WindowStyle,
   openglVersion: OpenGLVersion,
@@ -877,121 +907,171 @@ proc newWindow*(
   openglVersion = OpenGL4Dot1,
   msaa = msaaDisabled,
   depthBits = 24,
-  stencilBits = 8
+  stencilBits = 8,
+  linuxOptions = LinuxWindowOptions()
 ): Window =
   ## Creates a new window and initializes Windy if needed.
   init()
   result = Window()
   result.innerDecorated = true
   result.state.runeInputEnabled = true
+  result.gpuPixelOptIn = linuxOptions.gpuPixels
+  try:
+    let root = display.defaultRootWindow
 
-  let
-    root = display.defaultRootWindow
-    graphics = createContext(
-      style,
-      openglVersion,
-      msaa,
-      depthBits,
-      stencilBits
-    )
-    vi = graphics.visual
-  result.ctx = graphics.context
-  var created = false
-  defer:
-    if not created:
-      result.destroy()
-
-  result.colormap = display.XCreateColormap(root, vi.visual, AllocNone)
-  var swa = XSetWindowAttributes(colormap: result.colormap)
-
-  result.handle = display.XCreateWindow(
-    root,
-    0, 0,
-    size.x.cuint, size.y.cuint,
-    0,
-    vi.depth.cuint,
-    InputOutput,
-    vi.visual,
-    CwColormap or CwEventMask or CwBorderPixel,
-    swa.addr
-  )
-
-  display.XSelectInput(
-    result.handle,
-    ExposureMask or
-    KeyPressMask or
-    KeyReleaseMask or
-    PointerMotionMask or
-    ButtonPressMask or
-    ButtonReleaseMask or
-    StructureNotifyMask or
-    EnterWindowMask or
-    LeaveWindowMask or
-    FocusChangeMask or
-    PropertyChangeMask
-  )
-
-  var wmProtocols = [xaWMDeleteWindow, xaNetWMSyncRequest]
-  display.XSetWMProtocols(
-    result.handle, wmProtocols[0].addr, cint wmProtocols.len
-  )
-
-  result.im = display.XOpenIM
-  result.ic = result.im.XCreateIC(
-    "clientWindow",
-    result.handle,
-    "focusWindow",
-    result.handle,
-    "inputStyle",
-    XimPreeditNothing or XimStatusNothing,
-    nil
-  )
-
-  var gcv: XGCValues
-  result.gc = display.XCreateGC(result.handle, GCForeground or GCBackground, gcv.addr)
-
-  result.title = title
-
-  # Set a default cursor
-  result.state.cursor = common.Cursor(kind: ArrowCursor)
-  result.applyCursor()
-
-  # Enable XDnD awareness (version 5)
-  const xdndVersion = 5'u32
-  result.handle.setProperty(xaXdndAware, xaCardinal, 32, @[xdndVersion].asString)
-
-  makeContextCurrent result
-
-  if vsync:
-    if glXSwapIntervalEXT != nil:
-      display.glXSwapIntervalEXT(result.handle, 1)
-    elif glXSwapIntervalMESA != nil:
-      glXSwapIntervalMESA(1)
-    elif glXSwapIntervalSGI != nil:
-      glXSwapIntervalSGI(1)
+    var vi: XVisualInfo
+    if linuxOptions.gpuPixels:
+      let vis =
+        if style == Transparent:
+          var attribList = [
+            GlxRgba, GlxDoublebuffer, GlxAlphaSize, 8'i32,
+            GlxRedSize, 8'i32, GlxGreenSize, 8'i32, GlxBlueSize, 8'i32,
+            GlxDepthSize, 0'i32, GlxStencilSize, 0'i32,
+            GlxSampleBuffers, 0'i32, 0'i32
+          ]
+          display.glXChooseVisual(display.defaultScreen, attribList[0].addr)
+        else:
+          var attribList = [
+            GlxRgba, GlxDoublebuffer,
+            GlxRedSize, 8'i32, GlxGreenSize, 8'i32, GlxBlueSize, 8'i32,
+            GlxDepthSize, 0'i32, GlxStencilSize, 0'i32,
+            GlxSampleBuffers, 0'i32, 0'i32
+          ]
+          display.glXChooseVisual(display.defaultScreen, attribList[0].addr)
+      if vis == nil:
+        if style == Transparent:
+          raise WindyError.newException("Transparent GPU pixel windows are not supported")
+        raise WindyError.newException("Error choosing OpenGL visual")
+      vi = vis[]
+      XFree(vis)
+      if style == Transparent and vi.depth < 32:
+        raise WindyError.newException("Transparent GPU pixel windows are not supported")
+    elif not defined(useCpu):
+      let graphics = createContext(style, openglVersion, msaa, depthBits, stencilBits)
+      vi = graphics.visual
+      result.ctx = graphics.context
+    elif style == Transparent:
+      display.XMatchVisualInfo(display.defaultScreen, 32, TrueColor, vi.addr)
     else:
-      raise WindyError.newException("VSync is not supported")
+      display.XMatchVisualInfo(display.defaultScreen, 24, TrueColor, vi.addr)
+      # strangely, glx returns nil when -d:danger
+      # var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
+      # vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
 
-  if visible:
-    result.visible = true
+    result.colormap = display.XCreateColormap(root, vi.visual, AllocNone)
+    var swa = XSetWindowAttributes(colormap: result.colormap)
 
-  block xsync:
-    var vEv, vEr: cint
-    if display.XSyncQueryExtension(vEv.addr, vEr.addr):
-      var vMaj, vMin: cint
-      display.XSyncInitialize(vMaj.addr, vMin.addr)
-      result.xSyncCounter = display.XSyncCreateCounter(XSyncValue())
-      result.handle.setProperty(
-        xaNetWMSyncRequestCounter,
-        xaCardinal,
-        32,
-        @[result.xSyncCounter].asString
-      )
+    result.handle = display.XCreateWindow(
+      root,
+      0, 0,
+      size.x.cuint, size.y.cuint,
+      0,
+      vi.depth.cuint,
+      InputOutput,
+      vi.visual,
+      CwColormap or CwEventMask or CwBorderPixel,
+      swa.addr
+    )
 
-  result.style = style
+    display.XSelectInput(
+      result.handle,
+      ExposureMask or
+      KeyPressMask or
+      KeyReleaseMask or
+      PointerMotionMask or
+      ButtonPressMask or
+      ButtonReleaseMask or
+      StructureNotifyMask or
+      EnterWindowMask or
+      LeaveWindowMask or
+      FocusChangeMask or
+      PropertyChangeMask
+    )
 
-  windows.add result
-  created = true
+    var wmProtocols = [xaWMDeleteWindow, xaNetWMSyncRequest]
+    display.XSetWMProtocols(
+      result.handle, wmProtocols[0].addr, cint wmProtocols.len
+    )
+
+    result.im = display.XOpenIM
+    result.ic = result.im.XCreateIC(
+      "clientWindow",
+      result.handle,
+      "focusWindow",
+      result.handle,
+      "inputStyle",
+      XimPreeditNothing or XimStatusNothing,
+      nil
+    )
+
+    var gcv: XGCValues
+    result.gc = display.XCreateGC(result.handle, GCForeground or GCBackground, gcv.addr)
+
+    if linuxOptions.gpuPixels:
+      # The pixel shaders use a compatibility context.
+      result.ctx = display.glXCreateContext(vi.addr, nil, 1)
+      if result.ctx == nil:
+        raise WindyError.newException("Error creating OpenGL context")
+
+    result.title = title
+
+    # Set a default cursor
+    result.state.cursor = common.Cursor(kind: ArrowCursor)
+    result.applyCursor()
+
+    # Enable XDnD awareness (version 5)
+    const xdndVersion = 5'u32
+    result.handle.setProperty(xaXdndAware, xaCardinal, 32, @[xdndVersion].asString)
+
+    if linuxOptions.gpuPixels:
+      makeContextCurrent result
+      let interval = if vsync: 1'i32 else: 0'i32
+      var configured = false
+      if hasGlxExtension("GLX_EXT_swap_control"):
+        display.glXSwapIntervalEXT(result.handle, interval)
+        configured = true
+      elif hasGlxExtension("GLX_MESA_swap_control"):
+        if glXSwapIntervalMESA(interval.cuint) == 0:
+          configured = true
+      elif vsync and hasGlxExtension("GLX_SGI_swap_control"):
+        if glXSwapIntervalSGI(interval) == 0:
+          configured = true
+      if vsync and not configured:
+        raise WindyError.newException("VSync is not supported")
+      result.gpuPixelVsyncState = vsync and configured
+    elif not defined(useCpu):
+      makeContextCurrent result
+      if vsync:
+        if glXSwapIntervalEXT != nil:
+          display.glXSwapIntervalEXT(result.handle, 1)
+        elif glXSwapIntervalMESA != nil:
+          discard glXSwapIntervalMESA(1)
+        elif glXSwapIntervalSGI != nil:
+          discard glXSwapIntervalSGI(1)
+        else:
+          raise WindyError.newException("VSync is not supported")
+    if visible:
+      result.visible = true
+
+    block xsync:
+      var vEv, vEr: cint
+      if display.XSyncQueryExtension(vEv.addr, vEr.addr):
+        var vMaj, vMin: cint
+        display.XSyncInitialize(vMaj.addr, vMin.addr)
+        result.xSyncCounter = display.XSyncCreateCounter(XSyncValue())
+        result.handle.setProperty(
+          xaNetWMSyncRequestCounter,
+          xaCardinal,
+          32,
+          @[result.xSyncCounter].asString
+        )
+
+    result.style = style
+
+    windows.add result
+  except CatchableError:
+    destroy result
+    raise
 
 proc pollEvents(window: Window) =
 
@@ -1009,8 +1089,8 @@ proc pollEvents(window: Window) =
     d: Display,
     event: ptr XEvent,
     userData: pointer
-  ): bool {.cdecl.} =
-    event.any.window == cast[Window](userData).handle
+  ): cint {.cdecl.} =
+    cint(event.any.window == cast[Window](userData).handle)
 
   template pushButtonEvent(
     button: Button,
@@ -1032,7 +1112,7 @@ proc pollEvents(window: Window) =
   proc handleRune(window: Window, rune: Rune) =
     handleRuneTemplate()
 
-  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)):
+  while display.XCheckIfEvent(ev.addr, checkEvent, cast[pointer](window)) != 0:
     case ev.kind
 
     of xeClientMessage:
@@ -1222,9 +1302,10 @@ proc pollEvents(window: Window) =
     of xeButtonPress, xeButtonRelease:
 
       template pushScrollEvent(delta: Vec2) =
-        window.perFrame.scrollDelta = delta
-        if window.onScroll != nil:
-          window.onScroll()
+        if ev.kind == xeButtonPress:
+          window.perFrame.scrollDelta += delta
+          if window.onScroll != nil:
+            window.onScroll()
 
       let
         now = getTime()
@@ -1448,12 +1529,12 @@ proc processClipboardEvents: bool =
     d: Display,
     event: ptr XEvent,
     userData: pointer
-  ): bool {.cdecl.} =
-    event.any.window == cast[XWindow](userData)
+  ): cint {.cdecl.} =
+    cint(event.any.window == cast[XWindow](userData))
 
   while display.XCheckIfEvent(
     ev.addr, checkEvent, cast[pointer](clipboardWindow)
-  ):
+  ) != 0:
     case ev.kind
     of xeSelection:
       template e: untyped = ev.selection
@@ -1679,3 +1760,78 @@ proc saveFileDialog*(
     args.add("--file-filter=" & filter.name & " | " &
       filter.extensions.replace(";", " ").replace(",", " "))
   result = runZenity(args)
+
+proc touches*(window: Window): seq[TouchContact] =
+  @[]
+when defined(useCpu):
+  const NativeByteOrder = when cpuEndian == littleEndian: 0 else: 1
+
+  type CpuImage = object
+    width, height, xoffset, format: cint
+    data: cstring
+    byteOrder, bitmapUnit, bitmapBitOrder, bitmapPad, depth: cint
+    bytesPerLine, bitsPerPixel: cint
+    redMask, greenMask, blueMask: culong
+    obdata: pointer
+    functions: array[6, pointer]
+  proc createImage(d: Display, visual: ptr Visual, depth: cuint, format: cint,
+    offset: cint, data: cstring, width, height: cuint, pad, stride: cint): ptr CpuImage
+    {.cdecl, importc: "XCreateImage", dynlib: libX11.}
+  proc putImage(d: Display, window: XWindow, gc: GC, image: ptr CpuImage,
+    sx, sy, dx, dy: cint, width, height: cuint): cint
+    {.cdecl, importc: "XPutImage", dynlib: libX11.}
+  proc putPixel(image: ptr CpuImage, x, y: cint, pixel: culong): cint
+    {.cdecl, importc: "XPutPixel", dynlib: libX11.}
+  proc destroyImage(image: ptr CpuImage): cint
+    {.cdecl, importc: "XDestroyImage", dynlib: libX11.}
+  proc malloc(size: csize_t): pointer {.importc, header: "<stdlib.h>".}
+
+  proc channel(value: uint8, mask: culong): culong =
+    var bits = mask
+    var shift = 0
+    while bits != 0 and (bits and 1) == 0:
+      bits = bits shr 1
+      inc shift
+    ((culong(value) * bits + 127) div 255 shl shift) and mask
+
+  proc presentPixels*(window: Window, image: Image) =
+    if window.closed:
+      raise newException(WindyError, "Cannot present to a closed window")
+    if image == nil or image.width <= 0 or image.height <= 0:
+      raise newException(WindyError, "Invalid pixel image")
+    var attributes: XWindowAttributes
+    display.XGetWindowAttributes(window.handle, addr attributes)
+    let native = createImage(display, attributes.visual, cuint(attributes.depth),
+      2, 0, nil, cuint(image.width), cuint(image.height), 32, 0)
+    if native == nil:
+      raise newException(WindyError, "Cannot create X11 pixel image")
+    defer: discard destroyImage(native)
+    native.data = cast[cstring](malloc(csize_t(native.bytesPerLine) * csize_t(image.height)))
+    if native.data == nil:
+      raise newException(WindyError, "Cannot allocate X11 pixel image")
+    let direct = native.bitsPerPixel == 32 and native.byteOrder == NativeByteOrder
+    var channels: array[3, array[256, culong]]
+    for value in 0 .. 255:
+      channels[0][value] = channel(uint8(value), native.redMask)
+      channels[1][value] = channel(uint8(value), native.greenMask)
+      channels[2][value] = channel(uint8(value), native.blueMask)
+    let destination = cast[ptr UncheckedArray[byte]](native.data)
+    for y in 0 ..< image.height:
+      let row = cast[ptr UncheckedArray[uint32]](addr destination[y * int(native.bytesPerLine)])
+      for x in 0 ..< image.width:
+        let
+          pixel = image.data[y * image.width + x]
+          packed = channels[0][pixel.r] or channels[1][pixel.g] or channels[2][pixel.b]
+        if direct:
+          row[x] = uint32(packed)
+        else:
+          discard putPixel(native, cint(x), cint(y), packed)
+    discard putImage(display, window.handle, window.gc, native, 0, 0, 0, 0,
+      cuint(image.width), cuint(image.height))
+    display.XFlush()
+
+proc hasWindows*(): bool =
+  for window in windows:
+    if not window.closed: return true
+
+include x11/pixels
