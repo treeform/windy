@@ -40,6 +40,18 @@ jobs:
     - run: nim r -d:useCpu tests/test_cpu_pixels.nim
       if: matrix.os == 'windows-latest'
 
+    - name: Test X11 contexts and mouse capture
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb xauth libgl1-mesa-dri libglx-mesa0 \
+          libxcursor1 libxfixes3 libxtst6
+        nim check tests/test_x11.nim
+        nim c tests/test_x11.nim
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ./tests/test_x11
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 \
+          MESA_GL_VERSION_OVERRIDE=3.3 ./tests/test_x11 --unsupported-version
+
     # Build native examples.
     - run: nim c examples/basic.nim
     - run: nim c examples/basic_boxy.nim
