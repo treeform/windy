@@ -40,6 +40,6 @@ nim	XEvent	windy/platforms/linux/x11/xevent.html#XEvent	object XEvent		395
 nim	XCheckIfEvent	windy/platforms/linux/x11/xevent.html#XCheckIfEvent,Display,ptr.XEvent,IfEventProc,pointer	proc XCheckIfEvent(d: Display; e: ptr XEvent; cb: IfEventProc; userData: pointer): bool		434
 nim	XSendEvent	windy/platforms/linux/x11/xevent.html#XSendEvent,Display,Window,bool,clong,ptr.XEvent	proc XSendEvent(d: Display; window: Window; propogate: bool; mask: clong;\n           e: ptr XEvent)		436
 nim	Xutf8LookupString	windy/platforms/linux/x11/xevent.html#Xutf8LookupString,XIC,ptr.XKeyEvent,cstring,cint,ptr.KeySym,ptr.cint	proc Xutf8LookupString(ic: XIC; e: ptr XKeyEvent; buffer: cstring; len: cint;\n                  ks: ptr KeySym; status: ptr cint): cint		438
-nim	XSetErrorHandler	windy/platforms/linux/x11/xevent.html#XSetErrorHandler,ErrorHandleProc	proc XSetErrorHandler(handler: ErrorHandleProc)		441
-nim	XLookupKeysym	windy/platforms/linux/x11/xevent.html#XLookupKeysym,ptr.XKeyEvent,cint	proc XLookupKeysym(e: ptr XKeyEvent; i: cint): KeySym		443
-nim	XNextEvent	windy/platforms/linux/x11/xevent.html#XNextEvent,Display,ptr.XEvent	proc XNextEvent(d: Display; event: ptr XEvent)		445
+nim	XSetErrorHandler	windy/platforms/linux/x11/xevent.html#XSetErrorHandler,ErrorHandleProc	proc XSetErrorHandler(handler: ErrorHandleProc): ErrorHandleProc		441
+nim	XLookupKeysym	windy/platforms/linux/x11/xevent.html#XLookupKeysym,ptr.XKeyEvent,cint	proc XLookupKeysym(e: ptr XKeyEvent; i: cint): KeySym		444
+nim	XNextEvent	windy/platforms/linux/x11/xevent.html#XNextEvent,Display,ptr.XEvent	proc XNextEvent(d: Display; event: ptr XEvent)		446

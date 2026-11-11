@@ -1,67 +1,67 @@
 nimTitle	platform	windy/platforms/linux/platform.html	module windy/platforms/linux/platform		0
 nim	Window	windy/platforms/linux/platform.html#Window	type Window		13
-nim	quitRequested	windy/platforms/linux/platform.html#quitRequested	var quitRequested		67
-nim	onQuitRequest	windy/platforms/linux/platform.html#onQuitRequest	var onQuitRequest		68
-nim	multiClickInterval	windy/platforms/linux/platform.html#multiClickInterval	var multiClickInterval		69
-nim	multiClickRadius	windy/platforms/linux/platform.html#multiClickRadius	var multiClickRadius		70
-nim	closed	windy/platforms/linux/platform.html#closed,Window	proc closed(window: Window): bool		400
-nim	close	windy/platforms/linux/platform.html#close,Window	proc close(window: Window)		402
-nim	makeContextCurrent	windy/platforms/linux/platform.html#makeContextCurrent,Window	proc makeContextCurrent(window: Window)		407
-nim	swapBuffers	windy/platforms/linux/platform.html#swapBuffers,Window	proc swapBuffers(window: Window)		410
-nim	visible	windy/platforms/linux/platform.html#visible,Window	proc visible(window: Window): bool		428
-nim	visible=	windy/platforms/linux/platform.html#visible=,Window,bool	proc visible=(window: Window; v: bool)		434
-nim	pos	windy/platforms/linux/platform.html#pos,Window	proc pos(window: Window): IVec2		441
-nim	pos=	windy/platforms/linux/platform.html#pos=,Window,IVec2	proc pos=(window: Window; v: IVec2)		461
-nim	size	windy/platforms/linux/platform.html#size,Window	proc size(window: Window): IVec2		469
-nim	framebufferSize	windy/platforms/linux/platform.html#framebufferSize,Window	proc framebufferSize(window: Window): IVec2		475
-nim	size=	windy/platforms/linux/platform.html#size=,Window,IVec2	proc size=(window: Window; v: IVec2)		478
-nim	centerWindow	windy/platforms/linux/platform.html#centerWindow,Window	proc centerWindow(window: Window)		490
-nim	maximized	windy/platforms/linux/platform.html#maximized,Window	proc maximized(window: Window): bool		503
-nim	maximized=	windy/platforms/linux/platform.html#maximized=,Window,bool	proc maximized=(window: Window; v: bool)		508
-nim	minimized	windy/platforms/linux/platform.html#minimized,Window	proc minimized(window: Window): bool		513
-nim	minimized=	windy/platforms/linux/platform.html#minimized=,Window,bool	proc minimized=(window: Window; v: bool)		518
-nim	focused	windy/platforms/linux/platform.html#focused,Window	proc focused(window: Window): bool		525
-nim	focus	windy/platforms/linux/platform.html#focus,Window	proc focus(window: Window)		528
-nim	fullscreen	windy/platforms/linux/platform.html#fullscreen,Window	proc fullscreen(window: Window): bool		531
-nim	fullscreen=	windy/platforms/linux/platform.html#fullscreen=,Window,bool	proc fullscreen=(window: Window; v: bool)		534
-nim	style	windy/platforms/linux/platform.html#style,Window	proc style(window: Window): WindowStyle		538
-nim	style=	windy/platforms/linux/platform.html#style=,Window,WindowStyle	proc style=(window: Window; v: WindowStyle)		549
-nim	title	windy/platforms/linux/platform.html#title,Window	proc title(window: Window): string		624
-nim	title=	windy/platforms/linux/platform.html#title=,Window,string	proc title=(window: Window; v: string)		627
-nim	contentScale	windy/platforms/linux/platform.html#contentScale,Window	proc contentScale(window: Window): float32		632
-nim	runeInputEnabled	windy/platforms/linux/platform.html#runeInputEnabled,Window	proc runeInputEnabled(window: Window): bool		648
-nim	runeInputEnabled=	windy/platforms/linux/platform.html#runeInputEnabled=,Window,bool	proc runeInputEnabled=(window: Window; v: bool)		651
-nim	cursor	windy/platforms/linux/platform.html#cursor,Window	proc cursor(window: Window): common.Cursor		654
-nim	cursor=	windy/platforms/linux/platform.html#cursor=,Window,	proc cursor=(window: Window; v: common.Cursor)		728
-nim	newWindow	windy/platforms/linux/platform.html#newWindow,string,IVec2,int,int	proc newWindow(title: string; size: IVec2; style = DecoratedResizable;\n          visible = true; vsync = true; openglVersion = OpenGL4Dot1;\n          msaa = msaaDisabled; depthBits = 24; stencilBits = 8): Window		732
-nim	mousePos	windy/platforms/linux/platform.html#mousePos,Window	proc mousePos(window: Window): IVec2		1163
-nim	mouseInside	windy/platforms/linux/platform.html#mouseInside,Window	proc mouseInside(window: Window): bool		1166
-nim	mousePrevPos	windy/platforms/linux/platform.html#mousePrevPos,Window	proc mousePrevPos(window: Window): IVec2		1170
-nim	mouseDelta	windy/platforms/linux/platform.html#mouseDelta,Window	proc mouseDelta(window: Window): IVec2		1173
-nim	mouseCaptured	windy/platforms/linux/platform.html#mouseCaptured,Window	proc mouseCaptured(window: Window): bool		1176
-nim	captureMouse	windy/platforms/linux/platform.html#captureMouse,Window	proc captureMouse(window: Window)		1180
-nim	releaseMouse	windy/platforms/linux/platform.html#releaseMouse,Window	proc releaseMouse(window: Window)		1187
-nim	scrollDelta	windy/platforms/linux/platform.html#scrollDelta,Window	proc scrollDelta(window: Window): Vec2		1193
-nim	buttonDown	windy/platforms/linux/platform.html#buttonDown,Window	proc buttonDown(window: Window): ButtonView		1196
-nim	buttonPressed	windy/platforms/linux/platform.html#buttonPressed,Window	proc buttonPressed(window: Window): ButtonView		1199
-nim	buttonReleased	windy/platforms/linux/platform.html#buttonReleased,Window	proc buttonReleased(window: Window): ButtonView		1202
-nim	buttonToggle	windy/platforms/linux/platform.html#buttonToggle,Window	proc buttonToggle(window: Window): ButtonView		1205
-nim	closeRequested	windy/platforms/linux/platform.html#closeRequested,Window	proc closeRequested(window: Window): bool		1208
-nim	closeRequested=	windy/platforms/linux/platform.html#closeRequested=,Window,bool	proc closeRequested=(window: Window; v: bool)		1211
-nim	getClipboardString	windy/platforms/linux/platform.html#getClipboardString	proc getClipboardString(): string		1288
-nim	setClipboardString	windy/platforms/linux/platform.html#setClipboardString,string	proc setClipboardString(s: string)		1307
-nim	getClipboardContentKinds	windy/platforms/linux/platform.html#getClipboardContentKinds	proc getClipboardContentKinds(): set[ClipboardContentKind]		1312
-nim	getClipboardImage	windy/platforms/linux/platform.html#getClipboardImage	proc getClipboardImage(): Image		1316
-nim	pollEvents	windy/platforms/linux/platform.html#pollEvents	proc pollEvents()		1320
-nim	closeIme	windy/platforms/linux/platform.html#closeIme,Window	proc closeIme(window: Window)		1342
-nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	proc imeCursorIndex(window: Window): int		1345
-nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1348
-nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1351
-nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1368
-nim	getConfigHome	windy/platforms/linux/platform.html#getConfigHome,string	proc getConfigHome(appName: string): string		1372
-nim	getConfig	windy/platforms/linux/platform.html#getConfig,string,string	proc getConfig(appName: string; fileName: string): string		1381
-nim	setConfig	windy/platforms/linux/platform.html#setConfig,string,string,string	proc setConfig(appName: string; fileName: string; content: string)		1391
-nim	openUrl	windy/platforms/linux/platform.html#openUrl,string	proc openUrl(url: string)		1400
-nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1407
-nim	openFileDialog	windy/platforms/linux/platform.html#openFileDialog,string,seq[FileDialogFilter],string	proc openFileDialog(title = "Open File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""): string		1426
-nim	saveFileDialog	windy/platforms/linux/platform.html#saveFileDialog,string,seq[FileDialogFilter],string,string	proc saveFileDialog(title = "Save File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""; defaultName = ""): string		1440
+nim	quitRequested	windy/platforms/linux/platform.html#quitRequested	var quitRequested		71
+nim	onQuitRequest	windy/platforms/linux/platform.html#onQuitRequest	var onQuitRequest		72
+nim	multiClickInterval	windy/platforms/linux/platform.html#multiClickInterval	var multiClickInterval		73
+nim	multiClickRadius	windy/platforms/linux/platform.html#multiClickRadius	var multiClickRadius		74
+nim	releaseMouse	windy/platforms/linux/platform.html#releaseMouse,Window	proc releaseMouse(window: Window)		409
+nim	closed	windy/platforms/linux/platform.html#closed,Window	proc closed(window: Window): bool		442
+nim	close	windy/platforms/linux/platform.html#close,Window	proc close(window: Window)		444
+nim	makeContextCurrent	windy/platforms/linux/platform.html#makeContextCurrent,Window	proc makeContextCurrent(window: Window)		449
+nim	swapBuffers	windy/platforms/linux/platform.html#swapBuffers,Window	proc swapBuffers(window: Window)		452
+nim	visible	windy/platforms/linux/platform.html#visible,Window	proc visible(window: Window): bool		470
+nim	visible=	windy/platforms/linux/platform.html#visible=,Window,bool	proc visible=(window: Window; v: bool)		476
+nim	pos	windy/platforms/linux/platform.html#pos,Window	proc pos(window: Window): IVec2		484
+nim	pos=	windy/platforms/linux/platform.html#pos=,Window,IVec2	proc pos=(window: Window; v: IVec2)		504
+nim	size	windy/platforms/linux/platform.html#size,Window	proc size(window: Window): IVec2		512
+nim	framebufferSize	windy/platforms/linux/platform.html#framebufferSize,Window	proc framebufferSize(window: Window): IVec2		518
+nim	size=	windy/platforms/linux/platform.html#size=,Window,IVec2	proc size=(window: Window; v: IVec2)		521
+nim	centerWindow	windy/platforms/linux/platform.html#centerWindow,Window	proc centerWindow(window: Window)		533
+nim	maximized	windy/platforms/linux/platform.html#maximized,Window	proc maximized(window: Window): bool		546
+nim	maximized=	windy/platforms/linux/platform.html#maximized=,Window,bool	proc maximized=(window: Window; v: bool)		551
+nim	minimized	windy/platforms/linux/platform.html#minimized,Window	proc minimized(window: Window): bool		556
+nim	minimized=	windy/platforms/linux/platform.html#minimized=,Window,bool	proc minimized=(window: Window; v: bool)		561
+nim	focused	windy/platforms/linux/platform.html#focused,Window	proc focused(window: Window): bool		568
+nim	focus	windy/platforms/linux/platform.html#focus,Window	proc focus(window: Window)		571
+nim	fullscreen	windy/platforms/linux/platform.html#fullscreen,Window	proc fullscreen(window: Window): bool		574
+nim	fullscreen=	windy/platforms/linux/platform.html#fullscreen=,Window,bool	proc fullscreen=(window: Window; v: bool)		577
+nim	style	windy/platforms/linux/platform.html#style,Window	proc style(window: Window): WindowStyle		581
+nim	style=	windy/platforms/linux/platform.html#style=,Window,WindowStyle	proc style=(window: Window; v: WindowStyle)		592
+nim	title	windy/platforms/linux/platform.html#title,Window	proc title(window: Window): string		667
+nim	title=	windy/platforms/linux/platform.html#title=,Window,string	proc title=(window: Window; v: string)		670
+nim	contentScale	windy/platforms/linux/platform.html#contentScale,Window	proc contentScale(window: Window): float32		675
+nim	runeInputEnabled	windy/platforms/linux/platform.html#runeInputEnabled,Window	proc runeInputEnabled(window: Window): bool		691
+nim	runeInputEnabled=	windy/platforms/linux/platform.html#runeInputEnabled=,Window,bool	proc runeInputEnabled=(window: Window; v: bool)		694
+nim	cursor	windy/platforms/linux/platform.html#cursor,Window	proc cursor(window: Window): common.Cursor		697
+nim	cursor=	windy/platforms/linux/platform.html#cursor=,Window,	proc cursor=(window: Window; v: common.Cursor)		771
+nim	newWindow	windy/platforms/linux/platform.html#newWindow,string,IVec2,int,int	proc newWindow(title: string; size: IVec2; style = DecoratedResizable;\n          visible = true; vsync = true; openglVersion = OpenGL4Dot1;\n          msaa = msaaDisabled; depthBits = 24; stencilBits = 8): Window		871
+nim	mousePos	windy/platforms/linux/platform.html#mousePos,Window	proc mousePos(window: Window): IVec2		1330
+nim	mouseInside	windy/platforms/linux/platform.html#mouseInside,Window	proc mouseInside(window: Window): bool		1333
+nim	mousePrevPos	windy/platforms/linux/platform.html#mousePrevPos,Window	proc mousePrevPos(window: Window): IVec2		1337
+nim	mouseDelta	windy/platforms/linux/platform.html#mouseDelta,Window	proc mouseDelta(window: Window): IVec2		1340
+nim	mouseCaptured	windy/platforms/linux/platform.html#mouseCaptured,Window	proc mouseCaptured(window: Window): bool		1343
+nim	captureMouse	windy/platforms/linux/platform.html#captureMouse,Window	proc captureMouse(window: Window)		1347
+nim	scrollDelta	windy/platforms/linux/platform.html#scrollDelta,Window	proc scrollDelta(window: Window): Vec2		1413
+nim	buttonDown	windy/platforms/linux/platform.html#buttonDown,Window	proc buttonDown(window: Window): ButtonView		1416
+nim	buttonPressed	windy/platforms/linux/platform.html#buttonPressed,Window	proc buttonPressed(window: Window): ButtonView		1419
+nim	buttonReleased	windy/platforms/linux/platform.html#buttonReleased,Window	proc buttonReleased(window: Window): ButtonView		1422
+nim	buttonToggle	windy/platforms/linux/platform.html#buttonToggle,Window	proc buttonToggle(window: Window): ButtonView		1425
+nim	closeRequested	windy/platforms/linux/platform.html#closeRequested,Window	proc closeRequested(window: Window): bool		1428
+nim	closeRequested=	windy/platforms/linux/platform.html#closeRequested=,Window,bool	proc closeRequested=(window: Window; v: bool)		1431
+nim	getClipboardString	windy/platforms/linux/platform.html#getClipboardString	proc getClipboardString(): string		1508
+nim	setClipboardString	windy/platforms/linux/platform.html#setClipboardString,string	proc setClipboardString(s: string)		1527
+nim	getClipboardContentKinds	windy/platforms/linux/platform.html#getClipboardContentKinds	proc getClipboardContentKinds(): set[ClipboardContentKind]		1532
+nim	getClipboardImage	windy/platforms/linux/platform.html#getClipboardImage	proc getClipboardImage(): Image		1536
+nim	pollEvents	windy/platforms/linux/platform.html#pollEvents	proc pollEvents()		1540
+nim	closeIme	windy/platforms/linux/platform.html#closeIme,Window	proc closeIme(window: Window)		1562
+nim	imeCursorIndex	windy/platforms/linux/platform.html#imeCursorIndex,Window	proc imeCursorIndex(window: Window): int		1565
+nim	imeCompositionString	windy/platforms/linux/platform.html#imeCompositionString,Window	proc imeCompositionString(window: Window): string		1568
+nim	icon=	windy/platforms/linux/platform.html#icon=,Window,Image	proc icon=(window: Window; icon: Image)		1571
+nim	url	windy/platforms/linux/platform.html#url,Window	proc url(window: Window): string		1588
+nim	getConfigHome	windy/platforms/linux/platform.html#getConfigHome,string	proc getConfigHome(appName: string): string		1592
+nim	getConfig	windy/platforms/linux/platform.html#getConfig,string,string	proc getConfig(appName: string; fileName: string): string		1601
+nim	setConfig	windy/platforms/linux/platform.html#setConfig,string,string,string	proc setConfig(appName: string; fileName: string; content: string)		1611
+nim	openUrl	windy/platforms/linux/platform.html#openUrl,string	proc openUrl(url: string)		1620
+nim	openTempTextFile	windy/platforms/linux/platform.html#openTempTextFile,string,string	proc openTempTextFile(title, text: string)		1627
+nim	openFileDialog	windy/platforms/linux/platform.html#openFileDialog,string,seq[FileDialogFilter],string	proc openFileDialog(title = "Open File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""): string		1646
+nim	saveFileDialog	windy/platforms/linux/platform.html#saveFileDialog,string,seq[FileDialogFilter],string,string	proc saveFileDialog(title = "Save File"; filters: seq[FileDialogFilter] = @[];\n               defaultPath = ""; defaultName = ""): string		1660

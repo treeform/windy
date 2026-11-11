@@ -68,6 +68,10 @@
     <summary><a class="reference reference-toplevel" href="#7" id="57">Types</a></summary>
     <ul class="simple simple-toc-section">
       <li><a class="reference" href="#GlxContext" title="GlxContext = ptr object">GlxContext</a></li>
+<li><a class="reference" href="#GlxCreateContextAttribsProc" title="GlxCreateContextAttribsProc = proc (d: Display; config: GlxFbConfig;
+                                    share: GlxContext; direct: cint;
+                                    attributes: ptr cint): GlxContext {.cdecl.}">GlxCreateContextAttribsProc</a></li>
+<li><a class="reference" href="#GlxFbConfig" title="GlxFbConfig = ptr object">GlxFbConfig</a></li>
 
     </ul>
   </details>
@@ -76,9 +80,27 @@
   <details open>
     <summary><a class="reference reference-toplevel" href="#10" id="60">Consts</a></summary>
     <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#GlxDepthSize" title="GlxDepthSize = 12'i32">GlxDepthSize</a></li>
+      <li><a class="reference" href="#GlxAlphaSize" title="GlxAlphaSize = 11'i32">GlxAlphaSize</a></li>
+<li><a class="reference" href="#GlxBlueSize" title="GlxBlueSize = 10'i32">GlxBlueSize</a></li>
+<li><a class="reference" href="#GlxContextCoreProfileBit" title="GlxContextCoreProfileBit = 1'i32">GlxContextCoreProfileBit</a></li>
+<li><a class="reference" href="#GlxContextMajorVersion" title="GlxContextMajorVersion = 0x00002091'i32">GlxContextMajorVersion</a></li>
+<li><a class="reference" href="#GlxContextMinorVersion" title="GlxContextMinorVersion = 0x00002092'i32">GlxContextMinorVersion</a></li>
+<li><a class="reference" href="#GlxContextProfileMask" title="GlxContextProfileMask = 0x00009126'i32">GlxContextProfileMask</a></li>
+<li><a class="reference" href="#GlxDepthSize" title="GlxDepthSize = 12'i32">GlxDepthSize</a></li>
 <li><a class="reference" href="#GlxDoublebuffer" title="GlxDoublebuffer = 5'i32">GlxDoublebuffer</a></li>
+<li><a class="reference" href="#GlxDrawableType" title="GlxDrawableType = 0x00008010'i32">GlxDrawableType</a></li>
+<li><a class="reference" href="#GlxGreenSize" title="GlxGreenSize = 9'i32">GlxGreenSize</a></li>
+<li><a class="reference" href="#GlxRedSize" title="GlxRedSize = 8'i32">GlxRedSize</a></li>
+<li><a class="reference" href="#GlxRenderType" title="GlxRenderType = 0x00008011'i32">GlxRenderType</a></li>
 <li><a class="reference" href="#GlxRgba" title="GlxRgba = 4'i32">GlxRgba</a></li>
+<li><a class="reference" href="#GlxRgbaBit" title="GlxRgbaBit = 1'i32">GlxRgbaBit</a></li>
+<li><a class="reference" href="#GlxSampleBuffers" title="GlxSampleBuffers = 100000'i32">GlxSampleBuffers</a></li>
+<li><a class="reference" href="#GlxSamples" title="GlxSamples = 100001'i32">GlxSamples</a></li>
+<li><a class="reference" href="#GlxStencilSize" title="GlxStencilSize = 13'i32">GlxStencilSize</a></li>
+<li><a class="reference" href="#GlxTrueColor" title="GlxTrueColor = 0x00008002'i32">GlxTrueColor</a></li>
+<li><a class="reference" href="#GlxWindowBit" title="GlxWindowBit = 1'i32">GlxWindowBit</a></li>
+<li><a class="reference" href="#GlxXRenderable" title="GlxXRenderable = 0x00008012'i32">GlxXRenderable</a></li>
+<li><a class="reference" href="#GlxXVisualType" title="GlxXVisualType = 0x00000022'i32">GlxXVisualType</a></li>
 
     </ul>
   </details>
@@ -87,7 +109,13 @@
   <details open>
     <summary><a class="reference reference-toplevel" href="#12" id="62">Procs</a></summary>
     <ul class="simple simple-toc-section">
-      <ul class="simple nested-toc-section">glXChooseVisual
+      <ul class="simple nested-toc-section">glXChooseFBConfig
+  <li><a class="reference" href="#glXChooseFBConfig%2CDisplay%2Ccint%2Cptr.cint%2Cptr.cint" title="glXChooseFBConfig(d: Display; screen: cint; attributes: ptr cint;
+                  count: ptr cint): ptr UncheckedArray[GlxFbConfig]">glXChooseFBConfig(d: Display; screen: cint; attributes: ptr cint;
+                  count: ptr cint): ptr UncheckedArray[GlxFbConfig]</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">glXChooseVisual
   <li><a class="reference" href="#glXChooseVisual%2CDisplay%2Ccint%2Cptr.int32" title="glXChooseVisual(d: Display; screen: cint; attribList: ptr int32): ptr XVisualInfo">glXChooseVisual(d: Display; screen: cint; attribList: ptr int32): ptr XVisualInfo</a></li>
 
 </ul>
@@ -105,8 +133,20 @@
   <li><a class="reference" href="#glXGetCurrentContext" title="glXGetCurrentContext(): GlxContext">glXGetCurrentContext(): GlxContext</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">glXGetProcAddressARB
+  <li><a class="reference" href="#glXGetProcAddressARB%2Ccstring" title="glXGetProcAddressARB(name: cstring): pointer">glXGetProcAddressARB(name: cstring): pointer</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">glXGetVisualFromFBConfig
+  <li><a class="reference" href="#glXGetVisualFromFBConfig%2CDisplay%2CGlxFbConfig" title="glXGetVisualFromFBConfig(d: Display; config: GlxFbConfig): ptr XVisualInfo">glXGetVisualFromFBConfig(d: Display; config: GlxFbConfig): ptr XVisualInfo</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">glXMakeCurrent
   <li><a class="reference" href="#glXMakeCurrent%2CDisplay%2CDrawable%2CGlxContext" title="glXMakeCurrent(d: Display; drawable: Drawable; ctx: GlxContext)">glXMakeCurrent(d: Display; drawable: Drawable; ctx: GlxContext)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">glXQueryExtensionsString
+  <li><a class="reference" href="#glXQueryExtensionsString%2CDisplay%2Ccint" title="glXQueryExtensionsString(d: Display; screen: cint): cstring">glXQueryExtensionsString(d: Display; screen: cint): cstring</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">glXSwapBuffers
@@ -154,8 +194,30 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L4" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L4" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L33" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L33" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxCreateContextAttribsProc">
+  <dt><pre><a href="#GlxCreateContextAttribsProc"><span class="Identifier">GlxCreateContextAttribsProc</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">config</span><span class="Other">:</span> <a href="#GlxFbConfig"><span class="Identifier">GlxFbConfig</span></a><span class="Other">;</span>
+                                    <span class="Identifier">share</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a><span class="Other">;</span> <span class="Identifier">direct</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">;</span>
+                                    <span class="Identifier">attributes</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a> {.<span class="Identifier">cdecl</span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L35" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L35" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxFbConfig">
+  <dt><pre><a href="#GlxFbConfig"><span class="Identifier">GlxFbConfig</span></a> <span class="Other">=</span> <span class="Keyword">ptr</span> <span class="Keyword">object</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L34" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L34" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -165,8 +227,8 @@
 <div class="section" id="10">
   <h1><a class="toc-backref" href="#10">Consts</a></h1>
   <dl class="item">
-    <div id="GlxDepthSize">
-  <dt><pre><a href="#GlxDepthSize"><span class="Identifier">GlxDepthSize</span></a> <span class="Other">=</span> <span class="DecNumber">12'i32</span></pre></dt>
+    <div id="GlxAlphaSize">
+  <dt><pre><a href="#GlxAlphaSize"><span class="Identifier">GlxAlphaSize</span></a> <span class="Other">=</span> <span class="DecNumber">11'i32</span></pre></dt>
   <dd>
     
     
@@ -175,8 +237,8 @@
 
   </dd>
 </div>
-<div id="GlxDoublebuffer">
-  <dt><pre><a href="#GlxDoublebuffer"><span class="Identifier">GlxDoublebuffer</span></a> <span class="Other">=</span> <span class="DecNumber">5'i32</span></pre></dt>
+<div id="GlxBlueSize">
+  <dt><pre><a href="#GlxBlueSize"><span class="Identifier">GlxBlueSize</span></a> <span class="Other">=</span> <span class="DecNumber">10'i32</span></pre></dt>
   <dd>
     
     
@@ -185,13 +247,193 @@
 
   </dd>
 </div>
-<div id="GlxRgba">
-  <dt><pre><a href="#GlxRgba"><span class="Identifier">GlxRgba</span></a> <span class="Other">=</span> <span class="DecNumber">4'i32</span></pre></dt>
+<div id="GlxContextCoreProfileBit">
+  <dt><pre><a href="#GlxContextCoreProfileBit"><span class="Identifier">GlxContextCoreProfileBit</span></a> <span class="Other">=</span> <span class="DecNumber">1'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L24" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L24" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxContextMajorVersion">
+  <dt><pre><a href="#GlxContextMajorVersion"><span class="Identifier">GlxContextMajorVersion</span></a> <span class="Other">=</span> <span class="DecNumber">0x00002091'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L21" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L21" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxContextMinorVersion">
+  <dt><pre><a href="#GlxContextMinorVersion"><span class="Identifier">GlxContextMinorVersion</span></a> <span class="Other">=</span> <span class="DecNumber">0x00002092'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L22" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L22" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxContextProfileMask">
+  <dt><pre><a href="#GlxContextProfileMask"><span class="Identifier">GlxContextProfileMask</span></a> <span class="Other">=</span> <span class="DecNumber">0x00009126'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L23" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L23" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxDepthSize">
+  <dt><pre><a href="#GlxDepthSize"><span class="Identifier">GlxDepthSize</span></a> <span class="Other">=</span> <span class="DecNumber">12'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L10" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L10" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxDoublebuffer">
+  <dt><pre><a href="#GlxDoublebuffer"><span class="Identifier">GlxDoublebuffer</span></a> <span class="Other">=</span> <span class="DecNumber">5'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L5" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L5" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxDrawableType">
+  <dt><pre><a href="#GlxDrawableType"><span class="Identifier">GlxDrawableType</span></a> <span class="Other">=</span> <span class="DecNumber">0x00008010'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L14" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L14" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxGreenSize">
+  <dt><pre><a href="#GlxGreenSize"><span class="Identifier">GlxGreenSize</span></a> <span class="Other">=</span> <span class="DecNumber">9'i32</span></pre></dt>
   <dd>
     
     
     <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L7" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L7" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxRedSize">
+  <dt><pre><a href="#GlxRedSize"><span class="Identifier">GlxRedSize</span></a> <span class="Other">=</span> <span class="DecNumber">8'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L6" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L6" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxRenderType">
+  <dt><pre><a href="#GlxRenderType"><span class="Identifier">GlxRenderType</span></a> <span class="Other">=</span> <span class="DecNumber">0x00008011'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L15" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L15" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxRgba">
+  <dt><pre><a href="#GlxRgba"><span class="Identifier">GlxRgba</span></a> <span class="Other">=</span> <span class="DecNumber">4'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L4" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L4" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxRgbaBit">
+  <dt><pre><a href="#GlxRgbaBit"><span class="Identifier">GlxRgbaBit</span></a> <span class="Other">=</span> <span class="DecNumber">1'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L18" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L18" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxSampleBuffers">
+  <dt><pre><a href="#GlxSampleBuffers"><span class="Identifier">GlxSampleBuffers</span></a> <span class="Other">=</span> <span class="DecNumber">100000'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L19" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L19" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxSamples">
+  <dt><pre><a href="#GlxSamples"><span class="Identifier">GlxSamples</span></a> <span class="Other">=</span> <span class="DecNumber">100001'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L20" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L20" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxStencilSize">
+  <dt><pre><a href="#GlxStencilSize"><span class="Identifier">GlxStencilSize</span></a> <span class="Other">=</span> <span class="DecNumber">13'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L11" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L11" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxTrueColor">
+  <dt><pre><a href="#GlxTrueColor"><span class="Identifier">GlxTrueColor</span></a> <span class="Other">=</span> <span class="DecNumber">0x00008002'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L13" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L13" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxWindowBit">
+  <dt><pre><a href="#GlxWindowBit"><span class="Identifier">GlxWindowBit</span></a> <span class="Other">=</span> <span class="DecNumber">1'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L17" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L17" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxXRenderable">
+  <dt><pre><a href="#GlxXRenderable"><span class="Identifier">GlxXRenderable</span></a> <span class="Other">=</span> <span class="DecNumber">0x00008012'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L16" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L16" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="GlxXVisualType">
+  <dt><pre><a href="#GlxXVisualType"><span class="Identifier">GlxXVisualType</span></a> <span class="Other">=</span> <span class="DecNumber">0x00000022'i32</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L12" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L12" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -201,15 +443,30 @@
 <div class="section" id="12">
   <h1><a class="toc-backref" href="#12">Procs</a></h1>
   <dl class="item">
-    <div id="glXChooseVisual-procs-all">
+    <div id="glXChooseFBConfig-procs-all">
+  <div id="glXChooseFBConfig,Display,cint,ptr.cint,ptr.cint">
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXChooseFBConfig%2CDisplay%2Ccint%2Cptr.cint%2Cptr.cint"><span class="Identifier">glXChooseFBConfig</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">screen</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">;</span> <span class="Identifier">attributes</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">cint</span><span class="Other">;</span>
+                       <span class="Identifier">count</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">UncheckedArray</span><span class="Other">[</span><a href="#GlxFbConfig"><span class="Identifier">GlxFbConfig</span></a><span class="Other">]</span> {.
+    <span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Returns framebuffer configurations matching the supplied attributes.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L45" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L45" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="glXChooseVisual-procs-all">
   <div id="glXChooseVisual,Display,cint,ptr.int32">
   <dt><pre><span class="Keyword">proc</span> <a href="#glXChooseVisual%2CDisplay%2Ccint%2Cptr.int32"><span class="Identifier">glXChooseVisual</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">screen</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">;</span> <span class="Identifier">attribList</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">int32</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="xlib.html#XVisualInfo"><span class="Identifier">XVisualInfo</span></a> {.
-    <span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L19" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L19" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L68" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L68" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -218,13 +475,13 @@
 <div id="glXCreateContext-procs-all">
   <div id="glXCreateContext,Display,ptr.XVisualInfo,GlxContext,cint">
   <dt><pre><span class="Keyword">proc</span> <a href="#glXCreateContext%2CDisplay%2Cptr.XVisualInfo%2CGlxContext%2Ccint"><span class="Identifier">glXCreateContext</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">vis</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="xlib.html#XVisualInfo"><span class="Identifier">XVisualInfo</span></a><span class="Other">;</span> <span class="Identifier">shareList</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a><span class="Other">;</span>
-                      <span class="Identifier">direct</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span>
+                      <span class="Identifier">direct</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span>
     <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L22" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L22" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L71" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L71" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -232,13 +489,13 @@
 </div>
 <div id="glXDestroyContext-procs-all">
   <div id="glXDestroyContext,Display,GlxContext">
-  <dt><pre><span class="Keyword">proc</span> <a href="#glXDestroyContext%2CDisplay%2CGlxContext"><span class="Identifier">glXDestroyContext</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">this</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXDestroyContext%2CDisplay%2CGlxContext"><span class="Identifier">glXDestroyContext</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">this</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span>
     <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L24" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L24" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L73" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L73" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -246,13 +503,41 @@
 </div>
 <div id="glXGetCurrentContext-procs-all">
   <div id="glXGetCurrentContext">
-  <dt><pre><span class="Keyword">proc</span> <a href="#glXGetCurrentContext"><span class="Identifier">glXGetCurrentContext</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXGetCurrentContext"><span class="Identifier">glXGetCurrentContext</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L27" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L27" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L76" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L76" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="glXGetProcAddressARB-procs-all">
+  <div id="glXGetProcAddressARB,cstring">
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXGetProcAddressARB%2Ccstring"><span class="Identifier">glXGetProcAddressARB</span></a><span class="Other">(</span><span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">pointer</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span>
+    <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Resolves an OpenGL or GLX extension entry point.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L65" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L65" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="glXGetVisualFromFBConfig-procs-all">
+  <div id="glXGetVisualFromFBConfig,Display,GlxFbConfig">
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXGetVisualFromFBConfig%2CDisplay%2CGlxFbConfig"><span class="Identifier">glXGetVisualFromFBConfig</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">config</span><span class="Other">:</span> <a href="#GlxFbConfig"><span class="Identifier">GlxFbConfig</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="xlib.html#XVisualInfo"><span class="Identifier">XVisualInfo</span></a> {.
+    <span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Returns the X11 visual associated with a framebuffer configuration.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L53" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L53" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -261,12 +546,26 @@
 <div id="glXMakeCurrent-procs-all">
   <div id="glXMakeCurrent,Display,Drawable,GlxContext">
   <dt><pre><span class="Keyword">proc</span> <a href="#glXMakeCurrent%2CDisplay%2CDrawable%2CGlxContext"><span class="Identifier">glXMakeCurrent</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">drawable</span><span class="Other">:</span> <a href="x.html#Drawable"><span class="Identifier">Drawable</span></a><span class="Other">;</span> <span class="Identifier">ctx</span><span class="Other">:</span> <a href="#GlxContext"><span class="Identifier">GlxContext</span></a><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span>
-    <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L26" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L26" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L75" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L75" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="glXQueryExtensionsString-procs-all">
+  <div id="glXQueryExtensionsString,Display,cint">
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXQueryExtensionsString%2CDisplay%2Ccint"><span class="Identifier">glXQueryExtensionsString</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">screen</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cstring</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span>
+    <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Returns the GLX extensions supported by this screen.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L59" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L59" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -274,13 +573,13 @@
 </div>
 <div id="glXSwapBuffers-procs-all">
   <div id="glXSwapBuffers,Display,Drawable">
-  <dt><pre><span class="Keyword">proc</span> <a href="#glXSwapBuffers%2CDisplay%2CDrawable"><span class="Identifier">glXSwapBuffers</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">drawable</span><span class="Other">:</span> <a href="x.html#Drawable"><span class="Identifier">Drawable</span></a><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXSwapBuffers%2CDisplay%2CDrawable"><span class="Identifier">glXSwapBuffers</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">drawable</span><span class="Other">:</span> <a href="x.html#Drawable"><span class="Identifier">Drawable</span></a><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span>
     <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L29" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L29" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L78" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L78" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -289,12 +588,12 @@
 <div id="glXSwapIntervalEXT-procs-all">
   <div id="glXSwapIntervalEXT,Display,Drawable,cint">
   <dt><pre><span class="Keyword">proc</span> <a href="#glXSwapIntervalEXT%2CDisplay%2CDrawable%2Ccint"><span class="Identifier">glXSwapIntervalEXT</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="xlib.html#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">drawable</span><span class="Other">:</span> <a href="x.html#Drawable"><span class="Identifier">Drawable</span></a><span class="Other">;</span> <span class="Identifier">interval</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span>
-    <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L31" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L31" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L80" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L80" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -302,13 +601,13 @@
 </div>
 <div id="glXSwapIntervalMESA-procs-all">
   <div id="glXSwapIntervalMESA,cint">
-  <dt><pre><span class="Keyword">proc</span> <a href="#glXSwapIntervalMESA%2Ccint"><span class="Identifier">glXSwapIntervalMESA</span></a><span class="Other">(</span><span class="Identifier">interval</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXSwapIntervalMESA%2Ccint"><span class="Identifier">glXSwapIntervalMESA</span></a><span class="Other">(</span><span class="Identifier">interval</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L33" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L33" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L82" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L82" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -316,13 +615,13 @@
 </div>
 <div id="glXSwapIntervalSGI-procs-all">
   <div id="glXSwapIntervalSGI,cint">
-  <dt><pre><span class="Keyword">proc</span> <a href="#glXSwapIntervalSGI%2Ccint"><span class="Identifier">glXSwapIntervalSGI</span></a><span class="Other">(</span><span class="Identifier">interval</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">libGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#glXSwapIntervalSGI%2Ccint"><span class="Identifier">glXSwapIntervalSGI</span></a><span class="Other">(</span><span class="Identifier">interval</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">LibGLX</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L34" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L34" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/glx.nim#L83" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/glx.nim#L83" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -338,7 +637,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-11 00:38:43 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-11 19:33:49 UTC</small>
       </div>
     </div>
   </div>

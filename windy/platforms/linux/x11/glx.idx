@@ -1,14 +1,38 @@
 nimTitle	glx	windy/platforms/linux/x11/glx.html	module windy/platforms/linux/x11/glx		0
-nim	GlxContext	windy/platforms/linux/x11/glx.html#GlxContext	type GlxContext		4
-nim	GlxRgba	windy/platforms/linux/x11/glx.html#GlxRgba	const GlxRgba		7
-nim	GlxDoublebuffer	windy/platforms/linux/x11/glx.html#GlxDoublebuffer	const GlxDoublebuffer		8
-nim	GlxDepthSize	windy/platforms/linux/x11/glx.html#GlxDepthSize	const GlxDepthSize		9
-nim	glXChooseVisual	windy/platforms/linux/x11/glx.html#glXChooseVisual,Display,cint,ptr.int32	proc glXChooseVisual(d: Display; screen: cint; attribList: ptr int32): ptr XVisualInfo		19
-nim	glXCreateContext	windy/platforms/linux/x11/glx.html#glXCreateContext,Display,ptr.XVisualInfo,GlxContext,cint	proc glXCreateContext(d: Display; vis: ptr XVisualInfo; shareList: GlxContext;\n                 direct: cint): GlxContext		22
-nim	glXDestroyContext	windy/platforms/linux/x11/glx.html#glXDestroyContext,Display,GlxContext	proc glXDestroyContext(d: Display; this: GlxContext)		24
-nim	glXMakeCurrent	windy/platforms/linux/x11/glx.html#glXMakeCurrent,Display,Drawable,GlxContext	proc glXMakeCurrent(d: Display; drawable: Drawable; ctx: GlxContext)		26
-nim	glXGetCurrentContext	windy/platforms/linux/x11/glx.html#glXGetCurrentContext	proc glXGetCurrentContext(): GlxContext		27
-nim	glXSwapBuffers	windy/platforms/linux/x11/glx.html#glXSwapBuffers,Display,Drawable	proc glXSwapBuffers(d: Display; drawable: Drawable)		29
-nim	glXSwapIntervalEXT	windy/platforms/linux/x11/glx.html#glXSwapIntervalEXT,Display,Drawable,cint	proc glXSwapIntervalEXT(d: Display; drawable: Drawable; interval: cint)		31
-nim	glXSwapIntervalMESA	windy/platforms/linux/x11/glx.html#glXSwapIntervalMESA,cint	proc glXSwapIntervalMESA(interval: cint)		33
-nim	glXSwapIntervalSGI	windy/platforms/linux/x11/glx.html#glXSwapIntervalSGI,cint	proc glXSwapIntervalSGI(interval: cint)		34
+nim	GlxRgba	windy/platforms/linux/x11/glx.html#GlxRgba	const GlxRgba		4
+nim	GlxDoublebuffer	windy/platforms/linux/x11/glx.html#GlxDoublebuffer	const GlxDoublebuffer		5
+nim	GlxRedSize	windy/platforms/linux/x11/glx.html#GlxRedSize	const GlxRedSize		6
+nim	GlxGreenSize	windy/platforms/linux/x11/glx.html#GlxGreenSize	const GlxGreenSize		7
+nim	GlxBlueSize	windy/platforms/linux/x11/glx.html#GlxBlueSize	const GlxBlueSize		8
+nim	GlxAlphaSize	windy/platforms/linux/x11/glx.html#GlxAlphaSize	const GlxAlphaSize		9
+nim	GlxDepthSize	windy/platforms/linux/x11/glx.html#GlxDepthSize	const GlxDepthSize		10
+nim	GlxStencilSize	windy/platforms/linux/x11/glx.html#GlxStencilSize	const GlxStencilSize		11
+nim	GlxXVisualType	windy/platforms/linux/x11/glx.html#GlxXVisualType	const GlxXVisualType		12
+nim	GlxTrueColor	windy/platforms/linux/x11/glx.html#GlxTrueColor	const GlxTrueColor		13
+nim	GlxDrawableType	windy/platforms/linux/x11/glx.html#GlxDrawableType	const GlxDrawableType		14
+nim	GlxRenderType	windy/platforms/linux/x11/glx.html#GlxRenderType	const GlxRenderType		15
+nim	GlxXRenderable	windy/platforms/linux/x11/glx.html#GlxXRenderable	const GlxXRenderable		16
+nim	GlxWindowBit	windy/platforms/linux/x11/glx.html#GlxWindowBit	const GlxWindowBit		17
+nim	GlxRgbaBit	windy/platforms/linux/x11/glx.html#GlxRgbaBit	const GlxRgbaBit		18
+nim	GlxSampleBuffers	windy/platforms/linux/x11/glx.html#GlxSampleBuffers	const GlxSampleBuffers		19
+nim	GlxSamples	windy/platforms/linux/x11/glx.html#GlxSamples	const GlxSamples		20
+nim	GlxContextMajorVersion	windy/platforms/linux/x11/glx.html#GlxContextMajorVersion	const GlxContextMajorVersion		21
+nim	GlxContextMinorVersion	windy/platforms/linux/x11/glx.html#GlxContextMinorVersion	const GlxContextMinorVersion		22
+nim	GlxContextProfileMask	windy/platforms/linux/x11/glx.html#GlxContextProfileMask	const GlxContextProfileMask		23
+nim	GlxContextCoreProfileBit	windy/platforms/linux/x11/glx.html#GlxContextCoreProfileBit	const GlxContextCoreProfileBit		24
+nim	GlxContext	windy/platforms/linux/x11/glx.html#GlxContext	type GlxContext		33
+nim	GlxFbConfig	windy/platforms/linux/x11/glx.html#GlxFbConfig	type GlxFbConfig		34
+nim	GlxCreateContextAttribsProc	windy/platforms/linux/x11/glx.html#GlxCreateContextAttribsProc	type GlxCreateContextAttribsProc		35
+nim	glXChooseFBConfig	windy/platforms/linux/x11/glx.html#glXChooseFBConfig,Display,cint,ptr.cint,ptr.cint	proc glXChooseFBConfig(d: Display; screen: cint; attributes: ptr cint;\n                  count: ptr cint): ptr UncheckedArray[GlxFbConfig]		45
+nim	glXGetVisualFromFBConfig	windy/platforms/linux/x11/glx.html#glXGetVisualFromFBConfig,Display,GlxFbConfig	proc glXGetVisualFromFBConfig(d: Display; config: GlxFbConfig): ptr XVisualInfo		53
+nim	glXQueryExtensionsString	windy/platforms/linux/x11/glx.html#glXQueryExtensionsString,Display,cint	proc glXQueryExtensionsString(d: Display; screen: cint): cstring		59
+nim	glXGetProcAddressARB	windy/platforms/linux/x11/glx.html#glXGetProcAddressARB,cstring	proc glXGetProcAddressARB(name: cstring): pointer		65
+nim	glXChooseVisual	windy/platforms/linux/x11/glx.html#glXChooseVisual,Display,cint,ptr.int32	proc glXChooseVisual(d: Display; screen: cint; attribList: ptr int32): ptr XVisualInfo		68
+nim	glXCreateContext	windy/platforms/linux/x11/glx.html#glXCreateContext,Display,ptr.XVisualInfo,GlxContext,cint	proc glXCreateContext(d: Display; vis: ptr XVisualInfo; shareList: GlxContext;\n                 direct: cint): GlxContext		71
+nim	glXDestroyContext	windy/platforms/linux/x11/glx.html#glXDestroyContext,Display,GlxContext	proc glXDestroyContext(d: Display; this: GlxContext)		73
+nim	glXMakeCurrent	windy/platforms/linux/x11/glx.html#glXMakeCurrent,Display,Drawable,GlxContext	proc glXMakeCurrent(d: Display; drawable: Drawable; ctx: GlxContext)		75
+nim	glXGetCurrentContext	windy/platforms/linux/x11/glx.html#glXGetCurrentContext	proc glXGetCurrentContext(): GlxContext		76
+nim	glXSwapBuffers	windy/platforms/linux/x11/glx.html#glXSwapBuffers,Display,Drawable	proc glXSwapBuffers(d: Display; drawable: Drawable)		78
+nim	glXSwapIntervalEXT	windy/platforms/linux/x11/glx.html#glXSwapIntervalEXT,Display,Drawable,cint	proc glXSwapIntervalEXT(d: Display; drawable: Drawable; interval: cint)		80
+nim	glXSwapIntervalMESA	windy/platforms/linux/x11/glx.html#glXSwapIntervalMESA,cint	proc glXSwapIntervalMESA(interval: cint)		82
+nim	glXSwapIntervalSGI	windy/platforms/linux/x11/glx.html#glXSwapIntervalSGI,cint	proc glXSwapIntervalSGI(interval: cint)		83
