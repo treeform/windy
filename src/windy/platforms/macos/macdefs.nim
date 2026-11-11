@@ -381,6 +381,8 @@ objc:
   proc deactivate*(self: NSTextInputContext)
   proc activate*(self: NSTextInputContext)
   proc insertText*(self: NSTextInputClient, x: ID, replacementRange: NSRange)
+  proc insertText*(self: NSTextInputClient, x: ID)
+  proc paste*(self: NSView, x: ID)
   proc initWithData*(self: NSBitmapImageRep, x: NSData): NSBitmapImageRep
   proc representationUsingType*(
     self: NSBitmapImageRep,

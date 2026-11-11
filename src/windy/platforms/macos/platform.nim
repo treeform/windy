@@ -27,6 +27,8 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
     imePos*: IVec2
@@ -40,6 +42,7 @@ type
     fullscreenState: bool
     minimizedState: bool
     cpuImage: NSImage
+    textInput: TextInputState
 
 const
   ActivationTurnSeconds = 0.001
@@ -370,6 +373,10 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
 
+proc handleTextInput(window: Window, text: string) =
+  ## Delivers a complete native text insertion without synthesizing keys.
+  handleTextInputTemplate(text)
+
 proc createMenuBar() =
   let
     menuBar = NSMenu.new()
@@ -512,6 +519,10 @@ proc syncModifierClass(
     # Some virtual keyboards omit the device bits; fall back to treating the
     # changed key as the pressed one without disturbing its sibling.
     window.syncModifierButton(changed, true)
+  elif leftButton notin window.state.buttonDown and
+    rightButton notin window.state.buttonDown:
+      # Synthetic key events may provide only the aggregate modifier bit.
+      window.syncModifierButton(leftButton, true)
 
 proc syncModifierState(window: Window, flags: uint, changed = ButtonUnknown) =
   window.syncModifierClass(
@@ -778,6 +789,8 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   else:
     discard
 
+include accessibility
+
 proc hasMarkedText(self: ID, cmd: SEL): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window != nil and window.markedText.int != 0:
@@ -794,7 +807,11 @@ proc markedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
 
 proc selectedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
-  if window != nil:
+  if window != nil and window.markedText.int != 0:
+    NSMakeRange(window.state.imeCursorIndex.uint, 0)
+  elif window.hasTextInput:
+    window.selectedTextRange
+  elif window != nil:
     NSMakeRange(window.state.imeCursorIndex.uint, 0)
   else:
     kEmptyRange
@@ -848,6 +865,7 @@ proc insertText2(
   obj: ID,
   replacementRange: NSRange
 ): ID {.cdecl.} =
+  ## Delivers committed AppKit text as one insertion, including newlines.
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
@@ -858,23 +876,16 @@ proc insertText2(
   else:
     characters = obj.NSString
 
-  var range = NSMakeRange(0, characters.length.uint)
-  while range.length > 0:
-    var
-      codepoint: uint32
-      usedLength: uint
-    discard characters.getBytes(
-      codepoint.addr,
-      sizeof(codepoint).uint,
-      usedLength.addr,
-      NSUTF32StringEncoding,
-      0.NSStringEncodingConversionOptions,
-      range,
-      range.addr
-    )
-    if codepoint >= 0xf700 and codepoint <= 0xf7ff:
+  var text: string
+  for rune in ($characters).runes:
+    if rune.int >= 0xf700 and rune.int <= 0xf7ff:
       continue
-    window.handleRune(Rune(codepoint))
+    text.add($rune)
+  if replacementRange.location != NSNotFound.uint and
+    window.hasTextInput and window.onTextEdit != nil:
+      window.replaceNativeText(text, replacementRange)
+  else:
+    window.handleTextInput(text)
 
   if window.markedText.int != 0:
     window.markedText.ID.release()
@@ -885,6 +896,21 @@ proc insertText2(
     window.state.imeCursorIndex = 0
     if window.onImeChange != nil:
       window.onImeChange()
+
+proc insertTextLegacy(self: ID, cmd: SEL, obj: ID): ID {.cdecl.} =
+  ## Accepts the legacy NSResponder insertion selector used by text services.
+  insertText2(self, cmd, obj, kEmptyRange)
+
+proc pasteText(self: ID, cmd: SEL, sender: ID): ID {.cdecl.} =
+  ## Captures the current pasteboard immediately for native paste actions.
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil or not window.state.runeInputEnabled:
+    return
+  let value = NSPasteboard.generalPasteboard().stringForType(
+    NSPasteboardTypeString
+  )
+  if value.int != 0:
+    window.handleTextInput($value)
 
 proc characterIndexForPoint(
   self: ID,
@@ -1006,6 +1032,7 @@ proc init() {.raises: [].} =
     when defined(useMetal4) or defined(useCpu):
       addClass "WindyView", "NSView", WindyView:
         addProtocol "NSTextInputClient"
+        registerAccessibilityMethods(WindyView)
         addMethod "acceptsFirstResponder", acceptsFirstResponder
         addMethod "canBecomeKeyView", canBecomeKeyView
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
@@ -1034,6 +1061,8 @@ proc init() {.raises: [].} =
         addMethod "validAttributesForMarkedText", validAttributesForMarkedText
         addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
         addMethod "insertText:replacementRange:", insertText2
+        addMethod "insertText:", insertTextLegacy
+        addMethod "paste:", pasteText
         addMethod "characterIndexForPoint:", characterIndexForPoint
         addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
         addMethod "doCommandBySelector:", doCommandBySelector
@@ -1043,6 +1072,7 @@ proc init() {.raises: [].} =
     else:
       addClass "WindyView", "NSOpenGLView", WindyView:
         addProtocol "NSTextInputClient"
+        registerAccessibilityMethods(WindyView)
         addMethod "acceptsFirstResponder", acceptsFirstResponder
         addMethod "canBecomeKeyView", canBecomeKeyView
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
@@ -1071,6 +1101,8 @@ proc init() {.raises: [].} =
         addMethod "validAttributesForMarkedText", validAttributesForMarkedText
         addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
         addMethod "insertText:replacementRange:", insertText2
+        addMethod "insertText:", insertTextLegacy
+        addMethod "paste:", pasteText
         addMethod "characterIndexForPoint:", characterIndexForPoint
         addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
         addMethod "doCommandBySelector:", doCommandBySelector
@@ -1103,19 +1135,25 @@ proc init() {.raises: [].} =
   initialized = true
 
 proc processKeyDown(event: NSEvent) =
+  ## Synchronizes modifiers before delivering physical or synthetic keys.
   let nsWindow = event.window()
   let window = windows.forNSWindow(nsWindow)
   if window == nil:
     return
 
+  let flags = event.modifierFlags()
+  window.syncModifierState(flags)
   window.handleButtonPress(keyCodeToButton[event.keyCode.int])
-  if window.state.runeInputEnabled:
-    discard nsWindow.contentView().inputContext.handleEvent(event)
+  if window.state.runeInputEnabled and
+    (flags and ModifierClassCommand) == 0:
+      discard nsWindow.contentView().inputContext.handleEvent(event)
 
 proc processKeyUp(event: NSEvent) =
+  ## Refreshes modifiers even when a synthetic sender omits flagsChanged.
   let window = windows.forNSWindow(event.window())
   if window == nil:
     return
+  window.syncModifierState(event.modifierFlags())
   window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
 
 proc processFlagsChanged(event: NSEvent) =
@@ -1284,6 +1322,9 @@ proc close*(window: Window) =
   window.onButtonPress = nil
   window.onButtonRelease = nil
   window.onRune = nil
+  window.onTextInput = nil
+  window.onTextEdit = nil
+  window.textInput = TextInputState()
   window.onImeChange = nil
   window.onFileDrop = nil
 
