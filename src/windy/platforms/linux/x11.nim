@@ -21,6 +21,8 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
 
@@ -440,6 +442,8 @@ proc destroy(window: Window) =
 proc closed*(window: Window): bool = window.closed
 
 proc close*(window: Window) =
+  window.onTextInput = nil
+  window.onTextEdit = nil
   destroy window
 
 proc makeContextCurrent*(window: Window) =

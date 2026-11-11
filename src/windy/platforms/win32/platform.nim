@@ -73,6 +73,8 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
     imePos*: IVec2
@@ -252,6 +254,8 @@ proc destroy(window: Window) =
   window.onButtonPress = nil
   window.onButtonRelease = nil
   window.onRune = nil
+  window.onTextInput = nil
+  window.onTextEdit = nil
   window.onImeChange = nil
 
   # Destroy graphics context

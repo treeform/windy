@@ -1,4 +1,4 @@
-import common, pixie, std/random
+import common, pixie, std/[random, unicode]
 
 const
   multiClickRadius = 4
@@ -163,8 +163,21 @@ template handleRuneTemplate*() =
     return
   if rune.uint32 < 32 or (rune.uint32 > 126 and rune.uint32 < 160):
     return
-  if window.onRune != nil:
+  if window.onTextInput != nil:
+    window.onTextInput($rune)
+  elif window.onRune != nil:
     window.onRune(rune)
+
+template handleTextInputTemplate*(value: string) =
+  ## Delivers a committed text edit while preserving legacy rune callbacks.
+  if window.state.runeInputEnabled:
+    let text = value
+    if text.len > 0:
+      if window.onTextInput != nil:
+        window.onTextInput(text)
+      else:
+        for rune in text.runes:
+          window.handleRune(rune)
 
 proc addDefaultHeaders*(headers: var seq[HttpHeader]) =
   if headers["user-agent"].len == 0:
