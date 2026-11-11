@@ -1,10 +1,28 @@
 when defined(macosx):
   include ../src/windy/platforms/macos/platform
 
+  type
+    NSPasteboardItem = distinct NSObject
+    NSMutableArray = distinct NSObject
+
   objc:
     proc retainCount(self: ID): uint
     proc windowNumber(self: NSWindow): int
     proc postEvent(self: NSApplication, x: NSEvent, atStart: bool)
+    proc initWithString(
+      self: NSAttributedString,
+      x: NSString
+    ): NSAttributedString
+    proc pasteboardItems(self: NSPasteboard): NSArray
+    proc writeObjects(self: NSPasteboard, x: NSArray): bool
+    proc types(self: NSPasteboardItem): NSArray
+    proc dataForType(self: NSPasteboardItem, x: NSPasteboardType): NSData
+    proc setData(
+      self: NSPasteboardItem,
+      x: NSData,
+      forType: NSPasteboardType
+    ): bool
+    proc addObject(self: NSMutableArray, x: ID)
     proc keyEventWithType(
       class: typedesc[NSEvent],
       x: uint,
@@ -141,6 +159,141 @@ when defined(macosx):
       doAssert not window.buttonDown[button]
 
   testKeyboardQueue()
+
+  proc testNativeTextInput() =
+    ## Checks native and legacy insertions remain single Unicode edits.
+    const Text = "First 🙂 世界\nSecond\tline"
+    let
+      window = newWindow("Text insertion", ivec2(32, 32), visible = false)
+      client = window.inner.contentView.NSTextInputClient
+    defer:
+      window.close()
+      doAssert window.onTextInput == nil
+    var
+      insertions: seq[string]
+      runes: seq[Rune]
+    window.runeInputEnabled = true
+    window.onTextInput = proc(text: string) =
+      ## Records complete insertions.
+      insertions.add(text)
+    window.onRune = proc(rune: Rune) =
+      ## Records legacy fallback callbacks.
+      runes.add(rune)
+    autoreleasepool:
+      client.insertText((@Text).ID, kEmptyRange)
+      client.insertText((@Text).ID)
+      let attributed = NSAttributedString.alloc().initWithString(@Text)
+      client.insertText(attributed.ID, kEmptyRange)
+      attributed.ID.release()
+      doAssert insertions == @[Text, Text, Text]
+      doAssert runes.len == 0
+      client.insertText((@("a" & $Rune(0xf700) & "b")).ID)
+      doAssert insertions[^1] == "ab"
+      window.runeInputEnabled = false
+      client.insertText((@Text).ID, kEmptyRange)
+      client.insertText((@Text).ID)
+      doAssert insertions.len == 4
+      window.runeInputEnabled = true
+      window.onTextInput = nil
+      client.insertText((@Text).ID)
+      doAssert runes == "First 🙂 世界Secondline".toRunes
+
+  testNativeTextInput()
+
+  proc testNativePaste() =
+    ## Checks paste captures text before a dictation tool restores clipboard.
+    const Text = "Dictated 🙂 text\nwith another paragraph."
+    let
+      window = newWindow("Native paste", ivec2(32, 32), visible = false)
+      view = window.inner.contentView
+      pasteboard = NSPasteboard.generalPasteboard()
+      saved = NSMutableArray.new()
+    defer:
+      window.close()
+      pasteboard.clearContents()
+      if saved.NSArray.count > 0:
+        doAssert pasteboard.writeObjects(saved.NSArray)
+      saved.ID.release()
+    let items = pasteboard.pasteboardItems()
+    for i in 0 ..< items.count.int:
+      let
+        original = items[i].NSPasteboardItem
+        copy = NSPasteboardItem.new()
+        types = original.types()
+      for j in 0 ..< types.count.int:
+        let
+          kind = types[j].NSPasteboardType
+          data = original.dataForType(kind)
+        if data.int != 0:
+          doAssert copy.setData(data, kind)
+      saved.addObject(copy.ID)
+      copy.ID.release()
+    var insertions: seq[string]
+    window.runeInputEnabled = true
+    window.onTextInput = proc(text: string) =
+      ## Records native paste values before the next frame.
+      insertions.add(text)
+    setClipboardString(Text)
+    view.paste(0.ID)
+    setClipboardString("Restored clipboard")
+    doAssert insertions == @[Text]
+    window.runeInputEnabled = false
+    view.paste(0.ID)
+    doAssert insertions == @[Text]
+
+  testNativePaste()
+
+  proc testSyntheticPasteModifiers() =
+    ## Checks Cmd+V works when synthetic events omit flagsChanged events.
+    let window = newWindow("Synthetic paste", ivec2(32, 32), visible = false)
+    defer:
+      window.close()
+    var
+      shortcuts: int
+      insertions: seq[string]
+    window.runeInputEnabled = true
+    window.onButtonPress = proc(button: Button) =
+      ## Checks the command modifier is already visible in the key callback.
+      if button == KeyV:
+        doAssert window.buttonDown[KeyLeftSuper]
+        inc shortcuts
+    window.onTextInput = proc(text: string) =
+      ## Rejects ordinary text insertion for a command shortcut.
+      insertions.add(text)
+    autoreleasepool:
+      for eventType in [10.uint, 11]:
+        let
+          flags =
+            if eventType == 10:
+              ModifierClassCommand
+            else:
+              0.uint
+          event = NSEvent.keyEventWithType(
+            eventType,
+            NSMakePoint(0, 0),
+            flags,
+            0,
+            window.inner.windowNumber(),
+            0.ID,
+            @"v",
+            @"v",
+            false,
+            9
+          )
+        NSApp.postEvent(event, false)
+      pollEvents()
+    doAssert shortcuts == 1
+    doAssert insertions.len == 0
+    doAssert not window.buttonDown[KeyLeftSuper]
+    doAssert not window.buttonDown[KeyV]
+    window.syncModifierState(ModifierClassCommand or DeviceRightCommand)
+    window.syncModifierState(ModifierClassCommand)
+    doAssert window.buttonDown[KeyRightSuper]
+    doAssert not window.buttonDown[KeyLeftSuper]
+    window.syncModifierState(0)
+    doAssert not window.buttonDown[KeyRightSuper]
+
+  testSyntheticPasteModifiers()
 
   proc testWindowCenter() =
     ## Checks that native frame centers agree on Retina and 1x screens.

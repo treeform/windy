@@ -29,6 +29,8 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
 
@@ -44,6 +46,7 @@ type
     prevSize, prevPos: IVec2
 
     handle: XWindow
+    colormap: Colormap
     ctx: GlxContext
     gpuPixelOptIn: bool
     gpuPixelVsyncState: bool
@@ -57,6 +60,9 @@ type
     innerDecorated: bool
     innerFocused: bool
     mouseCaptured: bool
+    capturePos, restorePos, warpPos: IVec2
+    warpSerial, mouseSerial: culong
+    warpPending: bool
 
     # XDnD state
     xdndSource: XWindow
@@ -78,6 +84,7 @@ var
   multiClickRadius*: float = 4
 
   initialized: bool
+  contextError: bool
   windows: seq[Window]
 
   display: Display
@@ -148,7 +155,8 @@ proc initConstants(display: Display) =
 proc atomIfExist(name: string): Atom =
   display.XInternAtom(name, 1)
 
-proc handleXError(d: Display, event: ptr XErrorEvent): bool {.cdecl.} =
+proc handleXError(d: Display, event: ptr XErrorEvent): cint {.cdecl.} =
+  ## Reports X11 errors through Windy's exception type.
   raise WindyError.newException("Error dealing with X11: " &
       $event.errorCode.Status)
 
@@ -391,9 +399,39 @@ proc queryKeyboardState(): set[0..255] =
   display.XQueryKeymap(r)
   return cast[ptr set[0..255]](r.addr)[]
 
+proc warpMouse(window: Window, pos: IVec2) =
+  ## Tracks warps so their motion events do not become user input.
+  window.warpPos = pos
+  window.warpSerial = display.XNextRequest()
+  window.warpPending = true
+  display.XWarpPointer(
+    0,
+    window.handle,
+    0,
+    0,
+    0,
+    0,
+    pos.x,
+    pos.y
+  )
+  display.XFlush()
+
+proc releaseMouse*(window: Window) =
+  ## Shows the cursor and restores normal absolute mouse tracking.
+  if not window.mouseCaptured:
+    return
+  window.mouseCaptured = false
+  display.XUngrabPointer(CurrentTime)
+  window.warpMouse(window.restorePos)
+  window.mouseSerial = window.warpSerial
+  window.mousePos = window.restorePos
+  window.mousePrevPos = window.restorePos
+
 proc destroy(window: Window) =
+  ## Releases native resources and any active pointer grab.
   if window.closed:
     return
+  window.releaseMouse()
   if window.ctx != nil:
     if glXGetCurrentContext() == window.ctx:
       display.glXMakeCurrent(0.Drawable, nil)
@@ -407,6 +445,8 @@ proc destroy(window: Window) =
     display.XFreeGC(window.gc)
   if window.handle != 0:
     display.XDestroyWindow(window.handle)
+  if window.colormap != 0:
+    display.XFreeColormap(window.colormap)
   if window.xSyncCounter.int != 0:
     display.XSyncDestroyCounter(window.xSyncCounter)
   wasMoved window[]
@@ -415,6 +455,8 @@ proc destroy(window: Window) =
 proc closed*(window: Window): bool = window.closed
 
 proc close*(window: Window) =
+  window.onTextInput = nil
+  window.onTextEdit = nil
   destroy window
 
 proc hasGpuPixelContext*(window: Window): bool =
@@ -456,6 +498,7 @@ proc `visible=`*(window: Window, v: bool) =
   if v:
     display.XMapWindow(window.handle)
   else:
+    window.releaseMouse()
     display.XUnmapWindow(window.handle)
   blockUntil(window.visible == v)
 
@@ -759,6 +802,102 @@ proc hasGlxExtension(name: string): bool =
     if part == name:
       return true
 
+proc createContext(
+  style: WindowStyle,
+  openglVersion: OpenGLVersion,
+  msaa: MSAA,
+  depthBits, stencilBits: int
+): tuple[visual: XVisualInfo, context: GlxContext] =
+  ## Chooses a matching visual and creates the requested OpenGL context.
+  let
+    extensions = strutils.splitWhitespace(
+      $display.glXQueryExtensionsString(display.defaultScreen)
+    )
+    create = cast[GlxCreateContextAttribsProc](
+      glXGetProcAddressARB("glXCreateContextAttribsARB")
+    )
+  if "GLX_ARB_create_context" notin extensions or create == nil:
+    raise WindyError.newException("GLX_ARB_create_context is not supported")
+  if openglVersion >= OpenGL3Dot2 and
+    "GLX_ARB_create_context_profile" notin extensions:
+      raise WindyError.newException("OpenGL core profiles are not supported")
+
+  var
+    attributes = [
+      GlxXRenderable, 1,
+      GlxDrawableType, GlxWindowBit,
+      GlxRenderType, GlxRgbaBit,
+      GlxXVisualType, GlxTrueColor,
+      GlxDoublebuffer, 1,
+      GlxRedSize, 8,
+      GlxGreenSize, 8,
+      GlxBlueSize, 8,
+      GlxAlphaSize, 8,
+      GlxDepthSize, depthBits.cint,
+      GlxStencilSize, stencilBits.cint,
+      GlxSampleBuffers, cint(msaa != msaaDisabled),
+      GlxSamples, msaa.cint,
+      0
+    ]
+    count: cint
+  let configs = display.glXChooseFBConfig(
+    display.defaultScreen,
+    attributes[0].addr,
+    count.addr
+  )
+  if configs == nil:
+    raise WindyError.newException("No matching OpenGL framebuffer configuration")
+  defer:
+    XFree(configs)
+
+  var config: GlxFbConfig
+  for i in 0 ..< count:
+    let visual = display.glXGetVisualFromFBConfig(configs[i])
+    if visual == nil:
+      continue
+    let suitable = style != Transparent or visual.depth == 32
+    if suitable:
+      result.visual = visual[]
+      config = configs[i]
+    XFree(visual)
+    if suitable:
+      break
+  if config == nil:
+    raise WindyError.newException("No matching OpenGL window visual")
+
+  var contextAttributes = @[
+    GlxContextMajorVersion, openglVersion.major.cint,
+    GlxContextMinorVersion, openglVersion.minor.cint
+  ]
+  if openglVersion >= OpenGL3Dot2:
+    contextAttributes.add [GlxContextProfileMask, GlxContextCoreProfileBit]
+  contextAttributes.add 0
+
+  proc handleContextError(d: Display, event: ptr XErrorEvent): cint {.cdecl.} =
+    ## Records context creation errors without unwinding through Xlib.
+    contextError = true
+
+  display.XSync()
+  let previousHandler = XSetErrorHandler(handleContextError)
+  defer:
+    XSetErrorHandler(previousHandler)
+  contextError = false
+  result.context = create(
+    display,
+    config,
+    nil,
+    1,
+    contextAttributes[0].addr
+  )
+  display.XSync()
+  if contextError or result.context == nil:
+    if result.context != nil:
+      display.glXDestroyContext(result.context)
+    raise WindyError.newException(
+      "Unable to create OpenGL " & $openglVersion.major & "." &
+      $openglVersion.minor & " context"
+    )
+
 proc newWindow*(
   title: string,
   size: IVec2,
@@ -771,7 +910,7 @@ proc newWindow*(
   stencilBits = 8,
   linuxOptions = LinuxWindowOptions()
 ): Window =
-  ## Creates a new window. Intitializes Windy if needed.
+  ## Creates a new window and initializes Windy if needed.
   init()
   result = Window()
   result.innerDecorated = true
@@ -807,6 +946,10 @@ proc newWindow*(
       XFree(vis)
       if style == Transparent and vi.depth < 32:
         raise WindyError.newException("Transparent GPU pixel windows are not supported")
+    elif not defined(useCpu):
+      let graphics = createContext(style, openglVersion, msaa, depthBits, stencilBits)
+      vi = graphics.visual
+      result.ctx = graphics.context
     elif style == Transparent:
       display.XMatchVisualInfo(display.defaultScreen, 32, TrueColor, vi.addr)
     else:
@@ -815,8 +958,8 @@ proc newWindow*(
       # var attribList = [GlxRgba, GlxDepthSize, 24, GlxDoublebuffer]
       # vi = display.glXChooseVisual(display.defaultScreen, attribList[0].addr)[]
 
-    let cmap = display.XCreateColormap(root, vi.visual, AllocNone)
-    var swa = XSetWindowAttributes(colormap: cmap)
+    result.colormap = display.XCreateColormap(root, vi.visual, AllocNone)
+    var swa = XSetWindowAttributes(colormap: result.colormap)
 
     result.handle = display.XCreateWindow(
       root,
@@ -864,7 +1007,8 @@ proc newWindow*(
     var gcv: XGCValues
     result.gc = display.XCreateGC(result.handle, GCForeground or GCBackground, gcv.addr)
 
-    if linuxOptions.gpuPixels or not defined(useCpu):
+    if linuxOptions.gpuPixels:
+      # The pixel shaders use a compatibility context.
       result.ctx = display.glXCreateContext(vi.addr, nil, 1)
       if result.ctx == nil:
         raise WindyError.newException("Error creating OpenGL context")
@@ -1066,6 +1210,8 @@ proc pollEvents(window: Window) =
         display.XFlush()
 
     of xeFocusIn:
+      if ev.focus.mode in [NotifyGrab, NotifyUngrab]:
+        continue
       if window.innerFocused:
         return # was duplicated
       window.innerFocused = true
@@ -1085,6 +1231,9 @@ proc pollEvents(window: Window) =
         window.onFocusChange()
 
     of xeFocusOut:
+      if ev.focus.mode in [NotifyGrab, NotifyUngrab]:
+        continue
+      window.releaseMouse()
       if not window.innerFocused:
         return # was duplicated
       window.innerFocused = false
@@ -1115,9 +1264,26 @@ proc pollEvents(window: Window) =
         if window.onFrame != nil:
           window.onFrame()
 
+    of xeUnmap:
+      window.releaseMouse()
+
     of xeMotion:
+      if ev.motion.serial < window.mouseSerial:
+        continue
+      if window.warpPending and ev.motion.serial >= window.warpSerial:
+        window.warpPending = false
+        window.capturePos = window.warpPos
+        if not window.mouseCaptured:
+          window.mousePos = window.warpPos
+          window.mousePrevPos = window.warpPos
+        if ev.motion.pos == window.warpPos:
+          continue
       window.mousePrevPos = window.mousePos
-      window.mousePos = ev.motion.pos
+      if window.mouseCaptured:
+        window.mousePos += ev.motion.pos - window.capturePos
+        window.capturePos = ev.motion.pos
+      else:
+        window.mousePos = ev.motion.pos
       window.state.mouseInside = true
       window.perFrame.mouseDelta += window.mousePos - window.mousePrevPos
       if (window.mousePos - window.lastClickPosition).vec2.length > multiClickRadius:
@@ -1237,6 +1403,11 @@ proc pollEvents(window: Window) =
     else:
       discard
 
+  if window.mouseCaptured and not window.warpPending:
+    let center = window.size div 2
+    if window.capturePos != center:
+      window.warpMouse(center)
+
 proc mousePos*(window: Window): IVec2 =
   window.mousePos
 
@@ -1255,17 +1426,70 @@ proc mouseCaptured*(window: Window): bool =
   window.mouseCaptured
 
 proc captureMouse*(window: Window) =
-  ## Hide the cursor and report unbounded relative mouse deltas.
+  ## Hides and confines the cursor and reports relative mouse deltas.
   if window.mouseCaptured:
     return
+  if window.closed:
+    raise newException(WindyError, "Cannot capture a closed window")
+  for other in windows:
+    if other.mouseCaptured:
+      raise newException(WindyError, "Another window has captured the mouse")
+  var
+    root, child: XWindow
+    rootPos, pos: IVec2
+    mask: cuint
+  if display.XQueryPointer(
+    window.handle,
+    root.addr,
+    child.addr,
+    rootPos.x.addr,
+    rootPos.y.addr,
+    pos.x.addr,
+    pos.y.addr,
+    mask.addr
+  ) == 0:
+    raise newException(WindyError, "Mouse is on a different X11 screen")
+  let image = XcursorImageCreate(1, 1)
+  if image == nil:
+    raise newException(WindyError, "Unable to create an invisible cursor")
+  defer:
+    XcursorImageDestroy(image)
+  image.pixels[] = 0
+  image.xhot = 0
+  image.yhot = 0
+  let cursor = XcursorImageLoadCursor(display, image)
+  if cursor == 0:
+    raise newException(WindyError, "Unable to load an invisible cursor")
+  defer:
+    display.XFreeCursor(cursor)
+  let status = display.XGrabPointer(
+    window.handle,
+    0,
+    (PointerMotionMask or ButtonPressMask or ButtonReleaseMask).cuint,
+    GrabModeAsync,
+    GrabModeAsync,
+    window.handle,
+    cursor,
+    CurrentTime
+  )
+  case status
+  of GrabSuccess:
+    discard
+  of AlreadyGrabbed:
+    raise newException(WindyError, "Mouse is grabbed by another application")
+  of GrabNotViewable:
+    raise newException(WindyError, "Cannot capture an unmapped window")
+  of GrabFrozen:
+    raise newException(WindyError, "Mouse is frozen by another application")
+  else:
+    raise newException(WindyError, "Unable to grab the X11 mouse pointer")
   window.mouseCaptured = true
-  warn "Mouse capture is not implemented on Linux yet"
-
-proc releaseMouse*(window: Window) =
-  ## Show the cursor and restore normal absolute mouse tracking.
-  if not window.mouseCaptured:
-    return
-  window.mouseCaptured = false
+  window.restorePos = pos
+  window.capturePos = pos
+  window.mousePos = pos
+  window.mousePrevPos = pos
+  window.warpMouse(window.size div 2)
+  window.mouseSerial = window.warpSerial
 
 proc scrollDelta*(window: Window): Vec2 =
   window.perFrame.scrollDelta

@@ -18,6 +18,8 @@ else:
     onMouseMove*, onScroll*, onImeChange*: Callback
     onButtonPress*, onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onFileDrop*: FileDropCallback
     onTouch*: TouchCallback
     direct*: DirectWindowState
@@ -33,6 +35,8 @@ proc close*(window: Window) =
     if data.drm != nil and data.drm.gpuOwned:
       raise newException(WindyError, "Close the GPU pixel presenter before its windows")
   data.closed = true
+  window.onTextInput = nil
+  window.onTextEdit = nil
   try:
     if data.touch != nil:
       try:

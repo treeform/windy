@@ -224,6 +224,9 @@ proc XGetAtomName*(d: Display, atom: Atom): cstring
 proc XCreateColormap*(d: Display, root: Window; visual: ptr Visual;
     flags: cint): Colormap
 
+proc XFreeColormap*(d: Display, colormap: Colormap)
+  ## Frees a colormap created for a window.
+
 proc XCreateWindow*(
   d: Display,
   root: Window;
@@ -342,6 +345,42 @@ proc XCreateFontCursor*(d: Display, shape: cuint): x.Cursor
 proc XDefineCursor*(d: Display, window: x.Window; cursor: x.Cursor)
 proc XUndefineCursor*(d: Display, window: x.Window)
 proc XFreeCursor*(d: Display, cursor: x.Cursor)
+
+proc XGrabPointer*(
+  d: Display,
+  window: Window,
+  ownerEvents: cint,
+  eventMask: cuint,
+  pointerMode, keyboardMode: cint,
+  confineTo: Window,
+  cursor: x.Cursor,
+  time: Time
+): cint
+  ## Grabs pointer events and optionally confines and changes the cursor.
+
+proc XUngrabPointer*(d: Display, time: Time)
+  ## Releases this client's pointer grab.
+
+proc XQueryPointer*(
+  d: Display,
+  window: Window,
+  root, child: ptr Window,
+  rootX, rootY, windowX, windowY: ptr cint,
+  mask: ptr cuint
+): cint
+  ## Returns the pointer position relative to a window.
+
+proc XNextRequest*(d: Display): culong
+  ## Returns the serial number of the next X request.
+
+proc XWarpPointer*(
+  d: Display,
+  source, destination: Window,
+  sourceX, sourceY: cint,
+  sourceWidth, sourceHeight: cuint,
+  destinationX, destinationY: cint
+)
+  ## Moves the pointer to the requested window coordinates.
 
 {.pop.}
 
