@@ -1,8 +1,9 @@
 import
   pixie,
-  ./common,
-  ./platforms/linux/[backends, direct],
-  ./platforms/linux/native/[drm, pixelpair]
+  ../../common,
+  ./[backends, direct],
+  ./drm/display,
+  ./native/pixelpair
 
 export PixelRegion
 

@@ -1,44 +1,49 @@
 # X11 GPU pixels
 
-`windy/x11pixels` presents opaque Pixie images through a double-buffered GLX
-drawable, including in `-d:useCpu` applications. It leaves ordinary CPU windows
-and native DRM/fbdev presentation unchanged. Opt in with
-`LinuxWindowOptions(gpuPixels: true)` on `newWindow`.
+Use the X11 pixel presenter to scale a Pixie image on the GPU, with optional vsync.
+It works in CPU pixel builds, so an app can choose between CPU and GPU rendering.
+Add `switch("define", "useCpu")` to your application's `config.nims`.
+The default Linux backend is X11.
 
-Create a `newX11PixelPresenter(window)`, call `drawPixels(image, region)` then
-`swap()`, and close the presenter before its window. Create, draw, swap and close
-on the window thread. Each presenter owns one texture, shader program and vertex
-buffer. The context needs OpenGL 2.1 / GLSL 1.20.
+```nim
+import
+  pixie, windy,
+  windy/platforms/linux/x11pixels
 
-Images upload as RGBA bytes without channel conversion; the shader forces opaque
-output. Native-size textures use nearest filtering, integer scaling and centered
-black borders. An explicit `scale` must fit. `fitDown` permits fractional nearest
-scaling for a modal UI in a small window; leave it false for game pixels. Regions
-use top-left coordinates. A nil image with an empty region clears black.
+proc main() =
+  ## Draw a Pixie image with the X11 GPU presenter.
+  let window = newWindow("GPU pixels", ivec2(800, 600), vsync = true,
+    linuxOptions = LinuxWindowOptions(gpuPixels: true))
+  defer: window.close()
+  let presenter = newX11PixelPresenter(window)
+  defer: presenter.close()
+  let image = newImage(256, 224)
+  image.fill(color(0.2, 0.4, 0.8, 1))
+  while not window.closeRequested:
+    pollEvents()
+    presenter.drawPixels(image, PixelRegion(width: image.width, height: image.height))
+    presenter.swap()
 
-`changed = false` retains texture pixels; callers must still draw after resizes
-or crop changes. A different source size reallocates storage even when `changed`
-is false. For two windows, draw both back buffers first and then swap both. This
-submits drawing before presentation waits; it does not promise atomic updates
-across windows.
+main()
+```
 
-`vsync = true` requests swap interval one through the advertised EXT, MESA or SGI
-GLX extension. Startup fails if no supported extension can configure it.
-`gpuPixelVsync` reports successful configuration, not measured physical refresh.
-`vsync = false` is an explicit diagnostic/headless mode. `hasGpuPixelContext`
-checks the opt-in drawable; CPU `presentPixels` is not its presentation API.
-GPU initialization and driver errors remain visible to callers.
+The region uses coordinates from the image's top-left corner. Pixels are drawn
+opaque, scaled by a whole number and centered with black borders. You can request
+an exact size with `scale = 2`, or allow shrinking into a small window with
+`fitDown = true`.
 
-## Verification
+Pass `changed = false` when the image has not changed to avoid uploading it again.
+You must still draw and swap after a window resize or a change to the region.
+To clear the window to black, pass a nil image and an empty `PixelRegion()`.
 
-Run `nim r tests/test_x11_pixels.nim` with Xvfb installed. It starts and stops its
-own isolated server and uses software Mesa, never the user's desktop. Actual GL
-readback is compared against an independent CPU pixel reference for colours,
-opacity, crop orientation, borders, forced scale, UI downscale, duplicates,
-source-size changes and independent contexts. Cleanup and paired submission are
-also checked. `nim r tests/test_drm_pixelpair.nim` retains the headless native checks.
+Keep the presenter on the window thread and close it before closing the window.
+It requires OpenGL 2.1. With `vsync = true`, startup fails if the GLX driver cannot
+configure vsync; use `vsync = false` when you do not need it.
 
-Xvfb does not provide physical vsync. Real-display acceptance must check moving
-imagery for tearing and normal pacing with both windows visible, resized,
-minimized and restored. Applications should retain an explicit CPU comparison
-path. Automated playback remains muted or uses a null audio backend.
+For two windows, draw both before swapping either. X11 does not guarantee an
+atomic update across windows. For coordinated updates on direct Linux displays,
+see [DRM GPU pixels](drm-pixel-pairs.md).
+
+Run `nim r tests/test_x11_pixels.nim` for the headless rendering test. It requires
+Xvfb and Mesa and checks the rendered pixels. Physical vsync still needs testing
+on a real display.

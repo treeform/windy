@@ -3,7 +3,7 @@ import
   std/[algorithm, parseutils],
   ./drm_gpu_patterns
 
-include windy/platforms/linux/native/drm
+include windy/platforms/linux/drm/display
 
 type
   GbmHandle {.union.} = object

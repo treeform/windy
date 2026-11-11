@@ -1,6 +1,7 @@
 import
   std/unittest,
-  windy/[common, drmpixels],
+  windy/common,
+  windy/platforms/linux/drmpixels,
   windy/platforms/linux/native/pixelpair
 
 suite "GPU pixel pairs":

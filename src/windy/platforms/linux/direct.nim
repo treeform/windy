@@ -2,7 +2,8 @@ import
   pixie,
   ../../common,
   ./backends,
-  ./native/[state, drm, framebuffer, touch]
+  ./drm/display,
+  ./native/[state, framebuffer, touch]
 
 when HasX11:
   import ./x11

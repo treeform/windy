@@ -1,7 +1,7 @@
 import
   std/[dynlib, monotimes, os, posix, strformat, strutils, times],
   pixie,
-  ./[framebuffer, pixels, pixelpair]
+  ../native/[framebuffer, pixels, pixelpair]
 
 type
   ModeInfo = object
@@ -541,4 +541,4 @@ proc openDrm*(path: string): DrmDisplay =
     result.close()
     raiseOSError(error, path)
 
-include drmgpu
+include gpu

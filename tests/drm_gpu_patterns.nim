@@ -12,7 +12,7 @@ const
   SourceWidth* = 256
 
 proc fit*(width, height, panelWidth, panelHeight: int): Viewport =
-  ## Center a positive integer enlargement inside a panel.
+  ## Center an image inside a panel using an integer scale.
   if min(width, height) <= 0 or min(panelWidth, panelHeight) <= 0:
     raise newException(ValueError, "Dimensions must be positive")
   let scale = min(panelWidth div width, panelHeight div height)

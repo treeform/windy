@@ -1,20 +1,21 @@
-# Direct Linux displays (experimental)
+# Linux displays without X11
 
-These CPU pixel backends support Linux systems without X11. The default build
-still uses X11/OpenGL. Put the desired settings in your application's
-`config.nims`:
+Windy can draw Pixie images directly to a Linux display through fbdev or DRM.
+These backends are experimental and currently require a 64-bit Linux target.
+Your app needs access to the display and input devices, with no other application
+controlling the display.
+
+Put the backends you need in your application's `config.nims`:
 
 ```nim
 switch("define", "useCpu")
 switch("define", "windyBackends=fbdev,drm")
 ```
 
-`windyBackends` accepts `x11`, `fbdev`, `drm`, or a comma-separated combination.
-Direct-only builds do not need X11 libraries. DRM loads `libdrm.so.2` when opened
-and currently requires a 64-bit target. Combined builds include X11's library
-dependencies even when selecting a direct display.
+You can include `x11` in the list for an app that also runs on a desktop.
+Builds without `x11` do not need X11 libraries. DRM needs `libdrm.so.2` at runtime.
 
-Select the backend before creating windows:
+Choose the backend before opening a window. For example, to fill a DRM display:
 
 ```nim
 import pixie, windy
@@ -33,45 +34,27 @@ while not window.closeRequested:
 window.close()
 ```
 
-Choose connector and input paths for your system. Multiple DRM windows can own
-separate connectors on the same device. For fbdev, select `FbdevBackend` and
-`LinuxWindowOptions(device: "/dev/fb0")`; only one window can own that framebuffer.
-Windows use the panel's native size. `rotation` and `touchRotation` accept
-0, 90, 180 or 270 degrees. Device discovery and board-specific configuration
-belong to the application.
+Replace the device, connector and touch paths with those for your system. Omit
+`touchDevice` if you do not need touch. Each window fills its display; the size
+passed to `newWindow` is ignored. You can open separate windows on different DRM
+connectors on the same device.
 
-`window.onTouch` receives begin/move/end/cancel events with stable contact IDs
-and window-local pixel positions. `window.touches` contains active contacts.
-Evdev single-touch and slot-based multitouch are supported, without smoothing,
-gestures or mouse synthesis. X11, browser, Windows and macOS touch delivery is
-not implemented in this draft.
+For fbdev, choose `FbdevBackend` and open a window with `vsync = false` and
+`LinuxWindowOptions(device: "/dev/fb0")`. Only one window can use that framebuffer.
+Both backends accept `rotation` and `touchRotation` of 0, 90, 180 or 270 degrees.
 
-The application needs permission to open its display and input devices, and
-exclusive display ownership. Close windows before switching backends. Native
-desktop operations such as resizing, clipboard access or OpenGL contexts raise
-`WindyError`. Keyboard, mouse and controller input are not supplied by these
-direct backends; use the application's input library for controllers.
+DRM's `vsync = true` draws into a second buffer and switches buffers between
+refreshes to avoid tearing. Without vsync, and on fbdev, writes go straight to the
+displayed buffer and can tear. Close all windows before switching backends.
 
-DRM windows with `vsync=true` use two buffers. Presentation uploads into the
-non-visible buffer and queues a switch at vblank. A subsequent upload waits for
-the previous switch before reusing storage, with at most one pending flip per
-screen. Outputs remain independent; the backend dispatches completion events for
-all windows sharing the DRM device. Applications still control their frame rate.
-Page-flip errors and a one-second completion timeout propagate to the caller.
-Each additional buffer uses the panel's native width, pitch and height (about
-3 MiB for a 1024×768 32-bit panel).
+Touch events arrive through `window.onTouch`; `window.touches` holds the active
+contacts. Positions are in window pixels. Both single-touch and multitouch evdev
+devices are supported. Touch is not yet implemented for X11 or the other platforms.
 
-DRM with `vsync=false` and fbdev use direct scanout writes, which can tear.
-fbdev requires `vsync=false`. Normal close waits for pending DRM flips and restores
-the saved display state when it is still available. If the kernel retired the
-previous DRM framebuffer, the output is disabled instead.
+These backends do not provide keyboard, mouse or controller input. Desktop
+operations such as resizing and clipboard access are also unavailable. Device
+selection and controller input belong in the application.
 
-Run `nim r tests/test_native_input.nim` for touch lifecycle and pixel tests.
-`WINDY_TEST_BACKENDS=x11,fbdev,drm nim r tests/test_linux_display.nim` checks
-combined backend selection and X11 CPU pixels; use an isolated Xvfb display.
-`nim r tests/test_linux_glx.nim` checks the default OpenGL path.
-
-On a dedicated test device, compile `tests/manual_direct_displays.nim` with
-`WINDY_TEST_BACKENDS=fbdev,drm` and run it with `fbdev`, or with
-`drm CONNECTOR1 CONNECTOR2`. This temporarily changes both outputs and checks
-independent ownership and cleanup; stop other display applications first.
+For GPU scaling and coordinated updates to two displays, see
+[DRM GPU pixels](drm-pixel-pairs.md). Desktop GPU rendering is covered in
+[X11 GPU pixels](x11-pixels.md).

@@ -1,7 +1,7 @@
 import
   std/[monotimes, os, osproc, streams, strutils, times, unittest],
   opengl, pixie, windy,
-  windy/x11pixels
+  windy/platforms/linux/x11pixels
 
 proc readBack(window: Window): Image =
   ## Read only synthetic pixels from the back buffer on the isolated test display.

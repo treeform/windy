@@ -1,53 +1,57 @@
-# GPU pixel pairs
+# DRM GPU pixels
 
-`windy/drmpixels` adds GPU-scaled pixel presentation for two native DRM windows.
-The caller supplies their order and source crops; device identities and game
-layouts remain application concerns. Existing X11/fbdev/CPU rendering is retained.
+Use a DRM pixel pair when your app needs to scale images on the GPU and update
+two displays together. Windy uploads one Pixie image, draws a region of it for
+each display, and submits both displays in one atomic DRM update.
 
-Enable Windy's DRM backend in the project's Nim configuration. Create two equal,
-unrotated native windows on one DRM device with independent controllers, then
-claim their pair before presenting CPU pixels to either window:
+The displays must be equally sized, unrotated, and on the same DRM device. This
+requires hardware GPU rendering, GBM, EGL and OpenGL ES. Enable `useCpu` and the
+`drm` backend in `config.nims` as shown in [the display setup](linux-direct.md).
+
+This example displays the top and bottom halves of an image on two connectors:
 
 ```nim
 import
   pixie, windy,
-  windy/drmpixels
+  windy/platforms/linux/drmpixels
 
-proc showPanels(first, second: Window, frame: Image) =
-  ## Present two stacked panels without splitting their pixel storage.
+proc main() =
+  ## Display one image across two DRM outputs.
+  setLinuxBackend(DrmBackend)
   let
-    pair = newDrmPixelPair(first, second)
-    panelHeight = frame.height div 2
+    first = newWindow("First", ivec2(0, 0),
+      linuxOptions = LinuxWindowOptions(device: "/dev/dri/card0", output: "DSI-1"))
+    second = newWindow("Second", ivec2(0, 0),
+      linuxOptions = LinuxWindowOptions(device: "/dev/dri/card0", output: "DSI-2"))
+  defer: first.close()
+  defer: second.close()
+
+  let pair = newDrmPixelPair(first, second)
   defer: pair.close()
-  pair.presentPixels(frame, [
-    PixelRegion(width: frame.width, height: panelHeight),
-    PixelRegion(y: panelHeight, width: frame.width, height: panelHeight)])
+  let image = newImage(256, 384)
+  image.fill(color(0.2, 0.4, 0.8, 1))
+  while not first.closeRequested and not second.closeRequested:
+    pollEvents()
+    pair.presentPixels(image, [
+      PixelRegion(width: 256, height: 192),
+      PixelRegion(y: 192, width: 256, height: 192)])
+
+main()
 ```
 
-Keep the pair alive across frames. Source coordinates use the top-left origin;
-a default/zero region leaves an output black. Scaling uses the largest positive
-integer that fits, centered with black borders. Below native size it stays at1×
-and clips to its output. Odd borders match CPU top/left centering.
+Choose the connector order for your app. Region coordinates start at the image's
+top-left corner. Each region is scaled by a whole number and centered, with black
+borders. An empty region leaves that display black. Images larger than a display
+are shown at 1× and clipped.
 
-The packed Pixie RGBA image is read only during the call. Crops share one texture
-upload and one linear combined GBM framebuffer. There is no CPU enlargement,
-screen splitting or readback in normal presentation. EGL has no depth/stencil
-or MSAA. GBM/EGL/GLES libraries load only when creating a pair; software renderers
-are rejected. Unsupported paired scanout does not choose another backend.
+Create the pair before calling either window's CPU `presentPixels`. Keep it alive
+across frames, use it on the window thread, and close it before closing the windows.
+The windows still handle input while the pair handles rendering.
 
-Both primary-plane framebuffer IDs change in one atomic transaction. Rendering
-finishes before submission; old storage remains locked until both CRTC events
-arrive. This coordinates generations, not physical panel refresh phases.
-Presentation is synchronous and vblank paced; fencing/overlap is separate work.
+`presentPixels` waits for both displays to finish their page flips before allowing
+the old buffer to be reused. Both outputs receive the same frame update, although
+the physical panels may refresh at different times. Unsupported hardware raises
+an error; the pair does not automatically switch to CPU rendering.
 
-Use the creating thread. The pair activates its EGL context for rendering and
-cleanup. Keep windows alive for input and close the pair before either window.
-Claiming releases their unused CPU scanout buffers; reopen windows to return to
-CPU presentation. Closed pairs reject presentation and tolerate repeated close.
-Initialization and cleanup errors propagate.
-
-`tests/test_drm_pixelpair.nim` covers geometry, crops, event order and ownership.
-`tests/manual_drm_pixelpair.nim CARD TOP BOTTOM` reads every GPU pixel and tests
-real flips, odd borders, resizing, clipping, black outputs and swaps. Physical
-tests need exclusive display ownership and a bounded service-restoring runner.
-Initial measurements are in [the proof guide](drm-gpu-proof.md).
+Run `nim r tests/test_drm_pixelpair.nim` for the headless tests. The hardware test
+is `tests/manual_drm_pixelpair.nim`; it needs exclusive access to both displays.

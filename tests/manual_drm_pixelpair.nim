@@ -1,4 +1,4 @@
-include windy/platforms/linux/native/drm
+include windy/platforms/linux/drm/display
 
 proc pattern(width, height: int): Image =
   ## Generate asymmetric pixel colours without loading game data.

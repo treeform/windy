@@ -1,4 +1,4 @@
-include windy/platforms/linux/native/drm
+include windy/platforms/linux/drm/display
 
 var
   signalFd: cint
