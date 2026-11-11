@@ -1,9 +1,13 @@
 import
   pixie,
   ../../common,
-  ./[backends, fbdev],
-  ./drm/display,
+  ./backends,
   ./native/[state, touch]
+
+when HasFbdev:
+  import ./fbdev
+when HasDrm:
+  import ./drm
 
 when HasX11:
   import ./x11
@@ -21,11 +25,13 @@ else:
 var windows: seq[Window]
 
 proc close*(window: Window) =
+  ## Release input and display resources before removing the window.
   if window.direct == nil or window.direct.closed:
     return
   let data = window.direct
-  if data.drm != nil and data.drm.gpuOwned:
-    raise newException(WindyError, "Close the GPU pixel presenter before its windows")
+  when HasDrm:
+    if data.drm != nil and data.drm.gpuOwned:
+      raise newException(WindyError, "Close the GPU pixel presenter before its windows")
   data.closed = true
   try:
     if data.touch != nil:
@@ -37,62 +43,78 @@ proc close*(window: Window) =
         data.touch.close()
   finally:
     try:
-      if data.fb != nil: data.fb.close()
-      if data.drm != nil and data.screen != nil:
-        data.drm.closeScreen(data.screen)
+      when HasFbdev:
+        if data.fb != nil: data.fb.close()
+      when HasDrm:
+        if data.drm != nil and data.screen != nil:
+          data.drm.closeScreen(data.screen)
     finally:
-      if data.drm != nil:
-        for index, screen in data.drm.screens:
-          if screen == data.screen:
-            data.drm.screens.delete(index)
-            break
-        if data.drm.screens.len == 0:
-          data.drm.close()
+      when HasDrm:
+        if data.drm != nil:
+          for index, screen in data.drm.screens:
+            if screen == data.screen:
+              data.drm.screens.delete(index)
+              break
+          if data.drm.screens.len == 0:
+            data.drm.close()
       for index, current in windows:
         if current == window:
           windows.delete(index)
           break
 
+proc size*(window: Window): IVec2 =
+  ## Return the native dimensions of the selected display.
+  let data = window.direct
+  when HasFbdev:
+    if data.backend == FbdevBackend:
+      return ivec2(data.fb.width.int32, data.fb.height.int32)
+  when HasDrm:
+    return ivec2(data.screen.width.int32, data.screen.height.int32)
+
 proc newDirectWindow*(title: string, backend: LinuxBackend,
     options: LinuxWindowOptions, vsync = false): Window =
+  ## Open one compiled direct display backend and its optional touch device.
   let path = if options.device.len > 0: options.device
     elif backend == FbdevBackend: "/dev/fb0" else: "/dev/dri/card0"
   result = Window(direct: DirectWindowState(title: title, device: path, backend: backend))
   let data = result.direct
   try:
-    if backend == FbdevBackend:
-      for window in windows:
-        if window.direct.device == path:
-          raise newException(WindyError, "Framebuffer is already owned: " & path)
-      data.fb = openFramebuffer(path, options.rotation)
-    else:
-      if options.output.len == 0:
-        raise newException(WindyError, "A DRM connector must be selected")
-      for window in windows:
-        if window.direct.backend == DrmBackend and window.direct.device == path:
-          data.drm = window.direct.drm
-          break
-      if data.drm == nil:
-        data.drm = openDrm(path)
-      data.drm.openOutput(@[options.output], options.rotation, vsync)
-      data.screen = data.drm.screens[^1]
+    case backend
+    of FbdevBackend:
+      when HasFbdev:
+        for window in windows:
+          if window.direct.device == path:
+            raise newException(WindyError, "Framebuffer is already owned: " & path)
+        data.fb = openFramebuffer(path, options.rotation)
+      else:
+        raise newException(WindyError, "fbdev backend was not compiled")
+    of DrmBackend:
+      when HasDrm:
+        if options.output.len == 0:
+          raise newException(WindyError, "A DRM connector must be selected")
+        for window in windows:
+          if window.direct.backend == DrmBackend and window.direct.device == path:
+            data.drm = window.direct.drm
+            break
+        if data.drm == nil:
+          data.drm = openDrm(path)
+        data.drm.openOutput(@[options.output], options.rotation, vsync)
+        data.screen = data.drm.screens[^1]
+      else:
+        raise newException(WindyError, "DRM backend was not compiled")
+    of X11Backend:
+      raise newException(WindyError, "X11 is not a direct display backend")
     if options.touchDevice.len > 0:
       for window in windows:
         if window.direct.touch != nil and window.direct.touch.path == options.touchDevice:
           raise newException(WindyError, "Touchscreen is already assigned")
-      let
-        width = if data.fb != nil: data.fb.width else: data.screen.width
-        height = if data.fb != nil: data.fb.height else: data.screen.height
-      data.touch = openTouch(options.touchDevice, width, height, options.touchRotation)
+      let dimensions = result.size
+      data.touch = openTouch(options.touchDevice, dimensions.x.int, dimensions.y.int,
+        options.touchRotation)
     windows.add result
   except:
     result.close()
     raise
-
-proc size*(window: Window): IVec2 =
-  let data = window.direct
-  if data.fb != nil: ivec2(data.fb.width.int32, data.fb.height.int32)
-  else: ivec2(data.screen.width.int32, data.screen.height.int32)
 
 proc framebufferSize*(window: Window): IVec2 = window.size
 proc closed*(window: Window): bool = window.direct.closed
@@ -114,9 +136,11 @@ proc presentPixels*(window: Window, image: Image) =
   if window.closed:
     raise newException(WindyError, "Cannot present to a closed window")
   let data = window.direct
-  if data.fb != nil:
-    data.fb.present(image)
-  else:
+  when HasFbdev:
+    if data.fb != nil:
+      data.fb.present(image)
+      return
+  when HasDrm:
     for index, screen in data.drm.screens:
       if screen == data.screen:
         data.drm.present(index, image)

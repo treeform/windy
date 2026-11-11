@@ -1,7 +1,7 @@
 import
   std/[monotimes, os, times],
   pixie,
-  windy/platforms/linux/drm/display
+  windy/platforms/linux/drm
 
 proc main() =
   doAssert paramCount() == 1, "Choose a DRM connector."

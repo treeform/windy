@@ -2,7 +2,6 @@ import
   std/[os, posix],
   pixie,
   ../../../common,
-  ../fbdev,
   ./pixels
 
 type
@@ -66,13 +65,13 @@ proc cancel*(reader: TouchReader): seq[TouchEvent] =
 proc resync(reader: TouchReader) =
   if reader.multitouch:
     var axis: Axis
-    if deviceIoctl(reader.fd, getAxis(47), addr axis) < 0:
+    if posix.ioctl(reader.fd, getAxis(47), addr axis) < 0:
       raiseOSError(osLastError(), reader.path)
     reader.slot = int(axis.value) - reader.slotMinimum
     for code in [57'i32, 53, 54]:
       var values = newSeq[int32](reader.pending.len + 1)
       values[0] = code
-      if deviceIoctl(reader.fd, getSlots(cint(values.len * sizeof(int32))), addr values[0]) < 0:
+      if posix.ioctl(reader.fd, getSlots(cint(values.len * sizeof(int32))), addr values[0]) < 0:
         raiseOSError(osLastError(), reader.path)
       for index in 0 ..< reader.pending.len:
         case code
@@ -84,9 +83,9 @@ proc resync(reader: TouchReader) =
     var
       keys: array[96, byte]
       x, y: Axis
-    if deviceIoctl(reader.fd, getKeys(cint(keys.len)), addr keys[0]) < 0 or
-        deviceIoctl(reader.fd, getAxis(0), addr x) < 0 or
-        deviceIoctl(reader.fd, getAxis(1), addr y) < 0:
+    if posix.ioctl(reader.fd, getKeys(cint(keys.len)), addr keys[0]) < 0 or
+        posix.ioctl(reader.fd, getAxis(0), addr x) < 0 or
+        posix.ioctl(reader.fd, getAxis(1), addr y) < 0:
       raiseOSError(osLastError(), reader.path)
     reader.pending[0] = Slot(id: (if (keys[330 div 8] and (1'u8 shl (330 mod 8))) != 0: 0'i32 else: -1'i32),
       x: x.value, y: y.value)
@@ -108,11 +107,11 @@ proc openTouch*(path: string, width, height, rotation: int): TouchReader =
     var
       bits: array[8, byte]
       slots, x, y: Axis
-    if deviceIoctl(result.fd, getBits(3, cint(bits.len)), addr bits[0]) < 0:
+    if posix.ioctl(result.fd, getBits(3, cint(bits.len)), addr bits[0]) < 0:
       raiseOSError(osLastError(), path)
     result.multitouch = (bits[47 div 8] and (1'u8 shl (47 mod 8))) != 0
     if result.multitouch:
-      if deviceIoctl(result.fd, getAxis(47), addr slots) < 0:
+      if posix.ioctl(result.fd, getAxis(47), addr slots) < 0:
         raiseOSError(osLastError(), path)
       result.slotMinimum = int(slots.minimum)
     let
@@ -121,8 +120,8 @@ proc openTouch*(path: string, width, height, rotation: int): TouchReader =
       yCode = if result.multitouch: 54 else: 1
     if count notin 1 .. 32:
       raise newException(WindyError, "Unsupported touch slot count")
-    if deviceIoctl(result.fd, getAxis(cint(xCode)), addr x) < 0 or
-        deviceIoctl(result.fd, getAxis(cint(yCode)), addr y) < 0:
+    if posix.ioctl(result.fd, getAxis(cint(xCode)), addr x) < 0 or
+        posix.ioctl(result.fd, getAxis(cint(yCode)), addr y) < 0:
       raiseOSError(osLastError(), path)
     if x.maximum <= x.minimum or y.maximum <= y.minimum:
       raise newException(WindyError, "Invalid touchscreen coordinate ranges")

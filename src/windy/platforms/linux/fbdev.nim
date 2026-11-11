@@ -43,8 +43,6 @@ const
   Blank = 0x4611.culong
   ActivateForce = 128'u32
 
-proc deviceIoctl*(fd: cint, request: culong, argument: pointer): cint {.importc: "ioctl", header: "<sys/ioctl.h>".}
-
 proc packPixel*(color: uint32, red, green, blue, alpha: Bitfield): uint32 =
   for (value, channel) in [(color shr 16 and 255, red),
       (color shr 8 and 255, green), (color and 255, blue), (255'u32, alpha)]:
@@ -55,7 +53,7 @@ proc packPixel*(color: uint32, red, green, blue, alpha: Bitfield): uint32 =
       result = result or ((value * maximum + 127) div 255 shl channel.offset)
 
 proc checkedIoctl(fd: cint, request: culong, argument: pointer) =
-  if deviceIoctl(fd, request, argument) < 0:
+  if posix.ioctl(fd, request, argument) < 0:
     raiseOSError(osLastError())
 
 proc openFramebuffer*(path: string, rotation = 0): Framebuffer =
@@ -140,7 +138,7 @@ proc present*(fb: Framebuffer, image: Image) =
   if not fb.activated:
     fb.variable.xoffset = 0
     fb.variable.yoffset = 0
-    if deviceIoctl(fb.fd, PanDisplay, addr fb.variable) < 0:
+    if posix.ioctl(fb.fd, PanDisplay, addr fb.variable) < 0:
       fb.variable.activate = ActivateForce
       checkedIoctl(fb.fd, PutVariable, addr fb.variable)
     checkedIoctl(fb.fd, Blank, nil)
@@ -148,13 +146,13 @@ proc present*(fb: Framebuffer, image: Image) =
 
 proc close*(fb: Framebuffer) =
   if fb.memory != nil:
-    var restoreResult = 0.cint
+    var restoreResult = 0
     if fb.touched:
       copyMem(fb.memory, addr fb.saved[0], fb.length)
     if fb.activated:
-      restoreResult = deviceIoctl(fb.fd, PanDisplay, addr fb.original)
+      restoreResult = posix.ioctl(fb.fd, PanDisplay, addr fb.original)
       if restoreResult < 0:
-        restoreResult = deviceIoctl(fb.fd, PutVariable, addr fb.original)
+        restoreResult = posix.ioctl(fb.fd, PutVariable, addr fb.original)
     let unmapResult = munmap(fb.memory, fb.length)
     fb.memory = nil
     let closeResult = posix.close(fb.fd)

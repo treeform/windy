@@ -1,19 +1,26 @@
-import ./backends
+import ../../common, ./backends
 export backends
 
 when not HasDirect:
-  include x11
+  import ./x11
+  export x11
 
   proc setLinuxBackend*(backend: LinuxBackend) =
     if backend != X11Backend:
       raise newException(WindyError, "Backend was not compiled into Windy")
 else:
-  import pixie, ../../common, ./direct
+  import pixie, ./direct
   import ../../http
   export http
   when HasX11:
     import ./x11
     export x11.quitRequested, x11.onQuitRequest, x11.multiClickInterval, x11.multiClickRadius
+    export x11.X11PixelPresenter, x11.newX11PixelPresenter, x11.drawPixels,
+      x11.swap, x11.PixelRegion
+
+    proc close*(presenter: x11.X11PixelPresenter) =
+      ## Release the X11 pixel presenter's GPU resources before its window.
+      x11.close(presenter)
   else:
     var
       quitRequested*: bool

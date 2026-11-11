@@ -2,7 +2,7 @@ import
   pixie,
   windy/common,
   windy/platforms/linux/fbdev,
-  windy/platforms/linux/drm/display,
+  windy/platforms/linux/drm,
   windy/platforms/linux/native/[touch, pixels]
 
 block:

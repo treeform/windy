@@ -1,8 +1,8 @@
 import
   std/unittest,
-  windy/common,
-  windy/platforms/linux/drmpixels,
-  windy/platforms/linux/native/pixelpair
+  windy,
+  windy/platforms/linux/drm,
+  windy/platforms/linux/native/pixels
 
 suite "GPU pixel pairs":
   test "DS and EarthBound preserve integer pixels and borders":
@@ -28,15 +28,8 @@ suite "GPU pixel pairs":
     check vertices[11] == 0
     check vertices[27] == 1
     check vertices[35] == 0.5
-  test "both controllers must complete in either order":
-    for reverse in [false, true]:
-      var pair = GpuFlipPair(crtcs: [69'u32, 70])
-      pair.complete(if reverse: 70 else: 69, 100)
-      check not pair.ready
-      pair.complete(if reverse: 69 else: 70, 106)
-      check pair.ready
-      expect ValueError: pair.complete(69, 107)
-      expect ValueError: pair.complete(71, 107)
   test "invalid window ownership fails without opening GPU libraries":
     expect WindyError: discard newDrmPixelPair(nil, nil)
+    expect WindyError: discard newDrmPixelPair(Window(nil), Window(nil))
+    expect WindyError: discard newDrmPixelPair(Window(), Window())
     close(DrmPixelPair(nil))

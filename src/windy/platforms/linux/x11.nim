@@ -1,8 +1,9 @@
 import
-  std/[os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
+  std/[math, os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
   ../../[common, internal],
-  vmath, pixie,
-  x11/[glx, keysym, x, xevent, xlib, xcursor]
+  opengl, vmath, pixie,
+  x11/[glx, keysym, x, xevent, xlib, xcursor],
+  ./native/pixels
 
 import ../../http
 export http
@@ -1608,3 +1609,5 @@ when defined(useCpu):
 proc hasWindows*(): bool =
   for window in windows:
     if not window.closed: return true
+
+include x11/pixels

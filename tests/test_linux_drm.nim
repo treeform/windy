@@ -1,4 +1,17 @@
-include windy/platforms/linux/drm/display
+import std/unittest
+
+include windy/platforms/linux/drm
+
+suite "DRM paired flips":
+  test "both controllers must complete in either order":
+    for reverse in [false, true]:
+      var pair = GpuFlipPair(crtcs: [69'u32, 70])
+      pair.complete(if reverse: 70 else: 69, 100)
+      check not pair.ready
+      pair.complete(if reverse: 69 else: 70, 106)
+      check pair.ready
+      expect ValueError: pair.complete(69, 107)
+      expect ValueError: pair.complete(71, 107)
 
 var
   signalFd: cint

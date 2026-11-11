@@ -1,5 +1,9 @@
 # Included by the DRM backend to share its private native bindings.
 type
+  GpuFlipPair = object
+    crtcs: array[2, uint32]
+    completed: set[range[0..1]]
+    timestamps: array[2, uint64]
   GpuGbmHandle {.union.} = object
     pointerValue: pointer
     u32: uint32
@@ -358,6 +362,20 @@ proc gpuCommit(probe: GpuDisplay, values: seq[GpuAtomicValue], flags: uint32, da
   for item in values:
     gpuChecked(probe.atomic.add(request, item.id, item.gpuProperty, item.value) >= 0, "Adding atomic property")
   gpuChecked(probe.atomic.gpuCommit(probe.display.fd, request, flags, data) == 0, "Committing paired display update")
+
+proc complete(pair: var GpuFlipPair, crtc: uint32, timestamp: uint64) =
+  ## Record one event per controller before either old scanout can be retired.
+  for index in 0..1:
+    if pair.crtcs[index] == crtc:
+      if index in pair.completed: raise newException(ValueError, "Duplicate flip completion")
+      pair.completed.incl index
+      pair.timestamps[index] = timestamp
+      return
+  raise newException(ValueError, "Completion from an unexpected CRTC")
+
+proc ready(pair: GpuFlipPair): bool =
+  ## Return whether both controllers have completed the generation.
+  pair.completed == {0, 1}
 
 proc gpuFlip2(fd: cint, sequence, seconds, microseconds, crtc: cuint, data: pointer) {.cdecl.} =
   ## Handle both events without allowing a Nim exception across a C callback.

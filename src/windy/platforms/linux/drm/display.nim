@@ -1,8 +1,7 @@
 import
   std/[dynlib, monotimes, os, posix, strformat, strutils, times],
   pixie,
-  ../fbdev,
-  ../native/[pixels, pixelpair]
+  ../native/pixels
 
 type
   ModeInfo = object
@@ -284,7 +283,7 @@ proc closeScreen*(display: DrmDisplay, screen: DrmScreen) =
       else:
         if framebuffer.handle != 0:
           var handle = GemClose(handle: framebuffer.handle)
-          if deviceIoctl(display.fd, CloseGem, addr handle) < 0:
+          if posix.ioctl(display.fd, CloseGem, addr handle) < 0:
             errors.add "Closing original GEM handle for " & screen.name
         display.api.freeFb(framebuffer)
     let
@@ -306,7 +305,7 @@ proc closeScreen*(display: DrmDisplay, screen: DrmScreen) =
         errors.add "Removing framebuffer for " & screen.name
       scanout.framebuffer = 0
     if scanout.buffer.handle != 0:
-      if deviceIoctl(display.fd, DestroyDumb, addr scanout.buffer.handle) < 0:
+      if posix.ioctl(display.fd, DestroyDumb, addr scanout.buffer.handle) < 0:
         errors.add "Destroying buffer for " & screen.name
       scanout.buffer.handle = 0
 
@@ -450,7 +449,7 @@ proc openOutput*(result: DrmDisplay, outputs: seq[string], rotation: int, vsync 
       for scanout in screen.buffers.mitems:
         scanout.buffer = DumbBuffer(width: uint32(screen.mode.hdisplay),
           height: uint32(screen.mode.vdisplay), bpp: 32)
-        if deviceIoctl(result.fd, CreateDumb, addr scanout.buffer) < 0:
+        if posix.ioctl(result.fd, CreateDumb, addr scanout.buffer) < 0:
           raiseOSError(osLastError(), "Allocating DRM scanout buffer")
         if scanout.buffer.pitch < scanout.buffer.width * 4 or
             scanout.buffer.size < uint64(scanout.buffer.pitch) * scanout.buffer.height or
@@ -468,7 +467,7 @@ proc openOutput*(result: DrmDisplay, outputs: seq[string], rotation: int, vsync 
             scanout.buffer.pitch, scanout.buffer.handle, addr scanout.framebuffer) < 0:
             raiseOSError(osLastError(), "Registering DRM framebuffer")
         var mapping = MapBuffer(handle: scanout.buffer.handle)
-        if deviceIoctl(result.fd, MapDumb, addr mapping) < 0:
+        if posix.ioctl(result.fd, MapDumb, addr mapping) < 0:
           raiseOSError(osLastError(), "Mapping DRM buffer")
         scanout.memory = mmap(nil, int(scanout.buffer.size), PROT_READ or PROT_WRITE,
           MAP_SHARED, result.fd, Off(mapping.offset))

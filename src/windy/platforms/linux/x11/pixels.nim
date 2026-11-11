@@ -1,9 +1,3 @@
-import
-  std/[math, strformat],
-  opengl, pixie,
-  ../../../windy,
-  ./native/pixelpair
-
 export PixelRegion
 
 type

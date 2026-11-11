@@ -19,7 +19,9 @@ if testBackends.len > 0:
   switch("define", "useCpu")
   switch("define", "windyBackends=" & testBackends)
 
-if getEnv("WINDY_TEST_TARGET") == "arm64":
+if getEnv("WINDY_TEST_TARGET") == "arm":
+  switch("cpu", "arm")
+elif getEnv("WINDY_TEST_TARGET") == "arm64":
   switch("cpu", "arm64")
   switch("gcc.exe", getEnv("MONO_RETRO_CC", "aarch64-unknown-linux-gnu-gcc"))
   switch("gcc.linkerexe", getEnv("MONO_RETRO_CC", "aarch64-unknown-linux-gnu-gcc"))

@@ -1,14 +1,20 @@
 import
   ../../../common,
-  ../[backends, fbdev],
-  ../drm/display,
+  ../backends,
   ./touch
+
+when HasFbdev:
+  import ../fbdev
+when HasDrm:
+  import ../drm
 
 type
   DirectWindowState* = ref object
-    fb*: Framebuffer
-    drm*: DrmDisplay
-    screen*: DrmScreen
+    when HasFbdev:
+      fb*: Framebuffer
+    when HasDrm:
+      drm*: DrmDisplay
+      screen*: DrmScreen
     touch*: TouchReader
     device*, title*: string
     backend*: LinuxBackend
