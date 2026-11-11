@@ -1,7 +1,8 @@
 import
   std/[dynlib, monotimes, os, posix, strformat, strutils, times],
   pixie,
-  ../native/[framebuffer, pixels, pixelpair]
+  ../fbdev,
+  ../native/[pixels, pixelpair]
 
 type
   ModeInfo = object

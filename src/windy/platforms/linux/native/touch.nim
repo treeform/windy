@@ -2,7 +2,8 @@ import
   std/[os, posix],
   pixie,
   ../../../common,
-  ./[framebuffer, pixels]
+  ../fbdev,
+  ./pixels
 
 type
   Event {.importc: "struct input_event", header: "<linux/input.h>", bycopy.} = object

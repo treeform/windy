@@ -1,8 +1,8 @@
 import
   ../../../common,
-  ../backends,
+  ../[backends, fbdev],
   ../drm/display,
-  ./[framebuffer, touch]
+  ./touch
 
 type
   DirectWindowState* = ref object

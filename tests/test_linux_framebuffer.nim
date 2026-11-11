@@ -1,4 +1,4 @@
-include windy/platforms/linux/native/framebuffer
+include windy/platforms/linux/fbdev
 
 proc checkPixels(bits: int, red, green, blue, alpha: Bitfield, rotation: int) =
   ## Compare packed scanout bytes with the generic converter, including padding.

@@ -1,7 +1,7 @@
 import
   std/[os, posix, strformat],
   pixie,
-  ./pixels
+  ./native/pixels
 
 type
   Bitfield* {.importc: "struct fb_bitfield", header: "<linux/fb.h>", bycopy.} = object

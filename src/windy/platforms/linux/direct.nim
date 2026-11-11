@@ -1,9 +1,9 @@
 import
   pixie,
   ../../common,
-  ./backends,
+  ./[backends, fbdev],
   ./drm/display,
-  ./native/[state, framebuffer, touch]
+  ./native/[state, touch]
 
 when HasX11:
   import ./x11

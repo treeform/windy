@@ -1,8 +1,9 @@
 import
   pixie,
   windy/common,
+  windy/platforms/linux/fbdev,
   windy/platforms/linux/drm/display,
-  windy/platforms/linux/native/[touch, pixels, framebuffer]
+  windy/platforms/linux/native/[touch, pixels]
 
 block:
   let reader = TouchReader(width: 1024, height: 768,
