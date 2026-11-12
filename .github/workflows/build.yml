@@ -63,6 +63,18 @@ jobs:
         nim c -d:release tests/test_tray.nim
         ./tests/test_tray
 
+    - name: Test Linux desktop notifications
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        nim c tests/test_notifications.nim
+        ./tests/test_notifications
+        nim c -d:release tests/test_notifications.nim
+        ./tests/test_notifications
+        WINDY_TEST_BACKENDS=x11,fbdev,drm nim c tests/test_notifications.nim
+        ./tests/test_notifications
+        WINDY_TEST_BACKENDS=fbdev nim c tests/test_notifications.nim
+        ./tests/test_notifications
+
     # Build native examples.
     - run: nim c examples/basic.nim
     - run: nim c examples/basic_boxy.nim
@@ -85,6 +97,7 @@ jobs:
     - run: nim c examples/scrollwheel.nim
     - run: nim c examples/system_cursors.nim
     - run: nim c examples/tray.nim
+    - run: nim c examples/notifications.nim
     - run: nim c examples/websocket.nim
 
     # Install Emscripten only after native checks pass.

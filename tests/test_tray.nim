@@ -2,7 +2,7 @@ when defined(linux) and not defined(emscripten):
   import
     std/[os, osproc, monotimes, streams, times, strutils, tables],
     pixie, windy,
-    windy/platforms/linux/tray/sni/dbus,
+    windy/platforms/linux/dbus,
     windy/platforms/linux/tray/xembed/xlib
 
   type

@@ -3,7 +3,7 @@ import
   pixie,
   ../../../common,
   ./state,
-  ./sni/dbus
+  ../dbus
 
 type
   SniTray* = ref object

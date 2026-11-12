@@ -3,11 +3,12 @@ import
   ../../[common, internal],
   opengl, vmath, pixie,
   x11/[glx, keysym, x, xevent, xlib, xcursor],
-  ./native/pixels, ./tray
+  ./native/pixels, ./tray, ./notifications
 
 import ../../http
 export http
 export tray except pollTrayEvents
+export notifications except pollNotificationEvents
 
 import ./backends
 when HasDirect:
@@ -1651,6 +1652,7 @@ proc getClipboardImage*(): Image =
   nil
 
 proc pollEvents*() =
+  pollNotificationEvents()
   pollTrayEvents()
   for window in windows:
     if window.onFrame != nil:

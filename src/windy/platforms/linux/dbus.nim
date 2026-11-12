@@ -1,6 +1,6 @@
 import
   std/dynlib,
-  ../../../../common
+  ../../common
 
 type
   Connection* = ptr object
@@ -158,6 +158,11 @@ proc stringValue*(i: var Iter): string =
 proc intValue*(i: var Iter): int32 =
   ## Reads a signed integer from a validated argument.
   if messageIterGetArgType(i.addr) == 'i'.cint:
+    messageIterGetBasic(i.addr, result.addr)
+
+proc uintValue*(i: var Iter): uint32 =
+  ## Reads an unsigned integer from a validated argument.
+  if messageIterGetArgType(i.addr) == 'u'.cint:
     messageIterGetBasic(i.addr, result.addr)
 
 proc next*(i: var Iter) =
