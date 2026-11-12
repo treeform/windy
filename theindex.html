@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/backends.html">windy/platforms/linux/backends</a>, <a href="windy/platforms/linux/native/pixels.html">windy/platforms/linux/native/pixels</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/tray.html">windy/platforms/linux/tray</a>, <a href="windy/platforms/linux/tray/sni.html">windy/platforms/linux/tray/sni</a>, <a href="windy/platforms/linux/tray/sni/dbus.html">windy/platforms/linux/tray/sni/dbus</a>, <a href="windy/platforms/linux/tray/state.html">windy/platforms/linux/tray/state</a>, <a href="windy/platforms/linux/tray/xembed.html">windy/platforms/linux/tray/xembed</a>, <a href="windy/platforms/linux/tray/xembed/xlib.html">windy/platforms/linux/tray/xembed/xlib</a>, <a href="windy/platforms/linux/x11.html">windy/platforms/linux/x11</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/backends.html">windy/platforms/linux/backends</a>, <a href="windy/platforms/linux/dbus.html">windy/platforms/linux/dbus</a>, <a href="windy/platforms/linux/native/pixels.html">windy/platforms/linux/native/pixels</a>, <a href="windy/platforms/linux/notifications.html">windy/platforms/linux/notifications</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/tray.html">windy/platforms/linux/tray</a>, <a href="windy/platforms/linux/tray/sni.html">windy/platforms/linux/tray/sni</a>, <a href="windy/platforms/linux/tray/state.html">windy/platforms/linux/tray/state</a>, <a href="windy/platforms/linux/tray/xembed.html">windy/platforms/linux/tray/xembed</a>, <a href="windy/platforms/linux/tray/xembed/xlib.html">windy/platforms/linux/tray/xembed/xlib</a>, <a href="windy/platforms/linux/x11.html">windy/platforms/linux/x11</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%3D%3D%60" href="#%60%3D%3D%60"><span>`==`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: proc `==`(a, b: HttpRequestHandle): bool" href="windy/common.html#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle">common: proc `==`(a, b: HttpRequestHandle): bool</a></li>
@@ -51,11 +51,11 @@
           </ul></dd>
 <dt><a name="addBool" href="#addBool"><span>addBool:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc addBool(i: var Iter; value: bool)" href="windy/platforms/linux/tray/sni/dbus.html#addBool%2CIter%2Cbool">dbus: proc addBool(i: var Iter; value: bool)</a></li>
+          data-doc-search-tag="dbus: proc addBool(i: var Iter; value: bool)" href="windy/platforms/linux/dbus.html#addBool%2CIter%2Cbool">dbus: proc addBool(i: var Iter; value: bool)</a></li>
           </ul></dd>
 <dt><a name="addByte" href="#addByte"><span>addByte:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc addByte(i: var Iter; value: uint8)" href="windy/platforms/linux/tray/sni/dbus.html#addByte%2CIter%2Cuint8">dbus: proc addByte(i: var Iter; value: uint8)</a></li>
+          data-doc-search-tag="dbus: proc addByte(i: var Iter; value: uint8)" href="windy/platforms/linux/dbus.html#addByte%2CIter%2Cuint8">dbus: proc addByte(i: var Iter; value: uint8)</a></li>
           </ul></dd>
 <dt><a name="addDefaultHeaders" href="#addDefaultHeaders"><span>addDefaultHeaders:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -63,15 +63,15 @@
           </ul></dd>
 <dt><a name="addInt" href="#addInt"><span>addInt:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc addInt(i: var Iter; value: int32)" href="windy/platforms/linux/tray/sni/dbus.html#addInt%2CIter%2Cint32">dbus: proc addInt(i: var Iter; value: int32)</a></li>
+          data-doc-search-tag="dbus: proc addInt(i: var Iter; value: int32)" href="windy/platforms/linux/dbus.html#addInt%2CIter%2Cint32">dbus: proc addInt(i: var Iter; value: int32)</a></li>
           </ul></dd>
 <dt><a name="addString" href="#addString"><span>addString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc addString(i: var Iter; value: string; kind = 's')" href="windy/platforms/linux/tray/sni/dbus.html#addString%2CIter%2Cstring%2Cchar">dbus: proc addString(i: var Iter; value: string; kind = 's')</a></li>
+          data-doc-search-tag="dbus: proc addString(i: var Iter; value: string; kind = 's')" href="windy/platforms/linux/dbus.html#addString%2CIter%2Cstring%2Cchar">dbus: proc addString(i: var Iter; value: string; kind = 's')</a></li>
           </ul></dd>
 <dt><a name="addUint" href="#addUint"><span>addUint:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc addUint(i: var Iter; value: uint32)" href="windy/platforms/linux/tray/sni/dbus.html#addUint%2CIter%2Cuint32">dbus: proc addUint(i: var Iter; value: uint32)</a></li>
+          data-doc-search-tag="dbus: proc addUint(i: var Iter; value: uint32)" href="windy/platforms/linux/dbus.html#addUint%2CIter%2Cuint32">dbus: proc addUint(i: var Iter; value: uint32)</a></li>
           </ul></dd>
 <dt><a name="AllocAll" href="#AllocAll"><span>AllocAll:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -235,11 +235,11 @@
           </ul></dd>
 <dt><a name="busAddMatch" href="#busAddMatch"><span>busAddMatch:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var busAddMatch" href="windy/platforms/linux/tray/sni/dbus.html#busAddMatch">dbus: var busAddMatch</a></li>
+          data-doc-search-tag="dbus: var busAddMatch" href="windy/platforms/linux/dbus.html#busAddMatch">dbus: var busAddMatch</a></li>
           </ul></dd>
 <dt><a name="busGetPrivate" href="#busGetPrivate"><span>busGetPrivate:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var busGetPrivate" href="windy/platforms/linux/tray/sni/dbus.html#busGetPrivate">dbus: var busGetPrivate</a></li>
+          data-doc-search-tag="dbus: var busGetPrivate" href="windy/platforms/linux/dbus.html#busGetPrivate">dbus: var busGetPrivate</a></li>
           </ul></dd>
 <dt><a name="Button" href="#Button"><span>Button:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -391,7 +391,7 @@
           </ul></dd>
 <dt><a name="checked" href="#checked"><span>checked:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc checked(ok: uint32)" href="windy/platforms/linux/tray/sni/dbus.html#checked%2Cuint32">dbus: proc checked(ok: uint32)</a></li>
+          data-doc-search-tag="dbus: proc checked(ok: uint32)" href="windy/platforms/linux/dbus.html#checked%2Cuint32">dbus: proc checked(ok: uint32)</a></li>
           </ul></dd>
 <dt><a name="clearButtonsTemplate" href="#clearButtonsTemplate"><span>clearButtonsTemplate:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -409,6 +409,8 @@
 <li><a class="reference external"
           data-doc-search-tag="http: proc close(handle: WebSocketHandle)" href="windy/http.html#close%2CWebSocketHandle">http: proc close(handle: WebSocketHandle)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="notifications: proc close(notification: Notification)" href="windy/platforms/linux/notifications.html#close%2CNotification">notifications: proc close(notification: Notification)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="sni: proc close(tray: SniTray)" href="windy/platforms/linux/tray/sni.html#close%2CSniTray">sni: proc close(tray: SniTray)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xembed: proc close(tray: XembedTray)" href="windy/platforms/linux/tray/xembed.html#close%2CXembedTray">xembed: proc close(tray: XembedTray)</a></li>
@@ -419,6 +421,8 @@
           </ul></dd>
 <dt><a name="closed" href="#closed"><span>closed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="notifications: proc closed(notification: Notification): bool" href="windy/platforms/linux/notifications.html#closed%2CNotification">notifications: proc closed(notification: Notification): bool</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="x11: proc closed(window: Window): bool" href="windy/platforms/linux/x11.html#closed%2CWindow">x11: proc closed(window: Window): bool</a></li>
           </ul></dd>
 <dt><a name="ClosedHandCursor" href="#ClosedHandCursor"><span>ClosedHandCursor:</span></a></dt><dd><ul class="simple">
@@ -475,36 +479,36 @@
           </ul></dd>
 <dt><a name="Connection" href="#Connection"><span>Connection:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: type Connection" href="windy/platforms/linux/tray/sni/dbus.html#Connection">dbus: type Connection</a></li>
+          data-doc-search-tag="dbus: type Connection" href="windy/platforms/linux/dbus.html#Connection">dbus: type Connection</a></li>
           </ul></dd>
 <dt><a name="connectionClose" href="#connectionClose"><span>connectionClose:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var connectionClose" href="windy/platforms/linux/tray/sni/dbus.html#connectionClose">dbus: var connectionClose</a></li>
+          data-doc-search-tag="dbus: var connectionClose" href="windy/platforms/linux/dbus.html#connectionClose">dbus: var connectionClose</a></li>
           </ul></dd>
 <dt><a name="connectionPopMessage" href="#connectionPopMessage"><span>connectionPopMessage:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var connectionPopMessage" href="windy/platforms/linux/tray/sni/dbus.html#connectionPopMessage">dbus: var connectionPopMessage</a></li>
+          data-doc-search-tag="dbus: var connectionPopMessage" href="windy/platforms/linux/dbus.html#connectionPopMessage">dbus: var connectionPopMessage</a></li>
           </ul></dd>
 <dt><a name="connectionReadWrite" href="#connectionReadWrite"><span>connectionReadWrite:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var connectionReadWrite" href="windy/platforms/linux/tray/sni/dbus.html#connectionReadWrite">dbus: var connectionReadWrite</a></li>
+          data-doc-search-tag="dbus: var connectionReadWrite" href="windy/platforms/linux/dbus.html#connectionReadWrite">dbus: var connectionReadWrite</a></li>
           </ul></dd>
 <dt><a name="connectionSend" href="#connectionSend"><span>connectionSend:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var connectionSend" href="windy/platforms/linux/tray/sni/dbus.html#connectionSend">dbus: var connectionSend</a></li>
+          data-doc-search-tag="dbus: var connectionSend" href="windy/platforms/linux/dbus.html#connectionSend">dbus: var connectionSend</a></li>
           </ul></dd>
 <dt><a name="connectionSetExitOnDisconnect" href="#connectionSetExitOnDisconnect"><span>connectionSetExitOnDisconnect:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var connectionSetExitOnDisconnect" href="windy/platforms/linux/tray/sni/dbus.html#connectionSetExitOnDisconnect">dbus: var connectionSetExitOnDisconnect</a></li>
+          data-doc-search-tag="dbus: var connectionSetExitOnDisconnect" href="windy/platforms/linux/dbus.html#connectionSetExitOnDisconnect">dbus: var connectionSetExitOnDisconnect</a></li>
           </ul></dd>
 <dt><a name="connectionUnref" href="#connectionUnref"><span>connectionUnref:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var connectionUnref" href="windy/platforms/linux/tray/sni/dbus.html#connectionUnref">dbus: var connectionUnref</a></li>
+          data-doc-search-tag="dbus: var connectionUnref" href="windy/platforms/linux/dbus.html#connectionUnref">dbus: var connectionUnref</a></li>
           </ul></dd>
 <dt><a name="container" href="#container"><span>container:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="dbus: template container(parent: var Iter; kind: char; signature: cstring; child: untyped;
-          body: untyped)" href="windy/platforms/linux/tray/sni/dbus.html#container.t%2CIter%2Cchar%2Ccstring%2Cuntyped%2Cuntyped">dbus: template container(parent: var Iter; kind: char; signature: cstring; child: untyped;
+          body: untyped)" href="windy/platforms/linux/dbus.html#container.t%2CIter%2Cchar%2Ccstring%2Cuntyped%2Cuntyped">dbus: template container(parent: var Iter; kind: char; signature: cstring; child: untyped;
           body: untyped)</a></li>
           </ul></dd>
 <dt><a name="contentScale" href="#contentScale"><span>contentScale:</span></a></dt><dd><ul class="simple">
@@ -1387,7 +1391,7 @@
           </ul></dd>
 <dt><a name="intValue" href="#intValue"><span>intValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc intValue(i: var Iter): int32" href="windy/platforms/linux/tray/sni/dbus.html#intValue%2CIter">dbus: proc intValue(i: var Iter): int32</a></li>
+          data-doc-search-tag="dbus: proc intValue(i: var Iter): int32" href="windy/platforms/linux/dbus.html#intValue%2CIter">dbus: proc intValue(i: var Iter): int32</a></li>
           </ul></dd>
 <dt><a name="IsUnmapped" href="#IsUnmapped"><span>IsUnmapped:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1403,7 +1407,7 @@
           </ul></dd>
 <dt><a name="Iter" href="#Iter"><span>Iter:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: object Iter" href="windy/platforms/linux/tray/sni/dbus.html#Iter">dbus: object Iter</a></li>
+          data-doc-search-tag="dbus: object Iter" href="windy/platforms/linux/dbus.html#Iter">dbus: object Iter</a></li>
           </ul></dd>
 <dt><a name="JoinBevel" href="#JoinBevel"><span>JoinBevel:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1883,7 +1887,7 @@
           </ul></dd>
 <dt><a name="loadDbus" href="#loadDbus"><span>loadDbus:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc loadDbus(): bool" href="windy/platforms/linux/tray/sni/dbus.html#loadDbus">dbus: proc loadDbus(): bool</a></li>
+          data-doc-search-tag="dbus: proc loadDbus(): bool" href="windy/platforms/linux/dbus.html#loadDbus">dbus: proc loadDbus(): bool</a></li>
           </ul></dd>
 <dt><a name="LockMapIndex" href="#LockMapIndex"><span>LockMapIndex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1947,95 +1951,95 @@
           </ul></dd>
 <dt><a name="Message" href="#Message"><span>Message:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: type Message" href="windy/platforms/linux/tray/sni/dbus.html#Message">dbus: type Message</a></li>
+          data-doc-search-tag="dbus: type Message" href="windy/platforms/linux/dbus.html#Message">dbus: type Message</a></li>
           </ul></dd>
 <dt><a name="messageGetInterface" href="#messageGetInterface"><span>messageGetInterface:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageGetInterface" href="windy/platforms/linux/tray/sni/dbus.html#messageGetInterface">dbus: var messageGetInterface</a></li>
+          data-doc-search-tag="dbus: var messageGetInterface" href="windy/platforms/linux/dbus.html#messageGetInterface">dbus: var messageGetInterface</a></li>
           </ul></dd>
 <dt><a name="messageGetMember" href="#messageGetMember"><span>messageGetMember:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageGetMember" href="windy/platforms/linux/tray/sni/dbus.html#messageGetMember">dbus: var messageGetMember</a></li>
+          data-doc-search-tag="dbus: var messageGetMember" href="windy/platforms/linux/dbus.html#messageGetMember">dbus: var messageGetMember</a></li>
           </ul></dd>
 <dt><a name="messageGetPath" href="#messageGetPath"><span>messageGetPath:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageGetPath" href="windy/platforms/linux/tray/sni/dbus.html#messageGetPath">dbus: var messageGetPath</a></li>
+          data-doc-search-tag="dbus: var messageGetPath" href="windy/platforms/linux/dbus.html#messageGetPath">dbus: var messageGetPath</a></li>
           </ul></dd>
 <dt><a name="messageGetReplySerial" href="#messageGetReplySerial"><span>messageGetReplySerial:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageGetReplySerial" href="windy/platforms/linux/tray/sni/dbus.html#messageGetReplySerial">dbus: var messageGetReplySerial</a></li>
+          data-doc-search-tag="dbus: var messageGetReplySerial" href="windy/platforms/linux/dbus.html#messageGetReplySerial">dbus: var messageGetReplySerial</a></li>
           </ul></dd>
 <dt><a name="messageGetSender" href="#messageGetSender"><span>messageGetSender:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageGetSender" href="windy/platforms/linux/tray/sni/dbus.html#messageGetSender">dbus: var messageGetSender</a></li>
+          data-doc-search-tag="dbus: var messageGetSender" href="windy/platforms/linux/dbus.html#messageGetSender">dbus: var messageGetSender</a></li>
           </ul></dd>
 <dt><a name="messageGetSignature" href="#messageGetSignature"><span>messageGetSignature:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageGetSignature" href="windy/platforms/linux/tray/sni/dbus.html#messageGetSignature">dbus: var messageGetSignature</a></li>
+          data-doc-search-tag="dbus: var messageGetSignature" href="windy/platforms/linux/dbus.html#messageGetSignature">dbus: var messageGetSignature</a></li>
           </ul></dd>
 <dt><a name="messageGetType" href="#messageGetType"><span>messageGetType:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageGetType" href="windy/platforms/linux/tray/sni/dbus.html#messageGetType">dbus: var messageGetType</a></li>
+          data-doc-search-tag="dbus: var messageGetType" href="windy/platforms/linux/dbus.html#messageGetType">dbus: var messageGetType</a></li>
           </ul></dd>
 <dt><a name="messageIterAbandonContainer" href="#messageIterAbandonContainer"><span>messageIterAbandonContainer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterAbandonContainer" href="windy/platforms/linux/tray/sni/dbus.html#messageIterAbandonContainer">dbus: var messageIterAbandonContainer</a></li>
+          data-doc-search-tag="dbus: var messageIterAbandonContainer" href="windy/platforms/linux/dbus.html#messageIterAbandonContainer">dbus: var messageIterAbandonContainer</a></li>
           </ul></dd>
 <dt><a name="messageIterAppendBasic" href="#messageIterAppendBasic"><span>messageIterAppendBasic:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterAppendBasic" href="windy/platforms/linux/tray/sni/dbus.html#messageIterAppendBasic">dbus: var messageIterAppendBasic</a></li>
+          data-doc-search-tag="dbus: var messageIterAppendBasic" href="windy/platforms/linux/dbus.html#messageIterAppendBasic">dbus: var messageIterAppendBasic</a></li>
           </ul></dd>
 <dt><a name="messageIterCloseContainer" href="#messageIterCloseContainer"><span>messageIterCloseContainer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterCloseContainer" href="windy/platforms/linux/tray/sni/dbus.html#messageIterCloseContainer">dbus: var messageIterCloseContainer</a></li>
+          data-doc-search-tag="dbus: var messageIterCloseContainer" href="windy/platforms/linux/dbus.html#messageIterCloseContainer">dbus: var messageIterCloseContainer</a></li>
           </ul></dd>
 <dt><a name="messageIterGetArgType" href="#messageIterGetArgType"><span>messageIterGetArgType:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterGetArgType" href="windy/platforms/linux/tray/sni/dbus.html#messageIterGetArgType">dbus: var messageIterGetArgType</a></li>
+          data-doc-search-tag="dbus: var messageIterGetArgType" href="windy/platforms/linux/dbus.html#messageIterGetArgType">dbus: var messageIterGetArgType</a></li>
           </ul></dd>
 <dt><a name="messageIterGetBasic" href="#messageIterGetBasic"><span>messageIterGetBasic:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterGetBasic" href="windy/platforms/linux/tray/sni/dbus.html#messageIterGetBasic">dbus: var messageIterGetBasic</a></li>
+          data-doc-search-tag="dbus: var messageIterGetBasic" href="windy/platforms/linux/dbus.html#messageIterGetBasic">dbus: var messageIterGetBasic</a></li>
           </ul></dd>
 <dt><a name="messageIterInit" href="#messageIterInit"><span>messageIterInit:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterInit" href="windy/platforms/linux/tray/sni/dbus.html#messageIterInit">dbus: var messageIterInit</a></li>
+          data-doc-search-tag="dbus: var messageIterInit" href="windy/platforms/linux/dbus.html#messageIterInit">dbus: var messageIterInit</a></li>
           </ul></dd>
 <dt><a name="messageIterInitAppend" href="#messageIterInitAppend"><span>messageIterInitAppend:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterInitAppend" href="windy/platforms/linux/tray/sni/dbus.html#messageIterInitAppend">dbus: var messageIterInitAppend</a></li>
+          data-doc-search-tag="dbus: var messageIterInitAppend" href="windy/platforms/linux/dbus.html#messageIterInitAppend">dbus: var messageIterInitAppend</a></li>
           </ul></dd>
 <dt><a name="messageIterNext" href="#messageIterNext"><span>messageIterNext:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterNext" href="windy/platforms/linux/tray/sni/dbus.html#messageIterNext">dbus: var messageIterNext</a></li>
+          data-doc-search-tag="dbus: var messageIterNext" href="windy/platforms/linux/dbus.html#messageIterNext">dbus: var messageIterNext</a></li>
           </ul></dd>
 <dt><a name="messageIterOpenContainer" href="#messageIterOpenContainer"><span>messageIterOpenContainer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterOpenContainer" href="windy/platforms/linux/tray/sni/dbus.html#messageIterOpenContainer">dbus: var messageIterOpenContainer</a></li>
+          data-doc-search-tag="dbus: var messageIterOpenContainer" href="windy/platforms/linux/dbus.html#messageIterOpenContainer">dbus: var messageIterOpenContainer</a></li>
           </ul></dd>
 <dt><a name="messageIterRecurse" href="#messageIterRecurse"><span>messageIterRecurse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageIterRecurse" href="windy/platforms/linux/tray/sni/dbus.html#messageIterRecurse">dbus: var messageIterRecurse</a></li>
+          data-doc-search-tag="dbus: var messageIterRecurse" href="windy/platforms/linux/dbus.html#messageIterRecurse">dbus: var messageIterRecurse</a></li>
           </ul></dd>
 <dt><a name="messageNewError" href="#messageNewError"><span>messageNewError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageNewError" href="windy/platforms/linux/tray/sni/dbus.html#messageNewError">dbus: var messageNewError</a></li>
+          data-doc-search-tag="dbus: var messageNewError" href="windy/platforms/linux/dbus.html#messageNewError">dbus: var messageNewError</a></li>
           </ul></dd>
 <dt><a name="messageNewMethodCall" href="#messageNewMethodCall"><span>messageNewMethodCall:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageNewMethodCall" href="windy/platforms/linux/tray/sni/dbus.html#messageNewMethodCall">dbus: var messageNewMethodCall</a></li>
+          data-doc-search-tag="dbus: var messageNewMethodCall" href="windy/platforms/linux/dbus.html#messageNewMethodCall">dbus: var messageNewMethodCall</a></li>
           </ul></dd>
 <dt><a name="messageNewMethodReturn" href="#messageNewMethodReturn"><span>messageNewMethodReturn:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageNewMethodReturn" href="windy/platforms/linux/tray/sni/dbus.html#messageNewMethodReturn">dbus: var messageNewMethodReturn</a></li>
+          data-doc-search-tag="dbus: var messageNewMethodReturn" href="windy/platforms/linux/dbus.html#messageNewMethodReturn">dbus: var messageNewMethodReturn</a></li>
           </ul></dd>
 <dt><a name="messageNewSignal" href="#messageNewSignal"><span>messageNewSignal:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageNewSignal" href="windy/platforms/linux/tray/sni/dbus.html#messageNewSignal">dbus: var messageNewSignal</a></li>
+          data-doc-search-tag="dbus: var messageNewSignal" href="windy/platforms/linux/dbus.html#messageNewSignal">dbus: var messageNewSignal</a></li>
           </ul></dd>
 <dt><a name="messageUnref" href="#messageUnref"><span>messageUnref:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: var messageUnref" href="windy/platforms/linux/tray/sni/dbus.html#messageUnref">dbus: var messageUnref</a></li>
+          data-doc-search-tag="dbus: var messageUnref" href="windy/platforms/linux/dbus.html#messageUnref">dbus: var messageUnref</a></li>
           </ul></dd>
 <dt><a name="minimized" href="#minimized"><span>minimized:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2183,7 +2187,7 @@
 <li><a class="reference external"
           data-doc-search-tag="internal: proc next(rand: Rand): int" href="windy/internal.html#next%2CRand">internal: proc next(rand: Rand): int</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="dbus: proc next(i: var Iter)" href="windy/platforms/linux/tray/sni/dbus.html#next%2CIter">dbus: proc next(i: var Iter)</a></li>
+          data-doc-search-tag="dbus: proc next(i: var Iter)" href="windy/platforms/linux/dbus.html#next%2CIter">dbus: proc next(i: var Iter)</a></li>
           </ul></dd>
 <dt><a name="NoEventMask" href="#NoEventMask"><span>NoEventMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2208,6 +2212,14 @@
 <dt><a name="NoSymbol" href="#NoSymbol"><span>NoSymbol:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const NoSymbol" href="windy/platforms/linux/x11/x.html#NoSymbol">x: const NoSymbol</a></li>
+          </ul></dd>
+<dt><a name="Notification" href="#Notification"><span>Notification:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="notifications: type Notification" href="windy/platforms/linux/notifications.html#Notification">notifications: type Notification</a></li>
+          </ul></dd>
+<dt><a name="NotificationErrorCallback" href="#NotificationErrorCallback"><span>NotificationErrorCallback:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="notifications: type NotificationErrorCallback" href="windy/platforms/linux/notifications.html#NotificationErrorCallback">notifications: type NotificationErrorCallback</a></li>
           </ul></dd>
 <dt><a name="NotifyAncestor" href="#NotifyAncestor"><span>NotifyAncestor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2453,6 +2465,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const ParentRelative" href="windy/platforms/linux/x11/x.html#ParentRelative">x: const ParentRelative</a></li>
           </ul></dd>
+<dt><a name="pending" href="#pending"><span>pending:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="notifications: proc pending(notification: Notification): bool" href="windy/platforms/linux/notifications.html#pending%2CNotification">notifications: proc pending(notification: Notification): bool</a></li>
+          </ul></dd>
 <dt><a name="PerFrame" href="#PerFrame"><span>PerFrame:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="internal: object PerFrame" href="windy/internal.html#PerFrame">internal: object PerFrame</a></li>
@@ -2521,6 +2537,10 @@
 <li><a class="reference external"
           data-doc-search-tag="http: proc pollHttp()" href="windy/http.html#pollHttp">http: proc pollHttp()</a></li>
           </ul></dd>
+<dt><a name="pollNotificationEvents" href="#pollNotificationEvents"><span>pollNotificationEvents:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="notifications: proc pollNotificationEvents()" href="windy/platforms/linux/notifications.html#pollNotificationEvents">notifications: proc pollNotificationEvents()</a></li>
+          </ul></dd>
 <dt><a name="pollTrayEvents" href="#pollTrayEvents"><span>pollTrayEvents:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="tray: proc pollTrayEvents()" href="windy/platforms/linux/tray.html#pollTrayEvents">tray: proc pollTrayEvents()</a></li>
@@ -2571,11 +2591,11 @@
           </ul></dd>
 <dt><a name="reader" href="#reader"><span>reader:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc reader(m: Message): Iter" href="windy/platforms/linux/tray/sni/dbus.html#reader%2CMessage">dbus: proc reader(m: Message): Iter</a></li>
+          data-doc-search-tag="dbus: proc reader(m: Message): Iter" href="windy/platforms/linux/dbus.html#reader%2CMessage">dbus: proc reader(m: Message): Iter</a></li>
           </ul></dd>
 <dt><a name="recurse" href="#recurse"><span>recurse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc recurse(i: var Iter): Iter" href="windy/platforms/linux/tray/sni/dbus.html#recurse%2CIter">dbus: proc recurse(i: var Iter): Iter</a></li>
+          data-doc-search-tag="dbus: proc recurse(i: var Iter): Iter" href="windy/platforms/linux/dbus.html#recurse%2CIter">dbus: proc recurse(i: var Iter): Iter</a></li>
           </ul></dd>
 <dt><a name="releaseMouse" href="#releaseMouse"><span>releaseMouse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2595,7 +2615,7 @@
           </ul></dd>
 <dt><a name="requireMessage" href="#requireMessage"><span>requireMessage:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc requireMessage(m: Message): Message" href="windy/platforms/linux/tray/sni/dbus.html#requireMessage%2CMessage">dbus: proc requireMessage(m: Message): Message</a></li>
+          data-doc-search-tag="dbus: proc requireMessage(m: Message): Message" href="windy/platforms/linux/dbus.html#requireMessage%2CMessage">dbus: proc requireMessage(m: Message): Message</a></li>
           </ul></dd>
 <dt><a name="ResizeDownCursor" href="#ResizeDownCursor"><span>ResizeDownCursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2701,7 +2721,15 @@
 <li><a class="reference external"
           data-doc-search-tag="http: proc send(handle: WebSocketHandle; msg: string; kind = Utf8Message)" href="windy/http.html#send%2CWebSocketHandle%2Cstring">http: proc send(handle: WebSocketHandle; msg: string; kind = Utf8Message)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="dbus: proc send(c: Connection; m: Message): uint32" href="windy/platforms/linux/tray/sni/dbus.html#send%2CConnection%2CMessage">dbus: proc send(c: Connection; m: Message): uint32</a></li>
+          data-doc-search-tag="dbus: proc send(c: Connection; m: Message): uint32" href="windy/platforms/linux/dbus.html#send%2CConnection%2CMessage">dbus: proc send(c: Connection; m: Message): uint32</a></li>
+          </ul></dd>
+<dt><a name="sendNotification" href="#sendNotification"><span>sendNotification:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="notifications: proc sendNotification(title, body: string; icon: Image = nil;
+                 onClick: Callback = nil;
+                 onError: NotificationErrorCallback = nil): Notification" href="windy/platforms/linux/notifications.html#sendNotification%2Cstring%2Cstring%2CImage%2CCallback%2CNotificationErrorCallback">notifications: proc sendNotification(title, body: string; icon: Image = nil;
+                 onClick: Callback = nil;
+                 onError: NotificationErrorCallback = nil): Notification</a></li>
           </ul></dd>
 <dt><a name="setActive" href="#setActive"><span>setActive:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2801,7 +2829,7 @@
           </ul></dd>
 <dt><a name="stringValue" href="#stringValue"><span>stringValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc stringValue(i: var Iter): string" href="windy/platforms/linux/tray/sni/dbus.html#stringValue%2CIter">dbus: proc stringValue(i: var Iter): string</a></li>
+          data-doc-search-tag="dbus: proc stringValue(i: var Iter): string" href="windy/platforms/linux/dbus.html#stringValue%2CIter">dbus: proc stringValue(i: var Iter): string</a></li>
           </ul></dd>
 <dt><a name="StructureNotifyMask" href="#StructureNotifyMask"><span>StructureNotifyMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2959,6 +2987,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const TrueColor" href="windy/platforms/linux/x11/x.html#TrueColor">x: const TrueColor</a></li>
           </ul></dd>
+<dt><a name="uintValue" href="#uintValue"><span>uintValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc uintValue(i: var Iter): uint32" href="windy/platforms/linux/dbus.html#uintValue%2CIter">dbus: proc uintValue(i: var Iter): uint32</a></li>
+          </ul></dd>
 <dt><a name="Undecorated" href="#Undecorated"><span>Undecorated:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: WindowStyle.Undecorated" href="windy/common.html#Undecorated">common: WindowStyle.Undecorated</a></li>
@@ -2973,6 +3005,8 @@
           </ul></dd>
 <dt><a name="update" href="#update"><span>update:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="notifications: proc update(notification: Notification; title, body: string; icon: Image = nil)" href="windy/platforms/linux/notifications.html#update%2CNotification%2Cstring%2Cstring%2CImage">notifications: proc update(notification: Notification; title, body: string; icon: Image = nil)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="sni: proc update(tray: SniTray; state: TrayState)" href="windy/platforms/linux/tray/sni.html#update%2CSniTray%2CTrayState">sni: proc update(tray: SniTray; state: TrayState)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xembed: proc update(tray: XembedTray; state: TrayState)" href="windy/platforms/linux/tray/xembed.html#update%2CXembedTray%2CTrayState">xembed: proc update(tray: XembedTray; state: TrayState)</a></li>
@@ -3081,7 +3115,7 @@
           </ul></dd>
 <dt><a name="writer" href="#writer"><span>writer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dbus: proc writer(m: Message): Iter" href="windy/platforms/linux/tray/sni/dbus.html#writer%2CMessage">dbus: proc writer(m: Message): Iter</a></li>
+          data-doc-search-tag="dbus: proc writer(m: Message): Iter" href="windy/platforms/linux/dbus.html#writer%2CMessage">dbus: proc writer(m: Message): Iter</a></li>
           </ul></dd>
 <dt><a name="X11Backend" href="#X11Backend"><span>X11Backend:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10965,7 +10999,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-12 20:56:41 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-12 23:41:00 UTC</small>
       </div>
     </div>
   </div>

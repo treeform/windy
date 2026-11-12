@@ -1,0 +1,9 @@
+nimTitle	notifications	windy/platforms/linux/notifications.html	module windy/platforms/linux/notifications		0
+nim	NotificationErrorCallback	windy/platforms/linux/notifications.html#NotificationErrorCallback	type NotificationErrorCallback		8
+nim	Notification	windy/platforms/linux/notifications.html#Notification	type Notification		17
+nim	closed	windy/platforms/linux/notifications.html#closed,Notification	proc closed(notification: Notification): bool		51
+nim	pending	windy/platforms/linux/notifications.html#pending,Notification	proc pending(notification: Notification): bool		55
+nim	sendNotification	windy/platforms/linux/notifications.html#sendNotification,string,string,Image,Callback,NotificationErrorCallback	proc sendNotification(title, body: string; icon: Image = nil;\n                 onClick: Callback = nil;\n                 onError: NotificationErrorCallback = nil): Notification		73
+nim	update	windy/platforms/linux/notifications.html#update,Notification,string,string,Image	proc update(notification: Notification; title, body: string; icon: Image = nil)		86
+nim	close	windy/platforms/linux/notifications.html#close,Notification	proc close(notification: Notification)		94
+nim	pollNotificationEvents	windy/platforms/linux/notifications.html#pollNotificationEvents	proc pollNotificationEvents()		311
