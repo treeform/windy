@@ -1,6 +1,7 @@
-import ../../common, ./backends, ./tray
+import ../../common, ./backends, ./tray, ./notifications
 export backends
 export tray except pollTrayEvents
+export notifications except pollNotificationEvents
 
 when not HasDirect:
   import ./x11
@@ -62,6 +63,7 @@ else:
     if selected == X11Backend:
       when HasX11: x11.pollEvents()
     else:
+      pollNotificationEvents()
       pollTrayEvents()
       direct.pollEvents()
       pollHttp()

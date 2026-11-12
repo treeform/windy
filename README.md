@@ -28,6 +28,7 @@ Features:
 * IME support (for Chinese, Japanese, etc. text input)
 * System clipboard (copy and paste) support
 * Show a system tray icon and menu (Windows and Linux)
+* Send desktop notifications (Linux)
 * Non-blocking HTTP requests and WebSockets
 
 ## Basic Example
@@ -63,6 +64,18 @@ SNI is unavailable. It waits if neither exists and recovers when the tray host
 restarts. SNI uses the optional `libdbus-1.so.3` runtime library. XEmbed uses
 Xlib with a basic popup menu; SNI menus follow the desktop's presentation.
 Tray-only Linux applications do not need to create a window or OpenGL context.
+
+## Desktop notifications
+
+On Linux, `sendNotification(title, body, icon = nil, onClick = nil, onError = nil)`
+returns a notification handle. Call `pollEvents()` to send queued requests and
+process callbacks. The handle supports `update(title, body, icon = nil)`, `close()`,
+and the `pending` and `closed` properties. An omitted error callback causes
+delivery errors to raise `WindyError` from `pollEvents()`.
+
+Notifications use the desktop's D-Bus service and do not require a tray icon or
+window. Click support and popup presentation depend on the desktop's capabilities
+and notification settings. See [examples/notifications.nim](examples/notifications.nim).
 
 ## CPU Pixels
 
