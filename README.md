@@ -27,7 +27,7 @@ Features:
 * Easy polling of keyboard state via `buttonDown[Button]` and more
 * IME support (for Chinese, Japanese, etc. text input)
 * System clipboard (copy and paste) support
-* Show a system tray icon and menu (Windows only)
+* Show a system tray icon and menu (Windows and Linux)
 * Non-blocking HTTP requests and WebSockets
 
 ## Basic Example
@@ -51,6 +51,18 @@ while not window.closeRequested:
 ```
 
 [Check out more examples here.](https://github.com/treeform/windy/tree/master/examples)
+
+## Tray icons
+
+`showTrayIcon(image, tooltip, onClick, menu)` shows one icon;
+calling it again replaces the icon and menu. Call `pollEvents()` to process
+interaction, and `hideTrayIcon()` to remove it. See [examples/tray.nim](examples/tray.nim).
+
+Linux selects an available StatusNotifierItem host, or an XEmbed tray when
+SNI is unavailable. It waits if neither exists and recovers when the tray host
+restarts. SNI uses the optional `libdbus-1.so.3` runtime library. XEmbed uses
+Xlib with a basic popup menu; SNI menus follow the desktop's presentation.
+Tray-only Linux applications do not need to create a window or OpenGL context.
 
 ## CPU Pixels
 

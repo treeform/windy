@@ -98,17 +98,6 @@ type
     style: LONG
     rect: RECT
 
-  TrayMenuEntryKind* = enum
-    TrayMenuOption, TrayMenuSeparator
-
-  TrayMenuEntry* = object
-    case kind*: TrayMenuEntryKind
-    of TrayMenuOption:
-      text*: string
-      onClick*: Callback
-    of TrayMenuSeparator:
-      discard
-
   HttpRequestState = object
     url, verb: string
     headers: seq[HttpHeader]
