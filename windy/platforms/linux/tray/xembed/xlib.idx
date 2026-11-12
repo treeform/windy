@@ -1,0 +1,24 @@
+nimTitle	xlib	windy/platforms/linux/tray/xembed/xlib.html	module windy/platforms/linux/tray/xembed/xlib		0
+nim	FontSet	windy/platforms/linux/tray/xembed/xlib.html#FontSet	type FontSet		7
+nim	XImage	windy/platforms/linux/tray/xembed/xlib.html#XImage	object XImage		8
+nim	XCloseDisplay	windy/platforms/linux/tray/xembed/xlib.html#XCloseDisplay,Display	proc XCloseDisplay(d: Display): cint		18
+nim	XPending	windy/platforms/linux/tray/xembed/xlib.html#XPending,Display	proc XPending(d: Display): cint		19
+nim	XGetVisualInfo	windy/platforms/linux/tray/xembed/xlib.html#XGetVisualInfo,Display,clong,ptr.XVisualInfo,ptr.cint	proc XGetVisualInfo(d: Display; mask: clong; info: ptr XVisualInfo; count: ptr cint): ptr XVisualInfo		20
+nim	XSetForeground	windy/platforms/linux/tray/xembed/xlib.html#XSetForeground,Display,GC,culong	proc XSetForeground(d: Display; gc: GC; color: culong): cint		21
+nim	XFillRectangle	windy/platforms/linux/tray/xembed/xlib.html#XFillRectangle,Display,Drawable,GC,cint,cint,cuint,cuint	proc XFillRectangle(d: Display; window: Drawable; gc: GC; x, y: cint;\n               width, height: cuint): cint		22
+nim	XDrawLine	windy/platforms/linux/tray/xembed/xlib.html#XDrawLine,Display,Drawable,GC,cint,cint,cint,cint	proc XDrawLine(d: Display; window: Drawable; gc: GC; x1, y1, x2, y2: cint): cint		23
+nim	XCreateImage	windy/platforms/linux/tray/xembed/xlib.html#XCreateImage,Display,ptr.Visual,cuint,cint,cint,cstring,cuint,cuint,cint,cint	proc XCreateImage(d: Display; visual: ptr Visual; depth: cuint; format: cint;\n             offset: cint; data: cstring; width, height: cuint;\n             pad, stride: cint): ptr XImage		24
+nim	XGetImage	windy/platforms/linux/tray/xembed/xlib.html#XGetImage,Display,Drawable,cint,cint,cuint,cuint,culong,cint	proc XGetImage(d: Display; window: Drawable; x, y: cint; width, height: cuint;\n          planes: culong; format: cint): ptr XImage		26
+nim	XPutImage	windy/platforms/linux/tray/xembed/xlib.html#XPutImage,Display,Drawable,GC,ptr.XImage,cint,cint,cint,cint,cuint,cuint	proc XPutImage(d: Display; window: Drawable; gc: GC; image: ptr XImage;\n          sourceX, sourceY, destX, destY: cint; width, height: cuint): cint		28
+nim	XPutPixel	windy/platforms/linux/tray/xembed/xlib.html#XPutPixel,ptr.XImage,cint,cint,culong	proc XPutPixel(image: ptr XImage; x, y: cint; pixel: culong): cint		30
+nim	XGetPixel	windy/platforms/linux/tray/xembed/xlib.html#XGetPixel,ptr.XImage,cint,cint	proc XGetPixel(image: ptr XImage; x, y: cint): culong		31
+nim	XDestroyImage	windy/platforms/linux/tray/xembed/xlib.html#XDestroyImage,ptr.XImage	proc XDestroyImage(image: ptr XImage): cint		32
+nim	XClearArea	windy/platforms/linux/tray/xembed/xlib.html#XClearArea,Display,Window,cint,cint,cuint,cuint,cint	proc XClearArea(d: Display; window: Window; x, y: cint; width, height: cuint;\n           exposures: cint): cint		33
+nim	XCreateFontSet	windy/platforms/linux/tray/xembed/xlib.html#XCreateFontSet,Display,cstring,ptr.ptr.cstring,ptr.cint,ptr.cstring	proc XCreateFontSet(d: Display; names: cstring; missing: ptr ptr cstring;\n               count: ptr cint; defaultString: ptr cstring): FontSet		34
+nim	XFreeFontSet	windy/platforms/linux/tray/xembed/xlib.html#XFreeFontSet,Display,FontSet	proc XFreeFontSet(d: Display; fonts: FontSet)		36
+nim	XFreeStringList	windy/platforms/linux/tray/xembed/xlib.html#XFreeStringList,ptr.cstring	proc XFreeStringList(strings: ptr cstring)		37
+nim	Xutf8TextEscapement	windy/platforms/linux/tray/xembed/xlib.html#Xutf8TextEscapement,FontSet,cstring,cint	proc Xutf8TextEscapement(fonts: FontSet; text: cstring; bytes: cint): cint		38
+nim	Xutf8DrawString	windy/platforms/linux/tray/xembed/xlib.html#Xutf8DrawString,Display,Drawable,FontSet,GC,cint,cint,cstring,cint	proc Xutf8DrawString(d: Display; window: Drawable; fonts: FontSet; gc: GC;\n                x, y: cint; text: cstring; bytes: cint)		39
+nim	XGrabKeyboard	windy/platforms/linux/tray/xembed/xlib.html#XGrabKeyboard,Display,Window,cint,cint,cint,Time	proc XGrabKeyboard(d: Display; window: Window;\n              ownerEvents, pointerMode, keyboardMode: cint; time: Time): cint		41
+nim	XUngrabKeyboard	windy/platforms/linux/tray/xembed/xlib.html#XUngrabKeyboard,Display,Time	proc XUngrabKeyboard(d: Display; time: Time): cint		43
+nim	calloc	windy/platforms/linux/tray/xembed/xlib.html#calloc,csize_t,csize_t	proc calloc(count, size: csize_t): pointer		46

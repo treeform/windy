@@ -1,0 +1,7 @@
+nimTitle	sni	windy/platforms/linux/tray/sni.html	module windy/platforms/linux/tray/sni		0
+nim	SniTray	windy/platforms/linux/tray/sni.html#SniTray	type SniTray		9
+nim	newSniTray	windy/platforms/linux/tray/sni.html#newSniTray,TrayState,string	proc newSniTray(state: TrayState; blockedOwner = ""): SniTray		331
+nim	setActive	windy/platforms/linux/tray/sni.html#setActive,SniTray,bool	proc setActive(tray: SniTray; active: bool)		348
+nim	update	windy/platforms/linux/tray/sni.html#update,SniTray,TrayState	proc update(tray: SniTray; state: TrayState)		358
+nim	poll	windy/platforms/linux/tray/sni.html#poll,SniTray	proc poll(tray: SniTray): seq[Callback]		370
+nim	close	windy/platforms/linux/tray/sni.html#close,SniTray	proc close(tray: SniTray)		442

@@ -1,0 +1,7 @@
+nimTitle	xembed	windy/platforms/linux/tray/xembed.html	module windy/platforms/linux/tray/xembed		0
+nim	XembedTray	windy/platforms/linux/tray/xembed.html#XembedTray	type XembedTray		10
+nim	newXembedTray	windy/platforms/linux/tray/xembed.html#newXembedTray,TrayState	proc newXembedTray(state: TrayState): XembedTray		121
+nim	setActive	windy/platforms/linux/tray/xembed.html#setActive,XembedTray,bool	proc setActive(tray: XembedTray; active: bool)		364
+nim	update	windy/platforms/linux/tray/xembed.html#update,XembedTray,TrayState	proc update(tray: XembedTray; state: TrayState)		372
+nim	poll	windy/platforms/linux/tray/xembed.html#poll,XembedTray	proc poll(tray: XembedTray): seq[Callback]		383
+nim	close	windy/platforms/linux/tray/xembed.html#close,XembedTray	proc close(tray: XembedTray)		468

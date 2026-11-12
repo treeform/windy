@@ -1,0 +1,3 @@
+nimTitle	state	windy/platforms/linux/tray/state.html	module windy/platforms/linux/tray/state		0
+nim	TrayState	windy/platforms/linux/tray/state.html#TrayState	type TrayState		6
+nim	menuCallback	windy/platforms/linux/tray/state.html#menuCallback,TrayState,int32	proc menuCallback(state: TrayState; id: int32): Callback		15

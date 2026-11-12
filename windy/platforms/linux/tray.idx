@@ -1,0 +1,4 @@
+nimTitle	tray	windy/platforms/linux/tray.html	module windy/platforms/linux/tray		0
+nim	hideTrayIcon	windy/platforms/linux/tray.html#hideTrayIcon	proc hideTrayIcon()		25
+nim	showTrayIcon	windy/platforms/linux/tray.html#showTrayIcon,Image,string,Callback,seq[TrayMenuEntry]	proc showTrayIcon(icon: Image; tooltip: string; onClick: Callback;\n             menu: seq[TrayMenuEntry] = @[])		35
+nim	pollTrayEvents	windy/platforms/linux/tray.html#pollTrayEvents	proc pollTrayEvents()		71

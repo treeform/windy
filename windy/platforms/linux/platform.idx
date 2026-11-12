@@ -1,2 +1,2 @@
 nimTitle	platform	windy/platforms/linux/platform.html	module windy/platforms/linux/platform		0
-nim	setLinuxBackend	windy/platforms/linux/platform.html#setLinuxBackend,LinuxBackend	proc setLinuxBackend(backend: LinuxBackend)		8
+nim	setLinuxBackend	windy/platforms/linux/platform.html#setLinuxBackend,LinuxBackend	proc setLinuxBackend(backend: LinuxBackend)		9

@@ -1,0 +1,50 @@
+nimTitle	dbus	windy/platforms/linux/tray/sni/dbus.html	module windy/platforms/linux/tray/sni/dbus		0
+nim	Connection	windy/platforms/linux/tray/sni/dbus.html#Connection	type Connection		6
+nim	Message	windy/platforms/linux/tray/sni/dbus.html#Message	type Message		7
+nim	Iter	windy/platforms/linux/tray/sni/dbus.html#Iter	object Iter		8
+nim	busGetPrivate	windy/platforms/linux/tray/sni/dbus.html#busGetPrivate	var busGetPrivate		18
+nim	busAddMatch	windy/platforms/linux/tray/sni/dbus.html#busAddMatch	var busAddMatch		19
+nim	connectionSetExitOnDisconnect	windy/platforms/linux/tray/sni/dbus.html#connectionSetExitOnDisconnect	var connectionSetExitOnDisconnect		20
+nim	connectionReadWrite	windy/platforms/linux/tray/sni/dbus.html#connectionReadWrite	var connectionReadWrite		21
+nim	connectionPopMessage	windy/platforms/linux/tray/sni/dbus.html#connectionPopMessage	var connectionPopMessage		22
+nim	connectionSend	windy/platforms/linux/tray/sni/dbus.html#connectionSend	var connectionSend		23
+nim	connectionClose	windy/platforms/linux/tray/sni/dbus.html#connectionClose	var connectionClose		24
+nim	connectionUnref	windy/platforms/linux/tray/sni/dbus.html#connectionUnref	var connectionUnref		25
+nim	messageNewMethodCall	windy/platforms/linux/tray/sni/dbus.html#messageNewMethodCall	var messageNewMethodCall		26
+nim	messageNewMethodReturn	windy/platforms/linux/tray/sni/dbus.html#messageNewMethodReturn	var messageNewMethodReturn		27
+nim	messageNewError	windy/platforms/linux/tray/sni/dbus.html#messageNewError	var messageNewError		28
+nim	messageNewSignal	windy/platforms/linux/tray/sni/dbus.html#messageNewSignal	var messageNewSignal		29
+nim	messageUnref	windy/platforms/linux/tray/sni/dbus.html#messageUnref	var messageUnref		30
+nim	messageGetType	windy/platforms/linux/tray/sni/dbus.html#messageGetType	var messageGetType		31
+nim	messageGetReplySerial	windy/platforms/linux/tray/sni/dbus.html#messageGetReplySerial	var messageGetReplySerial		32
+nim	messageGetPath	windy/platforms/linux/tray/sni/dbus.html#messageGetPath	var messageGetPath		33
+nim	messageGetInterface	windy/platforms/linux/tray/sni/dbus.html#messageGetInterface	var messageGetInterface		34
+nim	messageGetMember	windy/platforms/linux/tray/sni/dbus.html#messageGetMember	var messageGetMember		35
+nim	messageGetSender	windy/platforms/linux/tray/sni/dbus.html#messageGetSender	var messageGetSender		36
+nim	messageGetSignature	windy/platforms/linux/tray/sni/dbus.html#messageGetSignature	var messageGetSignature		37
+nim	messageIterInitAppend	windy/platforms/linux/tray/sni/dbus.html#messageIterInitAppend	var messageIterInitAppend		38
+nim	messageIterInit	windy/platforms/linux/tray/sni/dbus.html#messageIterInit	var messageIterInit		39
+nim	messageIterGetArgType	windy/platforms/linux/tray/sni/dbus.html#messageIterGetArgType	var messageIterGetArgType		40
+nim	messageIterGetBasic	windy/platforms/linux/tray/sni/dbus.html#messageIterGetBasic	var messageIterGetBasic		41
+nim	messageIterNext	windy/platforms/linux/tray/sni/dbus.html#messageIterNext	var messageIterNext		42
+nim	messageIterRecurse	windy/platforms/linux/tray/sni/dbus.html#messageIterRecurse	var messageIterRecurse		43
+nim	messageIterAppendBasic	windy/platforms/linux/tray/sni/dbus.html#messageIterAppendBasic	var messageIterAppendBasic		44
+nim	messageIterOpenContainer	windy/platforms/linux/tray/sni/dbus.html#messageIterOpenContainer	var messageIterOpenContainer		45
+nim	messageIterCloseContainer	windy/platforms/linux/tray/sni/dbus.html#messageIterCloseContainer	var messageIterCloseContainer		46
+nim	messageIterAbandonContainer	windy/platforms/linux/tray/sni/dbus.html#messageIterAbandonContainer	var messageIterAbandonContainer		47
+nim	loadDbus	windy/platforms/linux/tray/sni/dbus.html#loadDbus	proc loadDbus(): bool		49
+nim	checked	windy/platforms/linux/tray/sni/dbus.html#checked,uint32	proc checked(ok: uint32)		94
+nim	requireMessage	windy/platforms/linux/tray/sni/dbus.html#requireMessage,Message	proc requireMessage(m: Message): Message		99
+nim	writer	windy/platforms/linux/tray/sni/dbus.html#writer,Message	proc writer(m: Message): Iter		105
+nim	reader	windy/platforms/linux/tray/sni/dbus.html#reader,Message	proc reader(m: Message): Iter		109
+nim	addString	windy/platforms/linux/tray/sni/dbus.html#addString,Iter,string,char	proc addString(i: var Iter; value: string; kind = 's')		113
+nim	addInt	windy/platforms/linux/tray/sni/dbus.html#addInt,Iter,int32	proc addInt(i: var Iter; value: int32)		118
+nim	addUint	windy/platforms/linux/tray/sni/dbus.html#addUint,Iter,uint32	proc addUint(i: var Iter; value: uint32)		123
+nim	addBool	windy/platforms/linux/tray/sni/dbus.html#addBool,Iter,bool	proc addBool(i: var Iter; value: bool)		128
+nim	addByte	windy/platforms/linux/tray/sni/dbus.html#addByte,Iter,uint8	proc addByte(i: var Iter; value: uint8)		133
+nim	container	windy/platforms/linux/tray/sni/dbus.html#container.t,Iter,char,cstring,untyped,untyped	template container(parent: var Iter; kind: char; signature: cstring; child: untyped;\n          body: untyped)		138
+nim	stringValue	windy/platforms/linux/tray/sni/dbus.html#stringValue,Iter	proc stringValue(i: var Iter): string		150
+nim	intValue	windy/platforms/linux/tray/sni/dbus.html#intValue,Iter	proc intValue(i: var Iter): int32		158
+nim	next	windy/platforms/linux/tray/sni/dbus.html#next,Iter	proc next(i: var Iter)		163
+nim	recurse	windy/platforms/linux/tray/sni/dbus.html#recurse,Iter	proc recurse(i: var Iter): Iter		167
+nim	send	windy/platforms/linux/tray/sni/dbus.html#send,Connection,Message	proc send(c: Connection; m: Message): uint32		172

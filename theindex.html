@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/backends.html">windy/platforms/linux/backends</a>, <a href="windy/platforms/linux/native/pixels.html">windy/platforms/linux/native/pixels</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/x11.html">windy/platforms/linux/x11</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/backends.html">windy/platforms/linux/backends</a>, <a href="windy/platforms/linux/native/pixels.html">windy/platforms/linux/native/pixels</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/tray.html">windy/platforms/linux/tray</a>, <a href="windy/platforms/linux/tray/sni.html">windy/platforms/linux/tray/sni</a>, <a href="windy/platforms/linux/tray/sni/dbus.html">windy/platforms/linux/tray/sni/dbus</a>, <a href="windy/platforms/linux/tray/state.html">windy/platforms/linux/tray/state</a>, <a href="windy/platforms/linux/tray/xembed.html">windy/platforms/linux/tray/xembed</a>, <a href="windy/platforms/linux/tray/xembed/xlib.html">windy/platforms/linux/tray/xembed/xlib</a>, <a href="windy/platforms/linux/x11.html">windy/platforms/linux/x11</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%3D%3D%60" href="#%60%3D%3D%60"><span>`==`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: proc `==`(a, b: HttpRequestHandle): bool" href="windy/common.html#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle">common: proc `==`(a, b: HttpRequestHandle): bool</a></li>
@@ -49,9 +49,29 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const Above" href="windy/platforms/linux/x11/x.html#Above">x: const Above</a></li>
           </ul></dd>
+<dt><a name="addBool" href="#addBool"><span>addBool:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc addBool(i: var Iter; value: bool)" href="windy/platforms/linux/tray/sni/dbus.html#addBool%2CIter%2Cbool">dbus: proc addBool(i: var Iter; value: bool)</a></li>
+          </ul></dd>
+<dt><a name="addByte" href="#addByte"><span>addByte:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc addByte(i: var Iter; value: uint8)" href="windy/platforms/linux/tray/sni/dbus.html#addByte%2CIter%2Cuint8">dbus: proc addByte(i: var Iter; value: uint8)</a></li>
+          </ul></dd>
 <dt><a name="addDefaultHeaders" href="#addDefaultHeaders"><span>addDefaultHeaders:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="internal: proc addDefaultHeaders(headers: var seq[HttpHeader])" href="windy/internal.html#addDefaultHeaders%2Cseq%5BHttpHeader%5D">internal: proc addDefaultHeaders(headers: var seq[HttpHeader])</a></li>
+          </ul></dd>
+<dt><a name="addInt" href="#addInt"><span>addInt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc addInt(i: var Iter; value: int32)" href="windy/platforms/linux/tray/sni/dbus.html#addInt%2CIter%2Cint32">dbus: proc addInt(i: var Iter; value: int32)</a></li>
+          </ul></dd>
+<dt><a name="addString" href="#addString"><span>addString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc addString(i: var Iter; value: string; kind = 's')" href="windy/platforms/linux/tray/sni/dbus.html#addString%2CIter%2Cstring%2Cchar">dbus: proc addString(i: var Iter; value: string; kind = 's')</a></li>
+          </ul></dd>
+<dt><a name="addUint" href="#addUint"><span>addUint:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc addUint(i: var Iter; value: uint32)" href="windy/platforms/linux/tray/sni/dbus.html#addUint%2CIter%2Cuint32">dbus: proc addUint(i: var Iter; value: uint32)</a></li>
           </ul></dd>
 <dt><a name="AllocAll" href="#AllocAll"><span>AllocAll:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -213,6 +233,14 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const BottomIf" href="windy/platforms/linux/x11/x.html#BottomIf">x: const BottomIf</a></li>
           </ul></dd>
+<dt><a name="busAddMatch" href="#busAddMatch"><span>busAddMatch:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var busAddMatch" href="windy/platforms/linux/tray/sni/dbus.html#busAddMatch">dbus: var busAddMatch</a></li>
+          </ul></dd>
+<dt><a name="busGetPrivate" href="#busGetPrivate"><span>busGetPrivate:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var busGetPrivate" href="windy/platforms/linux/tray/sni/dbus.html#busGetPrivate">dbus: var busGetPrivate</a></li>
+          </ul></dd>
 <dt><a name="Button" href="#Button"><span>Button:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: enum Button" href="windy/common.html#Button">common: enum Button</a></li>
@@ -325,6 +353,10 @@
 <li><a class="reference external"
           data-doc-search-tag="common: type Callback" href="windy/common.html#Callback">common: type Callback</a></li>
           </ul></dd>
+<dt><a name="calloc" href="#calloc"><span>calloc:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc calloc(count, size: csize_t): pointer" href="windy/platforms/linux/tray/xembed/xlib.html#calloc%2Ccsize_t%2Ccsize_t">xlib: proc calloc(count, size: csize_t): pointer</a></li>
+          </ul></dd>
 <dt><a name="cancel" href="#cancel"><span>cancel:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="http: proc cancel(handle: HttpRequestHandle)" href="windy/http.html#cancel%2CHttpRequestHandle">http: proc cancel(handle: HttpRequestHandle)</a></li>
@@ -357,6 +389,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x11: proc centerWindow(window: Window)" href="windy/platforms/linux/x11.html#centerWindow%2CWindow">x11: proc centerWindow(window: Window)</a></li>
           </ul></dd>
+<dt><a name="checked" href="#checked"><span>checked:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc checked(ok: uint32)" href="windy/platforms/linux/tray/sni/dbus.html#checked%2Cuint32">dbus: proc checked(ok: uint32)</a></li>
+          </ul></dd>
 <dt><a name="clearButtonsTemplate" href="#clearButtonsTemplate"><span>clearButtonsTemplate:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="internal: template clearButtonsTemplate()" href="windy/internal.html#clearButtonsTemplate.t">internal: template clearButtonsTemplate()</a></li>
@@ -372,6 +408,10 @@
 <dt><a name="close" href="#close"><span>close:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="http: proc close(handle: WebSocketHandle)" href="windy/http.html#close%2CWebSocketHandle">http: proc close(handle: WebSocketHandle)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="sni: proc close(tray: SniTray)" href="windy/platforms/linux/tray/sni.html#close%2CSniTray">sni: proc close(tray: SniTray)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xembed: proc close(tray: XembedTray)" href="windy/platforms/linux/tray/xembed.html#close%2CXembedTray">xembed: proc close(tray: XembedTray)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="x11: proc close(window: Window)" href="windy/platforms/linux/x11.html#close%2CWindow">x11: proc close(window: Window)</a></li>
           <li><a class="reference external"
@@ -432,6 +472,40 @@
 <dt><a name="ConfirmYes" href="#ConfirmYes"><span>ConfirmYes:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: ConfirmKind.ConfirmYes" href="windy/common.html#ConfirmYes">common: ConfirmKind.ConfirmYes</a></li>
+          </ul></dd>
+<dt><a name="Connection" href="#Connection"><span>Connection:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: type Connection" href="windy/platforms/linux/tray/sni/dbus.html#Connection">dbus: type Connection</a></li>
+          </ul></dd>
+<dt><a name="connectionClose" href="#connectionClose"><span>connectionClose:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var connectionClose" href="windy/platforms/linux/tray/sni/dbus.html#connectionClose">dbus: var connectionClose</a></li>
+          </ul></dd>
+<dt><a name="connectionPopMessage" href="#connectionPopMessage"><span>connectionPopMessage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var connectionPopMessage" href="windy/platforms/linux/tray/sni/dbus.html#connectionPopMessage">dbus: var connectionPopMessage</a></li>
+          </ul></dd>
+<dt><a name="connectionReadWrite" href="#connectionReadWrite"><span>connectionReadWrite:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var connectionReadWrite" href="windy/platforms/linux/tray/sni/dbus.html#connectionReadWrite">dbus: var connectionReadWrite</a></li>
+          </ul></dd>
+<dt><a name="connectionSend" href="#connectionSend"><span>connectionSend:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var connectionSend" href="windy/platforms/linux/tray/sni/dbus.html#connectionSend">dbus: var connectionSend</a></li>
+          </ul></dd>
+<dt><a name="connectionSetExitOnDisconnect" href="#connectionSetExitOnDisconnect"><span>connectionSetExitOnDisconnect:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var connectionSetExitOnDisconnect" href="windy/platforms/linux/tray/sni/dbus.html#connectionSetExitOnDisconnect">dbus: var connectionSetExitOnDisconnect</a></li>
+          </ul></dd>
+<dt><a name="connectionUnref" href="#connectionUnref"><span>connectionUnref:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var connectionUnref" href="windy/platforms/linux/tray/sni/dbus.html#connectionUnref">dbus: var connectionUnref</a></li>
+          </ul></dd>
+<dt><a name="container" href="#container"><span>container:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: template container(parent: var Iter; kind: char; signature: cstring; child: untyped;
+          body: untyped)" href="windy/platforms/linux/tray/sni/dbus.html#container.t%2CIter%2Cchar%2Ccstring%2Cuntyped%2Cuntyped">dbus: template container(parent: var Iter; kind: char; signature: cstring; child: untyped;
+          body: untyped)</a></li>
           </ul></dd>
 <dt><a name="contentScale" href="#contentScale"><span>contentScale:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -798,6 +872,10 @@
 <dt><a name="FontRightToLeft" href="#FontRightToLeft"><span>FontRightToLeft:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const FontRightToLeft" href="windy/platforms/linux/x11/x.html#FontRightToLeft">x: const FontRightToLeft</a></li>
+          </ul></dd>
+<dt><a name="FontSet" href="#FontSet"><span>FontSet:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: type FontSet" href="windy/platforms/linux/tray/xembed/xlib.html#FontSet">xlib: type FontSet</a></li>
           </ul></dd>
 <dt><a name="ForgetGravity" href="#ForgetGravity"><span>ForgetGravity:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1227,6 +1305,10 @@
 <li><a class="reference external"
           data-doc-search-tag="backends: const HasX11" href="windy/platforms/linux/backends.html#HasX11">backends: const HasX11</a></li>
           </ul></dd>
+<dt><a name="hideTrayIcon" href="#hideTrayIcon"><span>hideTrayIcon:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="tray: proc hideTrayIcon()" href="windy/platforms/linux/tray.html#hideTrayIcon">tray: proc hideTrayIcon()</a></li>
+          </ul></dd>
 <dt><a name="HostDelete" href="#HostDelete"><span>HostDelete:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const HostDelete" href="windy/platforms/linux/x11/x.html#HostDelete">x: const HostDelete</a></li>
@@ -1303,6 +1385,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const InputOutput" href="windy/platforms/linux/x11/x.html#InputOutput">x: const InputOutput</a></li>
           </ul></dd>
+<dt><a name="intValue" href="#intValue"><span>intValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc intValue(i: var Iter): int32" href="windy/platforms/linux/tray/sni/dbus.html#intValue%2CIter">dbus: proc intValue(i: var Iter): int32</a></li>
+          </ul></dd>
 <dt><a name="IsUnmapped" href="#IsUnmapped"><span>IsUnmapped:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const IsUnmapped" href="windy/platforms/linux/x11/x.html#IsUnmapped">x: const IsUnmapped</a></li>
@@ -1314,6 +1400,10 @@
 <dt><a name="IsViewable" href="#IsViewable"><span>IsViewable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const IsViewable" href="windy/platforms/linux/x11/x.html#IsViewable">x: const IsViewable</a></li>
+          </ul></dd>
+<dt><a name="Iter" href="#Iter"><span>Iter:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: object Iter" href="windy/platforms/linux/tray/sni/dbus.html#Iter">dbus: object Iter</a></li>
           </ul></dd>
 <dt><a name="JoinBevel" href="#JoinBevel"><span>JoinBevel:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1791,6 +1881,10 @@
 <li><a class="reference external"
           data-doc-search-tag="backends: object LinuxWindowOptions" href="windy/platforms/linux/backends.html#LinuxWindowOptions">backends: object LinuxWindowOptions</a></li>
           </ul></dd>
+<dt><a name="loadDbus" href="#loadDbus"><span>loadDbus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc loadDbus(): bool" href="windy/platforms/linux/tray/sni/dbus.html#loadDbus">dbus: proc loadDbus(): bool</a></li>
+          </ul></dd>
 <dt><a name="LockMapIndex" href="#LockMapIndex"><span>LockMapIndex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const LockMapIndex" href="windy/platforms/linux/x11/x.html#LockMapIndex">x: const LockMapIndex</a></li>
@@ -1846,6 +1940,102 @@
 <dt><a name="maximized%3D" href="#maximized%3D"><span>maximized=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x11: proc maximized=(window: Window; v: bool)" href="windy/platforms/linux/x11.html#maximized%3D%2CWindow%2Cbool">x11: proc maximized=(window: Window; v: bool)</a></li>
+          </ul></dd>
+<dt><a name="menuCallback" href="#menuCallback"><span>menuCallback:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="state: proc menuCallback(state: TrayState; id: int32): Callback" href="windy/platforms/linux/tray/state.html#menuCallback%2CTrayState%2Cint32">state: proc menuCallback(state: TrayState; id: int32): Callback</a></li>
+          </ul></dd>
+<dt><a name="Message" href="#Message"><span>Message:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: type Message" href="windy/platforms/linux/tray/sni/dbus.html#Message">dbus: type Message</a></li>
+          </ul></dd>
+<dt><a name="messageGetInterface" href="#messageGetInterface"><span>messageGetInterface:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageGetInterface" href="windy/platforms/linux/tray/sni/dbus.html#messageGetInterface">dbus: var messageGetInterface</a></li>
+          </ul></dd>
+<dt><a name="messageGetMember" href="#messageGetMember"><span>messageGetMember:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageGetMember" href="windy/platforms/linux/tray/sni/dbus.html#messageGetMember">dbus: var messageGetMember</a></li>
+          </ul></dd>
+<dt><a name="messageGetPath" href="#messageGetPath"><span>messageGetPath:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageGetPath" href="windy/platforms/linux/tray/sni/dbus.html#messageGetPath">dbus: var messageGetPath</a></li>
+          </ul></dd>
+<dt><a name="messageGetReplySerial" href="#messageGetReplySerial"><span>messageGetReplySerial:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageGetReplySerial" href="windy/platforms/linux/tray/sni/dbus.html#messageGetReplySerial">dbus: var messageGetReplySerial</a></li>
+          </ul></dd>
+<dt><a name="messageGetSender" href="#messageGetSender"><span>messageGetSender:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageGetSender" href="windy/platforms/linux/tray/sni/dbus.html#messageGetSender">dbus: var messageGetSender</a></li>
+          </ul></dd>
+<dt><a name="messageGetSignature" href="#messageGetSignature"><span>messageGetSignature:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageGetSignature" href="windy/platforms/linux/tray/sni/dbus.html#messageGetSignature">dbus: var messageGetSignature</a></li>
+          </ul></dd>
+<dt><a name="messageGetType" href="#messageGetType"><span>messageGetType:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageGetType" href="windy/platforms/linux/tray/sni/dbus.html#messageGetType">dbus: var messageGetType</a></li>
+          </ul></dd>
+<dt><a name="messageIterAbandonContainer" href="#messageIterAbandonContainer"><span>messageIterAbandonContainer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterAbandonContainer" href="windy/platforms/linux/tray/sni/dbus.html#messageIterAbandonContainer">dbus: var messageIterAbandonContainer</a></li>
+          </ul></dd>
+<dt><a name="messageIterAppendBasic" href="#messageIterAppendBasic"><span>messageIterAppendBasic:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterAppendBasic" href="windy/platforms/linux/tray/sni/dbus.html#messageIterAppendBasic">dbus: var messageIterAppendBasic</a></li>
+          </ul></dd>
+<dt><a name="messageIterCloseContainer" href="#messageIterCloseContainer"><span>messageIterCloseContainer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterCloseContainer" href="windy/platforms/linux/tray/sni/dbus.html#messageIterCloseContainer">dbus: var messageIterCloseContainer</a></li>
+          </ul></dd>
+<dt><a name="messageIterGetArgType" href="#messageIterGetArgType"><span>messageIterGetArgType:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterGetArgType" href="windy/platforms/linux/tray/sni/dbus.html#messageIterGetArgType">dbus: var messageIterGetArgType</a></li>
+          </ul></dd>
+<dt><a name="messageIterGetBasic" href="#messageIterGetBasic"><span>messageIterGetBasic:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterGetBasic" href="windy/platforms/linux/tray/sni/dbus.html#messageIterGetBasic">dbus: var messageIterGetBasic</a></li>
+          </ul></dd>
+<dt><a name="messageIterInit" href="#messageIterInit"><span>messageIterInit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterInit" href="windy/platforms/linux/tray/sni/dbus.html#messageIterInit">dbus: var messageIterInit</a></li>
+          </ul></dd>
+<dt><a name="messageIterInitAppend" href="#messageIterInitAppend"><span>messageIterInitAppend:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterInitAppend" href="windy/platforms/linux/tray/sni/dbus.html#messageIterInitAppend">dbus: var messageIterInitAppend</a></li>
+          </ul></dd>
+<dt><a name="messageIterNext" href="#messageIterNext"><span>messageIterNext:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterNext" href="windy/platforms/linux/tray/sni/dbus.html#messageIterNext">dbus: var messageIterNext</a></li>
+          </ul></dd>
+<dt><a name="messageIterOpenContainer" href="#messageIterOpenContainer"><span>messageIterOpenContainer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterOpenContainer" href="windy/platforms/linux/tray/sni/dbus.html#messageIterOpenContainer">dbus: var messageIterOpenContainer</a></li>
+          </ul></dd>
+<dt><a name="messageIterRecurse" href="#messageIterRecurse"><span>messageIterRecurse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageIterRecurse" href="windy/platforms/linux/tray/sni/dbus.html#messageIterRecurse">dbus: var messageIterRecurse</a></li>
+          </ul></dd>
+<dt><a name="messageNewError" href="#messageNewError"><span>messageNewError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageNewError" href="windy/platforms/linux/tray/sni/dbus.html#messageNewError">dbus: var messageNewError</a></li>
+          </ul></dd>
+<dt><a name="messageNewMethodCall" href="#messageNewMethodCall"><span>messageNewMethodCall:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageNewMethodCall" href="windy/platforms/linux/tray/sni/dbus.html#messageNewMethodCall">dbus: var messageNewMethodCall</a></li>
+          </ul></dd>
+<dt><a name="messageNewMethodReturn" href="#messageNewMethodReturn"><span>messageNewMethodReturn:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageNewMethodReturn" href="windy/platforms/linux/tray/sni/dbus.html#messageNewMethodReturn">dbus: var messageNewMethodReturn</a></li>
+          </ul></dd>
+<dt><a name="messageNewSignal" href="#messageNewSignal"><span>messageNewSignal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageNewSignal" href="windy/platforms/linux/tray/sni/dbus.html#messageNewSignal">dbus: var messageNewSignal</a></li>
+          </ul></dd>
+<dt><a name="messageUnref" href="#messageUnref"><span>messageUnref:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: var messageUnref" href="windy/platforms/linux/tray/sni/dbus.html#messageUnref">dbus: var messageUnref</a></li>
           </ul></dd>
 <dt><a name="minimized" href="#minimized"><span>minimized:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1967,6 +2157,10 @@
 <li><a class="reference external"
           data-doc-search-tag="x11: var multiClickRadius" href="windy/platforms/linux/x11.html#multiClickRadius">x11: var multiClickRadius</a></li>
           </ul></dd>
+<dt><a name="newSniTray" href="#newSniTray"><span>newSniTray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="sni: proc newSniTray(state: TrayState; blockedOwner = &quot;&quot;): SniTray" href="windy/platforms/linux/tray/sni.html#newSniTray%2CTrayState%2Cstring">sni: proc newSniTray(state: TrayState; blockedOwner = &quot;&quot;): SniTray</a></li>
+          </ul></dd>
 <dt><a name="newWindow" href="#newWindow"><span>newWindow:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x11: proc newWindow(title: string; size: IVec2; style = DecoratedResizable;
@@ -1981,9 +2175,15 @@
 <li><a class="reference external"
           data-doc-search-tag="x11: proc newX11PixelPresenter(window: Window): X11PixelPresenter" href="windy/platforms/linux/x11.html#newX11PixelPresenter%2CWindow">x11: proc newX11PixelPresenter(window: Window): X11PixelPresenter</a></li>
           </ul></dd>
+<dt><a name="newXembedTray" href="#newXembedTray"><span>newXembedTray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xembed: proc newXembedTray(state: TrayState): XembedTray" href="windy/platforms/linux/tray/xembed.html#newXembedTray%2CTrayState">xembed: proc newXembedTray(state: TrayState): XembedTray</a></li>
+          </ul></dd>
 <dt><a name="next" href="#next"><span>next:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="internal: proc next(rand: Rand): int" href="windy/internal.html#next%2CRand">internal: proc next(rand: Rand): int</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="dbus: proc next(i: var Iter)" href="windy/platforms/linux/tray/sni/dbus.html#next%2CIter">dbus: proc next(i: var Iter)</a></li>
           </ul></dd>
 <dt><a name="NoEventMask" href="#NoEventMask"><span>NoEventMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2307,6 +2507,12 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const PointerWindow" href="windy/platforms/linux/x11/x.html#PointerWindow">x: const PointerWindow</a></li>
           </ul></dd>
+<dt><a name="poll" href="#poll"><span>poll:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="sni: proc poll(tray: SniTray): seq[Callback]" href="windy/platforms/linux/tray/sni.html#poll%2CSniTray">sni: proc poll(tray: SniTray): seq[Callback]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xembed: proc poll(tray: XembedTray): seq[Callback]" href="windy/platforms/linux/tray/xembed.html#poll%2CXembedTray">xembed: proc poll(tray: XembedTray): seq[Callback]</a></li>
+          </ul></dd>
 <dt><a name="pollEvents" href="#pollEvents"><span>pollEvents:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x11: proc pollEvents()" href="windy/platforms/linux/x11.html#pollEvents">x11: proc pollEvents()</a></li>
@@ -2314,6 +2520,10 @@
 <dt><a name="pollHttp" href="#pollHttp"><span>pollHttp:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="http: proc pollHttp()" href="windy/http.html#pollHttp">http: proc pollHttp()</a></li>
+          </ul></dd>
+<dt><a name="pollTrayEvents" href="#pollTrayEvents"><span>pollTrayEvents:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="tray: proc pollTrayEvents()" href="windy/platforms/linux/tray.html#pollTrayEvents">tray: proc pollTrayEvents()</a></li>
           </ul></dd>
 <dt><a name="pos" href="#pos"><span>pos:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2359,6 +2569,14 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const RaiseLowest" href="windy/platforms/linux/x11/x.html#RaiseLowest">x: const RaiseLowest</a></li>
           </ul></dd>
+<dt><a name="reader" href="#reader"><span>reader:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc reader(m: Message): Iter" href="windy/platforms/linux/tray/sni/dbus.html#reader%2CMessage">dbus: proc reader(m: Message): Iter</a></li>
+          </ul></dd>
+<dt><a name="recurse" href="#recurse"><span>recurse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc recurse(i: var Iter): Iter" href="windy/platforms/linux/tray/sni/dbus.html#recurse%2CIter">dbus: proc recurse(i: var Iter): Iter</a></li>
+          </ul></dd>
 <dt><a name="releaseMouse" href="#releaseMouse"><span>releaseMouse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x11: proc releaseMouse(window: Window)" href="windy/platforms/linux/x11.html#releaseMouse%2CWindow">x11: proc releaseMouse(window: Window)</a></li>
@@ -2374,6 +2592,10 @@
 <dt><a name="ReplayPointer" href="#ReplayPointer"><span>ReplayPointer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const ReplayPointer" href="windy/platforms/linux/x11/x.html#ReplayPointer">x: const ReplayPointer</a></li>
+          </ul></dd>
+<dt><a name="requireMessage" href="#requireMessage"><span>requireMessage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc requireMessage(m: Message): Message" href="windy/platforms/linux/tray/sni/dbus.html#requireMessage%2CMessage">dbus: proc requireMessage(m: Message): Message</a></li>
           </ul></dd>
 <dt><a name="ResizeDownCursor" href="#ResizeDownCursor"><span>ResizeDownCursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2478,6 +2700,14 @@
 <dt><a name="send" href="#send"><span>send:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="http: proc send(handle: WebSocketHandle; msg: string; kind = Utf8Message)" href="windy/http.html#send%2CWebSocketHandle%2Cstring">http: proc send(handle: WebSocketHandle; msg: string; kind = Utf8Message)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="dbus: proc send(c: Connection; m: Message): uint32" href="windy/platforms/linux/tray/sni/dbus.html#send%2CConnection%2CMessage">dbus: proc send(c: Connection; m: Message): uint32</a></li>
+          </ul></dd>
+<dt><a name="setActive" href="#setActive"><span>setActive:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="sni: proc setActive(tray: SniTray; active: bool)" href="windy/platforms/linux/tray/sni.html#setActive%2CSniTray%2Cbool">sni: proc setActive(tray: SniTray; active: bool)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xembed: proc setActive(tray: XembedTray; active: bool)" href="windy/platforms/linux/tray/xembed.html#setActive%2CXembedTray%2Cbool">xembed: proc setActive(tray: XembedTray; active: bool)</a></li>
           </ul></dd>
 <dt><a name="setClipboardString" href="#setClipboardString"><span>setClipboardString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2511,6 +2741,12 @@
 <li><a class="reference external"
           data-doc-search-tag="x: const ShiftMask" href="windy/platforms/linux/x11/x.html#ShiftMask">x: const ShiftMask</a></li>
           </ul></dd>
+<dt><a name="showTrayIcon" href="#showTrayIcon"><span>showTrayIcon:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="tray: proc showTrayIcon(icon: Image; tooltip: string; onClick: Callback;
+             menu: seq[TrayMenuEntry] = @[])" href="windy/platforms/linux/tray.html#showTrayIcon%2CImage%2Cstring%2CCallback%2Cseq%5BTrayMenuEntry%5D">tray: proc showTrayIcon(icon: Image; tooltip: string; onClick: Callback;
+             menu: seq[TrayMenuEntry] = @[])</a></li>
+          </ul></dd>
 <dt><a name="size" href="#size"><span>size:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: proc size(screen: Screen): IVec2" href="windy/common.html#size%2CScreen">common: proc size(screen: Screen): IVec2</a></li>
@@ -2520,6 +2756,10 @@
 <dt><a name="size%3D" href="#size%3D"><span>size=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x11: proc size=(window: Window; v: IVec2)" href="windy/platforms/linux/x11.html#size%3D%2CWindow%2CIVec2">x11: proc size=(window: Window; v: IVec2)</a></li>
+          </ul></dd>
+<dt><a name="SniTray" href="#SniTray"><span>SniTray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="sni: type SniTray" href="windy/platforms/linux/tray/sni.html#SniTray">sni: type SniTray</a></li>
           </ul></dd>
 <dt><a name="SouthEastGravity" href="#SouthEastGravity"><span>SouthEastGravity:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2558,6 +2798,10 @@
 <dt><a name="StippleShape" href="#StippleShape"><span>StippleShape:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const StippleShape" href="windy/platforms/linux/x11/x.html#StippleShape">x: const StippleShape</a></li>
+          </ul></dd>
+<dt><a name="stringValue" href="#stringValue"><span>stringValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc stringValue(i: var Iter): string" href="windy/platforms/linux/tray/sni/dbus.html#stringValue%2CIter">dbus: proc stringValue(i: var Iter): string</a></li>
           </ul></dd>
 <dt><a name="StructureNotifyMask" href="#StructureNotifyMask"><span>StructureNotifyMask:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2687,6 +2931,26 @@
 <li><a class="reference external"
           data-doc-search-tag="common: WindowStyle.Transparent" href="windy/common.html#Transparent">common: WindowStyle.Transparent</a></li>
           </ul></dd>
+<dt><a name="TrayMenuEntry" href="#TrayMenuEntry"><span>TrayMenuEntry:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: object TrayMenuEntry" href="windy/common.html#TrayMenuEntry">common: object TrayMenuEntry</a></li>
+          </ul></dd>
+<dt><a name="TrayMenuEntryKind" href="#TrayMenuEntryKind"><span>TrayMenuEntryKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: enum TrayMenuEntryKind" href="windy/common.html#TrayMenuEntryKind">common: enum TrayMenuEntryKind</a></li>
+          </ul></dd>
+<dt><a name="TrayMenuOption" href="#TrayMenuOption"><span>TrayMenuOption:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: TrayMenuEntryKind.TrayMenuOption" href="windy/common.html#TrayMenuOption">common: TrayMenuEntryKind.TrayMenuOption</a></li>
+          </ul></dd>
+<dt><a name="TrayMenuSeparator" href="#TrayMenuSeparator"><span>TrayMenuSeparator:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="common: TrayMenuEntryKind.TrayMenuSeparator" href="windy/common.html#TrayMenuSeparator">common: TrayMenuEntryKind.TrayMenuSeparator</a></li>
+          </ul></dd>
+<dt><a name="TrayState" href="#TrayState"><span>TrayState:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="state: type TrayState" href="windy/platforms/linux/tray/state.html#TrayState">state: type TrayState</a></li>
+          </ul></dd>
 <dt><a name="TripleClick" href="#TripleClick"><span>TripleClick:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: Button.TripleClick" href="windy/common.html#TripleClick">common: Button.TripleClick</a></li>
@@ -2706,6 +2970,12 @@
 <dt><a name="Unsorted" href="#Unsorted"><span>Unsorted:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const Unsorted" href="windy/platforms/linux/x11/x.html#Unsorted">x: const Unsorted</a></li>
+          </ul></dd>
+<dt><a name="update" href="#update"><span>update:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="sni: proc update(tray: SniTray; state: TrayState)" href="windy/platforms/linux/tray/sni.html#update%2CSniTray%2CTrayState">sni: proc update(tray: SniTray; state: TrayState)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xembed: proc update(tray: XembedTray; state: TrayState)" href="windy/platforms/linux/tray/xembed.html#update%2CXembedTray%2CTrayState">xembed: proc update(tray: XembedTray; state: TrayState)</a></li>
           </ul></dd>
 <dt><a name="url" href="#url"><span>url:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2808,6 +3078,10 @@
 <dt><a name="windyRand" href="#windyRand"><span>windyRand:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="internal: var windyRand" href="windy/internal.html#windyRand">internal: var windyRand</a></li>
+          </ul></dd>
+<dt><a name="writer" href="#writer"><span>writer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dbus: proc writer(m: Message): Iter" href="windy/platforms/linux/tray/sni/dbus.html#writer%2CMessage">dbus: proc writer(m: Message): Iter</a></li>
           </ul></dd>
 <dt><a name="X11Backend" href="#X11Backend"><span>X11Backend:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3195,6 +3469,12 @@
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XCirculateRequestEvent" href="windy/platforms/linux/x11/xevent.html#XCirculateRequestEvent">xevent: object XCirculateRequestEvent</a></li>
           </ul></dd>
+<dt><a name="XClearArea" href="#XClearArea"><span>XClearArea:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XClearArea(d: Display; window: Window; x, y: cint; width, height: cuint;
+           exposures: cint): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XClearArea%2CDisplay%2CWindow%2Ccint%2Ccint%2Ccuint%2Ccuint%2Ccint">xlib: proc XClearArea(d: Display; window: Window; x, y: cint; width, height: cuint;
+           exposures: cint): cint</a></li>
+          </ul></dd>
 <dt><a name="XClientMessageData" href="#XClientMessageData"><span>XClientMessageData:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XClientMessageData" href="windy/platforms/linux/x11/xevent.html#XClientMessageData">xevent: object XClientMessageData</a></li>
@@ -3202,6 +3482,10 @@
 <dt><a name="XClientMessageEvent" href="#XClientMessageEvent"><span>XClientMessageEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XClientMessageEvent" href="windy/platforms/linux/x11/xevent.html#XClientMessageEvent">xevent: object XClientMessageEvent</a></li>
+          </ul></dd>
+<dt><a name="XCloseDisplay" href="#XCloseDisplay"><span>XCloseDisplay:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XCloseDisplay(d: Display): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XCloseDisplay%2CDisplay">xlib: proc XCloseDisplay(d: Display): cint</a></li>
           </ul></dd>
 <dt><a name="XCloseIM" href="#XCloseIM"><span>XCloseIM:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3233,6 +3517,12 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor" href="windy/platforms/linux/x11/xlib.html#XCreateFontCursor%2CDisplay%2Ccuint">xlib: proc XCreateFontCursor(d: Display; shape: cuint): x.Cursor</a></li>
           </ul></dd>
+<dt><a name="XCreateFontSet" href="#XCreateFontSet"><span>XCreateFontSet:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XCreateFontSet(d: Display; names: cstring; missing: ptr ptr cstring;
+               count: ptr cint; defaultString: ptr cstring): FontSet" href="windy/platforms/linux/tray/xembed/xlib.html#XCreateFontSet%2CDisplay%2Ccstring%2Cptr.ptr.cstring%2Cptr.cint%2Cptr.cstring">xlib: proc XCreateFontSet(d: Display; names: cstring; missing: ptr ptr cstring;
+               count: ptr cint; defaultString: ptr cstring): FontSet</a></li>
+          </ul></dd>
 <dt><a name="XCreateGC" href="#XCreateGC"><span>XCreateGC:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC" href="windy/platforms/linux/x11/xlib.html#XCreateGC%2CDisplay%2CDrawable%2Cculong%2Cptr.XGCValues">xlib: proc XCreateGC(d: Display; o: Drawable; flags: culong; gcv: ptr XGCValues): GC</a></li>
@@ -3240,6 +3530,14 @@
 <dt><a name="XCreateIC" href="#XCreateIC"><span>XCreateIC:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XCreateIC(im: XIM): XIC" href="windy/platforms/linux/x11/xlib.html#XCreateIC%2CXIM">xlib: proc XCreateIC(im: XIM): XIC</a></li>
+          </ul></dd>
+<dt><a name="XCreateImage" href="#XCreateImage"><span>XCreateImage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XCreateImage(d: Display; visual: ptr Visual; depth: cuint; format: cint;
+             offset: cint; data: cstring; width, height: cuint;
+             pad, stride: cint): ptr XImage" href="windy/platforms/linux/tray/xembed/xlib.html#XCreateImage%2CDisplay%2Cptr.Visual%2Ccuint%2Ccint%2Ccint%2Ccstring%2Ccuint%2Ccuint%2Ccint%2Ccint">xlib: proc XCreateImage(d: Display; visual: ptr Visual; depth: cuint; format: cint;
+             offset: cint; data: cstring; width, height: cuint;
+             pad, stride: cint): ptr XImage</a></li>
           </ul></dd>
 <dt><a name="XCreateSimpleWindow" href="#XCreateSimpleWindow"><span>XCreateSimpleWindow:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3305,6 +3603,10 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XDestroyIC(ic: XIC)" href="windy/platforms/linux/x11/xlib.html#XDestroyIC%2CXIC">xlib: proc XDestroyIC(ic: XIC)</a></li>
           </ul></dd>
+<dt><a name="XDestroyImage" href="#XDestroyImage"><span>XDestroyImage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XDestroyImage(image: ptr XImage): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XDestroyImage%2Cptr.XImage">xlib: proc XDestroyImage(image: ptr XImage): cint</a></li>
+          </ul></dd>
 <dt><a name="XDestroyWindow" href="#XDestroyWindow"><span>XDestroyWindow:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XDestroyWindow(d: Display; window: Window)" href="windy/platforms/linux/x11/xlib.html#XDestroyWindow%2CDisplay%2CWindow">xlib: proc XDestroyWindow(d: Display; window: Window)</a></li>
@@ -3312,6 +3614,14 @@
 <dt><a name="XDestroyWindowEvent" href="#XDestroyWindowEvent"><span>XDestroyWindowEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XDestroyWindowEvent" href="windy/platforms/linux/x11/xevent.html#XDestroyWindowEvent">xevent: object XDestroyWindowEvent</a></li>
+          </ul></dd>
+<dt><a name="XDrawLine" href="#XDrawLine"><span>XDrawLine:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XDrawLine(d: Display; window: Drawable; gc: GC; x1, y1, x2, y2: cint): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XDrawLine%2CDisplay%2CDrawable%2CGC%2Ccint%2Ccint%2Ccint%2Ccint">xlib: proc XDrawLine(d: Display; window: Drawable; gc: GC; x1, y1, x2, y2: cint): cint</a></li>
+          </ul></dd>
+<dt><a name="XembedTray" href="#XembedTray"><span>XembedTray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xembed: type XembedTray" href="windy/platforms/linux/tray/xembed.html#XembedTray">xembed: type XembedTray</a></li>
           </ul></dd>
 <dt><a name="XErrorEvent" href="#XErrorEvent"><span>XErrorEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3333,6 +3643,12 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: object XExtData" href="windy/platforms/linux/x11/xlib.html#XExtData">xlib: object XExtData</a></li>
           </ul></dd>
+<dt><a name="XFillRectangle" href="#XFillRectangle"><span>XFillRectangle:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XFillRectangle(d: Display; window: Drawable; gc: GC; x, y: cint;
+               width, height: cuint): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XFillRectangle%2CDisplay%2CDrawable%2CGC%2Ccint%2Ccint%2Ccuint%2Ccuint">xlib: proc XFillRectangle(d: Display; window: Drawable; gc: GC; x, y: cint;
+               width, height: cuint): cint</a></li>
+          </ul></dd>
 <dt><a name="XFlush" href="#XFlush"><span>XFlush:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XFlush(d: Display)" href="windy/platforms/linux/x11/xlib.html#XFlush%2CDisplay">xlib: proc XFlush(d: Display)</a></li>
@@ -3353,9 +3669,17 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XFreeCursor(d: Display; cursor: x.Cursor)" href="windy/platforms/linux/x11/xlib.html#XFreeCursor%2CDisplay%2C">xlib: proc XFreeCursor(d: Display; cursor: x.Cursor)</a></li>
           </ul></dd>
+<dt><a name="XFreeFontSet" href="#XFreeFontSet"><span>XFreeFontSet:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XFreeFontSet(d: Display; fonts: FontSet)" href="windy/platforms/linux/tray/xembed/xlib.html#XFreeFontSet%2CDisplay%2CFontSet">xlib: proc XFreeFontSet(d: Display; fonts: FontSet)</a></li>
+          </ul></dd>
 <dt><a name="XFreeGC" href="#XFreeGC"><span>XFreeGC:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XFreeGC(d: Display; gc: GC)" href="windy/platforms/linux/x11/xlib.html#XFreeGC%2CDisplay%2CGC">xlib: proc XFreeGC(d: Display; gc: GC)</a></li>
+          </ul></dd>
+<dt><a name="XFreeStringList" href="#XFreeStringList"><span>XFreeStringList:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XFreeStringList(strings: ptr cstring)" href="windy/platforms/linux/tray/xembed/xlib.html#XFreeStringList%2Cptr.cstring">xlib: proc XFreeStringList(strings: ptr cstring)</a></li>
           </ul></dd>
 <dt><a name="XGCValues" href="#XGCValues"><span>XGCValues:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3383,6 +3707,12 @@
              w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)" href="windy/platforms/linux/x11/xlib.html#XGetGeometry%2CDisplay%2CDrawable%2Cptr.Window%2Cptr.int32%2Cptr.int32%2Cptr.uint32%2Cptr.uint32%2Cptr.uint32%2Cptr.uint32">xlib: proc XGetGeometry(d: Display; window: Drawable; root: ptr Window; x, y: ptr int32;
              w, h: ptr uint32; borderW: ptr uint32; depth: ptr uint32)</a></li>
           </ul></dd>
+<dt><a name="XGetImage" href="#XGetImage"><span>XGetImage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XGetImage(d: Display; window: Drawable; x, y: cint; width, height: cuint;
+          planes: culong; format: cint): ptr XImage" href="windy/platforms/linux/tray/xembed/xlib.html#XGetImage%2CDisplay%2CDrawable%2Ccint%2Ccint%2Ccuint%2Ccuint%2Cculong%2Ccint">xlib: proc XGetImage(d: Display; window: Drawable; x, y: cint; width, height: cuint;
+          planes: culong; format: cint): ptr XImage</a></li>
+          </ul></dd>
 <dt><a name="XGetInputFocus" href="#XGetInputFocus"><span>XGetInputFocus:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XGetInputFocus(d: Display; window: ptr Window; revertTo: ptr RevertTo)" href="windy/platforms/linux/x11/xlib.html#XGetInputFocus%2CDisplay%2Cptr.Window%2Cptr.RevertTo">xlib: proc XGetInputFocus(d: Display; window: ptr Window; revertTo: ptr RevertTo)</a></li>
@@ -3391,9 +3721,17 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XGetNormalHints(d: Display; window: Window; res: ptr XSizeHints)" href="windy/platforms/linux/x11/xlib.html#XGetNormalHints%2CDisplay%2CWindow%2Cptr.XSizeHints">xlib: proc XGetNormalHints(d: Display; window: Window; res: ptr XSizeHints)</a></li>
           </ul></dd>
+<dt><a name="XGetPixel" href="#XGetPixel"><span>XGetPixel:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XGetPixel(image: ptr XImage; x, y: cint): culong" href="windy/platforms/linux/tray/xembed/xlib.html#XGetPixel%2Cptr.XImage%2Ccint%2Ccint">xlib: proc XGetPixel(image: ptr XImage; x, y: cint): culong</a></li>
+          </ul></dd>
 <dt><a name="XGetSelectionOwner" href="#XGetSelectionOwner"><span>XGetSelectionOwner:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XGetSelectionOwner(d: Display; kind: Atom): Window" href="windy/platforms/linux/x11/xlib.html#XGetSelectionOwner%2CDisplay%2CAtom">xlib: proc XGetSelectionOwner(d: Display; kind: Atom): Window</a></li>
+          </ul></dd>
+<dt><a name="XGetVisualInfo" href="#XGetVisualInfo"><span>XGetVisualInfo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XGetVisualInfo(d: Display; mask: clong; info: ptr XVisualInfo; count: ptr cint): ptr XVisualInfo" href="windy/platforms/linux/tray/xembed/xlib.html#XGetVisualInfo%2CDisplay%2Cclong%2Cptr.XVisualInfo%2Cptr.cint">xlib: proc XGetVisualInfo(d: Display; mask: clong; info: ptr XVisualInfo; count: ptr cint): ptr XVisualInfo</a></li>
           </ul></dd>
 <dt><a name="XGetWindowAttributes" href="#XGetWindowAttributes"><span>XGetWindowAttributes:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3410,6 +3748,12 @@
                    kindReturn: ptr Atom; formatReturn: ptr cint;
                    lenReturn: ptr culong; bytesAfterReturn: ptr culong;
                    dataReturn: ptr cstring)</a></li>
+          </ul></dd>
+<dt><a name="XGrabKeyboard" href="#XGrabKeyboard"><span>XGrabKeyboard:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XGrabKeyboard(d: Display; window: Window;
+              ownerEvents, pointerMode, keyboardMode: cint; time: Time): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XGrabKeyboard%2CDisplay%2CWindow%2Ccint%2Ccint%2Ccint%2CTime">xlib: proc XGrabKeyboard(d: Display; window: Window;
+              ownerEvents, pointerMode, keyboardMode: cint; time: Time): cint</a></li>
           </ul></dd>
 <dt><a name="XGrabPointer" href="#XGrabPointer"><span>XGrabPointer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3442,6 +3786,10 @@
 <dt><a name="XIM" href="#XIM"><span>XIM:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: type XIM" href="windy/platforms/linux/x11/xlib.html#XIM">xlib: type XIM</a></li>
+          </ul></dd>
+<dt><a name="XImage" href="#XImage"><span>XImage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: object XImage" href="windy/platforms/linux/tray/xembed/xlib.html#XImage">xlib: object XImage</a></li>
           </ul></dd>
 <dt><a name="XIMPreeditArea" href="#XIMPreeditArea"><span>XIMPreeditArea:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10367,9 +10715,23 @@
         resClass: cstring = nil): XIM" href="windy/platforms/linux/x11/xlib.html#XOpenIM%2CDisplay%2Cpointer%2Ccstring%2Ccstring">xlib: proc XOpenIM(d: Display; db: pointer = nil; resName: cstring = nil;
         resClass: cstring = nil): XIM</a></li>
           </ul></dd>
+<dt><a name="XPending" href="#XPending"><span>XPending:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XPending(d: Display): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XPending%2CDisplay">xlib: proc XPending(d: Display): cint</a></li>
+          </ul></dd>
 <dt><a name="XPropertyEvent" href="#XPropertyEvent"><span>XPropertyEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: object XPropertyEvent" href="windy/platforms/linux/x11/xevent.html#XPropertyEvent">xevent: object XPropertyEvent</a></li>
+          </ul></dd>
+<dt><a name="XPutImage" href="#XPutImage"><span>XPutImage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XPutImage(d: Display; window: Drawable; gc: GC; image: ptr XImage;
+          sourceX, sourceY, destX, destY: cint; width, height: cuint): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XPutImage%2CDisplay%2CDrawable%2CGC%2Cptr.XImage%2Ccint%2Ccint%2Ccint%2Ccint%2Ccuint%2Ccuint">xlib: proc XPutImage(d: Display; window: Drawable; gc: GC; image: ptr XImage;
+          sourceX, sourceY, destX, destY: cint; width, height: cuint): cint</a></li>
+          </ul></dd>
+<dt><a name="XPutPixel" href="#XPutPixel"><span>XPutPixel:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XPutPixel(image: ptr XImage; x, y: cint; pixel: culong): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XPutPixel%2Cptr.XImage%2Ccint%2Ccint%2Cculong">xlib: proc XPutPixel(image: ptr XImage; x, y: cint; pixel: culong): cint</a></li>
           </ul></dd>
 <dt><a name="XQueryKeymap" href="#XQueryKeymap"><span>XQueryKeymap:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10426,6 +10788,10 @@
 <dt><a name="XSetErrorHandler" href="#XSetErrorHandler"><span>XSetErrorHandler:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: proc XSetErrorHandler(handler: ErrorHandleProc): ErrorHandleProc" href="windy/platforms/linux/x11/xevent.html#XSetErrorHandler%2CErrorHandleProc">xevent: proc XSetErrorHandler(handler: ErrorHandleProc): ErrorHandleProc</a></li>
+          </ul></dd>
+<dt><a name="XSetForeground" href="#XSetForeground"><span>XSetForeground:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XSetForeground(d: Display; gc: GC; color: culong): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XSetForeground%2CDisplay%2CGC%2Cculong">xlib: proc XSetForeground(d: Display; gc: GC; color: culong): cint</a></li>
           </ul></dd>
 <dt><a name="XSetICFocus" href="#XSetICFocus"><span>XSetICFocus:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10509,6 +10875,10 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XUndefineCursor(d: Display; window: x.Window)" href="windy/platforms/linux/x11/xlib.html#XUndefineCursor%2CDisplay%2C">xlib: proc XUndefineCursor(d: Display; window: x.Window)</a></li>
           </ul></dd>
+<dt><a name="XUngrabKeyboard" href="#XUngrabKeyboard"><span>XUngrabKeyboard:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc XUngrabKeyboard(d: Display; time: Time): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XUngrabKeyboard%2CDisplay%2CTime">xlib: proc XUngrabKeyboard(d: Display; time: Time): cint</a></li>
+          </ul></dd>
 <dt><a name="XUngrabPointer" href="#XUngrabPointer"><span>XUngrabPointer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XUngrabPointer(d: Display; time: Time)" href="windy/platforms/linux/x11/xlib.html#XUngrabPointer%2CDisplay%2CTime">xlib: proc XUngrabPointer(d: Display; time: Time)</a></li>
@@ -10525,6 +10895,12 @@
 <li><a class="reference external"
           data-doc-search-tag="xlib: proc XUnsetICFocus(ic: XIC)" href="windy/platforms/linux/x11/xlib.html#XUnsetICFocus%2CXIC">xlib: proc XUnsetICFocus(ic: XIC)</a></li>
           </ul></dd>
+<dt><a name="Xutf8DrawString" href="#Xutf8DrawString"><span>Xutf8DrawString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc Xutf8DrawString(d: Display; window: Drawable; fonts: FontSet; gc: GC;
+                x, y: cint; text: cstring; bytes: cint)" href="windy/platforms/linux/tray/xembed/xlib.html#Xutf8DrawString%2CDisplay%2CDrawable%2CFontSet%2CGC%2Ccint%2Ccint%2Ccstring%2Ccint">xlib: proc Xutf8DrawString(d: Display; window: Drawable; fonts: FontSet; gc: GC;
+                x, y: cint; text: cstring; bytes: cint)</a></li>
+          </ul></dd>
 <dt><a name="Xutf8LookupString" href="#Xutf8LookupString"><span>Xutf8LookupString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xevent: proc Xutf8LookupString(ic: XIC; e: ptr XKeyEvent; buffer: cstring; len: cint;
@@ -10538,6 +10914,10 @@
                      normalHints: pointer; wmHints: pointer; classHints: pointer)" href="windy/platforms/linux/x11/xlib.html#Xutf8SetWMProperties%2CDisplay%2CWindow%2Ccstring%2Ccstring%2Cptr.cstring%2Ccint%2Cpointer%2Cpointer%2Cpointer">xlib: proc Xutf8SetWMProperties(d: Display; window: Window; name: cstring;
                      iconName: cstring; argv: ptr cstring; argc: cint;
                      normalHints: pointer; wmHints: pointer; classHints: pointer)</a></li>
+          </ul></dd>
+<dt><a name="Xutf8TextEscapement" href="#Xutf8TextEscapement"><span>Xutf8TextEscapement:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xlib: proc Xutf8TextEscapement(fonts: FontSet; text: cstring; bytes: cint): cint" href="windy/platforms/linux/tray/xembed/xlib.html#Xutf8TextEscapement%2CFontSet%2Ccstring%2Ccint">xlib: proc Xutf8TextEscapement(fonts: FontSet; text: cstring; bytes: cint): cint</a></li>
           </ul></dd>
 <dt><a name="XVisibilityEvent" href="#XVisibilityEvent"><span>XVisibilityEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10585,7 +10965,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-12 20:56:31 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-12 20:56:41 UTC</small>
       </div>
     </div>
   </div>
