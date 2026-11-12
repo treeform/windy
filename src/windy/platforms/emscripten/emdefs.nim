@@ -123,6 +123,24 @@ EM_JS(void, open_url, (const char* url), {
   window.open(urlUtf8, '_blank');
 });
 
+EM_JS(void, setup_paste_handler, (const char* target, void* userData), {
+  var canvas = document.querySelector(UTF8ToString(target));
+  canvas.addEventListener('paste', function(event) {
+    if (!event.clipboardData) return;
+    var text = event.clipboardData.getData('text/plain');
+    var size = lengthBytesUTF8(text) + 1;
+    var pointer = _malloc(size);
+    stringToUTF8(text, pointer, size);
+    try {
+      if (Module._windy_paste_callback(userData, pointer)) {
+        event.preventDefault();
+      }
+    } finally {
+      _free(pointer);
+    }
+  });
+});
+
 EM_JS(void, setup_drag_drop_handlers_internal, (const char* target, void* userData), {
   const canvas = target ? document.querySelector(UTF8ToString(target)) : Module.canvas;
   if (!canvas) {
@@ -329,6 +347,7 @@ proc get_device_pixel_ratio*(): cdouble {.importc.}
 proc open_temp_text_file*(title, text: cstring) {.importc.}
 proc open_url*(url: cstring) {.importc.}
 proc setup_drag_drop_handlers_internal*(target: cstring, userData: pointer) {.importc.}
+proc setup_paste_handler*(target: cstring, userData: pointer) {.importc.}
 proc set_cursor*(cursor: cstring) {.importc.}
 proc getLocalStorageLength*(key: cstring): cint {.importc: "get_local_storage_length".}
 proc getLocalStorageInto*(output: cstring, maxLen: cint, key: cstring): cint {.importc: "get_local_storage_into".}

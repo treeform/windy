@@ -65,6 +65,7 @@ type
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
+    onTouch*: TouchCallback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -73,6 +74,8 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
     imePos*: IVec2
@@ -252,6 +255,8 @@ proc destroy(window: Window) =
   window.onButtonPress = nil
   window.onButtonRelease = nil
   window.onRune = nil
+  window.onTextInput = nil
+  window.onTextEdit = nil
   window.onImeChange = nil
 
   # Destroy graphics context
@@ -2835,3 +2840,6 @@ proc openTempTextFile*(title, text: string) =
     createDir("tmp")
   writeFile("tmp/" & title, text)
   discard execShellCmd("notepad tmp/" & title)
+
+proc touches*(window: Window): seq[TouchContact] =
+  @[]

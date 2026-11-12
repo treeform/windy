@@ -25,19 +25,35 @@ jobs:
 
     # Run tests.
     - run: nim c tests/test.nim
+    - run: nim c tests/manual_inputs.nim
+    - name: Check 32-bit fbdev without DRM
+      if: matrix.os == 'ubuntu-latest'
+      run: WINDY_TEST_BACKENDS=fbdev WINDY_TEST_TARGET=arm nim check tests/test_linux_display.nim
     - run: nim r tests/test_openurl.nim
     - run: nim r tests/test_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r tests/test_accessibility.nim
       if: matrix.os == 'macos-latest'
     - run: nim r tests/test_tempfiles.nim
       if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_macos.nim
       if: matrix.os == 'macos-latest'
+    - run: nim r -d:useCpu tests/test_accessibility.nim
+      if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_cpu_pixels.nim
       if: matrix.os == 'windows-latest'
-    - run: |
-        sudo apt-get install -y xvfb libgl1-mesa-dri
-        LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a nim r tests/test_x11.nim
+
+    - name: Test X11 contexts, mouse capture, and resize sync
       if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb xauth libgl1-mesa-dri libglx-mesa0 \
+          libxcursor1 libxfixes3 libxtst6
+        nim check tests/test_x11.nim
+        nim c tests/test_x11.nim
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ./tests/test_x11
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 \
+          MESA_GL_VERSION_OVERRIDE=3.3 ./tests/test_x11 --unsupported-version
 
     # Build native examples.
     - run: nim c examples/basic.nim
@@ -68,6 +84,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
 
     # Build Emscripten examples on Ubuntu only.
+    - run: nim c -d:emscripten tests/manual_inputs.nim
+      if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/basic.nim
       if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/basic_boxy.nim

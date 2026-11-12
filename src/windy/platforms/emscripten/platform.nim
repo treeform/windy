@@ -1,11 +1,19 @@
 import
-  std/[tables, strutils, unicode, times],
+  std/[base64, tables, strutils, unicode, times],
   ../../common, ../../internal, vmath, pixie
 
 # include for EMSCRIPTEN_KEEPALIVE
 {.emit: """
 #include <emscripten.h>
+EM_JS(double, windy_canvas_left, (), {
+  return Module.canvas.getBoundingClientRect().left;
+});
+EM_JS(double, windy_canvas_top, (), {
+  return Module.canvas.getBoundingClientRect().top;
+});
 """.}
+proc windy_canvas_left(): cdouble {.importc, nodecl.}
+proc windy_canvas_top(): cdouble {.importc, nodecl.}
 
 import emdefs
 
@@ -13,6 +21,7 @@ type
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
+    onTouch*: TouchCallback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -21,6 +30,8 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
 
@@ -76,6 +87,7 @@ var
   frameDispatchActive: bool
   pendingResize: bool
   pendingFocusChange: bool
+  clipboardText: string
 
 proc handleButtonPress(window: Window, button: Button)
 proc handleButtonRelease(window: Window, button: Button)
@@ -375,7 +387,8 @@ proc buttonToggle*(window: Window): ButtonView =
 
 # Clipboard functions
 proc clipboardContent*(): string =
-  ""  # Would need JavaScript interop
+  ## Returns the text supplied by the latest browser paste event.
+  clipboardText
 
 proc `clipboardContent=`*(content: string) =
   discard  # Would need JavaScript interop
@@ -395,6 +408,7 @@ proc cursor*(window: Window): Cursor =
   window.state.cursor
 
 proc `cursor=`*(window: Window, cursor: Cursor) =
+  ## Sets the cursor displayed over the canvas.
   window.state.cursor = cursor
   case cursor.kind:
   of ArrowCursor:
@@ -426,8 +440,22 @@ proc `cursor=`*(window: Window, cursor: Cursor) =
   of WaitCursor:
     set_cursor("wait")
   of CustomCursor:
-    # TODO base64 encode Image?
-    set_cursor("auto")
+    if cursor.image == nil:
+      set_cursor("auto")
+    else:
+      let
+        data =
+          try:
+            base64.encode(cursor.image.encodeImage(PngFormat))
+          except PixieError as error:
+            raise newException(
+              WindyError,
+              "Unable to encode cursor image: " & error.msg,
+              error
+            )
+        value = "url(\"data:image/png;base64," & data & "\") " &
+          $cursor.hotspot.x & " " & $cursor.hotspot.y & ", crosshair"
+      set_cursor(value.cstring)
 
 # Style functions
 proc style*(window: Window): WindowStyle =
@@ -493,11 +521,8 @@ proc setClipboardString*(s: string) =
   )
 
 proc getClipboardString*(): string =
-  # TODO: Implement clipboard with Emscripten.
-  raise newException(
-    Exception,
-    "getClipboardString is not supported on emscripten"
-  )
+  ## Returns the text supplied by the latest browser paste event.
+  clipboardText
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
   ## Image clipboard is not implemented on Emscripten yet.
@@ -527,6 +552,7 @@ proc loadExtensions*() =
 
 # Convert JavaScript key codes to windy Button enum
 proc keyCodeToButton(keyCode: culong): Button =
+  ## Maps legacy key codes when the browser has no physical key code.
   case keyCode:
   of 27: KeyEscape
   of 32: KeySpace
@@ -572,6 +598,8 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 88: KeyX
   of 89: KeyY
   of 90: KeyZ
+  of 91, 92: KeyLeftSuper
+  of 93: KeyRightSuper
   of 48: Key0
   of 49: Key1
   of 50: Key2
@@ -595,6 +623,120 @@ proc keyCodeToButton(keyCode: culong): Button =
   of 222: KeyApostrophe
   else: ButtonUnknown
 
+proc keyEventToButton(event: ptr EmscriptenKeyboardEvent): Button =
+  ## Maps physical browser keys independently of the keyboard layout.
+  let code = $cast[cstring](addr event.code[0])
+  if code.len == 4 and code.startsWith("Key") and code[3] in 'A' .. 'Z':
+    return Button(KeyA.ord + code[3].ord - 'A'.ord)
+  if code.len == 6 and code.startsWith("Digit") and code[5] in '0' .. '9':
+    return Button(Key0.ord + code[5].ord - '0'.ord)
+  if code.len == 7 and code.startsWith("Numpad") and code[6] in '0' .. '9':
+    return Button(Numpad0.ord + code[6].ord - '0'.ord)
+  case code
+  of "Backquote": KeyBacktick
+  of "Minus": KeyMinus
+  of "Equal": KeyEqual
+  of "Backspace": KeyBackspace
+  of "Tab": KeyTab
+  of "BracketLeft": KeyLeftBracket
+  of "BracketRight": KeyRightBracket
+  of "Backslash", "IntlBackslash": KeyBackslash
+  of "CapsLock": KeyCapsLock
+  of "Semicolon": KeySemicolon
+  of "Quote": KeyApostrophe
+  of "Enter": KeyEnter
+  of "ShiftLeft": KeyLeftShift
+  of "Comma": KeyComma
+  of "Period": KeyPeriod
+  of "Slash": KeySlash
+  of "ShiftRight": KeyRightShift
+  of "ControlLeft": KeyLeftControl
+  of "MetaLeft", "OSLeft": KeyLeftSuper
+  of "AltLeft": KeyLeftAlt
+  of "Space": KeySpace
+  of "AltRight": KeyRightAlt
+  of "MetaRight", "OSRight": KeyRightSuper
+  of "ContextMenu": KeyMenu
+  of "ControlRight": KeyRightControl
+  of "Delete": KeyDelete
+  of "Home": KeyHome
+  of "End": KeyEnd
+  of "Insert": KeyInsert
+  of "PageUp": KeyPageUp
+  of "PageDown": KeyPageDown
+  of "Escape": KeyEscape
+  of "ArrowUp": KeyUp
+  of "ArrowDown": KeyDown
+  of "ArrowLeft": KeyLeft
+  of "ArrowRight": KeyRight
+  of "PrintScreen": KeyPrintScreen
+  of "ScrollLock": KeyScrollLock
+  of "Pause": KeyPause
+  of "F1": KeyF1
+  of "F2": KeyF2
+  of "F3": KeyF3
+  of "F4": KeyF4
+  of "F5": KeyF5
+  of "F6": KeyF6
+  of "F7": KeyF7
+  of "F8": KeyF8
+  of "F9": KeyF9
+  of "F10": KeyF10
+  of "F11": KeyF11
+  of "F12": KeyF12
+  of "NumLock": KeyNumLock
+  of "NumpadDecimal": NumpadDecimal
+  of "NumpadEnter": NumpadEnter
+  of "NumpadAdd": NumpadAdd
+  of "NumpadSubtract": NumpadSubtract
+  of "NumpadMultiply": NumpadMultiply
+  of "NumpadDivide": NumpadDivide
+  of "NumpadEqual": NumpadEqual
+  else:
+    # Android browsers can omit event.code despite supporting WebGL2.
+    let button = keyCodeToButton(event.keyCode)
+    if event.location == 2:
+      case button
+      of KeyLeftShift: return KeyRightShift
+      of KeyLeftControl: return KeyRightControl
+      of KeyLeftAlt: return KeyRightAlt
+      of KeyLeftSuper: return KeyRightSuper
+      else: discard
+    button
+
+proc syncModifiers(
+  window: Window,
+  event: ptr EmscriptenKeyboardEvent,
+  button = ButtonUnknown,
+  pressed = false
+) =
+  ## Makes the event's modifier state visible before any callbacks run.
+  let previous = window.state.buttonDown
+  for (left, right, held) in [
+    (KeyLeftControl, KeyRightControl, event.ctrlKey),
+    (KeyLeftShift, KeyRightShift, event.shiftKey),
+    (KeyLeftAlt, KeyRightAlt, event.altKey),
+    (KeyLeftSuper, KeyRightSuper, event.metaKey)
+  ]:
+    if button in {left, right}:
+      if pressed:
+        window.state.buttonDown.incl(button)
+      else:
+        window.state.buttonDown.excl(button)
+    if not held:
+      window.state.buttonDown.excl(left)
+      window.state.buttonDown.excl(right)
+    elif left notin window.state.buttonDown and
+      right notin window.state.buttonDown:
+        window.state.buttonDown.incl(left)
+  let current = window.state.buttonDown
+  for changed in previous - current:
+    if changed != button:
+      window.handleButtonRelease(changed)
+  for changed in current - previous:
+    if changed != button:
+      window.handleButtonPress(changed)
+
 proc mouseButtonToButton(button: cushort): Button =
   case button:
   of 0: MouseLeft
@@ -603,10 +745,24 @@ proc mouseButtonToButton(button: cushort): Button =
   else: MouseButton4
 
 # Event handlers
+proc updateMousePosition(window: Window, mouseEvent: ptr EmscriptenMouseEvent) =
+  ## Use canvas-relative coordinates for both canvas and document events.
+  let position = ivec2(
+    int32(mouseEvent.clientX.float64 - windy_canvas_left()),
+    int32(mouseEvent.clientY.float64 - windy_canvas_top())
+  )
+  window.state.mousePrevPos = window.state.mousePos
+  if window.state.hasPrevMouse:
+    window.state.perFrame.mouseDelta += position - window.state.mousePos
+  window.state.mousePos = position
+  window.state.hasPrevMouse = true
+
 proc onMouseDown(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   # Ensure canvas has focus when clicked
   make_canvas_focusable()
+  window.updateMousePosition(mouseEvent)
+  window.state.mouseInside = true
   let button = mouseButtonToButton(mouseEvent.button)
   window.handleButtonPress(button)
   return 1
@@ -614,16 +770,18 @@ proc onMouseDown(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
 proc onMouseUp(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   let button = mouseButtonToButton(mouseEvent.button)
+  if button notin window.state.buttonDown:
+    return 0
+  window.updateMousePosition(mouseEvent)
   window.handleButtonRelease(button)
   return 1
 
 proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
-  window.state.mousePrevPos = window.state.mousePos
-  # Use clientX/clientY as they are more reliably populated
-  window.state.mousePos = ivec2(mouseEvent.clientX.int32, mouseEvent.clientY.int32)
-  window.state.mouseInside = true
-  window.state.perFrame.mouseDelta += window.state.mousePos - window.state.mousePrevPos
+  if not window.state.mouseInside and
+      window.state.buttonDown * {MouseLeft, MouseMiddle, MouseRight, MouseButton4} == {}:
+    return 0
+  window.updateMousePosition(mouseEvent)
   if window.onMouseMove != nil:
     window.onMouseMove()
   return 1
@@ -631,6 +789,8 @@ proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData
 proc onMouseEnter(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   window.state.mouseInside = true
+  window.state.hasPrevMouse = false
+  window.updateMousePosition(mouseEvent)
   return 1
 
 proc onMouseLeave(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
@@ -657,21 +817,51 @@ proc onWheel(eventType: cint, wheelEvent: ptr EmscriptenWheelEvent, userData: po
   return 1
 
 proc onKeyDown(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
-  let window = cast[Window](userData)
-  let button = keyCodeToButton(keyEvent.keyCode)
-  window.handleButtonPress(button)
+  ## Delivers key presses and lets printable keys produce a text event.
+  let
+    window = cast[Window](userData)
+    button = keyEventToButton(keyEvent)
+    key = $cast[cstring](addr keyEvent.key[0])
+  window.syncModifiers(keyEvent, button, pressed = true)
+  if window.runeInputEnabled and button == KeyV and
+    (keyEvent.metaKey or (keyEvent.ctrlKey and not keyEvent.altKey)):
+      # Let the browser deliver clipboard text before notifying the editor.
+      return 0
+  if button != ButtonUnknown:
+    window.handleButtonPress(button)
+  if window.runeInputEnabled and not keyEvent.metaKey and
+    (not keyEvent.ctrlKey or keyEvent.altKey) and
+    (key.runeLen == 1 or key == "Dead" or key == "Process"):
+      # Cancelling keydown also suppresses the browser's keypress event.
+      return 0
   return 1
 
 proc onKeyUp(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
-  let window = cast[Window](userData)
-  let button = keyCodeToButton(keyEvent.keyCode)
-  window.handleButtonRelease(button)
+  ## Delivers releases with up-to-date modifier state.
+  let
+    window = cast[Window](userData)
+    button = keyEventToButton(keyEvent)
+  window.syncModifiers(keyEvent, button)
+  if button != ButtonUnknown:
+    window.handleButtonRelease(button)
+  if button in {KeyLeftSuper, KeyRightSuper} and not keyEvent.metaKey:
+    # Browsers can omit releases for keys used in Command shortcuts.
+    let held = window.state.buttonDown - {
+      KeyLeftControl, KeyRightControl, KeyLeftShift, KeyRightShift,
+      KeyLeftAlt, KeyRightAlt, KeyLeftSuper, KeyRightSuper
+    }
+    for released in held:
+      if released >= Key0:
+        window.handleButtonRelease(released)
   return 1
 
 proc onKeyPress(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  ## Delivers text once through the shared desktop rune handler.
   let window = cast[Window](userData)
-  if keyEvent.charCode > 0:
-    window.handleRune(Rune(keyEvent.charCode))
+  window.syncModifiers(keyEvent)
+  if not keyEvent.metaKey and
+    (not keyEvent.ctrlKey or keyEvent.altKey) and keyEvent.charCode > 0:
+      window.handleRune(Rune(keyEvent.charCode))
   return 1
 
 proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
@@ -684,7 +874,11 @@ proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: po
   return 1
 
 proc onBlur(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  ## Releases held input before notifying the application of focus loss.
   let window = cast[Window](userData)
+  clearButtonsTemplate()
+  window.state.hasPrevMouse = false
+  window.state.perFrame.mouseDelta = ivec2(0)
   if frameDispatchActive:
     pendingFocusChange = true
     return 1
@@ -720,8 +914,8 @@ proc drainDeferredWindowEvents() =
 proc setupEventHandlers(window: Window) =
   # Mouse events
   discard emscripten_set_mousedown_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseDown, EM_CALLBACK_THREAD_CONTEXT)
-  discard emscripten_set_mouseup_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)
-  discard emscripten_set_mousemove_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseMove, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mouseup_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, cast[pointer](window), 1, onMouseUp, EM_CALLBACK_THREAD_CONTEXT)
+  discard emscripten_set_mousemove_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, cast[pointer](window), 1, onMouseMove, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mouseenter_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseEnter, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_mouseleave_callback_on_thread(window.canvas, cast[pointer](window), 1, onMouseLeave, EM_CALLBACK_THREAD_CONTEXT)
 
@@ -742,6 +936,7 @@ proc setupEventHandlers(window: Window) =
 
   # Drag and drop handler
   setup_drag_drop_handlers_internal(window.canvas, cast[pointer](window))
+  setup_paste_handler(window.canvas, cast[pointer](window))
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -751,6 +946,23 @@ proc handleButtonRelease(window: Window, button: Button) =
 
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
+
+proc windy_paste_callback(userData: pointer, text: cstring): cint {.
+  exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#"
+.} =
+  ## Delivers browser clipboard text as one editor paste operation.
+  let window = cast[Window](userData)
+  if window == nil or not window.runeInputEnabled:
+    return 0
+  clipboardText = $text
+  let previous = window.state.buttonDown
+  window.state.buttonDown.excl(KeyLeftAlt)
+  window.state.buttonDown.excl(KeyRightAlt)
+  window.state.buttonDown.incl(KeyLeftControl)
+  window.handleButtonPress(KeyV)
+  window.handleButtonRelease(KeyV)
+  window.state.buttonDown = previous
+  return 1
 
 proc windy_file_drop_callback(userData: pointer, fileNamePtr: cstring, fileDataPtr: pointer, fileDataLen: cint) {.exportc, cdecl, codegenDecl: "EMSCRIPTEN_KEEPALIVE $# $#$#".} =
   ## callback to handle the file drop event.
@@ -1100,3 +1312,6 @@ proc saveFileDialog*(
   discard defaultName
   warn("saveFileDialog is not supported on emscripten")
   result = ""
+
+proc touches*(window: Window): seq[TouchContact] =
+  @[]
