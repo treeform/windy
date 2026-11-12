@@ -97,4 +97,5 @@ nim	XSyncInitialize	windy/platforms/linux/x11/xlib.html#XSyncInitialize,Display,
 nim	XSyncCreateCounter	windy/platforms/linux/x11/xlib.html#XSyncCreateCounter,Display,XSyncValue	proc XSyncCreateCounter(d: Display; v: XSyncValue): XSyncCounter		392
 nim	XSyncDestroyCounter	windy/platforms/linux/x11/xlib.html#XSyncDestroyCounter,Display,XSyncCounter	proc XSyncDestroyCounter(d: Display; c: XSyncCounter)		393
 nim	XSyncSetCounter	windy/platforms/linux/x11/xlib.html#XSyncSetCounter,Display,XSyncCounter,XSyncValue	proc XSyncSetCounter(d: Display; c: XSyncCounter; v: XSyncValue)		395
+nim	XSyncQueryCounter	windy/platforms/linux/x11/xlib.html#XSyncQueryCounter,Display,XSyncCounter,ptr.XSyncValue	proc XSyncQueryCounter(d: Display; c: XSyncCounter; v: ptr XSyncValue): cint		396
 nimgrp	Xchangeproperty	windy/platforms/linux/x11/xlib.html#XChangeProperty-procs-all	proc		272

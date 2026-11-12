@@ -513,6 +513,10 @@
   <li><a class="reference" href="#XSyncInitialize%2CDisplay%2Cptr.cint%2Cptr.cint" title="XSyncInitialize(d: Display; verMaj, verMin: ptr cint)">XSyncInitialize(d: Display; verMaj, verMin: ptr cint)</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">XSyncQueryCounter
+  <li><a class="reference" href="#XSyncQueryCounter%2CDisplay%2CXSyncCounter%2Cptr.XSyncValue" title="XSyncQueryCounter(d: Display; c: XSyncCounter; v: ptr XSyncValue): cint">XSyncQueryCounter(d: Display; c: XSyncCounter; v: ptr XSyncValue): cint</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">XSyncQueryExtension
   <li><a class="reference" href="#XSyncQueryExtension%2CDisplay%2Cptr.cint%2Cptr.cint" title="XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool">XSyncQueryExtension(d: Display; vEv, vEr: ptr cint): bool</a></li>
 
@@ -1859,6 +1863,20 @@
 </div>
 
 </div>
+<div id="XSyncQueryCounter-procs-all">
+  <div id="XSyncQueryCounter,Display,XSyncCounter,ptr.XSyncValue">
+  <dt><pre><span class="Keyword">proc</span> <a href="#XSyncQueryCounter%2CDisplay%2CXSyncCounter%2Cptr.XSyncValue"><span class="Identifier">XSyncQueryCounter</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">c</span><span class="Other">:</span> <a href="x.html#XSyncCounter"><span class="Identifier">XSyncCounter</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="#XSyncValue"><span class="Identifier">XSyncValue</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> {.
+    <span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/x11/xlib.nim#L396" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/x11/xlib.nim#L396" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="XSyncQueryExtension-procs-all">
   <div id="XSyncQueryExtension,Display,ptr.cint,ptr.cint">
   <dt><pre><span class="Keyword">proc</span> <a href="#XSyncQueryExtension%2CDisplay%2Cptr.cint%2Cptr.cint"><span class="Identifier">XSyncQueryExtension</span></a><span class="Other">(</span><span class="Identifier">d</span><span class="Other">:</span> <a href="#Display"><span class="Identifier">Display</span></a><span class="Other">;</span> <span class="Identifier">vEv</span><span class="Other">,</span> <span class="Identifier">vEr</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span class="Identifier">cdecl</span><span class="Other">,</span> <span class="Identifier">importc</span><span class="Other">,</span>
@@ -2001,7 +2019,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-11 22:48:24 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-12 20:56:30 UTC</small>
       </div>
     </div>
   </div>
