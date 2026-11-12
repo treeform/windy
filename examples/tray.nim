@@ -1,7 +1,6 @@
 import pixie, windy
 
-when defined(windows):
-  # Tray API only currently supported on Windows
+when defined(windows) or (defined(linux) and not defined(emscripten)):
 
   let window = newWindow("Windy Tray Icon", ivec2(1280, 800))
   window.makeContextCurrent()

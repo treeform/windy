@@ -91,6 +91,18 @@ type
     DecoratedResizable, Decorated, Undecorated, Transparent
 
   Callback* = proc()
+  TrayMenuEntryKind* = enum
+    TrayMenuOption, TrayMenuSeparator
+
+  TrayMenuEntry* = object
+    ## A tray menu option or separator. Option labels are literal UTF-8 text.
+    case kind*: TrayMenuEntryKind
+    of TrayMenuOption:
+      text*: string
+      onClick*: Callback
+    of TrayMenuSeparator:
+      discard
+
   ButtonCallback* = proc(button: Button)
   RuneCallback* = proc(rune: Rune)
   TextInputCallback* = proc(text: string)
