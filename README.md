@@ -114,6 +114,10 @@ Windows exposes UI Automation Value and Text patterns and handles native paste
 messages, synthesized shortcuts without scan codes, and UTF-16 character input.
 The providers use Nim COM definitions and call the Windows APIs directly.
 
+To try Windows dictation manually, run
+`nim r -d:useCpu tests/manual_text_input.nim` from the repository root.
+The window displays received text and prints input events to the terminal.
+
 ## Emscripten
 
 Windy can be compiled to WebAssembly using Emscripten. See the [Emscripten tutorial](https://github.com/treeform/nim_emscripten_tutorial) for more information on how Emscripten works with Nim and things you need to know.
