@@ -3,12 +3,12 @@ import
   ../../[common, internal],
   opengl, vmath, pixie,
   x11/[glx, keysym, x, xevent, xlib, xcursor],
-  ./native/pixels, ./tray, ./notifications
+  ./native/[pixels, waits], ./tray, ./notifications
 
 import ../../http
 export http
-export tray except pollTrayEvents
-export notifications except pollNotificationEvents
+export tray except pollTrayEvents, trayWaitTimeout
+export notifications except pollNotificationEvents, notificationWaitTimeout
 
 import ./backends
 when HasDirect:
@@ -185,6 +185,7 @@ proc init =
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
 
   display.initConstants()
+  initEventWait()
 
   wmForDecoratedKind =
     if (decoratedAtom = atomIfExist"_MOTIF_WM_HINTS"; decoratedAtom != 0):
@@ -1087,20 +1088,19 @@ proc newWindow*(
     destroy result
     raise
 
+proc completeResize(window: Window) =
+  ## Acknowledges a configured resize after its matching frame has been drawn.
+  if window.syncState == SyncConfigured:
+    display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
+    window.syncState = SyncIdle
+
 proc pollEvents(window: Window) =
 
   # Clear all per-frame data
   window.perFrame = PerFrame()
   window.buttonPressed = {}
   window.buttonReleased = {}
-
-  # Signal that the frame for the last _NET_WM_SYNC_REQUEST was drawn. This
-  # only happens once the matching ConfigureNotify was handled and a frame has
-  # gone by, otherwise a compositor such as KWin shows a frame that is still
-  # the old size.
-  if window.syncState == SyncConfigured:
-    display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
-    window.syncState = SyncIdle
+  window.completeResize()
 
   var ev: XEvent
 
@@ -1651,12 +1651,16 @@ proc getClipboardImage*(): Image =
   ## Image clipboard is not implemented on X11 yet.
   nil
 
-proc pollEvents*() =
+proc waitEvents*(timeoutMs: int) =
+  ## Draws pending frames, then waits up to the given milliseconds for events.
+  ## Zero polls without waiting. Call this on the window thread.
   pollNotificationEvents()
   pollTrayEvents()
   for window in windows:
     if window.onFrame != nil:
       window.onFrame()
+    if not window.closed:
+      window.completeResize()
 
   let ws = windows
   windows = @[]
@@ -1667,6 +1671,36 @@ proc pollEvents*() =
     else:
       windows.add window
 
+  var timeout = notificationWaitTimeout(trayWaitTimeout(
+    httpWaitTimeout(timeoutMs)
+  ))
+  if display != nil:
+    proc unownedEvent(
+      connection: Display, event: ptr XEvent, data: pointer
+    ): cint {.cdecl.} =
+      ## Drops only events that no active Windy window or clipboard can read.
+      if clipboardWindow != 0 and event.any.window == clipboardWindow:
+        return 0
+      for window in windows:
+        if event.any.window == window.handle:
+          return 0
+      1
+
+    var event: XEvent
+    while display.XCheckIfEvent(addr event, unownedEvent, nil) != 0:
+      discard
+    for window in windows:
+      if window.syncState == SyncRequested and
+        epochTime() < window.syncDeadline:
+          timeout = min(timeout, max(
+            0, int(ceil((window.syncDeadline - epochTime()) * 1000))
+          ))
+    if display.XPending() > 0:
+      timeout = 0
+    waitNativeEvents(timeout, [display.fd])
+  else:
+    waitNativeEvents(timeout, [])
+
   if clipboardWindow != 0:
     discard processClipboardEvents()
 
@@ -1674,6 +1708,14 @@ proc pollEvents*() =
     pollEvents(window)
 
   pollHttp()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Wakes native waiting from any thread after the first window is created.
+  wakeNativeEvents()
+
+proc pollEvents*() =
+  ## Draws pending frames and dispatches events without waiting.
+  waitEvents(0)
 
 proc closeIme*(window: Window) =
   discard

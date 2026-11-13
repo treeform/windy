@@ -26,6 +26,12 @@ jobs:
     # Run tests.
     - run: nim c tests/test.nim
     - run: nim c tests/manual_inputs.nim
+    - name: Test native event waiting
+      if: matrix.os != 'ubuntu-latest'
+      run: nim r -d:useCpu tests/test_waits.nim
+    - name: Test native event wake descriptors
+      if: matrix.os == 'ubuntu-latest'
+      run: nim r tests/test_eventpipes.nim
     - name: Check 32-bit fbdev without DRM
       if: matrix.os == 'ubuntu-latest'
       run: WINDY_TEST_BACKENDS=fbdev WINDY_TEST_TARGET=arm nim check tests/test_linux_display.nim
@@ -54,6 +60,8 @@ jobs:
         xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ./tests/test_x11
         xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 \
           MESA_GL_VERSION_OVERRIDE=3.3 ./tests/test_x11 --unsupported-version
+        nim c tests/test_waits.nim
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ./tests/test_waits
 
     - name: Test Linux tray backends
       if: matrix.os == 'ubuntu-latest'
@@ -77,6 +85,7 @@ jobs:
 
     # Build native examples.
     - run: nim c examples/basic.nim
+    - run: nim c examples/ondemand.nim
     - run: nim c examples/basic_boxy.nim
     - run: nim c examples/basic_textured_quad.nim
     - run: nim c examples/basic_triangle.nim

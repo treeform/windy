@@ -23,6 +23,13 @@ type
     pending*, previous*: seq[Slot]
     width*, height*, rotation*: int
 
+proc descriptor*(reader: TouchReader): cint =
+  ## Exposes the open input descriptor for native event waiting.
+  if reader == nil:
+    -1
+  else:
+    reader.fd
+
 proc getAxis(code: cint): culong {.importc: "EVIOCGABS", header: "<linux/input.h>".}
 proc getSlots(length: cint): culong {.importc: "EVIOCGMTSLOTS", header: "<linux/input.h>".}
 proc getKeys(length: cint): culong {.importc: "EVIOCGKEY", header: "<linux/input.h>".}

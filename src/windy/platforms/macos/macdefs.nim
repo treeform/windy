@@ -132,6 +132,7 @@ type
     NSEventTypeKeyDown            = 10,
     NSEventTypeKeyUp              = 11,
     NSEventTypeFlagsChanged       = 12,
+    NSEventTypeApplicationDefined = 15,
 
 const
   NSDragOperationNone* = 0.NSDragOperation
@@ -261,6 +262,21 @@ objc:
     dequeue: bool
   ): NSEvent
   proc sendEvent*(self: NSApplication, x: NSEvent)
+  proc postEvent*(self: NSApplication, x: NSEvent, atStart: bool)
+    ## Adds a native event to the application queue from any thread.
+  proc otherEventWithType*(
+    class: typedesc[NSEvent],
+    x: int,
+    location: NSPoint,
+    modifierFlags: uint,
+    timestamp: float64,
+    windowNumber: int,
+    context: NSObject,
+    subtype: int16,
+    data1: int,
+    data2: int
+  ): NSEvent
+    ## Creates an application-defined event without synthesizing user input.
   proc distantPast*(class: typedesc[NSDate]): NSDate
   proc dateWithTimeIntervalSinceNow*(
     class: typedesc[NSDate],

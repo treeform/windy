@@ -726,6 +726,23 @@ proc PeekMessageW*(
   wRemoveMsg: UINT
 ): BOOL {.dynlib: "User32".}
 
+proc MsgWaitForMultipleObjectsEx*(
+  count: DWORD,
+  handles: pointer,
+  milliseconds: DWORD,
+  wakeMask: DWORD,
+  flags: DWORD
+): DWORD {.dynlib: "User32".}
+  ## Waits for native input, including messages queued before the wait.
+
+proc GetCurrentThreadId*(): DWORD {.dynlib: "Kernel32".}
+  ## Identifies the native UI thread used by the message queue.
+
+proc PostThreadMessageW*(
+  thread: DWORD, message: UINT, wParam: WPARAM, lParam: LPARAM
+): BOOL {.dynlib: "User32".}
+  ## Posts a wake message without requiring an active or visible window.
+
 proc TranslateMessage*(
   lpMsg: LPMSG
 ): BOOL {.dynlib: "User32".}

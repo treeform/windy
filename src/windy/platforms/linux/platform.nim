@@ -1,7 +1,7 @@
 import ../../common, ./backends, ./tray, ./notifications
 export backends
-export tray except pollTrayEvents
-export notifications except pollNotificationEvents
+export tray except pollTrayEvents, trayWaitTimeout
+export notifications except pollNotificationEvents, notificationWaitTimeout
 
 when not HasDirect:
   import ./x11
@@ -67,6 +67,24 @@ else:
       pollTrayEvents()
       direct.pollEvents()
       pollHttp()
+
+  proc waitEvents*(timeoutMs: int) =
+    ## Waits for the selected native backend while servicing desktop services.
+    ## Calls onFrame before waiting. Zero polls without waiting.
+    if selected == X11Backend:
+      when HasX11:
+        x11.waitEvents(timeoutMs)
+    else:
+      pollNotificationEvents()
+      pollTrayEvents()
+      direct.waitEvents(notificationWaitTimeout(trayWaitTimeout(
+        httpWaitTimeout(timeoutMs)
+      )))
+      pollHttp()
+
+  proc wakeEvents*() {.raises: [], gcsafe.} =
+    ## Wakes native waiting from any thread after the first window is created.
+    direct.wakeEvents()
 
   proc closed*(window: Window): bool =
     when HasX11:

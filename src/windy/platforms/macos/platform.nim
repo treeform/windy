@@ -65,7 +65,7 @@ var
   # is in the future, pollEvents re-requests activation until it succeeds.
   activationRescueDeadline: float64
 
-proc drainEvents()
+proc drainEvents(timeoutMs = 0)
 proc pumpActivation()
 
 objc:
@@ -1181,16 +1181,22 @@ proc processFlagsChanged(event: NSEvent) =
     else:
       window.handleButtonPress(button)
 
-proc drainEvents() =
-  ## Dequeues and dispatches all pending AppKit events.
+proc drainEvents(timeoutMs: int) =
+  ## Waits for the first AppKit event, then dispatches the pending batch.
   autoreleasepool:
+    var deadline =
+      if timeoutMs > 0:
+        NSDate.dateWithTimeIntervalSinceNow(timeoutMs.float64 / 1000)
+      else:
+        NSDate.distantPast
     while true:
       let event = NSApp.nextEventMatchingMask(
         NSEventMaskAny,
-        NSDate.distantPast,
+        deadline,
         NSDefaultRunLoopMode,
         true
       )
+      deadline = NSDate.distantPast
       if event.int == 0:
         break
 
@@ -1237,7 +1243,9 @@ proc rescueActivation() =
   NSApp.activateIgnoringOtherApps(true)
   runLoopTurn()
 
-proc pollEvents*() =
+proc waitEvents*(timeoutMs: int) =
+  ## Runs onFrame callbacks, then waits up to timeoutMs and dispatches events.
+  ## Gate drawing inside onFrame for on-demand UIs; zero polls without waiting.
   autoreleasepool:
     rescueActivation()
 
@@ -1252,9 +1260,34 @@ proc pollEvents*() =
   for window in windows:
     window.state.perFrame = PerFrame()
 
-  drainEvents()
+  var timeout = httpWaitTimeout(timeoutMs)
+  if activationRescueDeadline > 0:
+    timeout = min(timeout, 10)
+  drainEvents(timeout)
 
   pollHttp()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Wakes native waiting from any thread after the first window is created.
+  if NSApp.int == 0:
+    return
+  autoreleasepool:
+    let event = NSEvent.otherEventWithType(
+      NSEventTypeApplicationDefined.int,
+      NSMakePoint(0, 0),
+      0,
+      0,
+      0,
+      NSObject(0),
+      0,
+      0,
+      0
+    )
+    NSApp.postEvent(event, false)
+
+proc pollEvents*() =
+  ## Draws pending frames and dispatches events without waiting.
+  waitEvents(0)
 
 proc centerWindow(window: Window) =
   ## Centers the native window frame using screen point coordinates.
