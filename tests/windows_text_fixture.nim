@@ -64,6 +64,7 @@ proc run() =
         commit(getClipboardString())
 
   let deadline = getMonoTime() + initDuration(seconds = 90)
+  var savedText: string
   while not window.closeRequested and getMonoTime() < deadline:
     pollEvents()
     if paramCount() > 0 and fileExists(paramStr(1)):
@@ -74,8 +75,13 @@ proc run() =
         state.multiline = mode != "single"
         window.runeInputEnabled = mode != "inactive" and mode != "disabled"
         publish()
-    if paramCount() > 1:
-      writeFile(paramStr(2), state.text)
+    if paramCount() > 1 and savedText != state.text:
+      try:
+        writeFile(paramStr(2), state.text)
+        savedText = state.text
+      except IOError:
+        # The external client may briefly hold the file while checking the model.
+        discard
     sleep(5)
 
 run()

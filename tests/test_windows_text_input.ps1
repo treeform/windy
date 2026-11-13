@@ -92,10 +92,35 @@ try {
     $pattern = $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
     Assert-Equal $pattern.DocumentRange.GetText(-1) $initial 'Document text'
     Assert-Equal $pattern.GetSelection()[0].GetText(-1) ([char]::ConvertFromUtf32(0x1f30d)) 'Surrogate selection'
+    Assert-Equal $pattern.GetSelection()[0].GetText(1) '' 'Truncation cannot split a surrogate pair'
+    Assert-Equal $pattern.DocumentRange.GetText(7) 'Hello ' 'Document truncation respects Unicode'
+    $bounds = $element.Current.BoundingRectangle
+    Assert-Equal ($bounds.Width -gt 0 -and $bounds.Height -gt 0) $true 'Native editor bounds'
+    if ($foreground) {
+        $point = New-Object System.Windows.Point(($bounds.X + 5), ($bounds.Y + 5))
+        Assert-Equal ([System.Windows.Automation.AutomationElement]::FromPoint($point).Current.AutomationId) 'native fixture' 'Fragment root hit testing'
+    }
+    Assert-Equal $pattern.DocumentRange.GetAttributeValue([System.Windows.Automation.TextPattern]::IsReadOnlyAttribute) $false 'Text read-only attribute'
+    # FindAttribute passes a VARIANT by value across the native COM ABI.
+    $writable = $pattern.DocumentRange.FindAttribute([System.Windows.Automation.TextPattern]::IsReadOnlyAttribute, $false, $false)
+    Assert-Equal $writable.GetText(-1) $initial 'Attribute search'
+    $range = $pattern.DocumentRange.Clone()
+    $range.MoveEndpointByRange([System.Windows.Automation.Text.TextPatternRangeEndpoint]::End, $range, [System.Windows.Automation.Text.TextPatternRangeEndpoint]::Start)
+    Assert-Equal $range.GetText(-1) '' 'Collapsed range'
+    $moved = $range.MoveEndpointByUnit([System.Windows.Automation.Text.TextPatternRangeEndpoint]::End, [System.Windows.Automation.Text.TextUnit]::Character, 7)
+    Assert-Equal $moved 7 'Character movement counts Unicode scalars'
+    Assert-Equal $range.GetText(-1) ('Hello ' + [char]::ConvertFromUtf32(0x1f30d)) 'Character movement preserves emoji'
+    Assert-Equal $range.CompareEndpoints([System.Windows.Automation.Text.TextPatternRangeEndpoint]::Start, $pattern.DocumentRange, [System.Windows.Automation.Text.TextPatternRangeEndpoint]::Start) 0 'Endpoint comparison'
     $found = $pattern.DocumentRange.FindText('WORLD', $false, $true)
     Assert-Equal $found.GetText(-1) 'world' 'Text search'
     $copy = $found.Clone()
     Assert-Equal $copy.Compare($found) $true 'Range clone'
+    $copy.ExpandToEnclosingUnit([System.Windows.Automation.Text.TextUnit]::Document)
+    Assert-Equal $copy.GetText(-1) $initial 'Document expansion'
+    Assert-Equal $copy.GetEnclosingElement().Current.AutomationId 'native fixture' 'Enclosing editor'
+    Assert-Equal $copy.GetChildren().Length 0 'No embedded elements'
+    Assert-Equal $copy.GetBoundingRectangles().Length 1 'Visible document bounds'
+    Assert-Equal $pattern.GetVisibleRanges()[0].GetText(-1) $initial 'Visible range'
     $found.Select()
     Message 0x0102 ([int][char]'!')
     Wait-Value ('Hello ' + [char]::ConvertFromUtf32(0x1f30d) + ' !')
