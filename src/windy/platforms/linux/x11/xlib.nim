@@ -216,6 +216,8 @@ proc defaultRootWindow*(d: Display): Window =
 proc XOpenDisplay*(displayName: cstring): Display
 proc XSync*(d: Display, disc = false)
 proc XFlush*(d: Display)
+proc XPending*(d: Display): cint
+  ## Flushes outgoing requests and counts queued events without blocking.
 proc XFree*(x: pointer)
 
 proc XInternAtom*(d: Display, name: cstring; onlyIfExist: cint): Atom

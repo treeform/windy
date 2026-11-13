@@ -2,7 +2,8 @@ import
   std/[os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
   ../../[common, internal],
   vmath, pixie,
-  x11/[glx, keysym, x, xevent, xlib, xcursor]
+  x11/[glx, keysym, x, xevent, xlib, xcursor],
+  ./native/waits
 
 import ../../http
 export http
@@ -161,6 +162,7 @@ proc init =
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
 
   display.initConstants()
+  initEventWait()
 
   wmForDecoratedKind =
     if (decoratedAtom = atomIfExist"_MOTIF_WM_HINTS"; decoratedAtom != 0):
@@ -1537,7 +1539,8 @@ proc getClipboardImage*(): Image =
   ## Image clipboard is not implemented on X11 yet.
   nil
 
-proc pollEvents*() =
+proc waitEvents*(timeoutMs: int) =
+  ## Draws frames and waits for native input or an explicit worker wake.
   for window in windows:
     if window.onFrame != nil:
       window.onFrame()
@@ -1551,6 +1554,28 @@ proc pollEvents*() =
     else:
       windows.add window
 
+  var timeout = httpWaitTimeout(timeoutMs)
+  if display != nil:
+    proc unownedEvent(
+      connection: Display, event: ptr XEvent, data: pointer
+    ): cint {.cdecl.} =
+      ## Drops events that no active window or clipboard endpoint can read.
+      if clipboardWindow != 0 and event.any.window == clipboardWindow:
+        return 0
+      for window in windows:
+        if event.any.window == window.handle:
+          return 0
+      1
+
+    var event: XEvent
+    while display.XCheckIfEvent(addr event, unownedEvent, nil) != 0:
+      discard
+    if display.XPending() > 0:
+      timeout = 0
+    waitNativeEvents(timeout, [display.fd])
+  else:
+    waitNativeEvents(timeout, [])
+
   if clipboardWindow != 0:
     discard processClipboardEvents()
 
@@ -1558,6 +1583,14 @@ proc pollEvents*() =
     pollEvents(window)
 
   pollHttp()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Wakes native waiting from any thread after the first window is created.
+  wakeNativeEvents()
+
+proc pollEvents*() =
+  ## Draws pending frames and dispatches events without waiting.
+  waitEvents(0)
 
 proc closeIme*(window: Window) =
   discard
