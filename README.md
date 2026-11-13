@@ -112,8 +112,7 @@ are not exposed.
 
 Windows exposes UI Automation Value and Text patterns and handles native paste
 messages, synthesized shortcuts without scan codes, and UTF-16 character input.
-It uses a C++ COM bridge built by the normal Nim command; MinGW runtime libraries
-are linked statically.
+The providers use Nim COM definitions and call the Windows APIs directly.
 
 ## Emscripten
 

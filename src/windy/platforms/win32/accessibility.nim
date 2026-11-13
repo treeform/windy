@@ -1,32 +1,8 @@
 # Included by platform.nim so native edits can use the window's private state.
-{.compile: "accessibility_bridge.cpp".}
-when defined(vcc) or defined(clang_cl):
-  {.passL: "oleaut32.lib user32.lib".}
-else:
-  # Keep the application portable; do not add MinGW runtime DLL requirements.
-  {.passL: "-static-libgcc -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -loleaut32 -luser32".}
-
-type NativeTextEdit = proc(
-  context: pointer, kind, first, last: cint, text: ptr WCHAR
-): cint {.cdecl.}
-
-proc windyTextRootCreate(hwnd: int): pointer {.cdecl, importc.}
-proc windyTextRootDestroy(root: pointer) {.cdecl, importc.}
-proc windyTextCreate(root: pointer, id: ptr WCHAR): pointer {.cdecl, importc.}
-proc windyTextDestroy(provider: pointer) {.cdecl, importc.}
-proc windyTextPublish(
-  provider: pointer, text: ptr WCHAR, first, last, visibleFirst, visibleLast: cint,
-  x, y, width, height: cdouble, editable, focused: cint
-) {.cdecl, importc.}
-proc windyTextObject(provider: pointer, wparam, lparam: int): int {.cdecl, importc.}
-proc windyTextRequest(
-  provider: pointer, request: int, edit: NativeTextEdit, context: pointer
-): int {.cdecl, importc.}
+import uia
 
 const
   WM_GETOBJECT = 0x003d
-  WM_WINDY_TEXT = WM_APP + 2
-  WM_WINDY_FOCUS = WM_APP + 3
   WM_PASTE = 0x0302
 
 proc hasTextInput(window: Window): bool =

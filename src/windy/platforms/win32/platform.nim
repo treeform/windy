@@ -949,11 +949,10 @@ proc wndProc(
     discard SetFocus(window.hWnd)
     return cint(GetForegroundWindow() == window.hWnd and GetFocus() == window.hWnd)
   of WM_WINDY_TEXT:
-    if window.hasTextInput and window.textProvider != nil and
-      cast[pointer](wParam) == window.textProvider:
-        return windyTextRequest(
-          window.textProvider, lParam, nativeTextEdit, cast[pointer](window)
-        )
+    if window.textRoot != nil and cast[pointer](wParam) == window.textRoot:
+      return windyTextRequest(
+        window.textRoot, lParam, nativeTextEdit, cast[pointer](window)
+      )
     return 0
   of WM_PASTE:
     # Read now: dictation tools may restore the clipboard before the next frame.
