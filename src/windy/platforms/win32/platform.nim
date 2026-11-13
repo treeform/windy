@@ -91,6 +91,10 @@ type
     vsync*: bool
     iconHandle: HICON
     customCursor: HCURSOR
+    textInput: TextInputState
+    textProvider: pointer
+    textRoot: pointer
+    pendingSurrogate: uint32
 
   ExitFullscreenInfo = ref object
     maximized: bool
@@ -186,6 +190,8 @@ proc forHandle(windows: seq[Window], hWnd: HWND): Window =
     return nil
   windows[index]
 
+include accessibility
+
 proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   let wideWindowClassName = windowClassName.wstr()
 
@@ -242,6 +248,10 @@ else: # OpenGL
 
 proc destroy(window: Window) =
   ## Destroys the window and its graphics context.
+
+  window.clearNativeText()
+  windyTextRootDestroy(window.textRoot)
+  window.textRoot = nil
 
   # Clear callbacks
   window.onCloseRequest = nil
@@ -629,6 +639,8 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   if runeInputEnabled:
     discard ImmAssociateContextEx(window.hWnd, 0, IACE_DEFAULT)
   else:
+    window.pendingSurrogate = 0
+    window.clearNativeText()
     window.closeIme()
     discard ImmAssociateContextEx(window.hWnd, 0, 0)
 
@@ -916,6 +928,11 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
 
+proc handleTextInput(window: Window, text: string) =
+  handleTextInputTemplate(text)
+
+proc getClipboardString*(): string
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -933,6 +950,26 @@ proc wndProc(
     raise newException(WindyError, "Received message for missing window")
 
   case uMsg:
+  of WM_GETOBJECT:
+    if window.textRoot != nil and
+      cast[int32](lParam and 0xffffffff) == -25:
+        return windyTextObject(window.textRoot, wParam, lParam)
+  of WM_WINDY_FOCUS:
+    discard SetForegroundWindow(window.hWnd)
+    discard SetFocus(window.hWnd)
+    return cint(GetForegroundWindow() == window.hWnd and GetFocus() == window.hWnd)
+  of WM_WINDY_TEXT:
+    if window.hasTextInput and window.textProvider != nil and
+      cast[pointer](wParam) == window.textProvider:
+        return windyTextRequest(
+          window.textProvider, lParam, nativeTextEdit, cast[pointer](window)
+        )
+    return 0
+  of WM_PASTE:
+    # Read now: dictation tools may restore the clipboard before the next frame.
+    if window.state.runeInputEnabled:
+      window.handleTextInput(getClipboardString())
+    return 0
   of WM_CLOSE:
     window.closeRequested = true
     return 0
@@ -947,8 +984,10 @@ proc wndProc(
       window.onFrame()
     return 0
   of WM_SETFOCUS, WM_KILLFOCUS:
+    window.pendingSurrogate = 0
     clearButtonsTemplate()
     if uMsg == WM_KILLFOCUS:
+      window.clearNativeText()
       window.releaseMouse()
     if window.onFocusChange != nil:
       window.onFocusChange()
@@ -1040,9 +1079,21 @@ proc wndProc(
       window.handleButtonPress(KeyPrintScreen)
       window.handleButtonRelease(KeyPrintScreen)
     else:
-      let
-        scancode = (HIWORD(lParam) and (KF_EXTENDED or 0xff))
-        button = scancodeToButton[scancode]
+      var scancode = (HIWORD(lParam) and (KF_EXTENDED or 0xff)).int
+      if (scancode and 0xff) == 0:
+        # SendInput and posted shortcuts can supply only a virtual key.
+        let mapped = MapVirtualKeyW(wParam.UINT, 4)
+        scancode = (mapped and 0xff).int
+        if (mapped and 0xff00) != 0:
+          scancode = scancode or 0x100
+      var button = scancodeToButton[scancode]
+      if (HIWORD(lParam) and 0xff) == 0:
+        # Virtual-key-only letter shortcuts retain their meaning on non-QWERTY
+        # layouts, rather than being interpreted as physical QWERTY positions.
+        if wParam in 0x41 .. 0x5a:
+          button = Button(ord(KeyA) + wParam.int - 0x41)
+        elif wParam in 0x30 .. 0x39:
+          button = Button(ord(Key0) + wParam.int - 0x30)
       if button != ButtonUnknown:
         if (HIWORD(lParam) and KF_UP) == 0:
           window.handleButtonPress(button)
@@ -1052,8 +1103,21 @@ proc wndProc(
   of WM_CHAR, WM_SYSCHAR, WM_UNICHAR:
     if uMsg == WM_UNICHAR and wParam == UNICODE_NOCHAR:
       return TRUE
+    if not window.state.runeInputEnabled:
+      window.pendingSurrogate = 0
+      return 0
     let codepoint = wParam.uint32
-    window.handleRune(Rune(codepoint))
+    if uMsg != WM_UNICHAR and codepoint in 0xd800'u32 .. 0xdbff'u32:
+      window.pendingSurrogate = codepoint
+    elif uMsg != WM_UNICHAR and codepoint in 0xdc00'u32 .. 0xdfff'u32:
+      if window.pendingSurrogate != 0:
+        window.handleRune(Rune(0x10000'u32 +
+          ((window.pendingSurrogate - 0xd800) shl 10) + codepoint - 0xdc00))
+      window.pendingSurrogate = 0
+    else:
+      window.pendingSurrogate = 0
+      if codepoint <= 0x10ffff and codepoint notin 0xd800'u32 .. 0xdfff'u32:
+        window.handleRune(Rune(codepoint))
     return 0
   of WM_IME_STARTCOMPOSITION:
     let hIMC = ImmGetContext(window.hWnd)
@@ -1360,6 +1424,7 @@ proc newWindow*(
     result.createGraphicsContext(depthBits, stencilBits, msaa, vsync, openglVersion)
 
     windows.add(result)
+    result.textRoot = windyTextRootCreate(result.hWnd)
 
     result.style = style
     result.visible = visible

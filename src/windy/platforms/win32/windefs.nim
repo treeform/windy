@@ -803,6 +803,12 @@ proc GetClientRect*(
   lpRect: LPRECT
 ): BOOL {.dynlib: "User32".}
 
+proc MapVirtualKeyW*(code, mapType: UINT): UINT {.dynlib: "User32".}
+proc SetFocus*(hwnd: HWND): HWND {.dynlib: "User32".}
+proc SetForegroundWindow*(hwnd: HWND): BOOL {.dynlib: "User32".}
+proc GetForegroundWindow*(): HWND {.dynlib: "User32".}
+proc GetFocus*(): HWND {.dynlib: "User32".}
+
 proc ClientToScreen*(
   hWnd: HWND,
   lpPoint: LPPOINT
