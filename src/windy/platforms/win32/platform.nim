@@ -20,6 +20,8 @@ const
   windowClassName = "WINDY0"
   trayIconId = 2022
   defaultScreenDpi = 96
+  AllInputMessages = 0x04FF
+  InputAlreadyAvailable = 0x0004
   wheelDelta = 120
   decoratedWindowStyle = WS_OVERLAPPEDWINDOW
   undecoratedWindowStyle = WS_POPUP
@@ -154,6 +156,7 @@ var
 var
   windowPropKey: string
   helperWindow: HWND
+  eventThread: DWORD
   windows: seq[Window]
   onTrayIconClick: Callback
   trayIconHandle: HICON
@@ -1311,6 +1314,7 @@ proc init() {.raises: [].} =
   except:
     quit("Error creating helper window")
   platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
+  eventThread = GetCurrentThreadId()
   initialized = true
 
 proc getHWND*(window: Window): HWND =
@@ -2695,7 +2699,9 @@ proc pollHttp*() =
   ## Polling for HTTP requests happens in the main windows loop.
   discard
 
-proc pollEvents*() =
+proc waitEvents*(timeoutMs: int) =
+  ## Runs onFrame callbacks, then waits up to timeoutMs and dispatches events.
+  ## Gate drawing inside onFrame for on-demand UIs; zero polls without waiting.
   # Draw first (in case a message closes a window or similar)
   for window in windows:
     if window.onFrame != nil:
@@ -2704,6 +2710,15 @@ proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
+
+  if timeoutMs > 0:
+    discard MsgWaitForMultipleObjectsEx(
+      0,
+      nil,
+      min(timeoutMs, int32.high.int).DWORD,
+      AllInputMessages,
+      InputAlreadyAvailable
+    )
 
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
@@ -2777,6 +2792,15 @@ proc pollEvents*() =
         activeWindow.handleButtonRelease(KeyRightShift)
 
   pollHttp()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Wakes native waiting from any thread after the first window is created.
+  if eventThread != 0:
+    discard PostThreadMessageW(eventThread, WM_NULL, 0, 0)
+
+proc pollEvents*() =
+  ## Draws pending frames and dispatches events without waiting.
+  waitEvents(0)
 
 proc forceMousePos*(window: Window, mousePos: IVec2) =
   ## Forces mouse position to a place.
