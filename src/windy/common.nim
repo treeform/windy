@@ -110,7 +110,7 @@ type
     ## Takes priority over onRune and requires runeInputEnabled.
     ## Native commits may contain multiple runes and line breaks.
   TextInputState* = object
-    ## Describes the focused editor for native text services on macOS.
+    ## Describes the focused editor for native text services on macOS/Windows.
     ## Selection and visible ranges use half-open rune offsets.
     id*: string
       ## A nonempty field identity activates the editor; an empty one clears it.
@@ -131,7 +131,7 @@ type
     start*, length*: int
 
   TextInputEditCallback* = proc(edit: TextInputEdit)
-    ## Receives native selection or replacement requests on macOS.
+    ## Receives native selection or replacement requests on macOS/Windows.
     ## Apply the request to the editor, then publish its state again.
     ## Requires runeInputEnabled and an active, nonsecure TextInputState.
   HttpErrorCallback* = proc(msg: string)

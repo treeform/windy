@@ -11,7 +11,7 @@ elif defined(linux):
 
 export common, platform, unicode, vmath
 
-when defined(emscripten) or not defined(macosx):
+when defined(emscripten) or not (defined(macosx) or defined(windows)):
   proc setTextInputState*(window: Window, state: TextInputState) =
     ## Publishes focused editor state for native text services where supported.
     ## This is a no-op on platforms without native editor-state integration.

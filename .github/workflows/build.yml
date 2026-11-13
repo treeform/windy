@@ -42,6 +42,14 @@ jobs:
       if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_cpu_pixels.nim
       if: matrix.os == 'windows-latest'
+    - name: Test Windows native text services
+      if: matrix.os == 'windows-latest'
+      shell: powershell
+      run: |
+        nim c -d:useCpu -o:tests/windows_text_fixture.exe tests/windows_text_fixture.nim
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File tests/test_windows_text_input.ps1
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Test X11 contexts, mouse capture, and resize sync
       if: matrix.os == 'ubuntu-latest'
