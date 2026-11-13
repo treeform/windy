@@ -101,6 +101,23 @@ Here are a few reasons that may be worth considering:
 
 * Windy has IME input support for Chinese, Japanese, Korean and other languages. Text input can also be enabled or disabled at any time (for example, to avoid opening the IME editor when a user just wants to use WASD in a game).
 
+## Native text services
+
+Custom text widgets on macOS and Windows can publish their focused editor with
+`window.setTextInputState(state)` and handle selection or replacement requests
+through `window.onTextEdit`. Ranges use half-open Unicode rune offsets; bounds
+use framebuffer pixels. Enable `runeInputEnabled` first, republish after edits
+or layout changes, and publish an empty id to clear the field. Password fields
+are not exposed.
+
+Windows exposes UI Automation Value and Text patterns and handles native paste
+messages, synthesized shortcuts without scan codes, and UTF-16 character input.
+The providers use Nim COM definitions and call the Windows APIs directly.
+
+To try Windows dictation manually, run
+`nim r -d:useCpu tests/manual_text_input.nim` from the repository root.
+The window displays received text and prints input events to the terminal.
+
 ## Emscripten
 
 Windy can be compiled to WebAssembly using Emscripten. See the [Emscripten tutorial](https://github.com/treeform/nim_emscripten_tutorial) for more information on how Emscripten works with Nim and things you need to know.
