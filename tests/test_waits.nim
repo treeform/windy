@@ -37,6 +37,16 @@ proc testWaits() =
     inc frames
   for i in 0 ..< 5:
     pollEvents()
+  block:
+    let started = getMonoTime()
+    for i in 0 ..< 240:
+      let beforeFrames = frames
+      pollEvents()
+      doAssert frames == beforeFrames + 1,
+        "Game frames must continue on every poll without input."
+    let elapsed = (getMonoTime() - started).inMilliseconds
+    doAssert elapsed < 2000, "Game polling must remain nonblocking."
+    echo "Continuous game polling: 240 frames in ", elapsed, " ms"
   var waited = false
   for i in 0 ..< 10:
     let
