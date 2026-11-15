@@ -152,11 +152,12 @@ when defined(macosx):
         let
           native = window.inner.ID
           presentation = NSApp.presentationOptions
+          expectedFullscreen = bool(entering)
         var callbacks = 0
         let closeInCallback = proc() =
           ## Closes immediately and rejects frame callbacks after disposal.
           inc callbacks
-          doAssert window.fullscreen == entering
+          doAssert window.fullscreen == expectedFullscreen
           window.close()
           window.onFrame = proc() =
             ## Rejects frame callbacks on the now closed window.
