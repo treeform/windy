@@ -7,7 +7,6 @@ when defined(macosx):
 
   objc:
     proc retainCount(self: ID): uint
-    proc windowNumber(self: NSWindow): int
     proc postEvent(self: NSApplication, x: NSEvent, atStart: bool)
     proc initWithString(
       self: NSAttributedString,

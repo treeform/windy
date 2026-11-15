@@ -3,6 +3,8 @@ import
   pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
 
+from pixie import Rect
+
 when defined(useMetal4):
   {.hint: "Using Metal backend".}
 elif defined(useCpu):
@@ -16,6 +18,18 @@ import ../../http
 export http
 
 type
+  FullscreenRestore = object
+    frame: NSRect
+    style: NSWindowStyleMask
+    level: NSWindowLevel
+    movable, shadow, hides, mouseMoved: bool
+
+  MouseConfinement = object
+    requested, fullWindow, active, updating: bool
+    region: Rect
+    cachedFrame, cachedBounds, cachedBacking: NSRect
+    controlsLocked, savedMovable, savedResizable: bool
+
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
@@ -39,8 +53,11 @@ type
     inner: NSWindow
     trackingArea: NSTrackingArea
     markedText: NSString
-    # AppKit applies this state asynchronously via delegate callbacks.
-    fullscreenState: bool
+    fullscreenState, fullscreenChanging, fullscreenUpdating: bool
+    fullscreenResized, fullscreenMoved: bool
+    fullscreenRestore: FullscreenRestore
+    confinement: MouseConfinement
+    closing: bool
     minimizedState: bool
     cpuImage: NSImage
     textInput: TextInputState
@@ -150,6 +167,9 @@ proc maximized*(window: Window): bool =
 proc focused*(window: Window): bool =
   window.inner.isKeyWindow
 
+include confinement
+include fullscreens
+
 proc closeIme*(window: Window) =
   if not window.focused:
     return
@@ -198,17 +218,27 @@ proc `visible=`*(window: Window, visible: bool) =
       pumpActivation()
     else:
       activationRescueDeadline = 0
+      window.suspendMouseConfinement()
+      if window.state.closed:
+        return
       window.inner.orderOut(0.ID)
+      updateFullscreenPresentation()
 
 proc `style=`*(window: Window, windowStyle: WindowStyle) =
+  if window.fullscreenState:
+    return
   autoreleasepool:
-    case windowStyle:
-    of DecoratedResizable:
-      window.inner.setStyleMask(decoratedResizableWindowMask)
-    of Decorated:
-      window.inner.setStyleMask(decoratedWindowMask)
-    of Undecorated, Transparent:
-      window.inner.setStyleMask(undecoratedWindowMask)
+    let mask = case windowStyle:
+      of DecoratedResizable: decoratedResizableWindowMask
+      of Decorated: decoratedWindowMask
+      of Undecorated, Transparent: undecoratedWindowMask
+    window.suspendMouseConfinement()
+    if window.state.closed:
+      return
+    window.inner.setStyleMask(mask)
+    if window.state.closed:
+      return
+    discard window.inner.makeFirstResponder(window.inner.contentView)
 
     when defined(useMetal4) or defined(useCpu):
       if windowStyle == Transparent:
@@ -222,12 +252,15 @@ proc `style=`*(window: Window, windowStyle: WindowStyle) =
         )
 
 proc `fullscreen=`*(window: Window, fullscreen: bool) =
-  if window.fullscreen == fullscreen:
-    return
-  autoreleasepool:
-    window.inner.toggleFullScreen(0.ID)
+  ## Covers the display without creating a separate macOS fullscreen Space.
+  window.setFullscreen(fullscreen)
 
 proc `floating=`*(window: Window, floating: bool) =
+  if window.fullscreenState:
+    window.fullscreenRestore.level =
+      if floating: NSFloatingWindowLevel
+      else: NSNormalWindowLevel
+    return
   if window.floating == floating:
     return
   autoreleasepool:
@@ -239,6 +272,11 @@ proc `floating=`*(window: Window, floating: bool) =
     window.inner.setLevel(level)
 
 proc `size=`*(window: Window, size: IVec2) =
+  if window.fullscreenState:
+    return
+  window.suspendMouseConfinement()
+  if window.state.closed:
+    return
   autoreleasepool:
     let virtualSize = (size.vec2 / window.contentScale)
 
@@ -250,6 +288,11 @@ proc `size=`*(window: Window, size: IVec2) =
     window.inner.setFrame(frameRect, true)
 
 proc `pos=`*(window: Window, pos: IVec2) =
+  if window.fullscreenState:
+    return
+  window.suspendMouseConfinement()
+  if window.state.closed:
+    return
   autoreleasepool:
     let
       windowFrame = window.inner.frame
@@ -263,12 +306,18 @@ proc `pos=`*(window: Window, pos: IVec2) =
 proc `minimized=`*(window: Window, minimized: bool) =
   autoreleasepool:
     if minimized and not window.minimized:
+      window.suspendMouseConfinement()
+      if window.state.closed:
+        return
       window.inner.miniaturize(0.ID)
     elif not minimized and window.minimized:
       window.inner.deminiaturize(0.ID)
 
 proc `maximized=`*(window: Window, maximized: bool) =
-  if window.maximized == maximized:
+  if window.fullscreenState or window.maximized == maximized:
+    return
+  window.suspendMouseConfinement()
+  if window.state.closed:
     return
   autoreleasepool:
     window.inner.zoom(0.ID)
@@ -276,6 +325,8 @@ proc `maximized=`*(window: Window, maximized: bool) =
 proc `closeRequested=`*(window: Window, closeRequested: bool) =
   window.state.closeRequested = closeRequested
   if closeRequested:
+    window.suspendMouseConfinement()
+    updateFullscreenPresentation()
     if window.onCloseRequest != nil:
       window.onCloseRequest()
 
@@ -311,6 +362,10 @@ proc warpCursorToCenter(window: Window) =
 
 proc captureMouse*(window: Window) =
   ## Hide the cursor and report unbounded relative mouse deltas.
+  window.releaseMouseConfinement()
+  if window.state.closed:
+    return
+  window.confinement.requested = false
   if window.state.mouseCaptured:
     return
   window.state.mouseCaptured = true
@@ -411,17 +466,36 @@ proc applicationDidFinishLaunching(
 ): ID {.cdecl.} =
   NSApp.setPresentationOptions(NSApplicationPresentationDefault)
 
+proc applicationActivityChanged(
+  self: ID,
+  cmd: SEL,
+  notification: NSNotification
+): ID {.cdecl.} =
+  ## Restores desktop presentation immediately when app activity changes.
+  if not NSApp.isActive:
+    let pending = windows
+    for window in pending:
+      window.suspendMouseConfinement()
+  updateFullscreenWindows()
+
 proc windowDidResize(
   self: ID,
   cmd: SEL,
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
+  if window == nil or window.closing:
+    return
+  if window.fullscreenChanging:
+    window.fullscreenResized = true
+    return
+  if not window.confinement.updating:
+    window.suspendMouseConfinement()
+  if window.state.closed:
     return
   if window.onResize != nil:
     window.onResize()
-  if window.onFrame != nil:
+  if not window.state.closed and window.onFrame != nil:
     window.onFrame()
 
 proc windowDidMove(
@@ -430,7 +504,16 @@ proc windowDidMove(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window != nil and window.onMove != nil:
+  if window == nil or window.closing:
+    return
+  if window.fullscreenChanging:
+    window.fullscreenMoved = true
+    return
+  if not window.confinement.updating:
+    window.suspendMouseConfinement()
+  if window.state.closed:
+    return
+  if window.onMove != nil:
     window.onMove()
 
 proc windowDidMiniaturize(
@@ -442,6 +525,8 @@ proc windowDidMiniaturize(
   if window == nil:
     return
   window.minimizedState = true
+  window.suspendMouseConfinement()
+  updateFullscreenWindows()
 
 proc windowDidDeminiaturize(
   self: ID,
@@ -452,28 +537,23 @@ proc windowDidDeminiaturize(
   if window == nil:
     return
   window.minimizedState = false
+  updateFullscreenWindows()
 
-proc windowDidEnterFullScreen(
+proc toggleWindyFullscreen(
   self: ID,
   cmd: SEL,
-  notification: NSNotification
-): ID {.cdecl.} =
+  sender: ID
+) {.cdecl.} =
+  ## Routes native fullscreen actions through Windy's borderless mode.
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
-    return
-  window.fullscreenState = true
-
-proc windowDidExitFullScreen(
-  self: ID,
-  cmd: SEL,
-  notification: NSNotification
-): ID {.cdecl.} =
-  let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
-    return
-  window.fullscreenState = false
+  if window != nil:
+    window.fullscreen = not window.fullscreen
 
 proc canBecomeKeyWindow(self: ID, cmd: SEL): bool {.cdecl.} =
+  true
+
+proc canBecomeMainWindow(self: ID, cmd: SEL): bool {.cdecl.} =
+  ## Allows borderless Windy windows to remain the application's main window.
   true
 
 const
@@ -554,16 +634,23 @@ proc windowDidBecomeKey(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
+  if window == nil or window.closing:
     return
   clearButtonsTemplate()
+  if window.state.closed:
+    return
   # Seed the modifier keys from the current hardware state so a modifier held
   # across the focus gain (Cmd-Tab, focus stolen mid-chord) is tracked as
   # down and its upcoming release cannot register as a phantom press.
   window.syncModifierState(NSEvent.modifierFlags())
+  if window.state.closed:
+    return
+  updateFullscreenWindows()
+  if window.state.closed:
+    return
   if window.onFocusChange != nil:
     window.onFocusChange()
-  if not window.state.mouseCaptured:
+  if not window.state.closed and not window.state.mouseCaptured:
     handleMouseMove(window, window.inner.mouseLocationOutsideOfEventStream)
 
 proc windowDidResignKey(
@@ -572,15 +659,18 @@ proc windowDidResignKey(
   notification: NSNotification
 ): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSWindow)
-  if window == nil:
+  if window == nil or window.closing:
     return
+  window.suspendMouseConfinement()
+  window.releaseMouse()
+  updateFullscreenWindows()
   clearButtonsTemplate()
+  if window.state.closed:
+    return
   if window.onFocusChange != nil:
     window.onFocusChange()
   # When loosing focus, prev mouse position is not valid.
   window.state.hasPrevMouse = false
-  # Alt-tab and focus loss always release capture.
-  window.releaseMouse()
 
 proc windowShouldClose(
   self: ID,
@@ -606,11 +696,18 @@ proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
   callSuper(self, cmd)
 
   let window = windows.forNSWindow(self.NSview.window)
-  if window == nil:
+  if window == nil or window.closing:
+    return
+  if window.fullscreenChanging:
+    window.fullscreenResized = true
+    return
+  if not window.confinement.updating:
+    window.suspendMouseConfinement()
+  if window.state.closed:
     return
   if window.onResize != nil:
     window.onResize()
-  if window.onFrame != nil:
+  if not window.state.closed and window.onFrame != nil:
     window.onFrame()
 
 proc updateTrackingAreas(self: ID, cmd: SEL): ID {.cdecl.} =
@@ -1014,18 +1111,21 @@ proc init() {.raises: [].} =
     addClass "WindyAppDelegate", "NSObject", WindyAppDelegate:
       addMethod "applicationWillFinishLaunching:", applicationWillFinishLaunching
       addMethod "applicationDidFinishLaunching:", applicationDidFinishLaunching
+      addMethod "applicationDidBecomeActive:", applicationActivityChanged
+      addMethod "applicationDidResignActive:", applicationActivityChanged
+      addMethod "applicationDidChangeScreenParameters:", applicationActivityChanged
 
     addClass "WindyWindow", "NSWindow", WindyWindow:
       addMethod "windowDidResize:", windowDidResize
       addMethod "windowDidMove:", windowDidMove
       addMethod "windowDidMiniaturize:", windowDidMiniaturize
       addMethod "windowDidDeminiaturize:", windowDidDeminiaturize
-      addMethod "windowDidEnterFullScreen:", windowDidEnterFullScreen
-      addMethod "windowDidExitFullScreen:", windowDidExitFullScreen
+      addMethod "toggleFullScreen:", toggleWindyFullscreen
       # The NSWindow key-eligibility check is the zero-argument getter
       # `canBecomeKeyWindow`; registering it with a trailing colon never
       # overrides it, which leaves borderless windows unable to become key.
       addMethod "canBecomeKeyWindow", canBecomeKeyWindow
+      addMethod "canBecomeMainWindow", canBecomeMainWindow
       addMethod "windowDidBecomeKey:", windowDidBecomeKey
       addMethod "windowDidResignKey:", windowDidResignKey
       addMethod "windowShouldClose:", windowShouldClose
@@ -1254,6 +1354,12 @@ proc pollEvents*() =
 
   drainEvents()
 
+  autoreleasepool:
+    updateFullscreenWindows()
+    let inputWindows = windows
+    for window in inputWindows:
+      window.updateMouseConfinement()
+
   pollHttp()
 
 proc centerWindow(window: Window) =
@@ -1310,7 +1416,15 @@ proc presentPixels*(window: Window, image: Image) =
     discard
 
 proc close*(window: Window) =
+  if window.state.closed or window.closing:
+    return
+  window.closing = true
+  window.state.closeRequested = true
+  defer: window.closing = false
+  window.releaseMouseConfinement()
   window.releaseMouse()
+  window.fullscreenState = false
+  updateFullscreenPresentation()
   window.cpuImage.ID.release()
   window.cpuImage = 0.NSImage
   window.onCloseRequest = nil
@@ -1444,6 +1558,11 @@ proc newWindow*(
       )
 
     result.inner.setRestorable(false)
+    result.inner.setCollectionBehavior(
+      (result.inner.collectionBehavior and not (
+        FullScreenPrimary or FullScreenAuxiliary
+      )) or FullScreenNone
+    )
 
     windows.add(result)
 
@@ -1457,8 +1576,6 @@ proc newWindow*(
     result.visible = visible
 
     result.minimizedState = result.inner.isMiniaturized
-    result.fullscreenState =
-      (result.inner.styleMask and NSWindowStyleMaskFullScreen) != 0
 
 proc title*(window: Window): string =
   window.state.title
