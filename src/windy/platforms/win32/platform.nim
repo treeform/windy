@@ -1461,7 +1461,8 @@ proc mouseDelta*(window: Window): IVec2 =
   window.state.perFrame.mouseDelta
 
 proc scrollDelta*(window: Window): Vec2 =
-  window.state.perFrame.scrollDelta
+  # Match macOS's public scroll scale while preserving fractional wheel steps.
+  window.state.perFrame.scrollDelta * 10
 
 proc runeInputEnabled*(window: Window): bool =
   window.state.runeInputEnabled
