@@ -1,3 +1,5 @@
+import ../../common
+
 type
   NativeTouchPhase* = enum
     NativeTouchBegan
@@ -22,5 +24,6 @@ type
     # uint.high means a software keyboard event has no modifier snapshot.
     onKey*: proc(usage: int, action: NativeKeyAction, modifiers: uint)
     onText*: proc(text: string)
+    onTextEdit*: proc(edit: TextInputEdit)
     onScroll*: proc(x, y, deltaX, deltaY: float64)
     onError*: proc(message: string)

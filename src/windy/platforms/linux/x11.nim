@@ -26,6 +26,7 @@ type
     onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
 
     mousePos, mousePrevPos: IVec2
     buttonClicking, buttonToggle: set[Button]
@@ -1002,9 +1003,6 @@ proc pollEvents(window: Window) =
   window.buttonPressed = {}
   window.buttonReleased = {}
 
-  # signal that frame was drawn
-  display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
-
   var ev: XEvent
 
   proc checkEvent(
@@ -1295,13 +1293,17 @@ proc pollEvents(window: Window) =
         if prop.data.len > 0:
           # Parse URI list (files separated by newlines).
           let uriList = prop.data
+          var paths: seq[string]
           for line in uriList.splitLines():
             if line.len > 0 and line.startsWith("file://"):
               # Convert URI to local path and decode percent-encoding.
-              var filePath = decodeUrl(line[7..^1])
-              if window.onFileDrop != nil:
-                let fileContent = readFile(filePath)
-                window.onFileDrop(filePath, fileContent)
+              paths.add(decodeUrl(line[7..^1]))
+          if window.onFileDropPaths != nil:
+            window.onFileDropPaths(paths)
+          elif window.onFileDrop != nil:
+            for filePath in paths:
+              let fileContent = readFile(filePath)
+              window.onFileDrop(filePath, fileContent)
 
         # Clean up the property.
         window.handle.delProperty(xaWindyXdndTargetProperty)
@@ -1539,11 +1541,18 @@ proc getClipboardImage*(): Image =
   ## Image clipboard is not implemented on X11 yet.
   nil
 
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Reports unsupported image clipboard writes on this X11 backend.
+  raise newException(WindyError, "Image clipboard writes are not supported on X11")
+
 proc waitEvents*(timeoutMs: int) =
   ## Draws frames and waits for native input or an explicit worker wake.
   for window in windows:
     if window.onFrame != nil:
       window.onFrame()
+    if not window.closed and window.xSyncCounter.culong != 0:
+      # Acknowledge the completed frame before a potentially blocking wait.
+      display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
 
   let ws = windows
   windows = @[]
@@ -1558,17 +1567,17 @@ proc waitEvents*(timeoutMs: int) =
   if display != nil:
     proc unownedEvent(
       connection: Display, event: ptr XEvent, data: pointer
-    ): cint {.cdecl.} =
+    ): bool {.cdecl.} =
       ## Drops events that no active window or clipboard endpoint can read.
       if clipboardWindow != 0 and event.any.window == clipboardWindow:
-        return 0
+        return false
       for window in windows:
         if event.any.window == window.handle:
-          return 0
-      1
+          return false
+      true
 
     var event: XEvent
-    while display.XCheckIfEvent(addr event, unownedEvent, nil) != 0:
+    while display.XCheckIfEvent(addr event, unownedEvent, nil):
       discard
     if display.XPending() > 0:
       timeout = 0

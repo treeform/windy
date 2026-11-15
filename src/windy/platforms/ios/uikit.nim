@@ -1,14 +1,51 @@
 import
   std/[math, unicode],
+  pixie,
   ../../common,
   events, uidefs
 
 export events
 
 {.compile: "protocols.m".}
+{.compile("services.m", "-fobjc-arc").}
 
 proc windyIosNativeProtocol(name: cstring): pointer {.importc, cdecl.}
   ## References UIKit protocol metadata emitted by the SDK's Objective-C headers.
+
+type
+  NativeTextEdit = proc(
+    kind: cint, text: cstring, textLength: csize_t, start, length: int
+  ) {.cdecl.}
+  NativeTextKeyCallback = proc(
+    usage, pressed: cint, modifiers: uint
+  ) {.cdecl.}
+
+proc windyIosClipboardImage(
+  bytes: ptr pointer, length: ptr csize_t
+): cint {.importc, cdecl.}
+  ## Copies clipboard PNG data into a caller-owned allocation.
+proc windyIosSetClipboardImage(
+  bytes: pointer, length: csize_t
+): cint {.importc, cdecl.}
+  ## Decodes PNG data and copies it into the native clipboard.
+proc windyIosHasClipboardImage(): cint {.importc, cdecl.}
+  ## Checks pasteboard image types without reading protected contents.
+proc windyIosFreeClipboardImage(bytes: pointer) {.importc, cdecl.}
+  ## Releases the clipboard PNG allocation.
+proc windyIosSetTextInputState(
+  host: pointer, identity, text: cstring, textLength: csize_t,
+  selectionStart, selectionEnd: int, x, y, width, height: float64,
+  multiline, password: cint, edit: NativeTextEdit, key: NativeTextKeyCallback
+) {.importc, cdecl.}
+  ## Publishes editor state to UIKit's text-input responder.
+proc windyIosSetTextKeyboardVisible(visible: cint): cint {.importc, cdecl.}
+  ## Transfers keyboard ownership when a native text editor is active.
+proc windyIosKeyboardInset(host: pointer): float64 {.importc, cdecl.}
+  ## Returns bottom-docked keyboard occlusion in UIKit points.
+proc windyIosObserveKeyboard(changed: proc() {.cdecl.}) {.importc, cdecl.}
+  ## Observes keyboard transitions even before text services are focused.
+proc windyIosWakeEvents() {.importc, cdecl, gcsafe.}
+  ## Posts an event to UIKit's main queue from any thread.
 
 const
   ControlModifier = 1'u shl 18
@@ -19,6 +56,7 @@ const
   KeyboardBackspace = 0x2a
   PixelFormatBgra8Unorm = 80'u
   FlexibleWidthAndHeight = 2'u or 16'u
+  ClipboardPixelLimit = 16 * 1024 * 1024
 
 var
   callbacks: NativeCallbacks
@@ -36,6 +74,10 @@ var
 proc stopNativeRendering*() =
   ## Stops native frame production while retaining the borrowed view handles.
   stopped = true
+  discard windyIosSetTextKeyboardVisible(0)
+  windyIosSetTextInputState(
+    nil, nil, nil, 0, 0, 0, 0, 0, 0, 0, 0, 0, nil, nil
+  )
   if nativeView.int != 0:
     nativeView.setPaused(true)
 
@@ -83,6 +125,16 @@ proc nativeScale*(): float32 =
   else:
     result = 1
 
+proc nativeKeyboardOcclusionHeight*(): float32 =
+  ## Returns a docked keyboard's overlap in framebuffer pixels.
+  if nativeView.int != 0:
+    result = (windyIosKeyboardInset(cast[pointer](nativeView)) *
+      nativeScale().float64).float32
+
+proc wakeNativeEvents*() {.gcsafe.} =
+  ## Wakes UIKit's main loop safely from a worker thread.
+  windyIosWakeEvents()
+
 proc nativeSafeAreaInsets*(): tuple[top, right, bottom, left: float32] =
   ## Converts UIKit's safe area from points to framebuffer pixels.
   if nativeView.int != 0:
@@ -110,10 +162,56 @@ proc nativeHasClipboardText*(): bool =
   ## Checks for clipboard text without reading protected clipboard contents.
   UIPasteboard.generalPasteboard().hasStrings()
 
+proc nativeClipboardImage*(): Image =
+  ## Copies the native clipboard image into an owned Pixie image.
+  var
+    bytes: pointer
+    length: csize_t
+  let status = windyIosClipboardImage(bytes.addr, length.addr)
+  if status == 0:
+    return nil
+  if status < 0:
+    raise newException(WindyError,
+      "Could not read clipboard image (maximum 16 megapixels or 64 MB)")
+  defer: windyIosFreeClipboardImage(bytes)
+  var data = newString(length.int)
+  if data.len > 0:
+    copyMem(data[0].addr, bytes, data.len)
+  try:
+    let size = decodeImageDimensions(data)
+    if size.width.int64 * size.height.int64 > ClipboardPixelLimit:
+      raise newException(WindyError, "Clipboard image exceeds 16 megapixels")
+    result = decodeImage(data)
+  except PixieError as error:
+    raise newException(WindyError,
+      "Could not decode clipboard image: " & error.msg, error)
+
+proc setNativeClipboardImage*(image: Image) =
+  ## Copies a Pixie image into UIKit's image clipboard.
+  if image == nil:
+    raise newException(WindyError, "Cannot copy a nil image to the clipboard")
+  if image.width.int64 * image.height.int64 > ClipboardPixelLimit:
+    raise newException(WindyError, "Clipboard image exceeds 16 megapixels")
+  try:
+    let data = image.encodeImage(PngFormat)
+    if windyIosSetClipboardImage(data.cstring, data.len.csize_t) == 0:
+      raise newException(WindyError, "Could not copy image to the clipboard")
+  except PixieError as error:
+    raise newException(WindyError,
+      "Could not encode clipboard image: " & error.msg, error)
+
+proc nativeHasClipboardImage*(): bool =
+  ## Checks for native clipboard images without reading their contents.
+  windyIosHasClipboardImage() != 0
+
 proc setNativeKeyboardVisible*(visible: bool) =
   ## Transfers first-responder ownership between text input and raw keys.
   keyboardRequested = visible
   if nativeView.int == 0:
+    return
+  if windyIosSetTextKeyboardVisible(visible.cint) != 0:
+    if not visible and nativeController.int != 0:
+      discard nativeController.becomeFirstResponder()
     return
   if visible:
     discard nativeView.becomeFirstResponder()
@@ -121,6 +219,50 @@ proc setNativeKeyboardVisible*(visible: bool) =
     discard nativeView.resignFirstResponder()
     if nativeController.int != 0:
       discard nativeController.becomeFirstResponder()
+
+proc nativeTextEdited(
+  kind: cint, text: cstring, textLength: csize_t, start, length: int
+) {.cdecl.} =
+  ## Copies native edit buffers before returning across the Objective-C ABI.
+  nativeCallback:
+    if not initialized or not active or stopped or
+        not keyboardRequested or callbacks.onTextEdit == nil:
+      return
+    var edit = TextInputEdit(
+      kind: (if kind == 0: ReplaceText else: SelectText),
+      start: start,
+      length: length
+    )
+    if kind == 0 and textLength > 0:
+      edit.text = newString(textLength.int)
+      copyMem(edit.text[0].addr, text, textLength.int)
+    callbacks.onTextEdit(edit)
+
+proc nativeTextKey(
+  usage, pressed: cint, modifiers: uint
+) {.cdecl.} =
+  ## Preserves application shortcuts while UIKit owns editor navigation.
+  nativeCallback:
+    if initialized and active and not stopped and
+        keyboardRequested and callbacks.onKey != nil:
+      callbacks.onKey(
+        usage.int,
+        (if pressed != 0: NativeKeyPressed else: NativeKeyReleased),
+        modifiers
+      )
+
+proc setNativeTextInputState*(state: TextInputState) =
+  ## Synchronizes native text services using framebuffer-based field bounds.
+  let scale = nativeScale().float64
+  windyIosSetTextInputState(
+    cast[pointer](nativeView), state.id.cstring, state.text.cstring,
+    state.text.len.csize_t, state.selectionStart, state.selectionEnd,
+    state.bounds.x.float64 / scale, state.bounds.y.float64 / scale,
+    state.bounds.w.float64 / scale, state.bounds.h.float64 / scale,
+    state.multiline.cint, state.password.cint,
+    nativeTextEdited, nativeTextKey
+  )
+  setNativeKeyboardVisible(keyboardRequested)
 
 proc superVoid(self: ID, className, selector: string) =
   ## Calls a zero-argument superclass implementation using its exact ABI.
@@ -189,6 +331,11 @@ proc setActive(value: bool) =
     callbacks.onFocus(value)
   if nativeView.int != 0:
     nativeView.setPaused(not (active and initialized and not stopped))
+
+proc nativeKeyboardChanged() {.cdecl.} =
+  ## Invalidates application layout even when the drawable size is unchanged.
+  nativeCallback:
+    updateSurface(true)
 
 proc viewLayout(self: ID, selector: SEL) {.cdecl.} =
   ## Lets MetalKit lay out first, then synchronizes drawable dimensions.
@@ -500,6 +647,7 @@ proc attachScene(scene: UIWindowScene) =
     nativeController = UIViewController(controllerClass.new().int)
     requireHandle(nativeController, "Could not create the UIKit controller")
     nativeController.setView(nativeView)
+    windyIosObserveKeyboard(nativeKeyboardChanged)
     let hover = UIHoverGestureRecognizer.alloc().initWithTarget(
       ID(nativeView.int), s"windyHover:"
     )

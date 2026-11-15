@@ -8,7 +8,7 @@ const ShiftFlag = 1'u shl 17
 var window: Window
 runApplication(proc() =
   window = newWindow("Input test", ivec2(640, 480))
-  doAssert window.metalView == nil
+  doAssert window.metalView != nil
 )
 doAssert windyIosMain(0, nil) == 0
 doAssert window != nil
@@ -16,7 +16,14 @@ doAssert window.metalView != nil
 doAssert window.nativeViewController == cast[pointer](2)
 doAssert window.contentScale == 2
 doAssert window.focused
+doAssert window.visible
+doAssert not window.minimized
 doAssert window.safeAreaInsets == (10'f, 20'f, 30'f, 40'f)
+doAssert window.keyboardOcclusionHeight == 0
+native.keyboardOcclusion = 280
+doAssert window.keyboardOcclusionHeight == 280
+wakeEvents()
+doAssert native.eventWakeCount == 1
 
 echo "Testing same-frame touch press and release"
 var sawPress, sawRelease, sawFrame: bool
@@ -122,11 +129,77 @@ setClipboardString("Windy native iOS")
 doAssert getClipboardString() == "Windy native iOS"
 doAssert getClipboardContentKinds() == {TextContent}
 
+echo "Testing atomic native commits and rune-based editing ranges"
+var receivedText: seq[string]
+window.onTextInput = proc(text: string) =
+  receivedText.add(text)
+window.runeInputEnabled = true
+native.callbacks.onText("a界\n👩🏽‍💻")
+doAssert receivedText == @["a界\n👩🏽‍💻"]
+doAssert receivedRunes.len == 2
+window.setTextInputState(TextInputState(
+  id: "composer", text: "a界🙂z", selectionStart: -1, selectionEnd: 20,
+  visibleStart: -4, visibleEnd: 18, multiline: true,
+  bounds: rect(5, 10, 200, 100)
+))
+doAssert native.textInput.selectionStart == 0
+doAssert native.textInput.selectionEnd == 4
+doAssert native.textInput.visibleStart == 0
+doAssert native.textInput.visibleEnd == 4
+var edits: seq[TextInputEdit]
+window.onTextEdit = proc(edit: TextInputEdit) =
+  edits.add(edit)
+native.callbacks.onTextEdit(TextInputEdit(
+  kind: ReplaceText, start: 1, length: 2, text: "👩🏽‍💻"
+))
+doAssert window.textInput.text == "a👩🏽‍💻z"
+doAssert edits.len == 1
+doAssert edits[0].start == 1 and edits[0].length == 2
+native.callbacks.onTextEdit(TextInputEdit(
+  kind: SelectText, start: 3, length: int.high
+))
+doAssert edits[1].start == 3 and edits[1].length == 3
+doAssert window.textInput.selectionStart == 3
+doAssert window.textInput.selectionEnd == 6
+native.callbacks.onTextEdit(TextInputEdit(
+  kind: ReplaceText, start: int.high, length: int.high, text: "!"
+))
+doAssert edits[2].start == 6 and edits[2].length == 0
+doAssert window.textInput.text == "a👩🏽‍💻z!"
+window.setTextInputState(TextInputState(
+  id: "password", text: "秘密", password: true
+))
+native.callbacks.onTextEdit(TextInputEdit(
+  kind: ReplaceText, start: 1, length: 1, text: "🙂"
+))
+doAssert window.textInput.text == "秘🙂"
+doAssert native.textInput.password
+window.runeInputEnabled = false
+native.callbacks.onTextEdit(TextInputEdit(kind: ReplaceText, text: "ignored"))
+doAssert edits.len == 4
+window.runeInputEnabled = true
+window.setTextInputState(TextInputState())
+native.callbacks.onTextEdit(TextInputEdit(kind: ReplaceText, text: "ignored"))
+doAssert edits.len == 4
+window.runeInputEnabled = false
+
+echo "Testing image clipboard and text replacement"
+let clipboardImage = newImage(2, 2)
+clipboardImage.fill(rgba(24, 68, 110, 255))
+setClipboardImage(clipboardImage)
+doAssert getClipboardContentKinds() == {ImageContent}
+doAssert getClipboardImage().data == clipboardImage.data
+setClipboardString("Replaces image")
+doAssert getClipboardContentKinds() == {TextContent}
+doAssert getClipboardImage() == nil
+
 echo "Testing focus, resize, scrolling and callback failure"
 native.callbacks.onTouch(10, NativeTouchBegan, 30, 40)
 native.callbacks.onKey(0x04, NativeKeyPressed, 0)
 native.callbacks.onFocus(false)
 doAssert not window.focused
+doAssert not window.visible
+doAssert window.minimized
 doAssert window.buttonDown.len == 0
 doAssert window.buttonPressed.len == 0
 doAssert not window.mouseInside
@@ -141,6 +214,8 @@ native.callbacks.onKey(0x04, NativeKeyPressed, 0)
 doAssert window.buttonDown.len == 0
 native.callbacks.onFocus(true)
 doAssert window.focused
+doAssert window.visible
+doAssert not window.minimized
 doAssert window.buttonDown.len == 0
 native.callbacks.onResize(1200, 600, 3)
 doAssert window.size == ivec2(1200, 600)

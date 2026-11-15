@@ -3,6 +3,8 @@ import
   pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
 
+from pixie/common import PixieError
+
 when defined(useMetal4):
   {.hint: "Using Metal backend".}
 elif defined(useCpu):
@@ -31,6 +33,7 @@ type
     onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     imePos*: IVec2
 
     state: WindowState
@@ -681,23 +684,31 @@ proc performDragOperation(
   cmd: SEL,
   sender: NSDraggingInfo
 ): bool {.cdecl.} =
-  ## Deliver dropped file paths and contents to onFileDrop.
+  ## Delivers native paths before considering eager file-content callbacks.
   let window = windows.forNSWindow(self.NSView.window)
-  if window == nil or window.onFileDrop == nil:
+  if window == nil or
+    (window.onFileDrop == nil and window.onFileDropPaths == nil):
     return false
   let
     pboard = sender.draggingPasteboard()
     list = pboard.propertyListForType(NSFilenamesPboardType).NSArray
   if list.int == 0:
     return false
+  var paths: seq[string]
   for i in 0 ..< list.count.int:
     let path = $list[i].NSString
-    if path.len == 0:
-      continue
-    try:
-      window.onFileDrop(path, readFile(path))
-    except CatchableError:
-      window.onFileDrop(path, "")
+    if path.len > 0:
+      paths.add(path)
+  if window.onFileDropPaths != nil:
+    window.onFileDropPaths(paths)
+  else:
+    for path in paths:
+      var content: string
+      try:
+        content = readFile(path)
+      except CatchableError:
+        discard
+      window.onFileDrop(path, content)
   true
 
 proc mouseDragged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
@@ -1360,6 +1371,7 @@ proc close*(window: Window) =
   window.textInput = TextInputState()
   window.onImeChange = nil
   window.onFileDrop = nil
+  window.onFileDropPaths = nil
 
   if window.inner.int != 0:
     autoreleasepool:
@@ -1631,6 +1643,26 @@ proc getClipboardString*(): string =
       return
 
     result = $value
+
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Copies lossless image pixels to the native pasteboard as PNG.
+  if image == nil or image.width <= 0 or image.height <= 0:
+    raise newException(WindyError, "Cannot copy an empty clipboard image")
+  var encoded: string
+  try:
+    encoded = image.encodePng()
+  except PixieError as error:
+    raise newException(WindyError, "Could not encode clipboard image: " &
+      error.msg)
+  init()
+  autoreleasepool:
+    let
+      pboard = NSPasteboard.generalPasteboard()
+      data = NSData.dataWithBytes(encoded[0].addr, encoded.len)
+    pboard.clearContents()
+    if not pboard.setData(data, NSPasteboardTypePNG):
+      raise newException(WindyError, "Could not write clipboard image")
+
 
 proc setClipboardString*(value: string) =
   ## Sets the clipboard content to the given string.

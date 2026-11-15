@@ -17,14 +17,18 @@ type
     onFocusChange*, onMouseMove*, onScroll*: Callback
     onButtonPress*, onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     imePos*: IVec2
     state: WindowState
     drawableSize: IVec2
     hasFocus: bool
     ready: bool
     primaryTouch: int
+    textInput: TextInputState
 
 var
   applicationInit: Callback
@@ -46,9 +50,22 @@ proc safeAreaInsets*(
   if applicationStarted and not window.state.closed:
     result = native.nativeSafeAreaInsets()
 
+proc keyboardOcclusionHeight*(window: Window): float32 =
+  ## Returns the keyboard's overlap at the drawable's bottom in pixels.
+  if applicationStarted and not window.state.closed:
+    result = native.nativeKeyboardOcclusionHeight()
+
 proc focused*(window: Window): bool =
   ## Returns whether the application is active.
   window.hasFocus
+
+proc visible*(window: Window): bool =
+  ## Reports whether UIKit can present the application window.
+  not window.state.closed and window.hasFocus
+
+proc minimized*(window: Window): bool =
+  ## Treats application suspension as unavailable for presentation.
+  not window.hasFocus
 
 proc surfaceReady*(window: Window): bool =
   ## Returns whether the Metal view has a drawable surface.
@@ -125,6 +142,8 @@ proc failCallback(message: string) =
     applicationWindow.primaryTouch = -1
     applicationWindow.state.buttonDown = {}
 
+proc close*(window: Window)
+
 proc renderCallback() =
   ## Lets UIKit drive one application frame and then resets transient input.
   let window = applicationWindow
@@ -134,6 +153,11 @@ proc renderCallback() =
   try:
     if window.onFrame != nil:
       window.onFrame()
+    if not window.state.closed and window.state.closeRequested:
+      if window.onCloseRequest != nil:
+        window.onCloseRequest()
+      if not window.state.closed and window.state.closeRequested:
+        window.close()
   except Exception as error:
     failCallback(error.msg)
   finally:
@@ -321,13 +345,45 @@ proc keyCallback(usage: int, action: NativeKeyAction, modifiers: uint) =
     failCallback(error.msg)
 
 proc textCallback(text: string) =
-  ## Decodes committed UTF-8 text into Windy rune callbacks.
+  ## Preserves a native commit as one edit with legacy rune fallback.
   let window = applicationWindow
   if window == nil or window.state.closed or not window.hasFocus:
     return
   try:
-    for rune in text.runes:
-      window.handleRune(rune)
+    handleTextInputTemplate(text)
+  except Exception as error:
+    failCallback(error.msg)
+
+proc textEditCallback(edit: TextInputEdit) =
+  ## Mirrors rune-based UIKit edits before queueing them for the application.
+  let window = applicationWindow
+  if window == nil or window.state.closed or not window.hasFocus or
+    not window.state.runeInputEnabled or window.textInput.id.len == 0 or
+    window.onTextEdit == nil:
+      return
+  try:
+    let
+      runes = window.textInput.text.toRunes
+      first = clamp(edit.start, 0, runes.len)
+      last = first + clamp(edit.length, 0, runes.len - first)
+    var bounded = edit
+    bounded.start = first
+    bounded.length = last - first
+    case edit.kind
+    of SelectText:
+      window.textInput.selectionStart = first
+      window.textInput.selectionEnd = last
+    of ReplaceText:
+      var text: string
+      for i in 0 ..< first:
+        text.add($runes[i])
+      text.add(edit.text)
+      for i in last ..< runes.len:
+        text.add($runes[i])
+      window.textInput.text = text
+      window.textInput.selectionStart = first + edit.text.runeLen
+      window.textInput.selectionEnd = window.textInput.selectionStart
+    window.onTextEdit(bounded)
   except Exception as error:
     failCallback(error.msg)
 
@@ -380,6 +436,7 @@ proc windyIosMain(argc: cint, argv: ptr cstring): cint {.exportc, cdecl.} =
       onTouch: touchCallback,
       onKey: keyCallback,
       onText: textCallback,
+      onTextEdit: textEditCallback,
       onScroll: scrollCallback,
       onError: failCallback
     ))
@@ -414,6 +471,7 @@ proc newWindow*(
   result.state.cursor = Cursor(kind: ArrowCursor)
   let size = native.nativeSize()
   result.drawableSize = ivec2(size.width, size.height)
+  result.ready = size.width > 0 and size.height > 0
   applicationWindow = result
 
 proc close*(window: Window) =
@@ -422,14 +480,39 @@ proc close*(window: Window) =
     window.cancelPointer()
     window.clearButtons()
     native.setNativeKeyboardVisible(false)
+    native.setNativeTextInputState(TextInputState())
     native.stopNativeRendering()
     window.state.runeInputEnabled = false
     window.state.closeRequested = true
     window.state.closed = true
+    window.textInput = TextInputState()
+    window.onCloseRequest = nil
+    window.onFrame = nil
+    window.onMove = nil
+    window.onResize = nil
+    window.onFocusChange = nil
+    window.onMouseMove = nil
+    window.onScroll = nil
+    window.onButtonPress = nil
+    window.onButtonRelease = nil
+    window.onRune = nil
+    window.onTextInput = nil
+    window.onTextEdit = nil
+    window.onImeChange = nil
+    window.onFileDrop = nil
+    window.onFileDropPaths = nil
 
 proc pollEvents*() =
   ## Rejects desktop event loops because UIKit dispatches iOS events.
   raise newException(WindyError, "Use runApplication and onFrame on iOS.")
+
+proc waitEvents*(timeoutMs: int) =
+  ## Rejects blocking the UIKit thread; the native host delivers callbacks.
+  raise newException(WindyError, "Use runApplication and onFrame on iOS.")
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Requests a frame on UIKit's main thread from a background worker.
+  native.wakeNativeEvents()
 
 proc makeContextCurrent*(window: Window) =
   ## Rejects OpenGL context operations on the Metal backend.
@@ -503,6 +586,20 @@ proc `runeInputEnabled=`*(window: Window, enabled: bool) =
     window.state.runeInputEnabled = enabled
     native.setNativeKeyboardVisible(enabled)
 
+proc setTextInputState*(window: Window, state: TextInputState) =
+  ## Publishes the focused editor for UIKit keyboard, IME and dictation input.
+  ## Selection offsets are runes and bounds are framebuffer pixels.
+  ## Publish an empty id when the application no longer has a focused editor.
+  if window.state.closed:
+    return
+  window.textInput = state
+  let count = state.text.runeLen
+  window.textInput.selectionStart = clamp(state.selectionStart, 0, count)
+  window.textInput.selectionEnd = clamp(state.selectionEnd, 0, count)
+  window.textInput.visibleStart = clamp(state.visibleStart, 0, count)
+  window.textInput.visibleEnd = clamp(state.visibleEnd, 0, count)
+  native.setNativeTextInputState(window.textInput)
+
 proc cursor*(window: Window): Cursor =
   ## Returns the requested desktop cursor appearance.
   window.state.cursor
@@ -531,10 +628,20 @@ proc setClipboardString*(text: string) =
   ## Copies text to the system clipboard.
   native.setNativeClipboardText(text)
 
+proc getClipboardImage*(): Image =
+  ## Reads an image from the system clipboard after UIKit's paste approval.
+  native.nativeClipboardImage()
+
+proc setClipboardImage*(image: Image) =
+  ## Copies an image to the system clipboard as PNG data.
+  native.setNativeClipboardImage(image)
+
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
   ## Returns the clipboard kinds currently supported by this backend.
   if native.nativeHasClipboardText():
     result.incl TextContent
+  if native.nativeHasClipboardImage():
+    result.incl ImageContent
 
 proc getScreens*(): seq[Screen] =
   ## Returns the current application's drawable as its available screen.
