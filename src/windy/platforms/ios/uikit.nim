@@ -383,11 +383,17 @@ proc deliverTouches(touches: NSSet, phase: NativeTouchPhase) =
     let
       touch = UITouch(objects.objectAtIndex(i).int)
       position = touch.locationInView(nativeView)
+      source =
+        case touch.`type`()
+        of 0, 1: TouchPointer
+        of 2: PenPointer
+        else: MousePointer
     callbacks.onTouch(
       touch.int,
       phase,
       position.x * scale,
-      position.y * scale
+      position.y * scale,
+      source
     )
 
 proc touchesBegan(
@@ -428,7 +434,8 @@ proc hoverChanged(
         position = recognizer.locationInView(nativeView)
         scale = nativeView.contentScaleFactor()
       callbacks.onTouch(
-        0, NativeTouchHover, position.x * scale, position.y * scale
+        0, NativeTouchHover, position.x * scale, position.y * scale,
+        MousePointer
       )
 
 proc scrollChanged(

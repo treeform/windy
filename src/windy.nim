@@ -13,6 +13,11 @@ elif defined(linux):
 
 export common, platform, unicode, vmath
 
+when not defined(ios):
+  proc pointerSource*(window: Window): PointerSource =
+    ## Returns the mouse source used by desktop and browser pointer events.
+    MousePointer
+
 when not defined(ios) and
   (defined(emscripten) or not (defined(macosx) or defined(windows))):
   proc setTextInputState*(window: Window, state: TextInputState) =

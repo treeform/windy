@@ -12,6 +12,7 @@ runApplication(proc() =
 )
 doAssert windyIosMain(0, nil) == 0
 doAssert window != nil
+doAssert window.pointerSource == MousePointer
 doAssert window.metalView != nil
 doAssert window.nativeViewController == cast[pointer](2)
 doAssert window.contentScale == 2
@@ -30,18 +31,21 @@ var sawPress, sawRelease, sawFrame: bool
 window.onButtonPress = proc(button: Button) =
   if button == MouseLeft:
     doAssert window.buttonDown[MouseLeft]
+    doAssert window.pointerSource == TouchPointer
     sawPress = true
 window.onButtonRelease = proc(button: Button) =
   if button == MouseLeft:
     doAssert not window.buttonDown[MouseLeft]
+    doAssert window.pointerSource == TouchPointer
     sawRelease = true
 
-native.callbacks.onTouch(10, NativeTouchBegan, 30, 40)
-native.callbacks.onTouch(10, NativeTouchEnded, 31, 41)
+native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
+native.callbacks.onTouch(10, NativeTouchEnded, 31, 41, TouchPointer)
 window.onFrame = proc() =
   doAssert window.buttonPressed[MouseLeft]
   doAssert window.buttonReleased[MouseLeft]
   doAssert not window.buttonDown[MouseLeft]
+  doAssert window.pointerSource == TouchPointer
   sawFrame = true
 native.callbacks.onFrame()
 doAssert sawPress and sawRelease and sawFrame
@@ -49,21 +53,95 @@ doAssert not window.buttonPressed[MouseLeft]
 doAssert not window.buttonReleased[MouseLeft]
 window.onFrame = nil
 
+echo "Testing primary touch dragging across frames"
+native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
+doAssert window.mouseDelta == ivec2(0, 0)
+native.callbacks.onFrame()
+doAssert window.buttonDown[MouseLeft]
+doAssert not window.buttonPressed[MouseLeft]
+doAssert window.pointerSource == TouchPointer
+native.callbacks.onTouch(10, NativeTouchMoved, 35, 50, TouchPointer)
+native.callbacks.onTouch(10, NativeTouchMoved, 40, 65, TouchPointer)
+doAssert window.mouseDelta == ivec2(10, 25)
+doAssert window.mousePos == ivec2(40, 65)
+doAssert window.mousePrevPos == ivec2(35, 50)
+doAssert window.scrollDelta == vec2(0, 0)
+native.callbacks.onFrame()
+doAssert window.buttonDown[MouseLeft]
+doAssert window.mouseDelta == ivec2(0, 0)
+doAssert window.pointerSource == TouchPointer
+native.callbacks.onTouch(10, NativeTouchEnded, 42, 68, TouchPointer)
+doAssert not window.buttonDown[MouseLeft]
+doAssert window.buttonReleased[MouseLeft]
+doAssert window.mousePos == ivec2(42, 68)
+doAssert window.mouseDelta == ivec2(2, 3)
+doAssert window.mouseInside
+doAssert window.pointerSource == TouchPointer
+native.callbacks.onFrame()
+doAssert not window.buttonReleased[MouseLeft]
+doAssert window.pointerSource == TouchPointer
+
+echo "Testing coalesced drag origin after earlier pointer movement"
+native.callbacks.onTouch(0, NativeTouchHover, 800, 900, MousePointer)
+doAssert window.mouseDelta != ivec2(0, 0)
+native.callbacks.onTouch(20, NativeTouchBegan, 200, 300, TouchPointer)
+doAssert window.mouseDelta == ivec2(0, 0)
+native.callbacks.onTouch(20, NativeTouchMoved, 210, 320, TouchPointer)
+native.callbacks.onTouch(20, NativeTouchEnded, 220, 340, TouchPointer)
+doAssert window.mouseDelta == ivec2(20, 40)
+native.callbacks.onTouch(0, NativeTouchHover, 900, 800, MousePointer)
+native.callbacks.onTouch(21, NativeTouchBegan, 100, 500, TouchPointer)
+native.callbacks.onTouch(21, NativeTouchMoved, 105, 490, TouchPointer)
+native.callbacks.onTouch(21, NativeTouchMoved, 120, 460, TouchPointer)
+native.callbacks.onTouch(21, NativeTouchEnded, 130, 440, TouchPointer)
+window.onFrame = proc() =
+  doAssert window.mousePos == ivec2(130, 440)
+  doAssert window.mouseDelta == ivec2(30, -60)
+  doAssert window.mousePos - window.mouseDelta == ivec2(100, 500)
+  doAssert window.pointerSource == TouchPointer
+  doAssert window.buttonPressed[MouseLeft]
+  doAssert window.buttonReleased[MouseLeft]
+  doAssert not window.buttonDown[MouseLeft]
+native.callbacks.onFrame()
+window.onFrame = nil
+doAssert window.mouseDelta == ivec2(0, 0)
+
 echo "Testing primary touch ownership and cancellation"
-native.callbacks.onTouch(10, NativeTouchBegan, 30, 40)
-native.callbacks.onTouch(11, NativeTouchBegan, 80, 90)
-native.callbacks.onTouch(11, NativeTouchMoved, 90, 100)
+native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
+native.callbacks.onTouch(11, NativeTouchBegan, 80, 90, PenPointer)
+native.callbacks.onTouch(11, NativeTouchMoved, 90, 100, PenPointer)
 doAssert window.mousePos == ivec2(30, 40)
-native.callbacks.onTouch(10, NativeTouchCancelled, 30, 40)
+doAssert window.pointerSource == TouchPointer
+native.callbacks.onTouch(0, NativeTouchHover, 100, 120, MousePointer)
+doAssert window.mousePos == ivec2(30, 40)
+doAssert window.pointerSource == TouchPointer
+native.callbacks.onTouch(10, NativeTouchCancelled, 30, 40, TouchPointer)
 doAssert not window.buttonDown[MouseLeft]
 doAssert not window.buttonPressed[MouseLeft]
 doAssert window.buttonReleased[MouseLeft]
 doAssert not window.mouseInside
 doAssert window.mousePos == ivec2(-1, -1)
-native.callbacks.onTouch(11, NativeTouchMoved, 110, 120)
+doAssert window.pointerSource == TouchPointer
+native.callbacks.onTouch(11, NativeTouchMoved, 110, 120, PenPointer)
 doAssert not window.buttonDown[MouseLeft]
 doAssert window.mousePos == ivec2(-1, -1)
-native.callbacks.onTouch(11, NativeTouchEnded, 110, 120)
+native.callbacks.onTouch(11, NativeTouchEnded, 110, 120, PenPointer)
+native.callbacks.onFrame()
+
+echo "Testing pointer source changes after touch cancellation"
+window.onButtonPress = nil
+window.onButtonRelease = nil
+native.callbacks.onTouch(0, NativeTouchHover, 50, 60, MousePointer)
+doAssert window.pointerSource == MousePointer
+doAssert window.mousePos == ivec2(50, 60)
+native.callbacks.onTouch(20, NativeTouchBegan, 60, 70, PenPointer)
+doAssert window.pointerSource == PenPointer
+native.callbacks.onTouch(20, NativeTouchEnded, 61, 71, PenPointer)
+doAssert window.pointerSource == PenPointer
+native.callbacks.onTouch(21, NativeTouchBegan, 70, 80, MousePointer)
+doAssert window.pointerSource == MousePointer
+native.callbacks.onTouch(21, NativeTouchEnded, 71, 81, MousePointer)
+doAssert window.pointerSource == MousePointer
 native.callbacks.onFrame()
 
 echo "Testing hardware modifier sides and software Shift-Tab"
@@ -194,7 +272,7 @@ doAssert getClipboardContentKinds() == {TextContent}
 doAssert getClipboardImage() == nil
 
 echo "Testing focus, resize, scrolling and callback failure"
-native.callbacks.onTouch(10, NativeTouchBegan, 30, 40)
+native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
 native.callbacks.onKey(0x04, NativeKeyPressed, 0)
 native.callbacks.onFocus(false)
 doAssert not window.focused
@@ -209,7 +287,7 @@ window.onFrame = proc() =
   inc frameCount
 native.callbacks.onFrame()
 doAssert frameCount == 0
-native.callbacks.onTouch(12, NativeTouchBegan, 50, 60)
+native.callbacks.onTouch(12, NativeTouchBegan, 50, 60, TouchPointer)
 native.callbacks.onKey(0x04, NativeKeyPressed, 0)
 doAssert window.buttonDown.len == 0
 native.callbacks.onFocus(true)
@@ -220,7 +298,9 @@ doAssert window.buttonDown.len == 0
 native.callbacks.onResize(1200, 600, 3)
 doAssert window.size == ivec2(1200, 600)
 doAssert window.contentScale == 3
+doAssert window.pointerSource == TouchPointer
 native.callbacks.onScroll(15, 24, 2, 3)
+doAssert window.pointerSource == MousePointer
 doAssert window.mousePos == ivec2(15, 24)
 doAssert window.scrollDelta == vec2(2, -3)
 native.callbacks.onFrame()

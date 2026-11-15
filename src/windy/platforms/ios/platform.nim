@@ -28,6 +28,7 @@ type
     hasFocus: bool
     ready: bool
     primaryTouch: int
+    pointerKind: PointerSource
     textInput: TextInputState
 
 var
@@ -200,7 +201,7 @@ proc focusCallback(focused: bool) =
     failCallback(error.msg)
 
 proc touchCallback(
-  touch: int, phase: NativeTouchPhase, x, y: float64
+  touch: int, phase: NativeTouchPhase, x, y: float64, source: PointerSource
 ) =
   ## Maps a stable primary touch to the pointer and left mouse button.
   let window = applicationWindow
@@ -210,23 +211,30 @@ proc touchCallback(
     case phase
     of NativeTouchHover:
       if window.primaryTouch == -1:
+        window.pointerKind = source
         window.handleMouseMove(x, y)
     of NativeTouchBegan:
       if window.primaryTouch == -1:
         window.primaryTouch = touch
+        window.pointerKind = source
         window.state.hasPrevMouse = false
+        # Preserve the press origin when an entire gesture arrives in one frame.
+        window.state.perFrame.mouseDelta = ivec2(0, 0)
         window.handleMouseMove(x, y)
         window.handleButtonPress(MouseLeft)
     of NativeTouchMoved:
       if window.primaryTouch == touch:
+        window.pointerKind = source
         window.handleMouseMove(x, y)
     of NativeTouchEnded:
       if window.primaryTouch == touch:
+        window.pointerKind = source
         window.handleMouseMove(x, y)
         window.primaryTouch = -1
         window.handleButtonRelease(MouseLeft)
     of NativeTouchCancelled:
       if window.primaryTouch == touch:
+        window.pointerKind = source
         window.cancelPointer()
   except Exception as error:
     failCallback(error.msg)
@@ -393,6 +401,7 @@ proc scrollCallback(x, y, deltaX, deltaY: float64) =
   if window == nil or window.state.closed or not window.hasFocus:
     return
   try:
+    window.pointerKind = MousePointer
     window.handleMouseMove(x, y)
     window.state.perFrame.scrollDelta += vec2(
       deltaX.float32, -deltaY.float32
@@ -542,12 +551,16 @@ proc mousePos*(window: Window): IVec2 =
   ## Returns the primary touch or pointer position in framebuffer pixels.
   window.state.mousePos
 
+proc pointerSource*(window: Window): PointerSource =
+  ## Returns the latest pointer's source, retained after release or cancel.
+  window.pointerKind
+
 proc mousePrevPos*(window: Window): IVec2 =
   ## Returns the position preceding the latest pointer event.
   window.state.mousePrevPos
 
 proc mouseDelta*(window: Window): IVec2 =
-  ## Returns accumulated pointer movement since the previous frame.
+  ## Returns movement since the previous frame or latest pointer press.
   window.state.perFrame.mouseDelta
 
 proc mouseInside*(window: Window): bool =

@@ -213,6 +213,8 @@ objc:
     ## Returns the touch's monotonic UIKit timestamp.
   proc phase*(self: UITouch): int
     ## Returns the current UITouchPhase value.
+  proc `type`*(self: UITouch): int
+    ## Returns the current UITouchType value.
   proc allObjects*(self: NSSet): NSArray
     ## Returns an autoreleased array of the set's objects.
   proc count*(self: NSSet): uint

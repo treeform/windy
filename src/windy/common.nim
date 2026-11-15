@@ -20,6 +20,12 @@ type
     left*, right*, top*, bottom*: int
     primary*: bool
 
+  PointerSource* = enum
+    ## Identifies the device driving the shared pointer and mouse buttons.
+    MousePointer
+    TouchPointer
+    PenPointer
+
   CursorKind* = enum
     ArrowCursor
     PointerCursor

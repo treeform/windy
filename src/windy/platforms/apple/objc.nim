@@ -44,6 +44,19 @@ var
   numClass {.compiletime.} = 1
   numSel {.compiletime.} = 2
 
+proc objcIdentifier(node: NimNode): string {.compileTime.} =
+  ## Extracts an Objective-C name without Nim export or quoting syntax.
+  case node.kind
+  of nnkPostfix:
+    result = objcIdentifier(node[1])
+  of nnkAccQuoted:
+    for part in node:
+      result.add objcIdentifier(part)
+  of nnkIdent, nnkSym:
+    result = node.strVal
+  else:
+    error("Expected an Objective-C identifier.", node)
+
 macro objc*(body: untyped) =
   ## Takes function declarations and converts them to ObjC calls.
 
@@ -53,13 +66,10 @@ macro objc*(body: untyped) =
   # For each function, add body and collect its classes and selectors.
   for fn in body:
     var
-      name = fn[0].repr
       retType = fn[3][0]
-      sel = name
+      sel = objcIdentifier(fn[0])
       classMethod = false
       numParams = 0
-
-    sel.removeSuffix("*")
 
     # Mark each proc inline:
     fn[4] = quote do: {.inline.}
@@ -84,7 +94,7 @@ macro objc*(body: untyped) =
     for defs in fn[3][1..^1]:
       for arg in defs[0 .. ^3]:
         let
-          argName = repr arg
+          argName = objcIdentifier(arg)
           argType = defs[^2]
 
         if numParams == 0:

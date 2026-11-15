@@ -19,7 +19,9 @@ type
     onFrame*: proc()
     onResize*: proc(width, height: int32, scale: float32)
     onFocus*: proc(focused: bool)
-    onTouch*: proc(id: int, phase: NativeTouchPhase, x, y: float64)
+    onTouch*: proc(
+      id: int, phase: NativeTouchPhase, x, y: float64, source: PointerSource
+    )
     # Keys use UIKit USB HID usages and UIKeyModifierFlags.
     # uint.high means a software keyboard event has no modifier snapshot.
     onKey*: proc(usage: int, action: NativeKeyAction, modifiers: uint)
