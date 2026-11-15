@@ -1,6 +1,8 @@
 import unicode, vmath, windy/common
 
-when defined(emscripten):
+when defined(ios):
+  import windy/platforms/ios/platform
+elif defined(emscripten):
   import windy/platforms/emscripten/platform
 elif defined(windows):
   import windy/platforms/win32/platform
