@@ -16,10 +16,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="nimdoc.out.css?v=2.4.0">
+<link rel="stylesheet" type="text/css" href="nimdoc.out.css?v=2.4.2">
 
 <!-- JS -->
-<script type="text/javascript" src="dochack.js?v=2.4.0"></script>
+<script type="text/javascript" src="dochack.js?v=2.4.2"></script>
 </head>
 <body>
   <div class="document" id="documentId">
@@ -460,6 +460,12 @@
 <dt><a name="Complex" href="#Complex"><span>Complex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const Complex" href="windy/platforms/linux/x11/x.html#Complex">x: const Complex</a></li>
+          </ul></dd>
+<dt><a name="confineMouse" href="#confineMouse"><span>confineMouse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="windy: proc confineMouse(window: Window)" href="windy.html#confineMouse%2CWindow">windy: proc confineMouse(window: Window)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="windy: proc confineMouse(window: Window; region: Rect)" href="windy.html#confineMouse%2CWindow%2CRect">windy: proc confineMouse(window: Window; region: Rect)</a></li>
           </ul></dd>
 <dt><a name="ConfirmCancel" href="#ConfirmCancel"><span>ConfirmCancel:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2105,6 +2111,14 @@
 <li><a class="reference external"
           data-doc-search-tag="x11: proc mouseCaptured(window: Window): bool" href="windy/platforms/linux/x11.html#mouseCaptured%2CWindow">x11: proc mouseCaptured(window: Window): bool</a></li>
           </ul></dd>
+<dt><a name="mouseConfined" href="#mouseConfined"><span>mouseConfined:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="windy: proc mouseConfined(window: Window): bool" href="windy.html#mouseConfined%2CWindow">windy: proc mouseConfined(window: Window): bool</a></li>
+          </ul></dd>
+<dt><a name="mouseConfinementSupported" href="#mouseConfinementSupported"><span>mouseConfinementSupported:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="windy: proc mouseConfinementSupported(window: Window): bool" href="windy.html#mouseConfinementSupported%2CWindow">windy: proc mouseConfinementSupported(window: Window): bool</a></li>
+          </ul></dd>
 <dt><a name="mouseDelta" href="#mouseDelta"><span>mouseDelta:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x11: proc mouseDelta(window: Window): IVec2" href="windy/platforms/linux/x11.html#mouseDelta%2CWindow">x11: proc mouseDelta(window: Window): IVec2</a></li>
@@ -2600,6 +2614,10 @@
 <dt><a name="releaseMouse" href="#releaseMouse"><span>releaseMouse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x11: proc releaseMouse(window: Window)" href="windy/platforms/linux/x11.html#releaseMouse%2CWindow">x11: proc releaseMouse(window: Window)</a></li>
+          </ul></dd>
+<dt><a name="releaseMouseConfinement" href="#releaseMouseConfinement"><span>releaseMouseConfinement:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="windy: proc releaseMouseConfinement(window: Window)" href="windy.html#releaseMouseConfinement%2CWindow">windy: proc releaseMouseConfinement(window: Window)</a></li>
           </ul></dd>
 <dt><a name="ReplaceText" href="#ReplaceText"><span>ReplaceText:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10999,7 +11017,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-12 23:41:00 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-15 01:37:34 UTC</small>
       </div>
     </div>
   </div>
