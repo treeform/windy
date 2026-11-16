@@ -360,6 +360,62 @@ setClipboardString("Replaces image")
 doAssert getClipboardContentKinds() == {TextContent}
 doAssert getClipboardImage() == nil
 
+echo "Testing native edit menus without keyboard ownership changes"
+var menuActions: seq[TextEditAction]
+let collectMenuAction = proc(action: TextEditAction) =
+  ## Records a user menu choice without changing the published editor.
+  menuActions.add(action)
+let menuBounds = rect(20, 40, 60, 80)
+doAssert window.showTextEditMenu(
+  menuBounds, {CopyTextAction, SelectAllTextAction}, collectMenuAction
+)
+doAssert native.textMenuBounds == menuBounds
+doAssert native.textMenuActions == {CopyTextAction, SelectAllTextAction}
+doAssert not native.keyboardVisible
+doAssert not window.runeInputEnabled
+let firstMenu = native.textMenuCallback
+firstMenu(PasteTextAction)
+doAssert menuActions.len == 0
+firstMenu(CopyTextAction)
+firstMenu(CopyTextAction)
+doAssert menuActions == @[CopyTextAction]
+doAssert not native.keyboardVisible
+window.runeInputEnabled = true
+doAssert window.showTextEditMenu(
+  menuBounds, {PasteTextAction}, collectMenuAction
+)
+let dismissedMenu = native.textMenuCallback
+window.dismissTextEditMenu()
+doAssert native.textMenuCallback == nil
+dismissedMenu(PasteTextAction)
+doAssert menuActions.len == 1
+doAssert native.keyboardVisible
+doAssert window.showTextEditMenu(
+  menuBounds, {CutTextAction}, collectMenuAction
+)
+let replacedMenu = native.textMenuCallback
+doAssert window.showTextEditMenu(
+  menuBounds, {SelectAllTextAction}, collectMenuAction
+)
+replacedMenu(CutTextAction)
+doAssert menuActions.len == 1
+native.textMenuCallback(SelectAllTextAction)
+doAssert menuActions == @[CopyTextAction, SelectAllTextAction]
+doAssert window.showTextEditMenu(
+  menuBounds, {CopyTextAction}, collectMenuAction
+)
+let suspendedMenu = native.textMenuCallback
+native.callbacks.onFocus(false)
+suspendedMenu(CopyTextAction)
+doAssert native.textMenuCallback == nil
+doAssert menuActions.len == 2
+doAssert not window.showTextEditMenu(
+  menuBounds, {CopyTextAction}, collectMenuAction
+)
+native.callbacks.onFocus(true)
+doAssert not window.showTextEditMenu(menuBounds, {}, collectMenuAction)
+window.runeInputEnabled = false
+
 echo "Testing focus, resize, scrolling and callback failure"
 native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
 native.callbacks.onKey(0x04, NativeKeyPressed, 0)
@@ -398,8 +454,15 @@ doAssert window.scrollDelta == vec2(0, 0)
 
 window.onFrame = proc() =
   raise newException(ValueError, "Expected input-test callback failure")
+doAssert window.showTextEditMenu(
+  menuBounds, {CopyTextAction}, collectMenuAction
+)
+let closedMenu = native.textMenuCallback
 native.callbacks.onFrame()
 doAssert window.closed and window.closeRequested
 doAssert native.renderingStopped
+doAssert native.textMenuCallback == nil
+closedMenu(CopyTextAction)
+doAssert menuActions.len == 2
 
 echo "Native iOS input and lifecycle checks passed."

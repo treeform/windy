@@ -40,12 +40,21 @@ proc windyIosSetTextInputState(
   ## Publishes editor state to UIKit's text-input responder.
 proc windyIosSetTextKeyboardVisible(visible: cint): cint {.importc, cdecl.}
   ## Transfers keyboard ownership when a native text editor is active.
+proc windyIosSetTextInputActive(active: cint) {.importc, cdecl.}
+  ## Invalidates stale responder ownership across UIKit scene activation.
 proc windyIosKeyboardInset(host: pointer): float64 {.importc, cdecl.}
   ## Returns bottom-docked keyboard occlusion in UIKit points.
 proc windyIosObserveKeyboard(changed: proc() {.cdecl.}) {.importc, cdecl.}
   ## Observes keyboard transitions even before text services are focused.
 proc windyIosWakeEvents() {.importc, cdecl, gcsafe.}
   ## Posts an event to UIKit's main queue from any thread.
+proc windyIosShowTextEditMenu(
+  host: pointer, x, y, width, height: float64, actions: cuint,
+  callback: proc(action: cint) {.cdecl.}
+): cint {.importc, cdecl.}
+  ## Presents a native editing menu without changing the active responder.
+proc windyIosDismissTextEditMenu() {.importc, cdecl.}
+  ## Invalidates and dismisses the current native editing menu.
 
 const
   ControlModifier = 1'u shl 18
@@ -70,10 +79,17 @@ var
   updatingSurface, running: bool
   lastWidth, lastHeight: int32
   lastScale = 1.0'f
+  textMenuCallback: TextEditActionCallback
+
+proc dismissNativeTextEditMenu*() =
+  ## Releases the menu callback before UIKit starts dismissing its views.
+  textMenuCallback = nil
+  windyIosDismissTextEditMenu()
 
 proc stopNativeRendering*() =
   ## Stops native frame production while retaining the borrowed view handles.
   stopped = true
+  dismissNativeTextEditMenu()
   discard windyIosSetTextKeyboardVisible(0)
   windyIosSetTextInputState(
     nil, nil, nil, 0, 0, 0, 0, 0, 0, 0, 0, 0, nil, nil
@@ -209,7 +225,10 @@ proc setNativeKeyboardVisible*(visible: bool) =
   keyboardRequested = visible
   if nativeView.int == 0:
     return
-  if windyIosSetTextKeyboardVisible(visible.cint) != 0:
+  let editorOwnsRequest = windyIosSetTextKeyboardVisible(visible.cint) != 0
+  if not active:
+    return
+  if editorOwnsRequest:
     if not visible and nativeController.int != 0:
       discard nativeController.becomeFirstResponder()
     return
@@ -263,6 +282,36 @@ proc setNativeTextInputState*(state: TextInputState) =
     nativeTextEdited, nativeTextKey
   )
   setNativeKeyboardVisible(keyboardRequested)
+
+proc nativeTextMenuAction(action: cint) {.cdecl.} =
+  ## Copies the callback before invoking an action that can change focus.
+  nativeCallback:
+    if not initialized or not active or stopped or textMenuCallback == nil or
+      action < TextEditAction.low.ord or action > TextEditAction.high.ord:
+        return
+    let callback = textMenuCallback
+    textMenuCallback = nil
+    callback(TextEditAction(action))
+
+proc showNativeTextEditMenu*(
+  bounds: Rect, actions: set[TextEditAction], callback: TextEditActionCallback
+): bool =
+  ## Converts framebuffer bounds to UIKit points for the native menu.
+  dismissNativeTextEditMenu()
+  if not initialized or not active or stopped or callback == nil:
+    return false
+  var mask: cuint
+  for action in actions:
+    mask = mask or (1.cuint shl action.ord)
+  let scale = nativeScale().float64
+  textMenuCallback = callback
+  result = windyIosShowTextEditMenu(
+    cast[pointer](nativeView), bounds.x.float64 / scale,
+    bounds.y.float64 / scale, bounds.w.float64 / scale,
+    bounds.h.float64 / scale, mask, nativeTextMenuAction
+  ) != 0
+  if not result:
+    textMenuCallback = nil
 
 proc superVoid(self: ID, className, selector: string) =
   ## Calls a zero-argument superclass implementation using its exact ABI.
@@ -323,12 +372,17 @@ proc updateSurface(force = false) =
 
 proc setActive(value: bool) =
   ## Pauses MetalKit before notifying Windy about application deactivation.
+  if not value:
+    dismissNativeTextEditMenu()
   if nativeView.int != 0 and not value:
     nativeView.setPaused(true)
   let changed = active != value
   active = value
+  windyIosSetTextInputActive(value.cint)
   if initialized and changed and callbacks.onFocus != nil:
     callbacks.onFocus(value)
+  if changed and value:
+    setNativeKeyboardVisible(keyboardRequested)
   if nativeView.int != 0:
     nativeView.setPaused(not (active and initialized and not stopped))
 

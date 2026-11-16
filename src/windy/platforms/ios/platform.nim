@@ -33,6 +33,7 @@ type
     pointerKind: PointerSource
     pointerMotion: PointerMotion
     textInput: TextInputState
+    textMenuGeneration: uint64
 
 var
   applicationInit: Callback
@@ -62,6 +63,31 @@ proc keyboardOcclusionHeight*(window: Window): float32 =
 proc focused*(window: Window): bool =
   ## Returns whether the application is active.
   window.hasFocus
+
+proc dismissTextEditMenu*(window: Window) =
+  ## Invalidates actions from the window's current native editing menu.
+  inc window.textMenuGeneration
+  native.dismissNativeTextEditMenu()
+
+proc showTextEditMenu*(
+  window: Window, bounds: Rect, actions: set[TextEditAction],
+  callback: TextEditActionCallback
+): bool {.discardable.} =
+  ## Presents editing actions around framebuffer bounds without focus changes.
+  ## Returns false if the window cannot present menus or iOS is older than 16.
+  window.dismissTextEditMenu()
+  if window.state.closed or not window.hasFocus or callback == nil or
+    actions == {}:
+      return false
+  let generation = window.textMenuGeneration
+  native.showNativeTextEditMenu(bounds, actions, proc(action: TextEditAction) =
+    ## Discards delayed selections after dismissal, focus loss, or replacement.
+    if window.state.closed or not window.hasFocus or
+      window.textMenuGeneration != generation or action notin actions:
+        return
+    inc window.textMenuGeneration
+    callback(action)
+  )
 
 proc visible*(window: Window): bool =
   ## Reports whether UIKit can present the application window.
@@ -198,6 +224,7 @@ proc focusCallback(focused: bool) =
   try:
     window.hasFocus = focused
     if not focused:
+      window.dismissTextEditMenu()
       window.cancelPointer()
       window.clearButtons()
       window.state.perFrame.buttonPressed = {}
@@ -515,6 +542,7 @@ proc newWindow*(
 proc close*(window: Window) =
   ## Stops callbacks without terminating the UIKit application.
   if not window.state.closed:
+    window.dismissTextEditMenu()
     window.cancelPointer()
     window.clearButtons()
     native.setNativeKeyboardVisible(false)
