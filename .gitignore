@@ -19,3 +19,4 @@ __pycache__
 bindings/generated
 cacert.pem
 tmp/
+/tests/dist/

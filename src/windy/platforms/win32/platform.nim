@@ -261,6 +261,8 @@ proc destroy(window: Window) =
   window.onTextInput = nil
   window.onTextEdit = nil
   window.onImeChange = nil
+  window.onFileDrop = nil
+  window.onFileDropPaths = nil
 
   # Destroy graphics context
   window.destoryGraphicsContext()
@@ -966,6 +968,40 @@ proc wndProc(
   of WM_CLOSE:
     window.closeRequested = true
     return 0
+  of WM_DROPFILES:
+    let drop = wParam.HDROP
+    defer:
+      DragFinish(drop)
+    if window.onFileDropPaths == nil and window.onFileDrop == nil:
+      return 0
+    var point: POINT
+    window.state.mouseInside = DragQueryPoint(drop, point.addr) != 0
+    window.state.mousePrevPos = window.state.mousePos
+    window.state.mousePos = ivec2(point.x, point.y)
+    window.state.perFrame.mouseDelta +=
+      window.state.mousePos - window.state.mousePrevPos
+    let count = DragQueryFileW(drop, UINT.high, nil, 0)
+    var paths: seq[string]
+    for i in 0 ..< min(count.int, 4096):
+      let length = DragQueryFileW(drop, i.UINT, nil, 0)
+      if length == 0 or length > 32767:
+        continue
+      var path = newSeq[WCHAR](length.int + 1)
+      if DragQueryFileW(drop, i.UINT, path[0].addr, path.len.UINT) != 0:
+        paths.add($path[0].addr)
+    if window.onFileDropPaths != nil:
+      window.onFileDropPaths(paths)
+    else:
+      for path in paths:
+        if window.onFileDrop == nil:
+          break
+        var data = ""
+        try:
+          data = readFile(path)
+        except IOError, OSError:
+          discard
+        window.onFileDrop(path, data)
+    return 0
   of WM_MOVE:
     if window.onMove != nil:
       window.onMove()
@@ -1419,6 +1455,7 @@ proc newWindow*(
 
     windows.add(result)
     result.textRoot = windyTextRootCreate(result.hWnd)
+    DragAcceptFiles(result.hWnd, TRUE)
 
     result.style = style
     result.visible = visible
@@ -1641,8 +1678,12 @@ proc getAvailableClipboardFormats(): seq[UINT] =
     result.add(format)
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  ## Reports the native clipboard formats available for reading.
   init()
-
+  if OpenClipboard(helperWindow) == 0:
+    return
+  defer:
+    discard CloseClipboard()
   let availableFormats = getAvailableClipboardFormats()
   if CF_UNICODETEXT in availableFormats:
     result.incl TextContent
@@ -1664,7 +1705,7 @@ proc getClipboardImage*(): Image =
     if p != nil:
       try:
         let size = GlobalSize(dataHandle).int
-        result = decodeDib(p, size, true)
+        result = decodeDib(p, size)
       except:
         discard
       finally:

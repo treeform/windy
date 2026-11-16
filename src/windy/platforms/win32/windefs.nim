@@ -44,6 +44,7 @@ type
   HBRUSH* = HANDLE
   HMODULE* = HINSTANCE
   HGLOBAL* = HANDLE
+  HDROP* = HANDLE
   HIMC* = HANDLE
   HBITMAP* = HANDLE
   HINTERNET* = HANDLE
@@ -403,6 +404,7 @@ const
   WM_XBUTTONDOWN* = 0x020B
   WM_XBUTTONUP* = 0x020C
   WM_MOUSEHWHEEL* = 0x020E
+  WM_DROPFILES* = 0x0233
   WM_IME_SETCONTEXT* = 0x0281
   WM_IME_NOTIFY* = 0x0282
   WM_IME_CONTROL* = 0x0283
@@ -662,6 +664,27 @@ proc GlobalFree*(
 proc GlobalSize*(
   hMem: HGLOBAL
 ): SIZE_T {.dynlib: "Kernel32".}
+
+proc DragAcceptFiles*(
+  hWnd: HWND,
+  accept: BOOL
+) {.dynlib: "Shell32".}
+  ## Enables native file drops for a window.
+
+proc DragQueryFileW*(
+  drop: HDROP,
+  index: UINT,
+  path: LPWSTR,
+  length: UINT
+): UINT {.dynlib: "Shell32".}
+  ## Reads the file count or a file path from a native drop.
+
+proc DragQueryPoint*(drop: HDROP, point: LPPOINT): BOOL
+    {.dynlib: "Shell32".}
+  ## Reads the drop location and whether it is inside the client area.
+
+proc DragFinish*(drop: HDROP) {.dynlib: "Shell32".}
+  ## Releases the native resources held by a file drop.
 
 proc GetUserDefaultUILanguage*(): LANGID {.dynlib: "Kernel32".}
 
