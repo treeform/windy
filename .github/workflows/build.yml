@@ -38,6 +38,8 @@ jobs:
     - run: nim r tests/test_openurl.nim
     - run: nim r tests/test_macos.nim
       if: matrix.os == 'macos-latest'
+    - run: nim r tests/test_mouse_positions_macos.nim
+      if: matrix.os == 'macos-latest'
     - name: Test native iOS input
       if: matrix.os == 'macos-latest'
       run: nim r --path:tests -d:windyIosTesting tests/ios_inputs.nim
@@ -51,6 +53,8 @@ jobs:
     - run: nim r tests/test_tempfiles.nim
       if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r -d:useCpu tests/test_mouse_positions_macos.nim
       if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_fullscreen_macos.nim
       if: matrix.os == 'macos-latest'
