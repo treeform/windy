@@ -73,8 +73,11 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     imePos*: IVec2
 
     state: WindowState
@@ -252,7 +255,11 @@ proc destroy(window: Window) =
   window.onButtonPress = nil
   window.onButtonRelease = nil
   window.onRune = nil
+  window.onTextInput = nil
+  window.onTextEdit = nil
   window.onImeChange = nil
+  window.onFileDrop = nil
+  window.onFileDropPaths = nil
 
   # Destroy graphics context
   window.destoryGraphicsContext()
@@ -932,6 +939,40 @@ proc wndProc(
   of WM_CLOSE:
     window.closeRequested = true
     return 0
+  of WM_DROPFILES:
+    let drop = wParam.HDROP
+    defer:
+      DragFinish(drop)
+    if window.onFileDropPaths == nil and window.onFileDrop == nil:
+      return 0
+    var point: POINT
+    window.state.mouseInside = DragQueryPoint(drop, point.addr) != 0
+    window.state.mousePrevPos = window.state.mousePos
+    window.state.mousePos = ivec2(point.x, point.y)
+    window.state.perFrame.mouseDelta +=
+      window.state.mousePos - window.state.mousePrevPos
+    let count = DragQueryFileW(drop, UINT.high, nil, 0)
+    var paths: seq[string]
+    for i in 0 ..< min(count.int, 4096):
+      let length = DragQueryFileW(drop, i.UINT, nil, 0)
+      if length == 0 or length > 32767:
+        continue
+      var path = newSeq[WCHAR](length.int + 1)
+      if DragQueryFileW(drop, i.UINT, path[0].addr, path.len.UINT) != 0:
+        paths.add($path[0].addr)
+    if window.onFileDropPaths != nil:
+      window.onFileDropPaths(paths)
+    else:
+      for path in paths:
+        if window.onFileDrop == nil:
+          break
+        var data = ""
+        try:
+          data = readFile(path)
+        except IOError, OSError:
+          discard
+        window.onFileDrop(path, data)
+    return 0
   of WM_MOVE:
     if window.onMove != nil:
       window.onMove()
@@ -1356,6 +1397,7 @@ proc newWindow*(
     result.createGraphicsContext(depthBits, stencilBits, msaa, vsync, openglVersion)
 
     windows.add(result)
+    DragAcceptFiles(result.hWnd, TRUE)
 
     result.style = style
     result.visible = visible
@@ -1577,8 +1619,12 @@ proc getAvailableClipboardFormats(): seq[UINT] =
     result.add(format)
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  ## Reports the native clipboard formats available for reading.
   init()
-
+  if OpenClipboard(helperWindow) == 0:
+    return
+  defer:
+    discard CloseClipboard()
   let availableFormats = getAvailableClipboardFormats()
   if CF_UNICODETEXT in availableFormats:
     result.incl TextContent
@@ -1600,7 +1646,7 @@ proc getClipboardImage*(): Image =
     if p != nil:
       try:
         let size = GlobalSize(dataHandle).int
-        result = decodeDib(p, size, true)
+        result = decodeDib(p, size)
       except:
         discard
       finally:
@@ -1615,6 +1661,61 @@ proc getClipboardImage*(): Image =
       result = decodeClipboardImage(CF_DIB)
   finally:
     discard CloseClipboard()
+
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Writes a packed native DIBV5 image, preserving its color and alpha.
+  if image == nil or image.width <= 0 or image.height <= 0 or
+    image.width > int32.high or image.height > int32.high or
+    image.data.len > (int.high - 124) div 4:
+      raise newException(WindyError, "Invalid clipboard image dimensions")
+  init()
+  let pixelBytes = image.data.len * 4
+  if pixelBytes > uint32.high.int64:
+    raise newException(WindyError, "Clipboard image is too large")
+  var data = newString(124 + pixelBytes)
+  data.writeUint32(0, 124)
+  data.writeInt32(4, image.width.int32)
+  data.writeInt32(8, image.height.int32)
+  data.writeUint16(12, 1)
+  data.writeUint16(14, 32)
+  data.writeUint32(16, 3)
+  data.writeUint32(20, pixelBytes.uint32)
+  data.writeUint32(40, 0x00FF0000)
+  data.writeUint32(44, 0x0000FF00)
+  data.writeUint32(48, 0x000000FF)
+  data.writeUint32(52, 0xFF000000'u32)
+  data.writeUint32(56, 0x73524742)
+  data.writeUint32(108, 4)
+  for y in 0 ..< image.height:
+    for x in 0 ..< image.width:
+      let
+        pixel = image[x, image.height - y - 1]
+        offset = 124 + (y * image.width + x) * 4
+      data[offset] = char(pixel.b)
+      data[offset + 1] = char(pixel.g)
+      data[offset + 2] = char(pixel.r)
+      data[offset + 3] = char(pixel.a)
+  let handle = GlobalAlloc(GMEM_MOVEABLE, data.len)
+  if handle == 0:
+    raise newException(WindyError, "Could not allocate clipboard image")
+  var transferred = false
+  defer:
+    if not transferred:
+      discard GlobalFree(handle)
+  let bytes = GlobalLock(handle)
+  if bytes == nil:
+    raise newException(WindyError, "Could not lock clipboard image")
+  copyMem(bytes, data[0].addr, data.len)
+  discard GlobalUnlock(handle)
+  if OpenClipboard(helperWindow) == 0:
+    raise newException(WindyError, "Could not open the clipboard")
+  defer:
+    discard CloseClipboard()
+  if EmptyClipboard() == 0:
+    raise newException(WindyError, "Could not clear the clipboard")
+  if SetClipboardData(CF_DIBV5, handle) == 0:
+    raise newException(WindyError, "Could not copy image to the clipboard")
+  transferred = true
 
 proc getClipboardString*(): string =
   init()

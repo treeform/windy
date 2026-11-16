@@ -1,0 +1,324 @@
+{
+  "cacheVersion": "D20240927T193831",
+  "outputFile": "/Users/me/p/windy/tests/dist/test_native_paste_gl",
+  "outputLastModificationTime": "",
+  "compile": [
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sexceptions.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sexceptions.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sexceptions.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdigitsutils.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdigitsutils.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdigitsutils.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sassertions.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sassertions.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sassertions.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdragonbox.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdragonbox.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdragonbox.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sformatfloat.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sformatfloat.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sformatfloat.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sobjectdollar.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sobjectdollar.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sobjectdollar.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sdollars.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sdollars.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sdollars.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssyncio.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssyncio.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssyncio.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pbitops.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pbitops.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pbitops.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pmath.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pmath.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pmath.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@punicode.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@punicode.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@punicode.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstrutils.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstrutils.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstrutils.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@soserrors.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@soserrors.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@soserrors.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pposix.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pposix.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pposix.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@poptions.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@poptions.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@poptions.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptimes.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptimes.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptimes.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@scmdline.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@scmdline.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@scmdline.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcpuinfo.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcpuinfo.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcpuinfo.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdeques.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdeques.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdeques.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptables.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptables.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptables.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@scommon.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@scommon.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@scommon.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sinternal.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sinternal.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sinternal.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scommon.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scommon.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scommon.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sinternal.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sinternal.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sinternal.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32_simd.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32_simd.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32_simd.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc32_simd.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc32_simd.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc32_simd.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sbitstreams.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sbitstreams.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sbitstreams.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@slz77.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@slz77.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@slz77.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@ssnappy.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@ssnappy.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@ssnappy.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pheapqueue.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pheapqueue.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pheapqueue.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sdeflate.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sdeflate.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sdeflate.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssysrand.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssysrand.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssysrand.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32_simd.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32_simd.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32_simd.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@spng.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@spng.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@spng.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@sjpeg.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@sjpeg.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@sjpeg.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@scommon.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@scommon.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@scommon.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sutils.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sutils.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sutils.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@smonotimes.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@smonotimes.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@smonotimes.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@prandom.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@prandom.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@prandom.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@sinternal.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@sinternal.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@sinternal.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sobjc.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sobjc.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sobjc.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdynlib.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdynlib.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdynlib.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@popengl.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@popengl.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@popengl.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@smacdefs.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@smacdefs.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@smacdefs.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncfutures.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncfutures.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncfutures.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncstreams.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncstreams.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncstreams.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pnativesockets.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pnativesockets.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pnativesockets.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pselectors.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pselectors.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pselectors.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncdispatch.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncdispatch.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncdispatch.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncnet.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncnet.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncnet.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpcore.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpcore.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpcore.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpclient.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpclient.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpclient.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pws.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pws.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pws.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@shttp.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@shttp.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@shttp.nim.c"
+    ],
+    [
+      "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@mtest_macos.nim.c",
+      "clang -c  -w -ferror-limit=3 -fno-strict-aliasing -pthread   -I/Users/me/.nimby/nim/lib -I/Users/me/p/windy/tests -o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@mtest_macos.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@mtest_macos.nim.c"
+    ]
+  ],
+  "link": [
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sexceptions.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdigitsutils.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sassertions.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdragonbox.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sformatfloat.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sobjectdollar.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sdollars.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssyncio.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pbitops.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pmath.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@punicode.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstrutils.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@soserrors.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pposix.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@poptions.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptimes.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@scmdline.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcpuinfo.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdeques.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptables.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@scommon.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sinternal.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scommon.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sinternal.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32_simd.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc32_simd.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sbitstreams.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@slz77.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@ssnappy.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pheapqueue.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sdeflate.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssysrand.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32_simd.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@spng.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@sjpeg.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@scommon.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sutils.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@smonotimes.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@prandom.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@sinternal.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sobjc.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdynlib.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@popengl.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@smacdefs.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncfutures.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncstreams.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pnativesockets.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pselectors.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncdispatch.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncnet.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpcore.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpclient.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pws.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@shttp.nim.c.o",
+    "/Users/me/p/windy/tests/dist/native_paste_gl_cache/@mtest_macos.nim.c.o"
+  ],
+  "linkcmd": "clang   -o /Users/me/p/windy/tests/dist/test_native_paste_gl /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sexceptions.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdigitsutils.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sassertions.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sprivate@sdragonbox.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sformatfloat.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@sobjectdollar.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem@sdollars.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssyncio.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@psystem.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pbitops.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pmath.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@punicode.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstrutils.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@soserrors.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pposix.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@poptions.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptimes.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@scmdline.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcpuinfo.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdeques.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ptables.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@scommon.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sinternal.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scommon.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sinternal.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32_simd.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sadler32.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc32_simd.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@scrc.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sbitstreams.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@slz77.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@ssnappy.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pheapqueue.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy@sdeflate.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@ssysrand.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pzippy.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32_simd.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pcrunchy@scrc32.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@spng.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@ppixie@sfileformats@sjpeg.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@scommon.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sutils.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pstd@smonotimes.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@prandom.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@sinternal.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@sobjc.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pdynlib.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@popengl.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@splatforms@smacos@smacdefs.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncfutures.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncstreams.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pnativesockets.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pselectors.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncdispatch.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pasyncnet.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpcore.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@phttpclient.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pws.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@pwindy@shttp.nim.c.o /Users/me/p/windy/tests/dist/native_paste_gl_cache/@mtest_macos.nim.c.o  -framework Security -framework Cocoa -framework ApplicationServices   -ldl",
+  "extraCmds": [],
+  "configFiles": [
+    "/Users/me/.nimby/nim/config/nim.cfg",
+    "/Users/me/.nimby/nim/config/config.nims",
+    "/Users/me/p/nim.cfg",
+    "/Users/me/p/windy/tests/config.nims"
+  ],
+  "stdinInput": false,
+  "projectIsCmd": false,
+  "cmdInput": "",
+  "currentDir": "/Users/me/p/windy",
+  "cmdline": "",
+  "depfiles": [],
+  "nimexe": ""
+}

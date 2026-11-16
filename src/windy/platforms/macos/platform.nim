@@ -3,6 +3,8 @@ import
   pixie/fileformats/png, pixie/images, utils, vmath,
   ../../[common, internal], macdefs
 
+from pixie/common import PixieError
+
 when defined(useMetal4):
   {.hint: "Using Metal backend".}
 elif defined(useCpu):
@@ -27,8 +29,11 @@ type
     onButtonPress*: ButtonCallback
     onButtonRelease*: ButtonCallback
     onRune*: RuneCallback
+    onTextInput*: TextInputCallback
+    onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     imePos*: IVec2
 
     state: WindowState
@@ -40,6 +45,7 @@ type
     fullscreenState: bool
     minimizedState: bool
     cpuImage: NSImage
+    textInput: TextInputState
 
 const
   ActivationTurnSeconds = 0.001
@@ -63,6 +69,7 @@ var
 
 proc drainEvents()
 proc pumpActivation()
+proc readPasteboardImage(pboard: NSPasteboard): Image
 
 objc:
   proc initWithFrame(self: NSView, x: NSRect): NSView
@@ -370,6 +377,10 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
 
+proc handleTextInput(window: Window, text: string) =
+  ## Delivers a complete native text insertion without synthesizing keys.
+  handleTextInputTemplate(text)
+
 proc createMenuBar() =
   let
     menuBar = NSMenu.new()
@@ -512,6 +523,10 @@ proc syncModifierClass(
     # Some virtual keyboards omit the device bits; fall back to treating the
     # changed key as the pressed one without disturbing its sibling.
     window.syncModifierButton(changed, true)
+  elif leftButton notin window.state.buttonDown and
+    rightButton notin window.state.buttonDown:
+      # Synthetic key events may provide only the aggregate modifier bit.
+      window.syncModifierButton(leftButton, true)
 
 proc syncModifierState(window: Window, flags: uint, changed = ButtonUnknown) =
   window.syncModifierClass(
@@ -658,36 +673,86 @@ proc draggingEntered(
   cmd: SEL,
   sender: NSDraggingInfo
 ): NSDragOperation {.cdecl.} =
-  ## Accept Finder file drops onto the content view.
-  let pboard = sender.draggingPasteboard()
-  let types = pboard.types()
-  if types.int != 0 and types.containsObject(NSFilenamesPboardType.ID):
-    return NSDragOperationCopy
+  ## Accepts native file drops and updates their window-relative position.
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil or
+    (window.onFileDrop == nil and window.onFileDropPaths == nil):
+      return NSDragOperationNone
+  handleMouseMove(window, sender.draggingLocation())
+  let
+    pboard = sender.draggingPasteboard()
+    types = pboard.types()
+  if types.int != 0 and
+    (types.containsObject(NSFilenamesPboardType.ID) or
+    types.containsObject(NSPasteboardTypeFileURL.ID) or
+    (window.onFileDrop != nil and
+    (types.containsObject(NSPasteboardTypePNG.ID) or
+    types.containsObject(NSPasteboardTypeTIFF.ID)))):
+      return NSDragOperationCopy
   NSDragOperationNone
+
+proc pasteboardFilePaths(pboard: NSPasteboard): seq[string] =
+  ## Reads local file URLs with a fallback for legacy Finder pasteboards.
+  let urls = pboard.readObjectsForClasses(
+    NSArray.arrayWithObject(NSURL.getClass().ID),
+    0.NSDictionary
+  )
+  for i in 0 ..< urls.count.int:
+    let url = urls[i].NSURL
+    if url.isFileURL():
+      let path = $url.path()
+      if path.len > 0:
+        result.add(path)
+  if result.len > 0:
+    return
+  let list = pboard.propertyListForType(NSFilenamesPboardType).NSArray
+  for i in 0 ..< list.count.int:
+    let path = $list[i].NSString
+    if path.len > 0:
+      result.add(path)
+
+proc deliverFileDrop(window: Window, paths: seq[string]) =
+  ## Prefers path delivery so applications can bound their own file reads.
+  if window.onFileDropPaths != nil:
+    window.onFileDropPaths(paths)
+  elif window.onFileDrop != nil:
+    for path in paths:
+      var data: string
+      try:
+        data = readFile(path)
+      except IOError, OSError:
+        discard
+      window.onFileDrop(path, data)
+
+proc deliverPasteboardDrop(window: Window, pboard: NSPasteboard): bool =
+  ## Delivers local file paths or PNG bytes for pathless native image drops.
+  let paths = pasteboardFilePaths(pboard)
+  if paths.len > 0:
+    window.deliverFileDrop(paths)
+    return true
+  if window.onFileDrop != nil:
+    let image = readPasteboardImage(pboard)
+    if image != nil:
+      var encoded: string
+      try:
+        encoded = image.encodePng()
+      except PixieError:
+        return false
+      window.onFileDrop("Dropped image.png", encoded)
+      return true
 
 proc performDragOperation(
   self: ID,
   cmd: SEL,
   sender: NSDraggingInfo
 ): bool {.cdecl.} =
-  ## Deliver dropped file paths and contents to onFileDrop.
+  ## Updates the native drop location before invoking application callbacks.
   let window = windows.forNSWindow(self.NSView.window)
-  if window == nil or window.onFileDrop == nil:
-    return false
-  let
-    pboard = sender.draggingPasteboard()
-    list = pboard.propertyListForType(NSFilenamesPboardType).NSArray
-  if list.int == 0:
-    return false
-  for i in 0 ..< list.count.int:
-    let path = $list[i].NSString
-    if path.len == 0:
-      continue
-    try:
-      window.onFileDrop(path, readFile(path))
-    except CatchableError:
-      window.onFileDrop(path, "")
-  true
+  if window == nil or
+    (window.onFileDrop == nil and window.onFileDropPaths == nil):
+      return false
+  handleMouseMove(window, sender.draggingLocation())
+  window.deliverPasteboardDrop(sender.draggingPasteboard())
 
 proc mouseDragged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   mouseMoved(self, cmd, event)
@@ -728,30 +793,40 @@ proc mouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonPress(MouseLeft)
 
 proc mouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonRelease(MouseLeft)
 
 proc rightMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonPress(MouseRight)
 
 proc rightMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonRelease(MouseRight)
 
 proc otherMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
 
   case event.buttonNumber:
   of 2:
@@ -767,6 +842,8 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
 
   case event.buttonNumber:
   of 2:
@@ -777,6 +854,8 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
     window.handleButtonRelease(MouseButton5)
   else:
     discard
+
+include accessibility
 
 proc hasMarkedText(self: ID, cmd: SEL): bool {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
@@ -794,7 +873,11 @@ proc markedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
 
 proc selectedRange(self: ID, cmd: SEL): NSRange {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
-  if window != nil:
+  if window != nil and window.markedText.int != 0:
+    NSMakeRange(window.state.imeCursorIndex.uint, 0)
+  elif window.hasTextInput:
+    window.selectedTextRange
+  elif window != nil:
     NSMakeRange(window.state.imeCursorIndex.uint, 0)
   else:
     kEmptyRange
@@ -848,6 +931,7 @@ proc insertText2(
   obj: ID,
   replacementRange: NSRange
 ): ID {.cdecl.} =
+  ## Delivers committed AppKit text as one insertion, including newlines.
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
@@ -858,23 +942,16 @@ proc insertText2(
   else:
     characters = obj.NSString
 
-  var range = NSMakeRange(0, characters.length.uint)
-  while range.length > 0:
-    var
-      codepoint: uint32
-      usedLength: uint
-    discard characters.getBytes(
-      codepoint.addr,
-      sizeof(codepoint).uint,
-      usedLength.addr,
-      NSUTF32StringEncoding,
-      0.NSStringEncodingConversionOptions,
-      range,
-      range.addr
-    )
-    if codepoint >= 0xf700 and codepoint <= 0xf7ff:
+  var text: string
+  for rune in ($characters).runes:
+    if rune.int >= 0xf700 and rune.int <= 0xf7ff:
       continue
-    window.handleRune(Rune(codepoint))
+    text.add($rune)
+  if replacementRange.location != NSNotFound.uint and
+    window.hasTextInput and window.onTextEdit != nil:
+      window.replaceNativeText(text, replacementRange)
+  else:
+    window.handleTextInput(text)
 
   if window.markedText.int != 0:
     window.markedText.ID.release()
@@ -885,6 +962,21 @@ proc insertText2(
     window.state.imeCursorIndex = 0
     if window.onImeChange != nil:
       window.onImeChange()
+
+proc insertTextLegacy(self: ID, cmd: SEL, obj: ID): ID {.cdecl.} =
+  ## Accepts the legacy NSResponder insertion selector used by text services.
+  insertText2(self, cmd, obj, kEmptyRange)
+
+proc pasteText(self: ID, cmd: SEL, sender: ID): ID {.cdecl.} =
+  ## Captures the current pasteboard immediately for native paste actions.
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil or not window.state.runeInputEnabled:
+    return
+  let value = NSPasteboard.generalPasteboard().stringForType(
+    NSPasteboardTypeString
+  )
+  if value.int != 0:
+    window.handleTextInput($value)
 
 proc characterIndexForPoint(
   self: ID,
@@ -1006,6 +1098,7 @@ proc init() {.raises: [].} =
     when defined(useMetal4) or defined(useCpu):
       addClass "WindyView", "NSView", WindyView:
         addProtocol "NSTextInputClient"
+        registerAccessibilityMethods(WindyView)
         addMethod "acceptsFirstResponder", acceptsFirstResponder
         addMethod "canBecomeKeyView", canBecomeKeyView
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
@@ -1025,6 +1118,7 @@ proc init() {.raises: [].} =
         addMethod "otherMouseDown:", otherMouseDown
         addMethod "otherMouseUp:", otherMouseUp
         addMethod "draggingEntered:", draggingEntered
+        addMethod "draggingUpdated:", draggingEntered
         addMethod "performDragOperation:", performDragOperation
         addMethod "hasMarkedText", hasMarkedText
         addMethod "markedRange", markedRange
@@ -1034,6 +1128,8 @@ proc init() {.raises: [].} =
         addMethod "validAttributesForMarkedText", validAttributesForMarkedText
         addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
         addMethod "insertText:replacementRange:", insertText2
+        addMethod "insertText:", insertTextLegacy
+        addMethod "paste:", pasteText
         addMethod "characterIndexForPoint:", characterIndexForPoint
         addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
         addMethod "doCommandBySelector:", doCommandBySelector
@@ -1043,6 +1139,7 @@ proc init() {.raises: [].} =
     else:
       addClass "WindyView", "NSOpenGLView", WindyView:
         addProtocol "NSTextInputClient"
+        registerAccessibilityMethods(WindyView)
         addMethod "acceptsFirstResponder", acceptsFirstResponder
         addMethod "canBecomeKeyView", canBecomeKeyView
         addMethod "acceptsFirstMouse:", acceptsFirstMouse
@@ -1062,6 +1159,7 @@ proc init() {.raises: [].} =
         addMethod "otherMouseDown:", otherMouseDown
         addMethod "otherMouseUp:", otherMouseUp
         addMethod "draggingEntered:", draggingEntered
+        addMethod "draggingUpdated:", draggingEntered
         addMethod "performDragOperation:", performDragOperation
         addMethod "hasMarkedText", hasMarkedText
         addMethod "markedRange", markedRange
@@ -1071,6 +1169,8 @@ proc init() {.raises: [].} =
         addMethod "validAttributesForMarkedText", validAttributesForMarkedText
         addMethod "attributedSubstringForProposedRange:actualRange:", attributedSubstringForProposedRange
         addMethod "insertText:replacementRange:", insertText2
+        addMethod "insertText:", insertTextLegacy
+        addMethod "paste:", pasteText
         addMethod "characterIndexForPoint:", characterIndexForPoint
         addMethod "firstRectForCharacterRange:actualRange:", firstRectForCharacterRange
         addMethod "doCommandBySelector:", doCommandBySelector
@@ -1103,19 +1203,25 @@ proc init() {.raises: [].} =
   initialized = true
 
 proc processKeyDown(event: NSEvent) =
+  ## Synchronizes modifiers before delivering physical or synthetic keys.
   let nsWindow = event.window()
   let window = windows.forNSWindow(nsWindow)
   if window == nil:
     return
 
+  let flags = event.modifierFlags()
+  window.syncModifierState(flags)
   window.handleButtonPress(keyCodeToButton[event.keyCode.int])
-  if window.state.runeInputEnabled:
-    discard nsWindow.contentView().inputContext.handleEvent(event)
+  if window.state.runeInputEnabled and
+    (flags and ModifierClassCommand) == 0:
+      discard nsWindow.contentView().inputContext.handleEvent(event)
 
 proc processKeyUp(event: NSEvent) =
+  ## Refreshes modifiers even when a synthetic sender omits flagsChanged.
   let window = windows.forNSWindow(event.window())
   if window == nil:
     return
+  window.syncModifierState(event.modifierFlags())
   window.handleButtonRelease(keyCodeToButton[event.keyCode.int])
 
 proc processFlagsChanged(event: NSEvent) =
@@ -1284,8 +1390,12 @@ proc close*(window: Window) =
   window.onButtonPress = nil
   window.onButtonRelease = nil
   window.onRune = nil
+  window.onTextInput = nil
+  window.onTextEdit = nil
+  window.textInput = TextInputState()
   window.onImeChange = nil
   window.onFileDrop = nil
+  window.onFileDropPaths = nil
 
   if window.inner.int != 0:
     autoreleasepool:
@@ -1348,6 +1458,9 @@ proc newWindow*(
       discard result.inner.makeFirstResponder(nativeView)
       nativeView.registerForDraggedTypes(
         NSArray.arrayWithObject(NSFilenamesPboardType.ID)
+          .arrayByAddingObject(NSPasteboardTypeFileURL.ID)
+          .arrayByAddingObject(NSPasteboardTypePNG.ID)
+          .arrayByAddingObject(NSPasteboardTypeTIFF.ID)
       )
     else:
       let
@@ -1396,9 +1509,14 @@ proc newWindow*(
 
       result.inner.setDelegate(result.inner.ID)
       result.inner.setContentView(openglView.NSView)
+      # Attach the drawable even if the view is never shown.
+      openglView.openGLContext.setView(openglView.NSView)
       discard result.inner.makeFirstResponder(openglView.NSView)
       openglView.NSView.registerForDraggedTypes(
         NSArray.arrayWithObject(NSFilenamesPboardType.ID)
+          .arrayByAddingObject(NSPasteboardTypeFileURL.ID)
+          .arrayByAddingObject(NSPasteboardTypePNG.ID)
+          .arrayByAddingObject(NSPasteboardTypeTIFF.ID)
       )
 
     result.inner.setRestorable(false)
@@ -1494,13 +1612,10 @@ proc getClipboardContentKinds*(): set[ClipboardContentKind] =
         types.containsObject(NSPasteboardTypeTIFF.ID):
       result.incl ImageContent
 
-proc getClipboardImage*(): Image =
-  ## Reads a PNG or TIFF image from the system pasteboard.
-  init()
+proc readPasteboardImage(pboard: NSPasteboard): Image =
+  ## Decodes a PNG or TIFF supplied by clipboard or native image dragging.
   autoreleasepool:
-    let
-      pboard = NSPasteboard.generalPasteboard()
-      types = pboard.types
+    let types = pboard.types
 
     if types.int == 0:
       return
@@ -1510,7 +1625,7 @@ proc getClipboardImage*(): Image =
       if data.int != 0:
         try:
           return decodePng(data.bytes, data.length.int).convertToImage()
-        except:
+        except PixieError:
           discard
 
     if not types.containsObject(NSPasteboardTypeTIFF.ID):
@@ -1535,8 +1650,13 @@ proc getClipboardImage*(): Image =
 
     try:
       result = decodePng(pngData.bytes, pngData.length.int).convertToImage()
-    except:
+    except PixieError:
       return
+
+proc getClipboardImage*(): Image =
+  ## Reads a PNG or TIFF image from the system pasteboard.
+  init()
+  readPasteboardImage(NSPasteboard.generalPasteboard())
 
 proc getClipboardString*(): string =
   ## Gets the clipboard content as a string.
@@ -1557,6 +1677,25 @@ proc getClipboardString*(): string =
       return
 
     result = $value
+
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Copies lossless image pixels to the native pasteboard as PNG.
+  if image == nil or image.width <= 0 or image.height <= 0:
+    raise newException(WindyError, "Cannot copy an empty clipboard image")
+  var encoded: string
+  try:
+    encoded = image.encodePng()
+  except PixieError as error:
+    raise newException(WindyError, "Could not encode clipboard image: " &
+      error.msg)
+  init()
+  autoreleasepool:
+    let
+      pboard = NSPasteboard.generalPasteboard()
+      data = NSData.dataWithBytes(encoded[0].addr, encoded.len)
+    pboard.clearContents()
+    if not pboard.setData(data, NSPasteboardTypePNG):
+      raise newException(WindyError, "Could not write clipboard image")
 
 proc setClipboardString*(value: string) =
   ## Sets the clipboard content to the given string.

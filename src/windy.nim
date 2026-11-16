@@ -10,3 +10,9 @@ elif defined(linux):
   import windy/platforms/linux/platform
 
 export common, platform, unicode, vmath
+
+when defined(emscripten) or not defined(macosx):
+  proc setTextInputState*(window: Window, state: TextInputState) =
+    ## Publishes focused editor state for native text services where supported.
+    ## This is a no-op on platforms without native editor-state integration.
+    discard

@@ -142,6 +142,7 @@ var
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSPasteboardTypeTIFF* {.importc.}: NSPasteboardType
   NSPasteboardTypePNG* {.importc.}: NSPasteboardType
+  NSPasteboardTypeFileURL* {.importc.}: NSPasteboardType
   NSFilenamesPboardType* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
 
@@ -181,12 +182,14 @@ objc:
   proc length*(self: NSString): uint
   proc array*(class: typedesc[NSArray]): NSArray
   proc arrayWithObject*(class: typedesc[NSArray], x: ID): NSArray
+  proc arrayByAddingObject*(self: NSArray, x: ID): NSArray
   proc count*(self: NSArray): uint
   proc objectAtIndex*(self: NSArray, x: uint): ID
   proc firstObject*(self: NSArray): ID
   proc containsObject*(self: NSArray, x: ID): bool
   proc registerForDraggedTypes*(self: NSView, x: NSArray)
   proc draggingPasteboard*(self: NSDraggingInfo): NSPasteboard
+  proc draggingLocation*(self: NSDraggingInfo): NSPoint
   proc propertyListForType*(
     self: NSPasteboard,
     x: NSPasteboardType
@@ -214,6 +217,7 @@ objc:
   proc URLs*(self: NSOpenPanel): NSArray
   proc URL*(self: NSSavePanel): NSURL
   proc path*(self: NSURL): NSString
+  proc isFileURL*(self: NSURL): bool
   proc fileURLWithPath*(
     class: typedesc[NSURL],
     x: NSString,
@@ -234,6 +238,16 @@ objc:
   proc types*(self: NSPasteboard): NSArray
   proc stringForType*(self: NSPasteboard, x: NSPasteboardType): NSString
   proc dataForType*(self: NSPasteboard, x: NSPasteboardType): NSData
+  proc readObjectsForClasses*(
+    self: NSPasteboard,
+    x: NSArray,
+    options: NSDictionary
+  ): NSArray
+  proc setData*(
+    self: NSPasteboard,
+    x: NSData,
+    forType: NSPasteboardType
+  ): bool
   proc clearContents*(self: NSPasteboard)
   proc setString*(self: NSPasteboard, x: NSString, forType: NSPasteboardType)
   proc processInfo*(class: typedesc[NSProcessInfo]): NSProcessInfo
@@ -339,6 +353,7 @@ objc:
     x: bool
   )
   proc openGLContext*(self: NSOpenGLView): NSOpenGLContext
+  proc setView*(self: NSOpenGLContext, x: NSView)
   proc makeCurrentContext*(self: NSOpenGLContext)
   proc setValues*(
     self: NSOpenGLContext,
@@ -381,6 +396,8 @@ objc:
   proc deactivate*(self: NSTextInputContext)
   proc activate*(self: NSTextInputContext)
   proc insertText*(self: NSTextInputClient, x: ID, replacementRange: NSRange)
+  proc insertText*(self: NSTextInputClient, x: ID)
+  proc paste*(self: NSView, x: ID)
   proc initWithData*(self: NSBitmapImageRep, x: NSData): NSBitmapImageRep
   proc representationUsingType*(
     self: NSBitmapImageRep,
