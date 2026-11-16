@@ -18,10 +18,22 @@ proc emscripten_sleep*(ms: cuint) {.importc.}
 #include <GLES2/gl2.h>
 
 EM_JS(int, get_window_width, (), {
+  var canvas = (typeof Module !== 'undefined' && Module.canvas)
+    ? Module.canvas
+    : document.getElementById('canvas');
+  if (canvas && canvas.clientWidth > 0) {
+    return canvas.clientWidth;
+  }
   return window.innerWidth;
 });
 
 EM_JS(int, get_window_height, (), {
+  var canvas = (typeof Module !== 'undefined' && Module.canvas)
+    ? Module.canvas
+    : document.getElementById('canvas');
+  if (canvas && canvas.clientHeight > 0) {
+    return canvas.clientHeight;
+  }
   return window.innerHeight;
 });
 
@@ -40,6 +52,15 @@ EM_JS(void, setup_windy_runtime, (), {
       e.preventDefault();
     }, false);
     Module.canvas.windyContextHandlerAdded = true;
+  }
+
+  if (Module.canvas && !Module.canvas.windyResizeObserverAdded &&
+      typeof ResizeObserver !== 'undefined') {
+    var observer = new ResizeObserver(function() {
+      window.dispatchEvent(new Event('resize'));
+    });
+    observer.observe(Module.canvas);
+    Module.canvas.windyResizeObserverAdded = true;
   }
 
   if (!window.windyErrorHandlerAdded) {
@@ -100,6 +121,24 @@ EM_JS(void, open_temp_text_file, (const char* title, const char* text), {
 EM_JS(void, open_url, (const char* url), {
   const urlUtf8 = UTF8ToString(url);
   window.open(urlUtf8, '_blank');
+});
+
+EM_JS(void, setup_paste_handler, (const char* target, void* userData), {
+  var canvas = document.querySelector(UTF8ToString(target));
+  canvas.addEventListener('paste', function(event) {
+    if (!event.clipboardData) return;
+    var text = event.clipboardData.getData('text/plain');
+    var size = lengthBytesUTF8(text) + 1;
+    var pointer = _malloc(size);
+    stringToUTF8(text, pointer, size);
+    try {
+      if (Module._windy_paste_callback(userData, pointer)) {
+        event.preventDefault();
+      }
+    } finally {
+      _free(pointer);
+    }
+  });
 });
 
 EM_JS(void, setup_drag_drop_handlers_internal, (const char* target, void* userData), {
@@ -308,6 +347,7 @@ proc get_device_pixel_ratio*(): cdouble {.importc.}
 proc open_temp_text_file*(title, text: cstring) {.importc.}
 proc open_url*(url: cstring) {.importc.}
 proc setup_drag_drop_handlers_internal*(target: cstring, userData: pointer) {.importc.}
+proc setup_paste_handler*(target: cstring, userData: pointer) {.importc.}
 proc set_cursor*(cursor: cstring) {.importc.}
 proc getLocalStorageLength*(key: cstring): cint {.importc: "get_local_storage_length".}
 proc getLocalStorageInto*(output: cstring, maxLen: cint, key: cstring): cint {.importc: "get_local_storage_into".}
@@ -404,6 +444,8 @@ type
 proc emscripten_set_mousedown_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_mouseup_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_mousemove_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+proc emscripten_set_mouseenter_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+proc emscripten_set_mouseleave_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_wheel_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenWheelEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_keydown_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenKeyboardEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_keyup_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenKeyboardEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}

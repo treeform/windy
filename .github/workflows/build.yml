@@ -25,11 +25,83 @@ jobs:
 
     # Run tests.
     - run: nim c tests/test.nim
+    - run: nim c tests/manual_inputs.nim
+    - name: Test native event waiting
+      if: matrix.os != 'ubuntu-latest'
+      run: nim r -d:useCpu tests/test_waits.nim
+    - name: Test native event wake descriptors
+      if: matrix.os == 'ubuntu-latest'
+      run: nim r tests/test_eventpipes.nim
+    - name: Check 32-bit fbdev without DRM
+      if: matrix.os == 'ubuntu-latest'
+      run: WINDY_TEST_BACKENDS=fbdev WINDY_TEST_TARGET=arm nim check tests/test_linux_display.nim
+    - run: nim r tests/test_openurl.nim
+    - run: nim r tests/test_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r tests/test_mouse_positions_macos.nim
+      if: matrix.os == 'macos-latest'
+    - name: Test native iOS input
+      if: matrix.os == 'macos-latest'
+      run: nim r --path:tests -d:windyIosTesting tests/ios_inputs.nim
+    - name: Test shared Apple bindings
+      if: matrix.os == 'macos-latest'
+      run: nim r tests/test_objc.nim
+    - run: nim r tests/test_fullscreen_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r tests/test_accessibility.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r tests/test_tempfiles.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r -d:useCpu tests/test_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r -d:useCpu tests/test_mouse_positions_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r -d:useCpu tests/test_fullscreen_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r -d:useCpu tests/test_accessibility.nim
+      if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_cpu_pixels.nim
       if: matrix.os == 'windows-latest'
 
+    - name: Test X11 contexts, mouse capture, and resize sync
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb xauth libgl1-mesa-dri libglx-mesa0 \
+          libxcursor1 libxfixes3 libxtst6 libdbus-1-3 dbus-daemon xfonts-base
+        nim check tests/test_x11.nim
+        nim c tests/test_x11.nim
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ./tests/test_x11
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 \
+          MESA_GL_VERSION_OVERRIDE=3.3 ./tests/test_x11 --unsupported-version
+        nim c tests/test_waits.nim
+        xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ./tests/test_waits
+        WINDY_TEST_BACKENDS=x11,fbdev,drm nim check tests/test_waits.nim
+        WINDY_TEST_BACKENDS=fbdev WINDY_TEST_TARGET=arm nim check tests/test_waits.nim
+
+    - name: Test Linux tray backends
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        nim c tests/test_tray.nim
+        ./tests/test_tray
+        nim c -d:release tests/test_tray.nim
+        ./tests/test_tray
+
+    - name: Test Linux desktop notifications
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        nim c tests/test_notifications.nim
+        ./tests/test_notifications
+        nim c -d:release tests/test_notifications.nim
+        ./tests/test_notifications
+        WINDY_TEST_BACKENDS=x11,fbdev,drm nim c tests/test_notifications.nim
+        ./tests/test_notifications
+        WINDY_TEST_BACKENDS=fbdev nim c tests/test_notifications.nim
+        ./tests/test_notifications
+
     # Build native examples.
     - run: nim c examples/basic.nim
+    - run: nim c examples/ondemand.nim
     - run: nim c examples/basic_boxy.nim
     - run: nim c examples/basic_textured_quad.nim
     - run: nim c examples/basic_triangle.nim
@@ -41,7 +113,9 @@ jobs:
     - run: nim c examples/dragdrop.nim
     - run: nim c examples/fixedsize.nim
     - run: nim c examples/fullscreen.nim
+    - run: nim c tests/manual_mouse_confinement.nim
     - run: nim c examples/icon.nim
+    - run: nim c examples/mouse_inside.nim
     - run: nim c examples/opengl_version.nim
     - run: nim c examples/openurl.nim
     - run: nim c examples/property_changes.nim
@@ -49,6 +123,7 @@ jobs:
     - run: nim c examples/scrollwheel.nim
     - run: nim c examples/system_cursors.nim
     - run: nim c examples/tray.nim
+    - run: nim c examples/notifications.nim
     - run: nim c examples/websocket.nim
 
     # Install Emscripten only after native checks pass.
@@ -56,6 +131,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
 
     # Build Emscripten examples on Ubuntu only.
+    - run: nim c -d:emscripten tests/manual_inputs.nim
+      if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/basic.nim
       if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/basic_boxy.nim
@@ -81,6 +158,8 @@ jobs:
     - run: nim c -d:emscripten examples/fullscreen.nim
       if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/icon.nim
+      if: matrix.os == 'ubuntu-latest'
+    - run: nim c -d:emscripten examples/mouse_inside.nim
       if: matrix.os == 'ubuntu-latest'
     - run: nim c -d:emscripten examples/opengl_version.nim
       if: matrix.os == 'ubuntu-latest'

@@ -219,6 +219,30 @@ type
   BITMAPINFO* {.pure.} = object
     bmiHeader*: BITMAPINFOHEADER
     bmiColors*: array[1, RGBQUAD]
+  OPENFILENAMEW* {.pure.} = object
+    lStructSize*: DWORD
+    hwndOwner*: HWND
+    hInstance*: HINSTANCE
+    lpstrFilter*: LPCWSTR
+    lpstrCustomFilter*: LPWSTR
+    nMaxCustFilter*: DWORD
+    nFilterIndex*: DWORD
+    lpstrFile*: LPWSTR
+    nMaxFile*: DWORD
+    lpstrFileTitle*: LPWSTR
+    nMaxFileTitle*: DWORD
+    lpstrInitialDir*: LPCWSTR
+    lpstrTitle*: LPCWSTR
+    Flags*: DWORD
+    nFileOffset*: WORD
+    nFileExtension*: WORD
+    lpstrDefExt*: LPCWSTR
+    lCustData*: LPARAM
+    lpfnHook*: pointer
+    lpTemplateName*: LPCWSTR
+    pvReserved*: pointer
+    dwReserved*: DWORD
+    FlagsEx*: DWORD
 
 type
   wglCreateContext* = proc(hdc: HDC): HGLRC {.stdcall, raises: [].}
@@ -565,6 +589,11 @@ const
   DIB_RGB_COLORS* = 0
   SRCCOPY* = 0x00CC0020
   GDI_ERROR* = -1
+  OFN_OVERWRITEPROMPT* = 0x00000002.DWORD
+  OFN_NOCHANGEDIR* = 0x00000008.DWORD
+  OFN_PATHMUSTEXIST* = 0x00000800.DWORD
+  OFN_FILEMUSTEXIST* = 0x00001000.DWORD
+  OFN_EXPLORER* = 0x00080000.DWORD
 
 {.push importc, stdcall.}
 
@@ -697,6 +726,23 @@ proc PeekMessageW*(
   wRemoveMsg: UINT
 ): BOOL {.dynlib: "User32".}
 
+proc MsgWaitForMultipleObjectsEx*(
+  count: DWORD,
+  handles: pointer,
+  milliseconds: DWORD,
+  wakeMask: DWORD,
+  flags: DWORD
+): DWORD {.dynlib: "User32".}
+  ## Waits for native input, including messages queued before the wait.
+
+proc GetCurrentThreadId*(): DWORD {.dynlib: "Kernel32".}
+  ## Identifies the native UI thread used by the message queue.
+
+proc PostThreadMessageW*(
+  thread: DWORD, message: UINT, wParam: WPARAM, lParam: LPARAM
+): BOOL {.dynlib: "User32".}
+  ## Posts a wake message without requiring an active or visible window.
+
 proc TranslateMessage*(
   lpMsg: LPMSG
 ): BOOL {.dynlib: "User32".}
@@ -773,6 +819,12 @@ proc GetClientRect*(
   hWnd: HWND,
   lpRect: LPRECT
 ): BOOL {.dynlib: "User32".}
+
+proc MapVirtualKeyW*(code, mapType: UINT): UINT {.dynlib: "User32".}
+proc SetFocus*(hwnd: HWND): HWND {.dynlib: "User32".}
+proc SetForegroundWindow*(hwnd: HWND): BOOL {.dynlib: "User32".}
+proc GetForegroundWindow*(): HWND {.dynlib: "User32".}
+proc GetFocus*(): HWND {.dynlib: "User32".}
 
 proc ClientToScreen*(
   hWnd: HWND,
@@ -1156,45 +1208,12 @@ proc CloseHandle*(
   hObject: HANDLE
 ): BOOL {.dynlib: "kernel32".}
 
-type
-  OPENFILENAMEW* {.pure.} = object
-    lStructSize*: DWORD
-    hwndOwner*: HWND
-    hInstance*: HINSTANCE
-    lpstrFilter*: LPCWSTR
-    lpstrCustomFilter*: LPWSTR
-    nMaxCustFilter*: DWORD
-    nFilterIndex*: DWORD
-    lpstrFile*: LPWSTR
-    nMaxFile*: DWORD
-    lpstrFileTitle*: LPWSTR
-    nMaxFileTitle*: DWORD
-    lpstrInitialDir*: LPCWSTR
-    lpstrTitle*: LPCWSTR
-    Flags*: DWORD
-    nFileOffset*: WORD
-    nFileExtension*: WORD
-    lpstrDefExt*: LPCWSTR
-    lCustData*: LPARAM
-    lpfnHook*: pointer
-    lpTemplateName*: LPCWSTR
-    pvReserved*: pointer
-    dwReserved*: DWORD
-    FlagsEx*: DWORD
-
-const
-  OFN_OVERWRITEPROMPT* = 0x00000002.DWORD
-  OFN_NOCHANGEDIR* = 0x00000008.DWORD
-  OFN_PATHMUSTEXIST* = 0x00000800.DWORD
-  OFN_FILEMUSTEXIST* = 0x00001000.DWORD
-  OFN_EXPLORER* = 0x00080000.DWORD
-
 proc GetOpenFileNameW*(
   ofn: ptr OPENFILENAMEW
-): BOOL {.dynlib: "Comdlg32", importc.}
+): BOOL {.dynlib: "Comdlg32".}
 
 proc GetSaveFileNameW*(
   ofn: ptr OPENFILENAMEW
-): BOOL {.dynlib: "Comdlg32", importc.}
+): BOOL {.dynlib: "Comdlg32".}
 
 {.pop.}

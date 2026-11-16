@@ -132,6 +132,7 @@ type
     NSEventTypeKeyDown            = 10,
     NSEventTypeKeyUp              = 11,
     NSEventTypeFlagsChanged       = 12,
+    NSEventTypeApplicationDefined = 15,
 
 const
   NSDragOperationNone* = 0.NSDragOperation
@@ -234,6 +235,11 @@ objc:
   proc types*(self: NSPasteboard): NSArray
   proc stringForType*(self: NSPasteboard, x: NSPasteboardType): NSString
   proc dataForType*(self: NSPasteboard, x: NSPasteboardType): NSData
+  proc setData*(
+    self: NSPasteboard,
+    x: NSData,
+    forType: NSPasteboardType
+  ): bool
   proc clearContents*(self: NSPasteboard)
   proc setString*(self: NSPasteboard, x: NSString, forType: NSPasteboardType)
   proc processInfo*(class: typedesc[NSProcessInfo]): NSProcessInfo
@@ -248,6 +254,7 @@ objc:
     x: NSApplicationPresentationOptions
   )
   proc activateIgnoringOtherApps*(self: NSApplication, x: bool)
+  proc isActive*(self: NSApplication): bool
   proc setDelegate*(self: NSApplication, x: ID)
   proc setDelegate*(self: NSWindow, x: ID)
   proc setMainMenu*(self: NSApplication, x: NSMenu)
@@ -260,6 +267,21 @@ objc:
     dequeue: bool
   ): NSEvent
   proc sendEvent*(self: NSApplication, x: NSEvent)
+  proc postEvent*(self: NSApplication, x: NSEvent, atStart: bool)
+    ## Adds a native event to the application queue from any thread.
+  proc otherEventWithType*(
+    class: typedesc[NSEvent],
+    x: int,
+    location: NSPoint,
+    modifierFlags: uint,
+    timestamp: float64,
+    windowNumber: int,
+    context: NSObject,
+    subtype: int16,
+    data1: int,
+    data2: int
+  ): NSEvent
+    ## Creates an application-defined event without synthesizing user input.
   proc distantPast*(class: typedesc[NSDate]): NSDate
   proc dateWithTimeIntervalSinceNow*(
     class: typedesc[NSDate],
@@ -380,6 +402,8 @@ objc:
   proc deactivate*(self: NSTextInputContext)
   proc activate*(self: NSTextInputContext)
   proc insertText*(self: NSTextInputClient, x: ID, replacementRange: NSRange)
+  proc insertText*(self: NSTextInputClient, x: ID)
+  proc paste*(self: NSView, x: ID)
   proc initWithData*(self: NSBitmapImageRep, x: NSData): NSBitmapImageRep
   proc representationUsingType*(
     self: NSBitmapImageRep,

@@ -5,8 +5,8 @@ type
     d: Display,
     event: ptr XEvent,
     p: pointer
-  ): bool {.cdecl.}
-  ErrorHandleProc* = proc (d: Display, event: ptr XErrorEvent): bool {.cdecl.}
+  ): cint {.cdecl.}
+  ErrorHandleProc* = proc (d: Display, event: ptr XErrorEvent): cint {.cdecl.}
 
   XEventKind* {.size: cint.sizeof.} = enum
     xeKeyPress = 2
@@ -432,13 +432,14 @@ type
 {.push, cdecl, dynlib: libX11, importc.}
 
 proc XCheckIfEvent*(d: Display; e: ptr XEvent, cb: IfEventProc,
-    userData: pointer): bool
+    userData: pointer): cint
 proc XSendEvent*(d: Display; window: Window, propogate: bool, mask: clong, e: ptr XEvent)
 
 proc Xutf8LookupString*(ic: XIC, e: ptr XKeyEvent, buffer: cstring, len: cint,
     ks: ptr KeySym, status: ptr cint): cint
 
-proc XSetErrorHandler*(handler: ErrorHandleProc)
+proc XSetErrorHandler*(handler: ErrorHandleProc): ErrorHandleProc {.discardable.}
+  ## Replaces the X11 error handler and returns the previous handler.
 
 proc XLookupKeysym*(e: ptr XKeyEvent, i: cint): KeySym
 

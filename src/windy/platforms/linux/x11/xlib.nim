@@ -216,6 +216,8 @@ proc defaultRootWindow*(d: Display): Window =
 proc XOpenDisplay*(displayName: cstring): Display
 proc XSync*(d: Display, disc = false)
 proc XFlush*(d: Display)
+proc XPending*(d: Display): cint
+  ## Flushes outgoing requests and counts queued events without blocking.
 proc XFree*(x: pointer)
 
 proc XInternAtom*(d: Display, name: cstring; onlyIfExist: cint): Atom
@@ -223,6 +225,9 @@ proc XGetAtomName*(d: Display, atom: Atom): cstring
 
 proc XCreateColormap*(d: Display, root: Window; visual: ptr Visual;
     flags: cint): Colormap
+
+proc XFreeColormap*(d: Display, colormap: Colormap)
+  ## Frees a colormap created for a window.
 
 proc XCreateWindow*(
   d: Display,
@@ -343,6 +348,42 @@ proc XDefineCursor*(d: Display, window: x.Window; cursor: x.Cursor)
 proc XUndefineCursor*(d: Display, window: x.Window)
 proc XFreeCursor*(d: Display, cursor: x.Cursor)
 
+proc XGrabPointer*(
+  d: Display,
+  window: Window,
+  ownerEvents: cint,
+  eventMask: cuint,
+  pointerMode, keyboardMode: cint,
+  confineTo: Window,
+  cursor: x.Cursor,
+  time: Time
+): cint
+  ## Grabs pointer events and optionally confines and changes the cursor.
+
+proc XUngrabPointer*(d: Display, time: Time)
+  ## Releases this client's pointer grab.
+
+proc XQueryPointer*(
+  d: Display,
+  window: Window,
+  root, child: ptr Window,
+  rootX, rootY, windowX, windowY: ptr cint,
+  mask: ptr cuint
+): cint
+  ## Returns the pointer position relative to a window.
+
+proc XNextRequest*(d: Display): culong
+  ## Returns the serial number of the next X request.
+
+proc XWarpPointer*(
+  d: Display,
+  source, destination: Window,
+  sourceX, sourceY: cint,
+  sourceWidth, sourceHeight: cuint,
+  destinationX, destinationY: cint
+)
+  ## Moves the pointer to the requested window coordinates.
+
 {.pop.}
 
 {.push, cdecl, dynlib: libXExt, importc.}
@@ -354,5 +395,6 @@ proc XSyncCreateCounter*(d: Display, v: XSyncValue): XSyncCounter
 proc XSyncDestroyCounter*(d: Display, c: XSyncCounter)
 
 proc XSyncSetCounter*(d: Display, c: XSyncCounter; v: XSyncValue)
+proc XSyncQueryCounter*(d: Display, c: XSyncCounter; v: ptr XSyncValue): cint
 
 {.pop.}
