@@ -488,7 +488,7 @@
   <dt><pre><a href="#TextInputEditCallback"><span class="Identifier">TextInputEditCallback</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">edit</span><span class="Other">:</span> <a href="#TextInputEdit"><span class="Identifier">TextInputEdit</span></a><span class="Other">)</span></pre></dt>
   <dd>
     
-    Receives native selection or replacement requests on macOS. Apply the request to the editor, then publish its state again. Requires runeInputEnabled and an active, nonsecure TextInputState.
+    Receives native selection or replacement requests on macOS/Windows. Apply the request to the editor, then publish its state again. Requires runeInputEnabled and an active, nonsecure TextInputState.
     <a href="https://github.com/treeform/windy/tree/master/src/windy/common.nim#L133" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/common.nim#L133" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
@@ -515,7 +515,7 @@
   <span class="Identifier">multiline</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">password</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
   <dd>
     
-    Describes the focused editor for native text services on macOS. Selection and visible ranges use half-open rune offsets.
+    Describes the focused editor for native text services on macOS/Windows. Selection and visible ranges use half-open rune offsets.
     <a href="https://github.com/treeform/windy/tree/master/src/windy/common.nim#L112" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/common.nim#L112" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
@@ -778,7 +778,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-15 01:37:33 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-16 06:16:56 UTC</small>
       </div>
     </div>
   </div>

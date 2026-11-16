@@ -1,8 +1,8 @@
 nimTitle	windy	windy.html	module windy		0
-nim	setTextInputState	windy.html#setTextInputState,Window,TextInputState	proc setTextInputState(window: Window; state: TextInputState)		17
-nim	mouseConfinementSupported	windy.html#mouseConfinementSupported,Window	proc mouseConfinementSupported(window: Window): bool		22
-nim	mouseConfined	windy.html#mouseConfined,Window	proc mouseConfined(window: Window): bool		26
-nim	releaseMouseConfinement	windy.html#releaseMouseConfinement,Window	proc releaseMouseConfinement(window: Window)		30
-nim	confineMouse	windy.html#confineMouse,Window	proc confineMouse(window: Window)		34
-nim	confineMouse	windy.html#confineMouse,Window,Rect	proc confineMouse(window: Window; region: Rect)		39
-nimgrp	confinemouse	windy.html#confineMouse-procs-all	proc		34
+nim	setTextInputState	windy.html#setTextInputState,Window,TextInputState	proc setTextInputState(window: Window; state: TextInputState)		15
+nim	mouseConfinementSupported	windy.html#mouseConfinementSupported,Window	proc mouseConfinementSupported(window: Window): bool		23
+nim	mouseConfined	windy.html#mouseConfined,Window	proc mouseConfined(window: Window): bool		27
+nim	releaseMouseConfinement	windy.html#releaseMouseConfinement,Window	proc releaseMouseConfinement(window: Window)		31
+nim	confineMouse	windy.html#confineMouse,Window	proc confineMouse(window: Window)		35
+nim	confineMouse	windy.html#confineMouse,Window,Rect	proc confineMouse(window: Window; region: Rect)		40
+nimgrp	confinemouse	windy.html#confineMouse-procs-all	proc		35
