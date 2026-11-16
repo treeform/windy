@@ -18,6 +18,10 @@ when not defined(ios):
     ## Returns the mouse source used by desktop and browser pointer events.
     MousePointer
 
+  proc pointerVelocity*(window: Window): Vec2 =
+    ## Returns zero where native touch velocity sampling is unavailable.
+    vec2(0)
+
 when not defined(ios) and
   (defined(emscripten) or not (defined(macosx) or defined(windows))):
   proc setTextInputState*(window: Window, state: TextInputState) =

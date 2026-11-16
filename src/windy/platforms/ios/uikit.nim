@@ -393,7 +393,8 @@ proc deliverTouches(touches: NSSet, phase: NativeTouchPhase) =
       phase,
       position.x * scale,
       position.y * scale,
-      source
+      source,
+      touch.timestamp()
     )
 
 proc touchesBegan(
@@ -435,7 +436,7 @@ proc hoverChanged(
         scale = nativeView.contentScaleFactor()
       callbacks.onTouch(
         0, NativeTouchHover, position.x * scale, position.y * scale,
-        MousePointer
+        MousePointer, 0
       )
 
 proc scrollChanged(

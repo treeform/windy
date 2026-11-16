@@ -106,6 +106,95 @@ native.callbacks.onFrame()
 window.onFrame = nil
 doAssert window.mouseDelta == ivec2(0, 0)
 
+echo "Testing event-timed touch velocity independent of rendered frames"
+for rate in [30, 60, 120]:
+  let
+    start = 10_000_000.0
+    velocity = vec2(600, -900)
+    origin = vec2(100, 2000)
+  native.callbacks.onTouch(
+    30, NativeTouchBegan, origin.x, origin.y, TouchPointer, start
+  )
+  doAssert window.pointerVelocity == vec2(0)
+  for i in 1 .. 24:
+    let
+      elapsed = i.float64 / rate.float64
+      position = origin + velocity * elapsed.float32
+    native.callbacks.onTouch(
+      30, NativeTouchMoved, position.x, position.y, TouchPointer,
+      start + elapsed
+    )
+    if i mod 3 == 0:
+      native.callbacks.onFrame()
+  let position = origin + velocity * (24.0'f / rate.float32)
+  native.callbacks.onTouch(
+    30, NativeTouchEnded, position.x, position.y, TouchPointer,
+    start + 24.0 / rate.float64
+  )
+  doAssert (window.pointerVelocity - velocity).length < 0.02
+  native.callbacks.onFrame()
+  doAssert (window.pointerVelocity - velocity).length < 0.02
+
+echo "Testing a complete timed flick before one render frame"
+native.callbacks.onTouch(31, NativeTouchBegan, 100, 100, TouchPointer, 1.0)
+native.callbacks.onTouch(31, NativeTouchMoved, 120, 160, TouchPointer, 1.02)
+native.callbacks.onTouch(31, NativeTouchEnded, 140, 220, TouchPointer, 1.04)
+doAssert (window.pointerVelocity - vec2(1000, 3000)).length < 0.02
+doAssert window.buttonPressed[MouseLeft]
+doAssert window.buttonReleased[MouseLeft]
+native.callbacks.onFrame()
+doAssert (window.pointerVelocity - vec2(1000, 3000)).length < 0.02
+
+echo "Testing sparse touch timing retains velocity at the sample boundary"
+native.callbacks.onTouch(32, NativeTouchBegan, 100, 100, TouchPointer, 2.0)
+native.callbacks.onTouch(32, NativeTouchEnded, 400, 700, TouchPointer, 2.3)
+doAssert (window.pointerVelocity - vec2(1000, 2000)).length < 0.02
+native.callbacks.onFrame()
+
+echo "Testing pause before lift slows or cancels momentum"
+native.callbacks.onTouch(33, NativeTouchBegan, 100, 100, TouchPointer, 3.0)
+native.callbacks.onTouch(33, NativeTouchMoved, 100, 130, TouchPointer, 3.03)
+native.callbacks.onTouch(33, NativeTouchEnded, 100, 130, TouchPointer, 3.08)
+doAssert abs(window.pointerVelocity.y - 375) < 0.02
+native.callbacks.onTouch(34, NativeTouchBegan, 100, 100, TouchPointer, 4.0)
+native.callbacks.onTouch(34, NativeTouchMoved, 100, 130, TouchPointer, 4.03)
+native.callbacks.onTouch(34, NativeTouchEnded, 100, 130, TouchPointer, 4.15)
+doAssert window.pointerVelocity == vec2(0)
+native.callbacks.onFrame()
+
+echo "Testing quick reversal uses the new direction"
+native.callbacks.onTouch(35, NativeTouchBegan, 100, 100, TouchPointer, 5.0)
+native.callbacks.onTouch(35, NativeTouchMoved, 100, 180, TouchPointer, 5.04)
+native.callbacks.onTouch(35, NativeTouchMoved, 100, 200, TouchPointer, 5.05)
+native.callbacks.onTouch(35, NativeTouchMoved, 100, 180, TouchPointer, 5.06)
+native.callbacks.onTouch(35, NativeTouchEnded, 100, 170, TouchPointer, 5.07)
+doAssert abs(window.pointerVelocity.y + 1500) < 0.02
+native.callbacks.onFrame()
+
+echo "Testing velocity bounds, primary ownership and cancellation"
+native.callbacks.onTouch(36, NativeTouchBegan, 100, 100, TouchPointer, 6.0)
+native.callbacks.onTouch(36, NativeTouchMoved, 100, 1000, TouchPointer, 6.002)
+doAssert window.pointerVelocity.length <= MaxTouchSpeed * window.contentScale
+let primaryVelocity = window.pointerVelocity
+native.callbacks.onTouch(37, NativeTouchBegan, 30, 30, PenPointer, 6.003)
+native.callbacks.onTouch(37, NativeTouchMoved, 30, 300, PenPointer, 6.004)
+doAssert window.pointerVelocity == primaryVelocity
+native.callbacks.onTouch(36, NativeTouchCancelled, 100, 1000, TouchPointer, 6.005)
+doAssert window.pointerVelocity == vec2(0)
+native.callbacks.onTouch(38, NativeTouchBegan, 100, 100, TouchPointer, 7.0)
+native.callbacks.onTouch(38, NativeTouchMoved, 100, 200, TouchPointer, 7.05)
+doAssert window.pointerVelocity.y > 0
+native.callbacks.onFocus(false)
+doAssert window.pointerVelocity == vec2(0)
+native.callbacks.onFocus(true)
+native.callbacks.onTouch(39, NativeTouchBegan, 100, 100, TouchPointer, 8.0)
+native.callbacks.onTouch(39, NativeTouchMoved, 100, 200, TouchPointer, 8.05)
+native.callbacks.onTouch(39, NativeTouchEnded, 100, 200, TouchPointer, 8.05)
+doAssert window.pointerVelocity.y > 0
+native.callbacks.onScroll(100, 200, 0, 1)
+doAssert window.pointerVelocity == vec2(0)
+native.callbacks.onFrame()
+
 echo "Testing primary touch ownership and cancellation"
 native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
 native.callbacks.onTouch(11, NativeTouchBegan, 80, 90, PenPointer)

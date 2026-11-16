@@ -1,7 +1,7 @@
 import
   std/[times, unicode],
   pixie, vmath,
-  ../../common, ../../internal
+  ../../common, ../../internal, motions
 
 when defined(windyIosTesting):
   import ios_native_mock as native
@@ -10,6 +10,8 @@ else:
 
 when defined(ios) and not defined(windyIosTesting):
   {.compile: "entry.c".}
+
+const MaxTouchSpeed = 12000.0'f
 
 type
   Window* = ref object
@@ -29,6 +31,7 @@ type
     ready: bool
     primaryTouch: int
     pointerKind: PointerSource
+    pointerMotion: PointerMotion
     textInput: TextInputState
 
 var
@@ -98,11 +101,13 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc clearButtons(window: Window) =
   ## Releases held input when the native application deactivates.
   window.primaryTouch = -1
+  window.pointerMotion.clear()
   clearButtonsTemplate()
 
 proc cancelPointer(window: Window) =
   ## Releases cancelled input outside the content so it cannot activate UI.
   window.primaryTouch = -1
+  window.pointerMotion.clear()
   window.state.mouseInside = false
   window.state.hasPrevMouse = false
   window.state.mousePos = ivec2(-1, -1)
@@ -141,6 +146,7 @@ proc failCallback(message: string) =
     applicationWindow.state.closeRequested = true
     applicationWindow.state.closed = true
     applicationWindow.primaryTouch = -1
+    applicationWindow.pointerMotion.clear()
     applicationWindow.state.buttonDown = {}
 
 proc close*(window: Window)
@@ -201,7 +207,8 @@ proc focusCallback(focused: bool) =
     failCallback(error.msg)
 
 proc touchCallback(
-  touch: int, phase: NativeTouchPhase, x, y: float64, source: PointerSource
+  touch: int, phase: NativeTouchPhase, x, y: float64, source: PointerSource,
+  timestamp: float64 = 0
 ) =
   ## Maps a stable primary touch to the pointer and left mouse button.
   let window = applicationWindow
@@ -212,11 +219,18 @@ proc touchCallback(
     of NativeTouchHover:
       if window.primaryTouch == -1:
         window.pointerKind = source
+        window.pointerMotion.clear()
         window.handleMouseMove(x, y)
     of NativeTouchBegan:
       if window.primaryTouch == -1:
         window.primaryTouch = touch
         window.pointerKind = source
+        window.pointerMotion.clear()
+        if source == TouchPointer:
+          window.pointerMotion.sample(
+            vec2(x.float32, y.float32), timestamp,
+            MaxTouchSpeed * window.contentScale
+          )
         window.state.hasPrevMouse = false
         # Preserve the press origin when an entire gesture arrives in one frame.
         window.state.perFrame.mouseDelta = ivec2(0, 0)
@@ -225,10 +239,24 @@ proc touchCallback(
     of NativeTouchMoved:
       if window.primaryTouch == touch:
         window.pointerKind = source
+        if source == TouchPointer:
+          window.pointerMotion.sample(
+            vec2(x.float32, y.float32), timestamp,
+            MaxTouchSpeed * window.contentScale
+          )
+        else:
+          window.pointerMotion.clear()
         window.handleMouseMove(x, y)
     of NativeTouchEnded:
       if window.primaryTouch == touch:
         window.pointerKind = source
+        if source == TouchPointer:
+          window.pointerMotion.sample(
+            vec2(x.float32, y.float32), timestamp,
+            MaxTouchSpeed * window.contentScale
+          )
+        else:
+          window.pointerMotion.clear()
         window.handleMouseMove(x, y)
         window.primaryTouch = -1
         window.handleButtonRelease(MouseLeft)
@@ -402,6 +430,7 @@ proc scrollCallback(x, y, deltaX, deltaY: float64) =
     return
   try:
     window.pointerKind = MousePointer
+    window.pointerMotion.clear()
     window.handleMouseMove(x, y)
     window.state.perFrame.scrollDelta += vec2(
       deltaX.float32, -deltaY.float32
@@ -554,6 +583,10 @@ proc mousePos*(window: Window): IVec2 =
 proc pointerSource*(window: Window): PointerSource =
   ## Returns the latest pointer's source, retained after release or cancel.
   window.pointerKind
+
+proc pointerVelocity*(window: Window): Vec2 =
+  ## Returns recent touch pixels per second, retained through normal release.
+  window.pointerMotion.velocity
 
 proc mousePrevPos*(window: Window): IVec2 =
   ## Returns the position preceding the latest pointer event.
