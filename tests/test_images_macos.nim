@@ -102,6 +102,24 @@ when defined(macosx):
     doAssert window.deliverPasteboardDrop(pasteboard)
     doAssert received == NativePaths
 
+  proc testDropClosure() =
+    ## Stops multi-file delivery when a callback closes its window.
+    let window = newWindow("Drop closure", ivec2(32, 32), visible = false)
+    defer:
+      window.close()
+    var calls: int
+    window.onFileDrop = proc(path, data: string) =
+      ## Closes on the first path before any remaining paths are delivered.
+      inc calls
+      window.close()
+    window.deliverFileDrop(@[
+      "/tmp/windy-drop-first-missing",
+      "/tmp/windy-drop-second-missing"
+    ])
+    doAssert calls == 1
+    doAssert window.closed
+    doAssert window.onFileDrop == nil
+
   proc testImageDrop() =
     ## Delivers image pixels without requiring a source file path.
     let
@@ -131,5 +149,6 @@ when defined(macosx):
 
   testImageClipboard()
   testFilePaths()
+  testDropClosure()
   testImageDrop()
   echo "Native image clipboard and file paths passed."

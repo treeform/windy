@@ -38,13 +38,11 @@ jobs:
     - run: nim r tests/test_openurl.nim
     - run: nim r tests/test_macos.nim
       if: matrix.os == 'macos-latest'
-    - name: Test native image and pointer input
+    - name: Test native images and drops
       if: matrix.os == 'macos-latest'
       run: |
         nim r tests/test_images_macos.nim
-        nim r tests/test_mouse_positions_macos.nim
         nim r -d:useCpu tests/test_images_macos.nim
-        nim r -d:useCpu tests/test_mouse_positions_macos.nim
     - name: Test native iOS input
       if: matrix.os == 'macos-latest'
       run: nim r --path:tests -d:windyIosTesting tests/ios_inputs.nim

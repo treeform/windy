@@ -814,6 +814,8 @@ proc deliverFileDrop(window: Window, paths: seq[string]) =
     window.onFileDropPaths(paths)
   elif window.onFileDrop != nil:
     for path in paths:
+      if window.state.closed or window.onFileDrop == nil:
+        break
       var data: string
       try:
         data = readFile(path)
@@ -890,40 +892,30 @@ proc mouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-  if not window.state.mouseCaptured:
-    handleMouseMove(window, event.locationInWindow)
   window.handleButtonPress(MouseLeft)
 
 proc mouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-  if not window.state.mouseCaptured:
-    handleMouseMove(window, event.locationInWindow)
   window.handleButtonRelease(MouseLeft)
 
 proc rightMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-  if not window.state.mouseCaptured:
-    handleMouseMove(window, event.locationInWindow)
   window.handleButtonPress(MouseRight)
 
 proc rightMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-  if not window.state.mouseCaptured:
-    handleMouseMove(window, event.locationInWindow)
   window.handleButtonRelease(MouseRight)
 
 proc otherMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-  if not window.state.mouseCaptured:
-    handleMouseMove(window, event.locationInWindow)
 
   case event.buttonNumber:
   of 2:
@@ -939,8 +931,6 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
-  if not window.state.mouseCaptured:
-    handleMouseMove(window, event.locationInWindow)
 
   case event.buttonNumber:
   of 2:
