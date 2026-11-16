@@ -40,6 +40,8 @@ proc windyIosSetTextInputState(
   ## Publishes editor state to UIKit's text-input responder.
 proc windyIosSetTextKeyboardVisible(visible: cint): cint {.importc, cdecl.}
   ## Transfers keyboard ownership when a native text editor is active.
+proc windyIosSetTextInputActive(active: cint) {.importc, cdecl.}
+  ## Invalidates stale responder ownership across UIKit scene activation.
 proc windyIosKeyboardInset(host: pointer): float64 {.importc, cdecl.}
   ## Returns bottom-docked keyboard occlusion in UIKit points.
 proc windyIosObserveKeyboard(changed: proc() {.cdecl.}) {.importc, cdecl.}
@@ -223,7 +225,10 @@ proc setNativeKeyboardVisible*(visible: bool) =
   keyboardRequested = visible
   if nativeView.int == 0:
     return
-  if windyIosSetTextKeyboardVisible(visible.cint) != 0:
+  let editorOwnsRequest = windyIosSetTextKeyboardVisible(visible.cint) != 0
+  if not active:
+    return
+  if editorOwnsRequest:
     if not visible and nativeController.int != 0:
       discard nativeController.becomeFirstResponder()
     return
@@ -373,8 +378,11 @@ proc setActive(value: bool) =
     nativeView.setPaused(true)
   let changed = active != value
   active = value
+  windyIosSetTextInputActive(value.cint)
   if initialized and changed and callbacks.onFocus != nil:
     callbacks.onFocus(value)
+  if changed and value:
+    setNativeKeyboardVisible(keyboardRequested)
   if nativeView.int != 0:
     nativeView.setPaused(not (active and initialized and not stopped))
 

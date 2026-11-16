@@ -17,6 +17,7 @@ void windyIosSetTextInputState(void *host, const char *identity,
                               int multiline, int password,
                               WindyIosTextEdit edit, WindyIosTextKey key);
 int windyIosSetTextKeyboardVisible(int visible);
+void windyIosSetTextInputActive(int active);
 double windyIosKeyboardInset(void *host);
 void windyIosObserveKeyboard(void (*changed)(void));
 void windyIosWakeEvents(void);

@@ -167,6 +167,11 @@ void windyIosFreeClipboardImage(void *bytes) {
 @property(nonatomic) BOOL synchronizing;
 @property(nonatomic) BOOL publishing;
 @property(nonatomic) BOOL keyboardWanted;
+@property(nonatomic) BOOL keyboardNeedsReacquire;
+@property(nonatomic) BOOL keyboardAcquisitionFailed;
+@property(nonatomic) BOOL keyboardRetryUsed;
+@property(nonatomic) BOOL keyboardRetryPending;
+@property(nonatomic) NSUInteger keyboardGeneration;
 @property(nonatomic) BOOL updatingMarkedText;
 @property(nonatomic) WindyIosTextEdit editCallback;
 @property(nonatomic) WindyIosTextKey keyCallback;
@@ -174,10 +179,13 @@ void windyIosFreeClipboardImage(void *bytes) {
 @property(nonatomic, strong) NSMutableSet<NSNumber *> *routedKeys;
 - (void)publishChanges;
 - (void)sendControlKey:(int)usage;
+- (void)invalidateKeyboardRequest;
+- (void)acquireKeyboard;
 @end
 
 static WindyIosTextView *windyTextView;
 static void (*windyKeyboardChanged)(void);
+static BOOL windyTextInputActive;
 
 @implementation WindyIosTextView
 
@@ -232,6 +240,48 @@ static void (*windyKeyboardChanged)(void);
       action == @selector(cut:) || action == @selector(select:) ||
       action == @selector(selectAll:))) return NO;
   return [super canPerformAction:action withSender:sender];
+}
+
+- (void)invalidateKeyboardRequest {
+  // Cancel deferred acquisition without discarding the editor's text or selection.
+  self.keyboardGeneration++;
+  self.keyboardRetryUsed = NO;
+  self.keyboardRetryPending = NO;
+}
+
+- (void)acquireKeyboard {
+  // Reacquire once after activation and retry a rejected request on the main queue.
+  if (!windyTextInputActive || !self.keyboardWanted ||
+      !self.fieldIdentity.length || self.keyboardRetryPending) return;
+  BOOL reacquire = self.keyboardNeedsReacquire;
+  self.keyboardNeedsReacquire = NO;
+  if (reacquire) [self resignFirstResponder];
+  if (!reacquire && !self.keyboardAcquisitionFailed && self.isFirstResponder) return;
+  if ([self becomeFirstResponder]) {
+    self.keyboardAcquisitionFailed = NO;
+    self.keyboardRetryUsed = NO;
+    return;
+  }
+  self.keyboardAcquisitionFailed = YES;
+  if (self.keyboardRetryUsed) return;
+  self.keyboardRetryUsed = YES;
+  self.keyboardRetryPending = YES;
+  NSUInteger generation = self.keyboardGeneration;
+  NSString *field = self.fieldIdentity;
+  __weak WindyIosTextView *weakView = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    WindyIosTextView *view = weakView;
+    if (!view || view != windyTextView || !windyTextInputActive ||
+        !view.keyboardWanted || view.keyboardGeneration != generation ||
+        ![view.fieldIdentity isEqualToString:field]) return;
+    view.keyboardRetryPending = NO;
+    // UIKit can retain a stale responder flag while activation is settling.
+    if (view.isFirstResponder) [view resignFirstResponder];
+    if ([view becomeFirstResponder]) {
+      view.keyboardAcquisitionFailed = NO;
+      view.keyboardRetryUsed = NO;
+    }
+  });
 }
 
 - (void)keyboardChanged:(NSNotification *)notification {
@@ -389,6 +439,8 @@ void windyIosSetTextInputState(void *host, const char *identity,
     UIView *view = (__bridge UIView *)host;
     NSString *field = identity ? [NSString stringWithUTF8String:identity] : @"";
     if (!view || !field.length) {
+      [windyTextView invalidateKeyboardRequest];
+      windyTextView.keyboardWanted = NO;
       windyTextView.synchronizing = YES;
       [windyTextView resignFirstResponder];
       windyTextView.fieldIdentity = @"";
@@ -405,11 +457,13 @@ void windyIosSetTextInputState(void *host, const char *identity,
     if (!windyTextView) {
       windyTextView = [[WindyIosTextView alloc] initWithFrame:CGRectZero textContainer:nil];
     }
-    if (windyTextView.superview != view) [view addSubview:windyTextView];
+    BOOL changedHost = windyTextView.superview != view;
+    if (changedHost) [view addSubview:windyTextView];
     windyTextView.synchronizing = YES;
     BOOL traitsChanged = windyTextView.secureTextEntry != (password != 0);
     windyTextView.secureTextEntry = password != 0;
     BOOL changedField = ![windyTextView.fieldIdentity isEqualToString:field];
+    if (changedField || changedHost) [windyTextView invalidateKeyboardRequest];
     NSString *value = [[NSString alloc] initWithBytes:text length:textLength encoding:NSUTF8StringEncoding];
     if (!value) value = @"";
     NSUInteger start = windyUtf16Offset(value, selectionStart);
@@ -439,11 +493,28 @@ void windyIosSetTextInputState(void *host, const char *identity,
 
 int windyIosSetTextKeyboardVisible(int visible) {
   // Return whether a published editor owns the keyboard request.
+  if (windyTextView.keyboardWanted != (visible != 0)) {
+    [windyTextView invalidateKeyboardRequest];
+  }
   windyTextView.keyboardWanted = visible != 0;
   if (!windyTextView.fieldIdentity.length) return 0;
-  if (visible && !windyTextView.isFirstResponder) [windyTextView becomeFirstResponder];
+  if (visible) [windyTextView acquireKeyboard];
   else if (!visible && windyTextView.isFirstResponder) [windyTextView resignFirstResponder];
   return 1;
+}
+
+void windyIosSetTextInputActive(int active) {
+  // Invalidate keyboard ownership before UIKit suspends the scene.
+  if (windyTextInputActive == (active != 0)) return;
+  windyTextInputActive = active != 0;
+  [windyTextView invalidateKeyboardRequest];
+  if (!active) {
+    windyTextView.keyboardNeedsReacquire = YES;
+    [windyTextView resignFirstResponder];
+    windyTextView.keyboardFrame = CGRectZero;
+    [windyTextView.superview setNeedsLayout];
+    if (windyKeyboardChanged) windyKeyboardChanged();
+  }
 }
 
 double windyIosKeyboardInset(void *host) {
