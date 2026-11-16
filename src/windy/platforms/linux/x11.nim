@@ -1441,27 +1441,17 @@ proc pollEvents(window: Window) =
       # Handle XDnD selection data.
       if ev.selection.property == xaWindyXdndTargetProperty:
         let prop = window.handle.property(xaWindyXdndTargetProperty)
+        var paths: seq[string]
         if prop.data.len > 0:
           # Parse URI list (files separated by newlines).
           let uriList = prop.data
-          var paths: seq[string]
           for line in uriList.splitLines():
             if line.len > 0 and line.startsWith("file://"):
               let location = parseUri(line)
               if location.hostname.len == 0 or location.hostname == "localhost":
                 paths.add(decodeUrl(location.path, decodePlus = false))
-          if paths.len > 0 and window.onFileDropPaths != nil:
-            window.onFileDropPaths(paths)
-          elif window.onFileDrop != nil:
-            for path in paths:
-              var content = ""
-              try:
-                content = readFile(path)
-              except IOError, OSError:
-                discard
-              window.onFileDrop(path, content)
 
-        # Clean up the property.
+        # Finish the native transfer before callbacks can close the window.
         window.handle.delProperty(xaWindyXdndTargetProperty)
 
         # Send finished message.
@@ -1478,6 +1468,21 @@ proc pollEvents(window: Window) =
         window.xdndSource = 0
         window.xdndVersion = 0
         window.xdndFormat = 0
+
+        if paths.len > 0 and window.onFileDropPaths != nil:
+          window.onFileDropPaths(paths)
+        elif window.onFileDrop != nil:
+          for path in paths:
+            if window.closed or window.onFileDrop == nil:
+              break
+            var content = ""
+            try:
+              content = readFile(path)
+            except IOError, OSError:
+              discard
+            window.onFileDrop(path, content)
+        if window.closed:
+          return
 
     else:
       discard
