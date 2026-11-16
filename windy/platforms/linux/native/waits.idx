@@ -1,0 +1,4 @@
+nimTitle	waits	windy/platforms/linux/native/waits.html	module windy/platforms/linux/native/waits		0
+nim	initEventWait	windy/platforms/linux/native/waits.html#initEventWait	proc initEventWait()		13
+nim	wakeNativeEvents	windy/platforms/linux/native/waits.html#wakeNativeEvents	proc wakeNativeEvents()		27
+nim	waitNativeEvents	windy/platforms/linux/native/waits.html#waitNativeEvents,int,openArray[cint]	proc waitNativeEvents(timeoutMs: int; descriptors: openArray[cint])		33

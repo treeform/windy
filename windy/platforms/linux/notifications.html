@@ -85,6 +85,10 @@
   <li><a class="reference" href="#closed%2CNotification" title="closed(notification: Notification): bool">closed(notification: Notification): bool</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">notificationWaitTimeout
+  <li><a class="reference" href="#notificationWaitTimeout%2Cint" title="notificationWaitTimeout(timeoutMs: int): int">notificationWaitTimeout(timeoutMs: int): int</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">pending
   <li><a class="reference" href="#pending%2CNotification" title="pending(notification: Notification): bool">pending(notification: Notification): bool</a></li>
 
@@ -161,8 +165,8 @@
   <dd>
     
     Queues dismissal, or cancels a request that has not been sent. Safe to repeat.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L94" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L104" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L104" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -175,6 +179,20 @@
   <dd>
     
     True after dismissal, expiration, or failure; closing also counts as closed.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L61" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L61" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="notificationWaitTimeout-procs-all">
+  <div id="notificationWaitTimeout,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#notificationWaitTimeout%2Cint"><span class="Identifier">notificationWaitTimeout</span></a><span class="Other">(</span><span class="Identifier">timeoutMs</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Keeps the notification bus responsive while it owns pending callbacks.
     <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L51" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L51" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
@@ -189,8 +207,8 @@
   <dd>
     
     True while sending, updating, or dismissing still needs pollEvents to finish.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L55" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L55" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L65" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L65" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -204,8 +222,8 @@
   <dd>
     
     Pumps notification requests without waiting for service replies; dispatches callbacks.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L311" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L311" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L321" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L321" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -220,8 +238,8 @@
   <dd>
     
     Queues a notification without waiting for the desktop service. Plain text is used; the optional image is supplied through the standard image-data hint. Use the thread that calls pollEvents. Invalid input raises immediately. Click callbacks require desktop action support. Delivery errors call onError, or raise WindyError from pollEvents when onError is absent. The desktop controls presentation; acceptance does not guarantee a visible popup. The application name defaults to the executable name. No tray icon is needed.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L73" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L73" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L83" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L83" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -234,8 +252,8 @@
   <dd>
     
     Replaces the content and image while retaining callbacks. Nil clears the image. Updates before a reply are coalesced. A closed handle cannot be reused.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L86" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L86" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/notifications.nim#L96" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/notifications.nim#L96" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -251,7 +269,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-16 06:16:56 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-16 06:17:31 UTC</small>
       </div>
     </div>
   </div>

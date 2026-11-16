@@ -81,6 +81,10 @@
              menu: seq[TrayMenuEntry] = @[])</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">trayWaitTimeout
+  <li><a class="reference" href="#trayWaitTimeout%2Cint" title="trayWaitTimeout(timeoutMs: int): int">trayWaitTimeout(timeoutMs: int): int</a></li>
+
+</ul>
 
     </ul>
   </details>
@@ -112,8 +116,8 @@
   <dd>
     
     Removes the Linux tray icon and cancels pending registration. Safe to repeat.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/tray.nim#L25" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/tray.nim#L25" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/tray.nim#L34" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/tray.nim#L34" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -127,8 +131,8 @@
   <dd>
     
     Pumps both host monitors and dispatches callbacks for the current snapshot.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/tray.nim#L71" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/tray.nim#L71" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/tray.nim#L80" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/tray.nim#L80" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -143,8 +147,21 @@
   <dd>
     
     Shows or replaces one tray icon. Call pollEvents to process tray interaction. Waits for a tray host when none is present; prefers SNI, then XEmbed. Labels are literal UTF-8. SNI hosts determine how activation is presented.
-    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/tray.nim#L35" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/tray.nim#L35" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/tray.nim#L44" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/tray.nim#L44" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="trayWaitTimeout-procs-all">
+  <div id="trayWaitTimeout,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#trayWaitTimeout%2Cint"><span class="Identifier">trayWaitTimeout</span></a><span class="Other">(</span><span class="Identifier">timeoutMs</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Keeps tray connections responsive until their descriptors join waiting.
+    <a href="https://github.com/treeform/windy/tree/master/src/windy/platforms/linux/tray.nim#L25" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/windy/edit/devel/src/windy/platforms/linux/tray.nim#L25" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -160,7 +177,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-16 06:16:56 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-16 06:17:31 UTC</small>
       </div>
     </div>
   </div>

@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/backends.html">windy/platforms/linux/backends</a>, <a href="windy/platforms/linux/dbus.html">windy/platforms/linux/dbus</a>, <a href="windy/platforms/linux/native/pixels.html">windy/platforms/linux/native/pixels</a>, <a href="windy/platforms/linux/notifications.html">windy/platforms/linux/notifications</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/tray.html">windy/platforms/linux/tray</a>, <a href="windy/platforms/linux/tray/sni.html">windy/platforms/linux/tray/sni</a>, <a href="windy/platforms/linux/tray/state.html">windy/platforms/linux/tray/state</a>, <a href="windy/platforms/linux/tray/xembed.html">windy/platforms/linux/tray/xembed</a>, <a href="windy/platforms/linux/tray/xembed/xlib.html">windy/platforms/linux/tray/xembed/xlib</a>, <a href="windy/platforms/linux/x11.html">windy/platforms/linux/x11</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="windy.html">windy</a>, <a href="windy/common.html">windy/common</a>, <a href="windy/http.html">windy/http</a>, <a href="windy/internal.html">windy/internal</a>, <a href="windy/platforms/linux/backends.html">windy/platforms/linux/backends</a>, <a href="windy/platforms/linux/dbus.html">windy/platforms/linux/dbus</a>, <a href="windy/platforms/linux/native/pixels.html">windy/platforms/linux/native/pixels</a>, <a href="windy/platforms/linux/native/waits.html">windy/platforms/linux/native/waits</a>, <a href="windy/platforms/linux/notifications.html">windy/platforms/linux/notifications</a>, <a href="windy/platforms/linux/platform.html">windy/platforms/linux/platform</a>, <a href="windy/platforms/linux/tray.html">windy/platforms/linux/tray</a>, <a href="windy/platforms/linux/tray/sni.html">windy/platforms/linux/tray/sni</a>, <a href="windy/platforms/linux/tray/state.html">windy/platforms/linux/tray/state</a>, <a href="windy/platforms/linux/tray/xembed.html">windy/platforms/linux/tray/xembed</a>, <a href="windy/platforms/linux/tray/xembed/xlib.html">windy/platforms/linux/tray/xembed/xlib</a>, <a href="windy/platforms/linux/x11.html">windy/platforms/linux/x11</a>, <a href="windy/platforms/linux/x11/glx.html">windy/platforms/linux/x11/glx</a>, <a href="windy/platforms/linux/x11/keysym.html">windy/platforms/linux/x11/keysym</a>, <a href="windy/platforms/linux/x11/x.html">windy/platforms/linux/x11/x</a>, <a href="windy/platforms/linux/x11/xcursor.html">windy/platforms/linux/x11/xcursor</a>, <a href="windy/platforms/linux/x11/xevent.html">windy/platforms/linux/x11/xevent</a>, <a href="windy/platforms/linux/x11/xlib.html">windy/platforms/linux/x11/xlib</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%3D%3D%60" href="#%60%3D%3D%60"><span>`==`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: proc `==`(a, b: HttpRequestHandle): bool" href="windy/common.html#%3D%3D%2CHttpRequestHandle%2CHttpRequestHandle">common: proc `==`(a, b: HttpRequestHandle): bool</a></li>
@@ -1351,6 +1351,10 @@
 <li><a class="reference external"
           data-doc-search-tag="common: type HttpResponseCallback" href="windy/common.html#HttpResponseCallback">common: type HttpResponseCallback</a></li>
           </ul></dd>
+<dt><a name="httpWaitTimeout" href="#httpWaitTimeout"><span>httpWaitTimeout:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="http: proc httpWaitTimeout(timeoutMs: int): int" href="windy/http.html#httpWaitTimeout%2Cint">http: proc httpWaitTimeout(timeoutMs: int): int</a></li>
+          </ul></dd>
 <dt><a name="IBeamCursor" href="#IBeamCursor"><span>IBeamCursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: CursorKind.IBeamCursor" href="windy/common.html#IBeamCursor">common: CursorKind.IBeamCursor</a></li>
@@ -1378,6 +1382,10 @@
 <dt><a name="IncludeInferiors" href="#IncludeInferiors"><span>IncludeInferiors:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const IncludeInferiors" href="windy/platforms/linux/x11/x.html#IncludeInferiors">x: const IncludeInferiors</a></li>
+          </ul></dd>
+<dt><a name="initEventWait" href="#initEventWait"><span>initEventWait:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="waits: proc initEventWait()" href="windy/platforms/linux/native/waits.html#initEventWait">waits: proc initEventWait()</a></li>
           </ul></dd>
 <dt><a name="initialized" href="#initialized"><span>initialized:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2235,6 +2243,10 @@
 <li><a class="reference external"
           data-doc-search-tag="notifications: type NotificationErrorCallback" href="windy/platforms/linux/notifications.html#NotificationErrorCallback">notifications: type NotificationErrorCallback</a></li>
           </ul></dd>
+<dt><a name="notificationWaitTimeout" href="#notificationWaitTimeout"><span>notificationWaitTimeout:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="notifications: proc notificationWaitTimeout(timeoutMs: int): int" href="windy/platforms/linux/notifications.html#notificationWaitTimeout%2Cint">notifications: proc notificationWaitTimeout(timeoutMs: int): int</a></li>
+          </ul></dd>
 <dt><a name="NotifyAncestor" href="#NotifyAncestor"><span>NotifyAncestor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="x: const NotifyAncestor" href="windy/platforms/linux/x11/x.html#NotifyAncestor">x: const NotifyAncestor</a></li>
@@ -2997,6 +3009,10 @@
 <li><a class="reference external"
           data-doc-search-tag="state: type TrayState" href="windy/platforms/linux/tray/state.html#TrayState">state: type TrayState</a></li>
           </ul></dd>
+<dt><a name="trayWaitTimeout" href="#trayWaitTimeout"><span>trayWaitTimeout:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="tray: proc trayWaitTimeout(timeoutMs: int): int" href="windy/platforms/linux/tray.html#trayWaitTimeout%2Cint">tray: proc trayWaitTimeout(timeoutMs: int): int</a></li>
+          </ul></dd>
 <dt><a name="TripleClick" href="#TripleClick"><span>TripleClick:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: Button.TripleClick" href="windy/common.html#TripleClick">common: Button.TripleClick</a></li>
@@ -3076,6 +3092,22 @@
 <dt><a name="WaitCursor" href="#WaitCursor"><span>WaitCursor:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="common: CursorKind.WaitCursor" href="windy/common.html#WaitCursor">common: CursorKind.WaitCursor</a></li>
+          </ul></dd>
+<dt><a name="waitEvents" href="#waitEvents"><span>waitEvents:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc waitEvents(timeoutMs: int)" href="windy/platforms/linux/x11.html#waitEvents%2Cint">x11: proc waitEvents(timeoutMs: int)</a></li>
+          </ul></dd>
+<dt><a name="waitNativeEvents" href="#waitNativeEvents"><span>waitNativeEvents:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="waits: proc waitNativeEvents(timeoutMs: int; descriptors: openArray[cint])" href="windy/platforms/linux/native/waits.html#waitNativeEvents%2Cint%2CopenArray%5Bcint%5D">waits: proc waitNativeEvents(timeoutMs: int; descriptors: openArray[cint])</a></li>
+          </ul></dd>
+<dt><a name="wakeEvents" href="#wakeEvents"><span>wakeEvents:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="x11: proc wakeEvents()" href="windy/platforms/linux/x11.html#wakeEvents">x11: proc wakeEvents()</a></li>
+          </ul></dd>
+<dt><a name="wakeNativeEvents" href="#wakeNativeEvents"><span>wakeNativeEvents:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="waits: proc wakeNativeEvents()" href="windy/platforms/linux/native/waits.html#wakeNativeEvents">waits: proc wakeNativeEvents()</a></li>
           </ul></dd>
 <dt><a name="warn" href="#warn"><span>warn:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -10769,7 +10801,7 @@
           </ul></dd>
 <dt><a name="XPending" href="#XPending"><span>XPending:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="xlib: proc XPending(d: Display): cint" href="windy/platforms/linux/tray/xembed/xlib.html#XPending%2CDisplay">xlib: proc XPending(d: Display): cint</a></li>
+          data-doc-search-tag="xlib: proc XPending(d: Display): cint" href="windy/platforms/linux/x11/xlib.html#XPending%2CDisplay">xlib: proc XPending(d: Display): cint</a></li>
           </ul></dd>
 <dt><a name="XPropertyEvent" href="#XPropertyEvent"><span>XPropertyEvent:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -11017,7 +11049,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-16 06:16:57 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-16 06:17:32 UTC</small>
       </div>
     </div>
   </div>
