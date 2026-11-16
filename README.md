@@ -27,7 +27,8 @@ Features:
 * Easy polling of keyboard state via `buttonDown[Button]` and more
 * IME support (for Chinese, Japanese, etc. text input)
 * System clipboard (copy and paste) support
-* Show a system tray icon and menu (Windows only)
+* Show a system tray icon and menu (Windows and Linux)
+* Send desktop notifications (Linux)
 * Non-blocking HTTP requests and WebSockets
 
 ## Basic Example
@@ -52,11 +53,38 @@ while not window.closeRequested:
 
 [Check out more examples here.](https://github.com/treeform/windy/tree/master/examples)
 
+## Tray icons
+
+`showTrayIcon(image, tooltip, onClick, menu)` shows one icon;
+calling it again replaces the icon and menu. Call `pollEvents()` to process
+interaction, and `hideTrayIcon()` to remove it. See [examples/tray.nim](examples/tray.nim).
+
+Linux selects an available StatusNotifierItem host, or an XEmbed tray when
+SNI is unavailable. It waits if neither exists and recovers when the tray host
+restarts. SNI uses the optional `libdbus-1.so.3` runtime library. XEmbed uses
+Xlib with a basic popup menu; SNI menus follow the desktop's presentation.
+Tray-only Linux applications do not need to create a window or OpenGL context.
+
+## Desktop notifications
+
+On Linux, `sendNotification(title, body, icon = nil, onClick = nil, onError = nil)`
+returns a notification handle. Call `pollEvents()` to send queued requests and
+process callbacks. The handle supports `update(title, body, icon = nil)`, `close()`,
+and the `pending` and `closed` properties. An omitted error callback causes
+delivery errors to raise `WindyError` from `pollEvents()`.
+
+Notifications use the desktop's D-Bus service and do not require a tray icon or
+window. Click support and popup presentation depend on the desktop's capabilities
+and notification settings. See [examples/notifications.nim](examples/notifications.nim).
+
 ## CPU Pixels
 
-On Windows, compile with `-d:useCpu` to create a plain window without an
+On Windows and X11 Linux, compile with `-d:useCpu` to create a plain window without an
 OpenGL context. CPU renderers can update the client area by passing a Pixie
 image to `window.presentPixels(image)`.
+
+Linux also has experimental fbdev, DRM and evdev touch backends
+for applications running without a window server.
 
 
 ### Why not just use GLFW or SDL?

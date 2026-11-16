@@ -67,6 +67,7 @@ type
   Window* = ref object
     onCloseRequest*: Callback
     onFrame*: Callback
+    onTouch*: TouchCallback
     onMove*: Callback
     onResize*: Callback
     onFocusChange*: Callback
@@ -103,17 +104,6 @@ type
     maximized: bool
     style: LONG
     rect: RECT
-
-  TrayMenuEntryKind* = enum
-    TrayMenuOption, TrayMenuSeparator
-
-  TrayMenuEntry* = object
-    case kind*: TrayMenuEntryKind
-    of TrayMenuOption:
-      text*: string
-      onClick*: Callback
-    of TrayMenuSeparator:
-      discard
 
   HttpRequestState = object
     url, verb: string
@@ -2985,3 +2975,6 @@ proc openTempTextFile*(title, text: string) =
     createDir("tmp")
   writeFile("tmp/" & title, text)
   discard execShellCmd("notepad tmp/" & title)
+
+proc touches*(window: Window): seq[TouchContact] =
+  @[]

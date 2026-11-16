@@ -15,6 +15,10 @@ when defined(linux):
     {.cdecl, dynlib: libX11, importc: "XCloseDisplay".}
     ## Closes the independent test connection.
 
+  proc initThreads(): cint
+    {.cdecl, dynlib: libX11, importc: "XInitThreads".}
+    ## Enables independent Xlib connections on the observer thread.
+
   proc cursorImage(d: Display): ptr CursorImage
     {.cdecl, dynlib: "libXfixes.so.3", importc: "XFixesGetCursorImage".}
     ## Reads the cursor image currently displayed by the X server.
@@ -210,11 +214,127 @@ when defined(linux):
     peer.XSync()
     window.expectCaptureError()
 
+  proc counterValue(window: Window): XSyncValue =
+    ## Reads the current resize sync counter from the X server.
+    doAssert display.XSyncQueryCounter(window.xSyncCounter, result.addr) != 0
+
+  proc sendSyncRequest(window: Window, lo: uint32, hi: int32) =
+    ## Sends what a window manager sends right before resizing the window.
+    let xaWMProtocols = display.XInternAtom("WM_PROTOCOLS", 0)
+    let message = newClientMessage(
+      window.handle,
+      xaWMProtocols,
+      [xaNetWMSyncRequest.clong, 0.clong, lo.clong, hi.clong]
+    )
+    window.handle.send(message)
+    display.XSync()
+
+  proc resize(window: Window, size: IVec2) =
+    ## Resizes the window and waits for the server to queue ConfigureNotify.
+    display.XResizeWindow(window.handle, size.x.uint32, size.y.uint32)
+    display.XSync()
+
+  type SyncObserver = object
+    counter: XSyncCounter
+    expected: uint32
+    acknowledged: ptr bool
+
+  proc observeSync(data: SyncObserver) {.thread.} =
+    ## Checks completion from another connection while the UI thread waits.
+    sleep(40)
+    let peer = XOpenDisplay(nil)
+    if peer != nil:
+      var value: XSyncValue
+      data.acknowledged[] = peer.XSyncQueryCounter(
+        data.counter, value.addr
+      ) != 0 and value.lo == data.expected
+      discard closeDisplay(peer)
+    wakeEvents()
+
+  proc testSyncRequestAck() =
+    ## Plays the window manager side of the resize sync handshake under Xvfb.
+    ## Checks that acknowledgements follow ConfigureNotify and a frame,
+    ## and never happen without a request.
+    let window = newWindow("Sync", ivec2(200, 100), visible = false)
+    doAssert window.xSyncCounter.int != 0, "Xvfb lacks the SYNC extension"
+
+    var resizes: seq[IVec2]
+    window.onResize = proc() =
+      resizes.add window.size
+
+    doAssert window.counterValue.lo == 0
+    doAssert window.syncState == SyncIdle
+
+    # A resize without a request never touches the counter.
+    window.resize(ivec2(210, 110))
+    pollEvents()
+    doAssert resizes == @[ivec2(210, 110)]
+    doAssert window.counterValue.lo == 0
+    doAssert window.syncState == SyncIdle
+
+    # Request and ConfigureNotify in one poll: the ack waits for a frame.
+    window.sendSyncRequest(1, 0)
+    window.resize(ivec2(300, 200))
+    pollEvents()
+    doAssert resizes[^1] == ivec2(300, 200)
+    doAssert window.syncState == SyncConfigured
+    doAssert window.counterValue.lo == 0, "acked before the resized frame"
+    pollEvents()
+    doAssert window.syncState == SyncIdle
+    doAssert window.counterValue.lo == 1
+
+    # Request in one poll, ConfigureNotify in a later one. The poll that saw
+    # the request must not ack, and must not wait longer than the timeout.
+    window.sendSyncRequest(2, 0)
+    let start = epochTime()
+    pollEvents()
+    doAssert epochTime() - start < 1.0, "poll did not give up waiting"
+    doAssert window.syncState == SyncRequested
+    doAssert window.counterValue.lo == 1, "acked without a ConfigureNotify"
+    waitEvents(20)
+    doAssert window.counterValue.lo == 1
+    window.resize(ivec2(400, 300))
+    pollEvents()
+    doAssert resizes[^1] == ivec2(400, 300)
+    doAssert window.syncState == SyncConfigured
+    doAssert window.counterValue.lo == 1
+    var
+      acknowledged = false
+      observer: Thread[SyncObserver]
+    createThread(observer, observeSync, SyncObserver(
+      counter: window.xSyncCounter,
+      expected: 2,
+      acknowledged: acknowledged.addr
+    ))
+    waitEvents(1000)
+    joinThread(observer)
+    doAssert acknowledged, "resize completion was withheld during waiting"
+    doAssert window.syncState == SyncIdle
+    doAssert window.counterValue.lo == 2
+
+    # The full 64-bit value round-trips and a newer request wins.
+    window.sendSyncRequest(3, 0)
+    window.sendSyncRequest(5, 1)
+    window.resize(ivec2(500, 400))
+    pollEvents()
+    pollEvents()
+    let value = window.counterValue
+    doAssert value.lo == 5 and value.hi == 1
+
+    # Once idle, polling leaves the counter alone.
+    pollEvents()
+    doAssert window.counterValue.lo == 5
+    doAssert window.syncState == SyncIdle
+
+    window.close()
+
+  doAssert initThreads() != 0
   if paramCount() > 0 and paramStr(1) == "--unsupported-version":
     testUnsupportedVersion()
   else:
     testContexts()
     testCapture()
+    testSyncRequestAck()
   echo "Windy X11 regression tests passed"
 else:
   echo "Windy X11 regression tests skipped"
