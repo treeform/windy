@@ -165,6 +165,15 @@ proc pollEvents*() =
   pollHttp()
   emscripten_sleep(0)
 
+proc waitEvents*(timeoutMs: int) =
+  ## Yields to browser-managed events and animation frames without blocking.
+  ## The browser controls scheduling, so timeoutMs has no effect here.
+  pollEvents()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Browser callbacks already wake their event loop.
+  discard
+
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas in physical pixels (CSS size × DPR).
   let dpr = get_device_pixel_ratio()
