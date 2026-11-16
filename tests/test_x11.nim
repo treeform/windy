@@ -15,6 +15,10 @@ when defined(linux):
     {.cdecl, dynlib: libX11, importc: "XCloseDisplay".}
     ## Closes the independent test connection.
 
+  proc initThreads(): cint
+    {.cdecl, dynlib: libX11, importc: "XInitThreads".}
+    ## Enables independent Xlib connections on the observer thread.
+
   proc cursorImage(d: Display): ptr CursorImage
     {.cdecl, dynlib: "libXfixes.so.3", importc: "XFixesGetCursorImage".}
     ## Reads the cursor image currently displayed by the X server.
@@ -230,6 +234,23 @@ when defined(linux):
     display.XResizeWindow(window.handle, size.x.uint32, size.y.uint32)
     display.XSync()
 
+  type SyncObserver = object
+    counter: XSyncCounter
+    expected: uint32
+    acknowledged: ptr bool
+
+  proc observeSync(data: SyncObserver) {.thread.} =
+    ## Checks completion from another connection while the UI thread waits.
+    sleep(40)
+    let peer = XOpenDisplay(nil)
+    if peer != nil:
+      var value: XSyncValue
+      data.acknowledged[] = peer.XSyncQueryCounter(
+        data.counter, value.addr
+      ) != 0 and value.lo == data.expected
+      discard closeDisplay(peer)
+    wakeEvents()
+
   proc testSyncRequestAck() =
     ## Plays the window manager side of the resize sync handshake under Xvfb.
     ## Checks that acknowledgements follow ConfigureNotify and a frame,
@@ -270,14 +291,24 @@ when defined(linux):
     doAssert epochTime() - start < 1.0, "poll did not give up waiting"
     doAssert window.syncState == SyncRequested
     doAssert window.counterValue.lo == 1, "acked without a ConfigureNotify"
-    pollEvents()
+    waitEvents(20)
     doAssert window.counterValue.lo == 1
     window.resize(ivec2(400, 300))
     pollEvents()
     doAssert resizes[^1] == ivec2(400, 300)
     doAssert window.syncState == SyncConfigured
     doAssert window.counterValue.lo == 1
-    pollEvents()
+    var
+      acknowledged = false
+      observer: Thread[SyncObserver]
+    createThread(observer, observeSync, SyncObserver(
+      counter: window.xSyncCounter,
+      expected: 2,
+      acknowledged: acknowledged.addr
+    ))
+    waitEvents(1000)
+    joinThread(observer)
+    doAssert acknowledged, "resize completion was withheld during waiting"
     doAssert window.syncState == SyncIdle
     doAssert window.counterValue.lo == 2
 
@@ -297,6 +328,7 @@ when defined(linux):
 
     window.close()
 
+  doAssert initThreads() != 0
   if paramCount() > 0 and paramStr(1) == "--unsupported-version":
     testUnsupportedVersion()
   else:

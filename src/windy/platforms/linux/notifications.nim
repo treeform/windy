@@ -50,7 +50,7 @@ var
 
 proc notificationWaitTimeout*(timeoutMs: int): int =
   ## Keeps the notification bus responsive while it owns pending callbacks.
-  result = timeoutMs
+  result = clamp(timeoutMs, 0, int32.high.int)
   if connection != nil or requests.len > 0 or deliveries.len > 0:
     result = min(result, 10)
   else:

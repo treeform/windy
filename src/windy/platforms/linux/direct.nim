@@ -21,6 +21,7 @@ else:
     onTextInput*: TextInputCallback
     onTextEdit*: TextInputEditCallback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     onTouch*: TouchCallback
     direct*: DirectWindowState
 
@@ -78,12 +79,12 @@ proc size*(window: Window): IVec2 =
 proc newDirectWindow*(title: string, backend: LinuxBackend,
     options: LinuxWindowOptions, vsync = false): Window =
   ## Open one compiled direct display backend and its optional touch device.
-  initEventWait()
   let path = if options.device.len > 0: options.device
     elif backend == FbdevBackend: "/dev/fb0" else: "/dev/dri/card0"
   result = Window(direct: DirectWindowState(title: title, device: path, backend: backend))
   let data = result.direct
   try:
+    initEventWait()
     case backend
     of FbdevBackend:
       when HasFbdev:

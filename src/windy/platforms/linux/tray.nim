@@ -24,7 +24,7 @@ when HasX11:
 
 proc trayWaitTimeout*(timeoutMs: int): int =
   ## Keeps tray connections responsive until their descriptors join waiting.
-  result = timeoutMs
+  result = clamp(timeoutMs, 0, int32.high.int)
   if busTray != nil:
     result = min(result, 10)
   when HasX11:

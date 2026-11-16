@@ -38,6 +38,12 @@ jobs:
     - run: nim r tests/test_openurl.nim
     - run: nim r tests/test_macos.nim
       if: matrix.os == 'macos-latest'
+    - name: Test native iOS input
+      if: matrix.os == 'macos-latest'
+      run: nim r --path:tests -d:windyIosTesting tests/ios_inputs.nim
+    - name: Test shared Apple bindings
+      if: matrix.os == 'macos-latest'
+      run: nim r tests/test_objc.nim
     - run: nim r tests/test_fullscreen_macos.nim
       if: matrix.os == 'macos-latest'
     - run: nim r tests/test_accessibility.nim
@@ -66,6 +72,8 @@ jobs:
           MESA_GL_VERSION_OVERRIDE=3.3 ./tests/test_x11 --unsupported-version
         nim c tests/test_waits.nim
         xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ./tests/test_waits
+        WINDY_TEST_BACKENDS=x11,fbdev,drm nim check tests/test_waits.nim
+        WINDY_TEST_BACKENDS=fbdev WINDY_TEST_TARGET=arm nim check tests/test_waits.nim
 
     - name: Test Linux tray backends
       if: matrix.os == 'ubuntu-latest'

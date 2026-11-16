@@ -34,6 +34,7 @@ type
     onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
 
     ## In Emscripten, the canvas is the more or less the window.
     canvas: cstring
@@ -540,6 +541,14 @@ proc getClipboardContentKinds*(): set[ClipboardContentKind] =
 proc getClipboardImage*(): Image =
   ## Image clipboard is not implemented on Emscripten yet.
   nil
+
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Reports unsupported synchronous image clipboard writes in browsers.
+  raise newException(
+    WindyError,
+    "Image clipboard writes are not supported on Emscripten"
+  )
+
 
 proc closeIme*(window: Window) =
   if window.state.imeCompositionString.len > 0:

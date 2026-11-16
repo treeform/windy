@@ -80,6 +80,7 @@ type
     onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     imePos*: IVec2
 
     state: WindowState
@@ -1696,6 +1697,62 @@ proc getClipboardString*(): string =
       discard GlobalUnlock(dataHandle)
 
   discard CloseClipboard()
+
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Writes a packed native DIBV5 image, preserving its color and alpha.
+  if image == nil or image.width <= 0 or image.height <= 0 or
+    image.width > int32.high or image.height > int32.high or
+    image.data.len > (int.high - 124) div 4:
+      raise newException(WindyError, "Invalid clipboard image dimensions")
+  init()
+  let pixelBytes = image.data.len * 4
+  if pixelBytes > uint32.high.int64:
+    raise newException(WindyError, "Clipboard image is too large")
+  var data = newString(124 + pixelBytes)
+  data.writeUint32(0, 124)
+  data.writeInt32(4, image.width.int32)
+  data.writeInt32(8, image.height.int32)
+  data.writeUint16(12, 1)
+  data.writeUint16(14, 32)
+  data.writeUint32(16, 3)
+  data.writeUint32(20, pixelBytes.uint32)
+  data.writeUint32(40, 0x00FF0000)
+  data.writeUint32(44, 0x0000FF00)
+  data.writeUint32(48, 0x000000FF)
+  data.writeUint32(52, 0xFF000000'u32)
+  data.writeUint32(56, 0x73524742)
+  data.writeUint32(108, 4)
+  for y in 0 ..< image.height:
+    for x in 0 ..< image.width:
+      let
+        pixel = image[x, image.height - y - 1]
+        offset = 124 + (y * image.width + x) * 4
+      data[offset] = char(pixel.b)
+      data[offset + 1] = char(pixel.g)
+      data[offset + 2] = char(pixel.r)
+      data[offset + 3] = char(pixel.a)
+  let handle = GlobalAlloc(GMEM_MOVEABLE, data.len)
+  if handle == 0:
+    raise newException(WindyError, "Could not allocate clipboard image")
+  var transferred = false
+  defer:
+    if not transferred:
+      discard GlobalFree(handle)
+  let bytes = GlobalLock(handle)
+  if bytes == nil:
+    raise newException(WindyError, "Could not lock clipboard image")
+  copyMem(bytes, data[0].addr, data.len)
+  discard GlobalUnlock(handle)
+  if OpenClipboard(helperWindow) == 0:
+    raise newException(WindyError, "Could not open the clipboard")
+  defer:
+    discard CloseClipboard()
+  if EmptyClipboard() == 0:
+    raise newException(WindyError, "Could not clear the clipboard")
+  if SetClipboardData(CF_DIBV5, handle) == 0:
+    raise newException(WindyError, "Could not copy image to the clipboard")
+  transferred = true
+
 
 proc setClipboardString*(value: string) =
   init()

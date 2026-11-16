@@ -30,6 +30,12 @@ type
     left*, right*, top*, bottom*: int
     primary*: bool
 
+  PointerSource* = enum
+    ## Identifies the device driving the shared pointer and mouse buttons.
+    MousePointer
+    TouchPointer
+    PenPointer
+
   CursorKind* = enum
     ArrowCursor
     PointerCursor
@@ -110,7 +116,7 @@ type
     ## Takes priority over onRune and requires runeInputEnabled.
     ## Native commits may contain multiple runes and line breaks.
   TextInputState* = object
-    ## Describes the focused editor for native text services on macOS/Windows.
+    ## Describes the focused editor for native text services.
     ## Selection and visible ranges use half-open rune offsets.
     id*: string
       ## A nonempty field identity activates the editor; an empty one clears it.
@@ -131,14 +137,18 @@ type
     start*, length*: int
 
   TextInputEditCallback* = proc(edit: TextInputEdit)
-    ## Receives native selection or replacement requests on macOS/Windows.
+    ## Receives native selection or replacement requests.
     ## Apply the request to the editor, then publish its state again.
-    ## Requires runeInputEnabled and an active, nonsecure TextInputState.
+    ## Requires runeInputEnabled and an active TextInputState.
+    ## Desktop accessibility services exclude secure fields.
   HttpErrorCallback* = proc(msg: string)
   HttpResponseCallback* = proc(response: HttpResponse)
   HttpProgressCallback* = proc(completed, total: int)
   WebSocketMessageCallback* = proc(msg: string, kind: WebSocketMessageKind)
   FileDropCallback* = proc(fileName: string, fileData: string)
+  FileDropPathsCallback* = proc(paths: seq[string])
+    ## Receives native file paths without reading their contents.
+    ## Takes priority over onFileDrop; browser drops use onFileDrop instead.
 
   Button* = enum
     ButtonUnknown

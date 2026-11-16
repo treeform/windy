@@ -235,6 +235,11 @@ objc:
   proc types*(self: NSPasteboard): NSArray
   proc stringForType*(self: NSPasteboard, x: NSPasteboardType): NSString
   proc dataForType*(self: NSPasteboard, x: NSPasteboardType): NSData
+  proc setData*(
+    self: NSPasteboard,
+    x: NSData,
+    forType: NSPasteboardType
+  ): bool
   proc clearContents*(self: NSPasteboard)
   proc setString*(self: NSPasteboard, x: NSString, forType: NSPasteboardType)
   proc processInfo*(class: typedesc[NSProcessInfo]): NSProcessInfo
