@@ -130,6 +130,12 @@ type
   TextInputEditKind* = enum
     ReplaceText, SelectText
 
+  TextEditAction* = enum
+    CopyTextAction, CutTextAction, PasteTextAction, SelectAllTextAction
+
+  TextEditActionCallback* = proc(action: TextEditAction)
+    ## Handles an explicitly requested action from a native editing menu.
+
   TextInputEdit* = object
     ## Requests an edit over a half-open range of rune offsets.
     kind*: TextInputEditKind

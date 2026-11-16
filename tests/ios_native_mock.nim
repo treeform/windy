@@ -11,6 +11,9 @@ var
   textInput*: TextInputState
   keyboardOcclusion*: float32
   eventWakeCount*: int
+  textMenuBounds*: Rect
+  textMenuActions*: set[TextEditAction]
+  textMenuCallback*: TextEditActionCallback
   clipboard: string
   clipboardImage: Image
 
@@ -55,6 +58,20 @@ proc setNativeTextInputState*(state: TextInputState) =
   ## Records the editor published for native keyboard and IME services.
   textInput = state
 
+proc dismissNativeTextEditMenu*() =
+  ## Invalidates the simulated native menu without changing keyboard state.
+  textMenuCallback = nil
+  textMenuActions = {}
+
+proc showNativeTextEditMenu*(
+  bounds: Rect, actions: set[TextEditAction], callback: TextEditActionCallback
+): bool =
+  ## Records editing menu requests for lifecycle and action tests.
+  textMenuBounds = bounds
+  textMenuActions = actions
+  textMenuCallback = callback
+  true
+
 proc wakeNativeEvents*() {.raises: [], gcsafe.} =
   ## Records event wakes without starting an application event loop.
   inc eventWakeCount
@@ -66,6 +83,7 @@ proc setNativeKeyboardVisible*(visible: bool) =
 proc stopNativeRendering*() =
   ## Records that drawing has been stopped after close or an error.
   renderingStopped = true
+  dismissNativeTextEditMenu()
 
 proc nativeClipboardText*(): string =
   ## Returns the mock clipboard contents.

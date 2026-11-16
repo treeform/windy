@@ -5,6 +5,7 @@
 typedef void (*WindyIosTextEdit)(int kind, const char *text, size_t textLength,
                               intptr_t start, intptr_t length);
 typedef void (*WindyIosTextKey)(int usage, int pressed, uintptr_t modifiers);
+typedef void (*WindyIosTextMenuAction)(int action);
 int windyIosClipboardImage(void **bytes, size_t *length);
 int windyIosSetClipboardImage(const void *bytes, size_t length);
 int windyIosHasClipboardImage(void);
@@ -19,4 +20,8 @@ int windyIosSetTextKeyboardVisible(int visible);
 double windyIosKeyboardInset(void *host);
 void windyIosObserveKeyboard(void (*changed)(void));
 void windyIosWakeEvents(void);
+int windyIosShowTextEditMenu(void *host, double x, double y,
+                            double width, double height, unsigned int actions,
+                            WindyIosTextMenuAction callback);
+void windyIosDismissTextEditMenu(void);
 #endif

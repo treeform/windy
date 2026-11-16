@@ -8,6 +8,113 @@
 static const NSUInteger WindyClipboardByteLimit = 64 * 1024 * 1024;
 static const double WindyClipboardPixelLimit = 16 * 1024 * 1024;
 
+API_AVAILABLE(ios(16.0))
+@interface WindyIosEditMenu : NSObject <UIEditMenuInteractionDelegate>
+@property(nonatomic, strong) UIEditMenuInteraction *interaction;
+@property(nonatomic, weak) UIView *host;
+@property(nonatomic) CGRect bounds;
+@property(nonatomic) unsigned int actions;
+@property(nonatomic) NSUInteger generation;
+@property(nonatomic) WindyIosTextMenuAction callback;
+- (void)dismiss;
+- (void)performAction:(int)action generation:(NSUInteger)generation;
+@end
+
+static WindyIosEditMenu *windyEditMenu API_AVAILABLE(ios(16.0));
+
+@implementation WindyIosEditMenu
+
+- (void)dismiss {
+  // Invalidate delayed UIKit actions before starting dismissal animation.
+  self.generation++;
+  self.callback = NULL;
+  [self.interaction dismissMenu];
+}
+
+- (void)performAction:(int)action generation:(NSUInteger)generation {
+  // A menu action belongs only to its original presentation and fires once.
+  if (generation != self.generation || !self.callback || action < 0 ||
+      action > 3 || !(self.actions & (1u << action))) return;
+  WindyIosTextMenuAction callback = self.callback;
+  [self dismiss];
+  callback(action);
+}
+
+- (UIMenu *)editMenuInteraction:(UIEditMenuInteraction *)interaction
+    menuForConfiguration:(UIEditMenuConfiguration *)configuration
+    suggestedActions:(NSArray<UIMenuElement *> *)suggestedActions {
+  // The custom editor owns selection, permissions, and clipboard operations.
+  NSUInteger generation = [(NSNumber *)configuration.identifier unsignedIntegerValue];
+  if (generation != self.generation || !self.callback) return [UIMenu menuWithChildren:@[]];
+  NSArray<NSString *> *titles = @[@"Copy", @"Cut", @"Paste", @"Select All"];
+  NSMutableArray<UIMenuElement *> *items = [NSMutableArray array];
+  __weak WindyIosEditMenu *weakSelf = self;
+  for (int action = 0; action < 4; action++) {
+    if (!(self.actions & (1u << action))) continue;
+    [items addObject:[UIAction actionWithTitle:titles[action] image:nil
+      identifier:nil handler:^(__kindof UIAction *item) {
+        [weakSelf performAction:action generation:generation];
+      }]];
+  }
+  return [UIMenu menuWithChildren:items];
+}
+
+- (CGRect)editMenuInteraction:(UIEditMenuInteraction *)interaction
+    targetRectForConfiguration:(UIEditMenuConfiguration *)configuration {
+  // Position the native menu around the custom renderer's selected text.
+  return self.bounds;
+}
+
+- (void)editMenuInteraction:(UIEditMenuInteraction *)interaction
+    willDismissMenuForConfiguration:(UIEditMenuConfiguration *)configuration
+    animator:(id<UIEditMenuInteractionAnimating>)animator {
+  // Let a tapped action run before clearing its callback after animation.
+  NSUInteger generation = [(NSNumber *)configuration.identifier unsignedIntegerValue];
+  __weak WindyIosEditMenu *weakSelf = self;
+  [animator addCompletion:^{
+    WindyIosEditMenu *menu = weakSelf;
+    if (menu && menu.generation == generation) {
+      menu.generation++;
+      menu.callback = NULL;
+    }
+  }];
+}
+@end
+
+int windyIosShowTextEditMenu(void *host, double x, double y,
+                            double width, double height, unsigned int actions,
+                            WindyIosTextMenuAction callback) {
+  // Menu presentation never transfers first responder or keyboard ownership.
+  if (@available(iOS 16.0, *)) {
+    if (!NSThread.isMainThread) return 0;
+    UIView *view = (__bridge UIView *)host;
+    windyIosDismissTextEditMenu();
+    if (!view.window || !callback || !(actions & 15u)) return 0;
+    if (!windyEditMenu) windyEditMenu = [WindyIosEditMenu new];
+    if (windyEditMenu.host != view) {
+      [windyEditMenu.host removeInteraction:windyEditMenu.interaction];
+      windyEditMenu.host = view;
+      windyEditMenu.interaction = [[UIEditMenuInteraction alloc] initWithDelegate:windyEditMenu];
+      [view addInteraction:windyEditMenu.interaction];
+    }
+    windyEditMenu.bounds = CGRectMake(x, y, MAX(width, 1), MAX(height, 1));
+    windyEditMenu.actions = actions & 15u;
+    windyEditMenu.callback = callback;
+    UIEditMenuConfiguration *configuration = [UIEditMenuConfiguration
+      configurationWithIdentifier:@(windyEditMenu.generation)
+      sourcePoint:CGPointMake(CGRectGetMidX(windyEditMenu.bounds),
+        CGRectGetMidY(windyEditMenu.bounds))];
+    [windyEditMenu.interaction presentEditMenuWithConfiguration:configuration];
+    return 1;
+  }
+  return 0;
+}
+
+void windyIosDismissTextEditMenu(void) {
+  // Clearing the callback prevents an obsolete menu editing another field.
+  if (@available(iOS 16.0, *)) [windyEditMenu dismiss];
+}
+
 int windyIosClipboardImage(void **bytes, size_t *length) {
   // The caller owns the returned copy independently of the autorelease pool.
   *bytes = NULL;
