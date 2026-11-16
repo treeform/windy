@@ -49,10 +49,14 @@ var
   polling: bool
 
 proc notificationWaitTimeout*(timeoutMs: int): int =
-  ## Bounds waits while notification replies or callbacks may arrive.
+  ## Keeps the notification bus responsive while it owns pending callbacks.
   result = clamp(timeoutMs, 0, int32.high.int)
-  if notifications.len > 0 or requests.len > 0 or deliveries.len > 0:
-    result = min(result, 16)
+  if connection != nil or requests.len > 0 or deliveries.len > 0:
+    result = min(result, 10)
+  else:
+    for notification in notifications:
+      if notification.state notin {nsClosed, nsFailed}:
+        return min(result, 10)
 
 proc closed*(notification: Notification): bool =
   ## True after dismissal, expiration, or failure; closing also counts as closed.

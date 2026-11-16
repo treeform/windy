@@ -1089,12 +1089,19 @@ proc newWindow*(
     destroy result
     raise
 
+proc completeResize(window: Window) =
+  ## Acknowledges a configured resize after its matching frame has been drawn.
+  if window.syncState == SyncConfigured:
+    display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
+    window.syncState = SyncIdle
+
 proc pollEvents(window: Window) =
 
   # Clear all per-frame data
   window.perFrame = PerFrame()
   window.buttonPressed = {}
   window.buttonReleased = {}
+  window.completeResize()
 
   var ev: XEvent
 
@@ -1654,16 +1661,15 @@ proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
   raise newException(WindyError, "Image clipboard writes are not supported on X11")
 
 proc waitEvents*(timeoutMs: int) =
-  ## Draws frames and waits for native input or an explicit worker wake.
+  ## Draws pending frames, then waits up to the given milliseconds for events.
+  ## Zero polls without waiting. Call this on the window thread.
   pollNotificationEvents()
   pollTrayEvents()
   for window in windows:
     if window.onFrame != nil:
       window.onFrame()
-    if not window.closed and window.syncState == SyncConfigured:
-      # Acknowledge only the configured frame before blocking for more input.
-      display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
-      window.syncState = SyncIdle
+    if not window.closed:
+      window.completeResize()
 
   let ws = windows
   windows = @[]
@@ -1681,7 +1687,7 @@ proc waitEvents*(timeoutMs: int) =
     proc unownedEvent(
       connection: Display, event: ptr XEvent, data: pointer
     ): cint {.cdecl.} =
-      ## Drops events that no active window or clipboard endpoint can read.
+      ## Drops only events that no active Windy window or clipboard can read.
       if clipboardWindow != 0 and event.any.window == clipboardWindow:
         return 0
       for window in windows:
@@ -1692,6 +1698,12 @@ proc waitEvents*(timeoutMs: int) =
     var event: XEvent
     while display.XCheckIfEvent(addr event, unownedEvent, nil) != 0:
       discard
+    for window in windows:
+      if window.syncState == SyncRequested and
+        epochTime() < window.syncDeadline:
+          timeout = min(timeout, max(
+            0, int(ceil((window.syncDeadline - epochTime()) * 1000))
+          ))
     if display.XPending() > 0:
       timeout = 0
     waitNativeEvents(timeout, [display.fd])

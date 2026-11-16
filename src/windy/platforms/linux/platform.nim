@@ -13,7 +13,6 @@ when not HasDirect:
 else:
   import pixie, ./direct
   import ../../http
-  import ./native/waits
   export http
   when HasX11:
     import ./x11
@@ -60,26 +59,32 @@ else:
       raise newException(WindyError, "Framebuffer pixel presentation requires vsync=false")
     direct.newDirectWindow(title, selected, linuxOptions, vsync)
 
-  proc waitEvents*(timeoutMs: int) =
-    ## Waits for native input, capping direct device polling intervals at 16 ms.
+  proc pollEvents*() =
     if selected == X11Backend:
-      when HasX11: x11.waitEvents(timeoutMs)
+      when HasX11: x11.pollEvents()
     else:
-      initEventWait()
-      # Touch and desktop-service readers currently expose polling only.
-      waitNativeEvents(min(httpWaitTimeout(timeoutMs), 16), [])
       pollNotificationEvents()
       pollTrayEvents()
       direct.pollEvents()
       pollHttp()
 
-  proc wakeEvents*() {.raises: [], gcsafe.} =
-    ## Wakes either backend without inspecting window state from a worker.
-    wakeNativeEvents()
+  proc waitEvents*(timeoutMs: int) =
+    ## Waits for the selected native backend while servicing desktop services.
+    ## Calls onFrame before waiting. Zero polls without waiting.
+    if selected == X11Backend:
+      when HasX11:
+        x11.waitEvents(timeoutMs)
+    else:
+      pollNotificationEvents()
+      pollTrayEvents()
+      direct.waitEvents(notificationWaitTimeout(trayWaitTimeout(
+        httpWaitTimeout(timeoutMs)
+      )))
+      pollHttp()
 
-  proc pollEvents*() =
-    ## Dispatches native input and frames without waiting.
-    waitEvents(0)
+  proc wakeEvents*() {.raises: [], gcsafe.} =
+    ## Wakes native waiting from any thread after the first window is created.
+    direct.wakeEvents()
 
   proc closed*(window: Window): bool =
     when HasX11:
