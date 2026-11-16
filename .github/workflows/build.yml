@@ -32,11 +32,15 @@ jobs:
     - run: nim r tests/test_openurl.nim
     - run: nim r tests/test_macos.nim
       if: matrix.os == 'macos-latest'
+    - run: nim r tests/test_fullscreen_macos.nim
+      if: matrix.os == 'macos-latest'
     - run: nim r tests/test_accessibility.nim
       if: matrix.os == 'macos-latest'
     - run: nim r tests/test_tempfiles.nim
       if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_macos.nim
+      if: matrix.os == 'macos-latest'
+    - run: nim r -d:useCpu tests/test_fullscreen_macos.nim
       if: matrix.os == 'macos-latest'
     - run: nim r -d:useCpu tests/test_accessibility.nim
       if: matrix.os == 'macos-latest'
@@ -88,6 +92,7 @@ jobs:
     - run: nim c examples/dragdrop.nim
     - run: nim c examples/fixedsize.nim
     - run: nim c examples/fullscreen.nim
+    - run: nim c tests/manual_mouse_confinement.nim
     - run: nim c examples/icon.nim
     - run: nim c examples/mouse_inside.nim
     - run: nim c examples/opengl_version.nim
