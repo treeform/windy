@@ -86,6 +86,7 @@ var
 
 proc drainEvents(timeoutMs = 0)
 proc pumpActivation()
+proc readPasteboardImage(pboard: NSPasteboard): Image
 
 objc:
   proc initWithFrame(self: NSView, x: NSRect): NSView
@@ -769,44 +770,86 @@ proc draggingEntered(
   cmd: SEL,
   sender: NSDraggingInfo
 ): NSDragOperation {.cdecl.} =
-  ## Accept Finder file drops onto the content view.
-  let pboard = sender.draggingPasteboard()
-  let types = pboard.types()
-  if types.int != 0 and types.containsObject(NSFilenamesPboardType.ID):
-    return NSDragOperationCopy
+  ## Accepts native file drops and updates their window-relative position.
+  let window = windows.forNSWindow(self.NSView.window)
+  if window == nil or
+    (window.onFileDrop == nil and window.onFileDropPaths == nil):
+      return NSDragOperationNone
+  handleMouseMove(window, sender.draggingLocation())
+  let
+    pboard = sender.draggingPasteboard()
+    types = pboard.types()
+  if types.int != 0 and
+    (types.containsObject(NSFilenamesPboardType.ID) or
+    types.containsObject(NSPasteboardTypeFileURL.ID) or
+    (window.onFileDrop != nil and
+    (types.containsObject(NSPasteboardTypePNG.ID) or
+    types.containsObject(NSPasteboardTypeTIFF.ID)))):
+      return NSDragOperationCopy
   NSDragOperationNone
+
+proc pasteboardFilePaths(pboard: NSPasteboard): seq[string] =
+  ## Reads local file URLs with a fallback for legacy Finder pasteboards.
+  let urls = pboard.readObjectsForClasses(
+    NSArray.arrayWithObject(NSURL.getClass().ID),
+    0.NSDictionary
+  )
+  for i in 0 ..< urls.count.int:
+    let url = urls[i].NSURL
+    if url.isFileURL():
+      let path = $url.path()
+      if path.len > 0:
+        result.add(path)
+  if result.len > 0:
+    return
+  let list = pboard.propertyListForType(NSFilenamesPboardType).NSArray
+  for i in 0 ..< list.count.int:
+    let path = $list[i].NSString
+    if path.len > 0:
+      result.add(path)
+
+proc deliverFileDrop(window: Window, paths: seq[string]) =
+  ## Prefers path delivery so applications can bound their own file reads.
+  if window.onFileDropPaths != nil:
+    window.onFileDropPaths(paths)
+  elif window.onFileDrop != nil:
+    for path in paths:
+      var data: string
+      try:
+        data = readFile(path)
+      except IOError, OSError:
+        discard
+      window.onFileDrop(path, data)
+
+proc deliverPasteboardDrop(window: Window, pboard: NSPasteboard): bool =
+  ## Delivers local file paths or PNG bytes for pathless native image drops.
+  let paths = pasteboardFilePaths(pboard)
+  if paths.len > 0:
+    window.deliverFileDrop(paths)
+    return true
+  if window.onFileDrop != nil:
+    let image = readPasteboardImage(pboard)
+    if image != nil:
+      var encoded: string
+      try:
+        encoded = image.encodePng()
+      except PixieError:
+        return false
+      window.onFileDrop("Dropped image.png", encoded)
+      return true
 
 proc performDragOperation(
   self: ID,
   cmd: SEL,
   sender: NSDraggingInfo
 ): bool {.cdecl.} =
-  ## Delivers native paths before considering eager file-content callbacks.
+  ## Updates the native drop location before invoking application callbacks.
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil or
     (window.onFileDrop == nil and window.onFileDropPaths == nil):
-    return false
-  let
-    pboard = sender.draggingPasteboard()
-    list = pboard.propertyListForType(NSFilenamesPboardType).NSArray
-  if list.int == 0:
-    return false
-  var paths: seq[string]
-  for i in 0 ..< list.count.int:
-    let path = $list[i].NSString
-    if path.len > 0:
-      paths.add(path)
-  if window.onFileDropPaths != nil:
-    window.onFileDropPaths(paths)
-  else:
-    for path in paths:
-      var content: string
-      try:
-        content = readFile(path)
-      except CatchableError:
-        discard
-      window.onFileDrop(path, content)
-  true
+      return false
+  handleMouseMove(window, sender.draggingLocation())
+  window.deliverPasteboardDrop(sender.draggingPasteboard())
 
 proc mouseDragged(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   mouseMoved(self, cmd, event)
@@ -847,30 +890,40 @@ proc mouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonPress(MouseLeft)
 
 proc mouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonRelease(MouseLeft)
 
 proc rightMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonPress(MouseRight)
 
 proc rightMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
   window.handleButtonRelease(MouseRight)
 
 proc otherMouseDown(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
 
   case event.buttonNumber:
   of 2:
@@ -886,6 +939,8 @@ proc otherMouseUp(self: ID, cmd: SEL, event: NSEvent): ID {.cdecl.} =
   let window = windows.forNSWindow(self.NSView.window)
   if window == nil:
     return
+  if not window.state.mouseCaptured:
+    handleMouseMove(window, event.locationInWindow)
 
   case event.buttonNumber:
   of 2:
@@ -1163,6 +1218,7 @@ proc init() {.raises: [].} =
         addMethod "otherMouseDown:", otherMouseDown
         addMethod "otherMouseUp:", otherMouseUp
         addMethod "draggingEntered:", draggingEntered
+        addMethod "draggingUpdated:", draggingEntered
         addMethod "performDragOperation:", performDragOperation
         addMethod "hasMarkedText", hasMarkedText
         addMethod "markedRange", markedRange
@@ -1203,6 +1259,7 @@ proc init() {.raises: [].} =
         addMethod "otherMouseDown:", otherMouseDown
         addMethod "otherMouseUp:", otherMouseUp
         addMethod "draggingEntered:", draggingEntered
+        addMethod "draggingUpdated:", draggingEntered
         addMethod "performDragOperation:", performDragOperation
         addMethod "hasMarkedText", hasMarkedText
         addMethod "markedRange", markedRange
@@ -1548,6 +1605,9 @@ proc newWindow*(
       discard result.inner.makeFirstResponder(nativeView)
       nativeView.registerForDraggedTypes(
         NSArray.arrayWithObject(NSFilenamesPboardType.ID)
+          .arrayByAddingObject(NSPasteboardTypeFileURL.ID)
+          .arrayByAddingObject(NSPasteboardTypePNG.ID)
+          .arrayByAddingObject(NSPasteboardTypeTIFF.ID)
       )
     else:
       let
@@ -1596,9 +1656,14 @@ proc newWindow*(
 
       result.inner.setDelegate(result.inner.ID)
       result.inner.setContentView(openglView.NSView)
+      # Attach the drawable even if the view is never shown.
+      openglView.openGLContext.setView(openglView.NSView)
       discard result.inner.makeFirstResponder(openglView.NSView)
       openglView.NSView.registerForDraggedTypes(
         NSArray.arrayWithObject(NSFilenamesPboardType.ID)
+          .arrayByAddingObject(NSPasteboardTypeFileURL.ID)
+          .arrayByAddingObject(NSPasteboardTypePNG.ID)
+          .arrayByAddingObject(NSPasteboardTypeTIFF.ID)
       )
 
     result.inner.setRestorable(false)
@@ -1697,13 +1762,10 @@ proc getClipboardContentKinds*(): set[ClipboardContentKind] =
         types.containsObject(NSPasteboardTypeTIFF.ID):
       result.incl ImageContent
 
-proc getClipboardImage*(): Image =
-  ## Reads a PNG or TIFF image from the system pasteboard.
-  init()
+proc readPasteboardImage(pboard: NSPasteboard): Image =
+  ## Decodes a PNG or TIFF supplied by clipboard or native image dragging.
   autoreleasepool:
-    let
-      pboard = NSPasteboard.generalPasteboard()
-      types = pboard.types
+    let types = pboard.types
 
     if types.int == 0:
       return
@@ -1713,7 +1775,7 @@ proc getClipboardImage*(): Image =
       if data.int != 0:
         try:
           return decodePng(data.bytes, data.length.int).convertToImage()
-        except:
+        except PixieError:
           discard
 
     if not types.containsObject(NSPasteboardTypeTIFF.ID):
@@ -1738,8 +1800,13 @@ proc getClipboardImage*(): Image =
 
     try:
       result = decodePng(pngData.bytes, pngData.length.int).convertToImage()
-    except:
+    except PixieError:
       return
+
+proc getClipboardImage*(): Image =
+  ## Reads a PNG or TIFF image from the system pasteboard.
+  init()
+  readPasteboardImage(NSPasteboard.generalPasteboard())
 
 proc getClipboardString*(): string =
   ## Gets the clipboard content as a string.
