@@ -34,6 +34,7 @@ type
     onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
 
     ## In Emscripten, the canvas is the more or less the window.
     canvas: cstring
@@ -164,6 +165,15 @@ proc pollEvents*() =
   drainDeferredWindowEvents()
   pollHttp()
   emscripten_sleep(0)
+
+proc waitEvents*(timeoutMs: int) =
+  ## Yields to browser-managed events and animation frames without blocking.
+  ## The browser controls scheduling, so timeoutMs has no effect here.
+  pollEvents()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Browser callbacks already wake their event loop.
+  discard
 
 proc size*(window: Window): IVec2 =
   # Get the size of the canvas in physical pixels (CSS size × DPR).
@@ -531,6 +541,14 @@ proc getClipboardContentKinds*(): set[ClipboardContentKind] =
 proc getClipboardImage*(): Image =
   ## Image clipboard is not implemented on Emscripten yet.
   nil
+
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Reports unsupported synchronous image clipboard writes in browsers.
+  raise newException(
+    WindyError,
+    "Image clipboard writes are not supported on Emscripten"
+  )
+
 
 proc closeIme*(window: Window) =
   if window.state.imeCompositionString.len > 0:

@@ -1,18 +1,25 @@
 import
-  std/[math, os, osproc, sequtils, sets, strformat, strutils, times, unicode, uri, pathnorm],
+  std/[math, monotimes, os, osproc, sequtils, sets, strformat, strutils,
+    times, unicode, uri, pathnorm],
   ../../[common, internal],
   opengl, vmath, pixie,
   x11/[glx, keysym, x, xevent, xlib, xcursor],
-  ./native/pixels, ./tray, ./notifications
+  ./native/[pixels, waits], ./tray, ./notifications
 
 import ../../http
 export http
-export tray except pollTrayEvents
-export notifications except pollNotificationEvents
+export tray except pollTrayEvents, trayWaitTimeout
+export notifications except pollNotificationEvents, notificationWaitTimeout
 
 import ./backends
 when HasDirect:
   import ./native/state
+
+const
+  MaxClipboardBytes = 32 * 1024 * 1024
+  MaxClipboardPixels = 32 * 1024 * 1024
+  ClipboardTimeoutMs = 1000
+  ClipboardChunkBytes = 64 * 1024
 
 type
   XWindow = x.Window
@@ -35,6 +42,7 @@ type
     onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
 
     mousePos, mousePrevPos: IVec2
     buttonClicking, buttonToggle: set[Button]
@@ -106,6 +114,15 @@ var
   wmForDecoratedKind: WmForDecoratedKind
   clipboardWindow: XWindow
   clipboardContent: string
+  clipboardImage: string
+  clipboardReadData: string
+  clipboardReadTarget: Atom
+  clipboardReadPending: bool
+  clipboardReadIncremental: bool
+  clipboardReadFailed: bool
+  clipboardReadError: string
+  xaImagePng: Atom
+  xaIncremental: Atom
   xaCardinal: Atom
   xaWindyXdndTargetProperty: Atom
 
@@ -145,6 +162,8 @@ proc initConstants(display: Display) =
   xaWindyClipboardTargetProperty = display.XInternAtom("windy_clipboardTargetProperty", 0)
   xaWindyXdndTargetProperty = display.XInternAtom("windy_xdndTargetProperty", 0)
   xaTargets = display.XInternAtom("TARGETS", 0)
+  xaImagePng = display.XInternAtom("image/png", 0)
+  xaIncremental = display.XInternAtom("INCR", 0)
   xaText = display.XInternAtom("TEXT", 0)
   xaCardinal = display.XInternAtom("CARDINAL", 0)
 
@@ -185,6 +204,7 @@ proc init =
     raise WindyError.newException("Error opening X11 display, make sure the DISPLAY environment variable is set correctly")
 
   display.initConstants()
+  initEventWait()
 
   wmForDecoratedKind =
     if (decoratedAtom = atomIfExist"_MOTIF_WM_HINTS"; decoratedAtom != 0):
@@ -471,6 +491,8 @@ proc closed*(window: Window): bool = window.closed
 proc close*(window: Window) =
   window.onTextInput = nil
   window.onTextEdit = nil
+  window.onFileDropPaths = nil
+  window.onFileDrop = nil
   destroy window
 
 proc hasGpuPixelContext*(window: Window): bool =
@@ -1087,20 +1109,19 @@ proc newWindow*(
     destroy result
     raise
 
+proc completeResize(window: Window) =
+  ## Acknowledges a configured resize after its matching frame has been drawn.
+  if window.syncState == SyncConfigured:
+    display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
+    window.syncState = SyncIdle
+
 proc pollEvents(window: Window) =
 
   # Clear all per-frame data
   window.perFrame = PerFrame()
   window.buttonPressed = {}
   window.buttonReleased = {}
-
-  # Signal that the frame for the last _NET_WM_SYNC_REQUEST was drawn. This
-  # only happens once the matching ConfigureNotify was handled and a frame has
-  # gone by, otherwise a compositor such as KWin shows a frame that is still
-  # the old size.
-  if window.syncState == SyncConfigured:
-    display.XSyncSetCounter(window.xSyncCounter, window.lastSync)
-    window.syncState = SyncIdle
+  window.completeResize()
 
   var ev: XEvent
 
@@ -1194,6 +1215,22 @@ proc pollEvents(window: Window) =
         # XDnD position update.
         if window.xdndVersion > 5:
           continue
+
+        var
+          child: XWindow
+          position: IVec2
+        let packed = ev.client.data.l[2].uint32
+        display.XTranslateCoordinates(
+          display.defaultRootWindow,
+          window.handle,
+          cast[int16](packed shr 16).int32,
+          cast[int16](packed and 0xffff).int32,
+          position.x.addr,
+          position.y.addr,
+          child.addr
+        )
+        window.mousePos = position
+        window.mousePrevPos = position
 
         # Send status back to source.
         let acceptFlag: clong = if window.xdndFormat != 0: 1 else: 0
@@ -1404,18 +1441,17 @@ proc pollEvents(window: Window) =
       # Handle XDnD selection data.
       if ev.selection.property == xaWindyXdndTargetProperty:
         let prop = window.handle.property(xaWindyXdndTargetProperty)
+        var paths: seq[string]
         if prop.data.len > 0:
           # Parse URI list (files separated by newlines).
           let uriList = prop.data
           for line in uriList.splitLines():
             if line.len > 0 and line.startsWith("file://"):
-              # Convert URI to local path and decode percent-encoding.
-              var filePath = decodeUrl(line[7..^1])
-              if window.onFileDrop != nil:
-                let fileContent = readFile(filePath)
-                window.onFileDrop(filePath, fileContent)
+              let location = parseUri(line)
+              if location.hostname.len == 0 or location.hostname == "localhost":
+                paths.add(decodeUrl(location.path, decodePlus = false))
 
-        # Clean up the property.
+        # Finish the native transfer before callbacks can close the window.
         window.handle.delProperty(xaWindyXdndTargetProperty)
 
         # Send finished message.
@@ -1432,6 +1468,21 @@ proc pollEvents(window: Window) =
         window.xdndSource = 0
         window.xdndVersion = 0
         window.xdndFormat = 0
+
+        if paths.len > 0 and window.onFileDropPaths != nil:
+          window.onFileDropPaths(paths)
+        elif window.onFileDrop != nil:
+          for path in paths:
+            if window.closed or window.onFileDrop == nil:
+              break
+            var content = ""
+            try:
+              content = readFile(path)
+            except IOError, OSError:
+              discard
+            window.onFileDrop(path, content)
+        if window.closed:
+          return
 
     else:
       discard
@@ -1549,13 +1600,70 @@ proc `closeRequested=`*(window: Window, v: bool) =
       window.onCloseRequest()
 
 proc initClipboard =
+  ## Creates a hidden selection endpoint with property-change notifications.
+  init()
   if clipboardWindow != 0:
     return
   clipboardWindow = display.XCreateSimpleWindow(
     display.defaultRootWindow, 0, 0, 1, 1, 0, 0, 0
   )
+  display.XSelectInput(clipboardWindow, PropertyChangeMask)
 
-proc processClipboardEvents: bool =
+proc clipboardProperty(): tuple[kind: Atom, format: cint, data: string] =
+  ## Reads a bounded selection property and releases Xlib's allocation.
+  var
+    length, bytesAfter: culong
+    data: cstring
+  display.XGetWindowProperty(
+    clipboardWindow,
+    xaWindyClipboardTargetProperty,
+    0,
+    MaxClipboardBytes div 4,
+    false,
+    0,
+    result.kind.addr,
+    result.format.addr,
+    length.addr,
+    bytesAfter.addr,
+    data.addr
+  )
+  defer:
+    if data != nil:
+      XFree(data)
+  if bytesAfter > 0 or length > MaxClipboardBytes.culong:
+    raise newException(WindyError, "The clipboard content is too large.")
+  let size =
+    if result.format == 32:
+      length.int * sizeof(clong)
+    else:
+      length.int * result.format.int div 8
+  if size > MaxClipboardBytes:
+    raise newException(WindyError, "The clipboard content is too large.")
+  result.data = newString(size)
+  if size > 0 and data != nil:
+    copyMem(result.data[0].addr, data, size)
+
+proc sendClipboardData(window: XWindow, property, target: Atom, data: string) =
+  ## Publishes bounded byte content using requests below X11's size limit.
+  if data.len == 0:
+    window.setProperty(property, target, 8, "")
+    return
+  var offset = 0
+  while offset < data.len:
+    let count = min(ClipboardChunkBytes, data.len - offset)
+    display.XChangeProperty(
+      window,
+      property,
+      target,
+      8,
+      if offset == 0: pmReplace else: pmAppend,
+      cast[pointer](data[offset].unsafeAddr),
+      count.cint
+    )
+    offset += count
+
+proc processClipboardEvents() =
+  ## Services selection requests and advances a pending bounded read.
   var ev: XEvent
 
   proc checkEvent(
@@ -1563,100 +1671,221 @@ proc processClipboardEvents: bool =
     event: ptr XEvent,
     userData: pointer
   ): cint {.cdecl.} =
+    ## Selects only events belonging to the hidden clipboard endpoint.
     cint(event.any.window == cast[XWindow](userData))
+
+  proc receiveProperty() =
+    ## Appends one direct or incremental selection payload.
+    try:
+      let value = clipboardProperty()
+      if value.kind == xaIncremental and not clipboardReadIncremental:
+        clipboardReadIncremental = true
+        clipboardReadData.setLen(0)
+      else:
+        let expected =
+          if clipboardReadTarget == xaTargets:
+            value.kind == xaAtom and value.format == 32
+          else:
+            value.kind == clipboardReadTarget and value.format == 8
+        if value.data.len > MaxClipboardBytes - clipboardReadData.len:
+          clipboardReadError = "The clipboard content is too large."
+          clipboardReadFailed = true
+          clipboardReadPending = false
+        elif not expected:
+          clipboardReadFailed = true
+          clipboardReadPending = false
+        else:
+          clipboardReadData.add(value.data)
+          if not clipboardReadIncremental or value.data.len == 0:
+            clipboardReadPending = false
+    except WindyError as error:
+      clipboardReadError = error.msg
+      clipboardReadFailed = true
+      clipboardReadPending = false
+    clipboardWindow.delProperty(xaWindyClipboardTargetProperty)
+    display.XFlush()
 
   while display.XCheckIfEvent(
     ev.addr, checkEvent, cast[pointer](clipboardWindow)
   ) != 0:
     case ev.kind
     of xeSelection:
-      template e: untyped = ev.selection
-
-      if e.property == 0 or e.selection != xaClipboard:
-        continue
-
-      clipboardContent = clipboardWindow.property(
-        xaWindyClipboardTargetProperty
-      ).data
-      clipboardWindow.delProperty(xaWindyClipboardTargetProperty)
-
-      return true
-
+      let event = ev.selection
+      if not clipboardReadPending or event.selection != xaClipboard or
+        event.target != clipboardReadTarget:
+          continue
+      if event.property == 0:
+        clipboardReadFailed = true
+        clipboardReadPending = false
+      elif event.property == xaWindyClipboardTargetProperty:
+        receiveProperty()
+    of xeProperty:
+      if clipboardReadPending and clipboardReadIncremental and
+        ev.property.atom == xaWindyClipboardTargetProperty and
+        ev.property.state == PropertyNewValue:
+          receiveProperty()
     of xeSelectionRequest:
-      template e: untyped = ev.selectionRequest
-
-      var resp = XSelectionEvent(
+      let
+        event = ev.selectionRequest
+        property =
+          if event.property == 0:
+            event.target
+          else:
+            event.property
+      var response = XSelectionEvent(
         kind: xeSelection,
-        requestor: e.requestor,
-        selection: e.selection,
-        property: e.property,
-        target: e.target,
-        time: e.time
+        requestor: event.requestor,
+        selection: event.selection,
+        property: property,
+        target: event.target,
+        time: event.time
       )
-
-      if e.selection == xaClipboard:
-        if e.target == xaTargets:
-          # request requests that we can handle
-          e.requestor.setProperty(e.property, xaAtom, 32, @[
-            xaTargets,
-            xaText,
-            xaString,
-            xaUTF8String
-          ].asString)
-          e.requestor.send(XEvent(selection: resp), propagate = true)
-          continue
-
-        elif e.target in {xaString, xaText, xaUTF8String}:
-          # request clipboard data
-          e.requestor.setProperty(e.property, xaAtom, 8, clipboardContent)
-          e.requestor.send(XEvent(selection: resp), propagate = true)
-          continue
-
-      # we can't handle this request
-      resp.property = 0
-      e.requestor.send(XEvent(selection: resp), propagate = true)
-
+      if event.selection == xaClipboard:
+        if event.target == xaTargets:
+          var targets = @[xaTargets]
+          if clipboardImage.len > 0:
+            targets.add(xaImagePng)
+          else:
+            targets.add([xaText, xaString, xaUTF8String])
+          display.XChangeProperty(
+            event.requestor,
+            property,
+            xaAtom,
+            32,
+            pmReplace,
+            cast[pointer](targets[0].addr),
+            targets.len.cint
+          )
+        elif event.target == xaImagePng and clipboardImage.len > 0:
+          event.requestor.sendClipboardData(
+            property, xaImagePng, clipboardImage
+          )
+        elif event.target in [xaString, xaText, xaUTF8String] and
+          clipboardImage.len == 0:
+            event.requestor.sendClipboardData(
+              property, event.target, clipboardContent
+            )
+        else:
+          response.property = 0
+      else:
+        response.property = 0
+      event.requestor.send(XEvent(selection: response), propagate = false)
+      display.XFlush()
     else:
       discard
 
-proc getClipboardString*: string =
+proc readClipboard(target: Atom): string =
+  ## Requests one selection target with a finite wait and byte budget.
   initClipboard()
   if display.XGetSelectionOwner(xaClipboard) == 0:
-    return ""
+    return
+  clipboardReadTarget = target
+  clipboardReadPending = true
+  clipboardReadIncremental = false
+  clipboardReadFailed = false
+  clipboardReadError.setLen(0)
+  clipboardReadData.setLen(0)
+  clipboardWindow.delProperty(xaWindyClipboardTargetProperty)
+  display.XConvertSelection(
+    xaClipboard, target, xaWindyClipboardTargetProperty, clipboardWindow
+  )
+  display.XFlush()
+  let started = getMonoTime()
+  while clipboardReadPending:
+    processClipboardEvents()
+    if (getMonoTime() - started).inMilliseconds >= ClipboardTimeoutMs:
+      clipboardReadFailed = true
+      clipboardReadError = "The clipboard owner did not respond in time."
+      break
+    if clipboardReadPending:
+      sleep(1)
+  clipboardReadPending = false
+  clipboardReadIncremental = false
+  clipboardWindow.delProperty(xaWindyClipboardTargetProperty)
+  if not clipboardReadFailed:
+    result = move(clipboardReadData)
+  clipboardReadData.setLen(0)
+  if clipboardReadError.len > 0:
+    raise newException(WindyError, clipboardReadError)
 
+proc getClipboardString*(): string =
+  ## Reads UTF-8 text without waiting forever on unavailable clipboard owners.
+  initClipboard()
   if display.XGetSelectionOwner(xaClipboard) == clipboardWindow:
     return clipboardContent
+  readClipboard(xaUTF8String)
 
-  display.XConvertSelection(
-    xaClipboard,
-    xaUTF8String,
-    xaWindyClipboardTargetProperty,
-    clipboardWindow
-  )
-
-  while not processClipboardEvents(): discard
-  result = clipboardContent
-  clipboardContent = ""
-
-proc setClipboardString*(s: string) =
+proc setClipboardString*(text: string) =
+  ## Publishes UTF-8 text and clears any previous image representation.
   initClipboard()
-  clipboardContent = s
+  if text.len > MaxClipboardBytes:
+    raise newException(WindyError, "The clipboard content is too large.")
+  clipboardContent = text
+  clipboardImage.setLen(0)
   display.XSetSelectionOwner(xaClipboard, clipboardWindow)
+  display.XFlush()
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
-  ## Image clipboard is not implemented on X11 yet.
-  discard
+  ## Checks advertised UTF-8 text and PNG image targets.
+  initClipboard()
+  if display.XGetSelectionOwner(xaClipboard) == clipboardWindow:
+    if clipboardImage.len > 0:
+      return {ImageContent}
+    return {TextContent}
+  let targets = readClipboard(xaTargets).asSeq(Atom)
+  if xaUTF8String in targets:
+    result.incl(TextContent)
+  if xaImagePng in targets:
+    result.incl(ImageContent)
 
 proc getClipboardImage*(): Image =
-  ## Image clipboard is not implemented on X11 yet.
-  nil
+  ## Decodes a bounded PNG image from the current X11 selection owner.
+  initClipboard()
+  let data =
+    if display.XGetSelectionOwner(xaClipboard) == clipboardWindow:
+      clipboardImage
+    else:
+      readClipboard(xaImagePng)
+  if data.len == 0:
+    return
+  try:
+    let dimensions = decodeImageDimensions(data)
+    if dimensions.width <= 0 or dimensions.height <= 0 or
+      dimensions.width > MaxClipboardPixels div dimensions.height:
+        raise newException(WindyError, "The clipboard image is too large.")
+    result = decodeImage(data)
+  except PixieError as error:
+    raise newException(WindyError, "Could not decode clipboard image: " & error.msg)
 
-proc pollEvents*() =
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Publishes a PNG image through the native X11 clipboard selection.
+  if image == nil or image.width <= 0 or image.height <= 0:
+    raise newException(WindyError, "Cannot copy an empty clipboard image.")
+  if image.width > MaxClipboardPixels div image.height:
+    raise newException(WindyError, "The clipboard image is too large.")
+  var data: string
+  try:
+    data = image.encodeImage(PngFormat)
+  except PixieError as error:
+    raise newException(WindyError, "Could not encode clipboard image: " & error.msg)
+  if data.len > MaxClipboardBytes:
+    raise newException(WindyError, "The clipboard image is too large.")
+  initClipboard()
+  clipboardImage = move(data)
+  clipboardContent.setLen(0)
+  display.XSetSelectionOwner(xaClipboard, clipboardWindow)
+  display.XFlush()
+
+proc waitEvents*(timeoutMs: int) =
+  ## Draws pending frames, then waits up to the given milliseconds for events.
+  ## Zero polls without waiting. Call this on the window thread.
   pollNotificationEvents()
   pollTrayEvents()
   for window in windows:
     if window.onFrame != nil:
       window.onFrame()
+    if not window.closed:
+      window.completeResize()
 
   let ws = windows
   windows = @[]
@@ -1667,13 +1896,53 @@ proc pollEvents*() =
     else:
       windows.add window
 
+  var timeout = notificationWaitTimeout(trayWaitTimeout(
+    httpWaitTimeout(timeoutMs)
+  ))
+  if display != nil:
+    proc unownedEvent(
+      connection: Display, event: ptr XEvent, data: pointer
+    ): cint {.cdecl.} =
+      ## Drops only events that no active Windy window or clipboard can read.
+      if clipboardWindow != 0 and event.any.window == clipboardWindow:
+        return 0
+      for window in windows:
+        if event.any.window == window.handle:
+          return 0
+      1
+
+    var event: XEvent
+    while display.XCheckIfEvent(addr event, unownedEvent, nil) != 0:
+      discard
+    for window in windows:
+      if window.syncState == SyncRequested and
+        epochTime() < window.syncDeadline:
+          timeout = min(timeout, max(
+            0, int(ceil((window.syncDeadline - epochTime()) * 1000))
+          ))
+    if display.XPending() > 0:
+      timeout = 0
+    waitNativeEvents(timeout, [display.fd])
+  else:
+    waitNativeEvents(timeout, [])
+
+  pollNotificationEvents()
+  pollTrayEvents()
   if clipboardWindow != 0:
-    discard processClipboardEvents()
+    processClipboardEvents()
 
   for window in windows:
     pollEvents(window)
 
   pollHttp()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Wakes native waiting from any thread after the first window is created.
+  wakeNativeEvents()
+
+proc pollEvents*() =
+  ## Draws pending frames and dispatches events without waiting.
+  waitEvents(0)
 
 proc closeIme*(window: Window) =
   discard

@@ -20,6 +20,8 @@ const
   windowClassName = "WINDY0"
   trayIconId = 2022
   defaultScreenDpi = 96
+  AllInputMessages = 0x04FF
+  InputAlreadyAvailable = 0x0004
   wheelDelta = 120
   decoratedWindowStyle = WS_OVERLAPPEDWINDOW
   undecoratedWindowStyle = WS_POPUP
@@ -78,6 +80,7 @@ type
     onTextEdit*: TextInputEditCallback
     onImeChange*: Callback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     imePos*: IVec2
 
     state: WindowState
@@ -92,6 +95,10 @@ type
     vsync*: bool
     iconHandle: HICON
     customCursor: HCURSOR
+    textInput: TextInputState
+    textProvider: pointer
+    textRoot: pointer
+    pendingSurrogate: uint32
 
   ExitFullscreenInfo = ref object
     maximized: bool
@@ -154,6 +161,7 @@ var
 var
   windowPropKey: string
   helperWindow: HWND
+  eventThread: DWORD
   windows: seq[Window]
   onTrayIconClick: Callback
   trayIconHandle: HICON
@@ -175,6 +183,8 @@ proc forHandle(windows: seq[Window], hWnd: HWND): Window =
   if index == -1:
     return nil
   windows[index]
+
+include accessibility
 
 proc registerWindowClass(windowClassName: string, wndProc: WNDPROC) =
   let wideWindowClassName = windowClassName.wstr()
@@ -233,6 +243,10 @@ else: # OpenGL
 proc destroy(window: Window) =
   ## Destroys the window and its graphics context.
 
+  window.clearNativeText()
+  windyTextRootDestroy(window.textRoot)
+  window.textRoot = nil
+
   # Clear callbacks
   window.onCloseRequest = nil
   window.onFrame = nil
@@ -247,6 +261,8 @@ proc destroy(window: Window) =
   window.onTextInput = nil
   window.onTextEdit = nil
   window.onImeChange = nil
+  window.onFileDrop = nil
+  window.onFileDropPaths = nil
 
   # Destroy graphics context
   window.destoryGraphicsContext()
@@ -619,6 +635,8 @@ proc `runeInputEnabled=`*(window: Window, runeInputEnabled: bool) =
   if runeInputEnabled:
     discard ImmAssociateContextEx(window.hWnd, 0, IACE_DEFAULT)
   else:
+    window.pendingSurrogate = 0
+    window.clearNativeText()
     window.closeIme()
     discard ImmAssociateContextEx(window.hWnd, 0, 0)
 
@@ -906,6 +924,11 @@ proc handleButtonRelease(window: Window, button: Button) =
 proc handleRune(window: Window, rune: Rune) =
   handleRuneTemplate()
 
+proc handleTextInput(window: Window, text: string) =
+  handleTextInputTemplate(text)
+
+proc getClipboardString*(): string
+
 proc wndProc(
   hWnd: HWND,
   uMsg: UINT,
@@ -923,8 +946,61 @@ proc wndProc(
     raise newException(WindyError, "Received message for missing window")
 
   case uMsg:
+  of WM_GETOBJECT:
+    if window.textRoot != nil and
+      cast[int32](lParam and 0xffffffff) == -25:
+        return windyTextObject(window.textRoot, wParam, lParam)
+  of WM_WINDY_FOCUS:
+    discard SetForegroundWindow(window.hWnd)
+    discard SetFocus(window.hWnd)
+    return cint(GetForegroundWindow() == window.hWnd and GetFocus() == window.hWnd)
+  of WM_WINDY_TEXT:
+    if window.textRoot != nil and cast[pointer](wParam) == window.textRoot:
+      return windyTextRequest(
+        window.textRoot, lParam, nativeTextEdit, cast[pointer](window)
+      )
+    return 0
+  of WM_PASTE:
+    # Read now: dictation tools may restore the clipboard before the next frame.
+    if window.state.runeInputEnabled:
+      window.handleTextInput(getClipboardString())
+    return 0
   of WM_CLOSE:
     window.closeRequested = true
+    return 0
+  of WM_DROPFILES:
+    let drop = wParam.HDROP
+    defer:
+      DragFinish(drop)
+    if window.onFileDropPaths == nil and window.onFileDrop == nil:
+      return 0
+    var point: POINT
+    window.state.mouseInside = DragQueryPoint(drop, point.addr) != 0
+    window.state.mousePrevPos = window.state.mousePos
+    window.state.mousePos = ivec2(point.x, point.y)
+    window.state.perFrame.mouseDelta +=
+      window.state.mousePos - window.state.mousePrevPos
+    let count = DragQueryFileW(drop, UINT.high, nil, 0)
+    var paths: seq[string]
+    for i in 0 ..< min(count.int, 4096):
+      let length = DragQueryFileW(drop, i.UINT, nil, 0)
+      if length == 0 or length > 32767:
+        continue
+      var path = newSeq[WCHAR](length.int + 1)
+      if DragQueryFileW(drop, i.UINT, path[0].addr, path.len.UINT) != 0:
+        paths.add($path[0].addr)
+    if window.onFileDropPaths != nil:
+      window.onFileDropPaths(paths)
+    else:
+      for path in paths:
+        if window.onFileDrop == nil:
+          break
+        var data = ""
+        try:
+          data = readFile(path)
+        except IOError, OSError:
+          discard
+        window.onFileDrop(path, data)
     return 0
   of WM_MOVE:
     if window.onMove != nil:
@@ -937,8 +1013,10 @@ proc wndProc(
       window.onFrame()
     return 0
   of WM_SETFOCUS, WM_KILLFOCUS:
+    window.pendingSurrogate = 0
     clearButtonsTemplate()
     if uMsg == WM_KILLFOCUS:
+      window.clearNativeText()
       window.releaseMouse()
     if window.onFocusChange != nil:
       window.onFocusChange()
@@ -1030,9 +1108,21 @@ proc wndProc(
       window.handleButtonPress(KeyPrintScreen)
       window.handleButtonRelease(KeyPrintScreen)
     else:
-      let
-        scancode = (HIWORD(lParam) and (KF_EXTENDED or 0xff))
-        button = scancodeToButton[scancode]
+      var scancode = (HIWORD(lParam) and (KF_EXTENDED or 0xff)).int
+      if (scancode and 0xff) == 0:
+        # SendInput and posted shortcuts can supply only a virtual key.
+        let mapped = MapVirtualKeyW(wParam.UINT, 4)
+        scancode = (mapped and 0xff).int
+        if (mapped and 0xff00) != 0:
+          scancode = scancode or 0x100
+      var button = scancodeToButton[scancode]
+      if (HIWORD(lParam) and 0xff) == 0:
+        # Virtual-key-only letter shortcuts retain their meaning on non-QWERTY
+        # layouts, rather than being interpreted as physical QWERTY positions.
+        if wParam in 0x41 .. 0x5a:
+          button = Button(ord(KeyA) + wParam.int - 0x41)
+        elif wParam in 0x30 .. 0x39:
+          button = Button(ord(Key0) + wParam.int - 0x30)
       if button != ButtonUnknown:
         if (HIWORD(lParam) and KF_UP) == 0:
           window.handleButtonPress(button)
@@ -1042,8 +1132,21 @@ proc wndProc(
   of WM_CHAR, WM_SYSCHAR, WM_UNICHAR:
     if uMsg == WM_UNICHAR and wParam == UNICODE_NOCHAR:
       return TRUE
+    if not window.state.runeInputEnabled:
+      window.pendingSurrogate = 0
+      return 0
     let codepoint = wParam.uint32
-    window.handleRune(Rune(codepoint))
+    if uMsg != WM_UNICHAR and codepoint in 0xd800'u32 .. 0xdbff'u32:
+      window.pendingSurrogate = codepoint
+    elif uMsg != WM_UNICHAR and codepoint in 0xdc00'u32 .. 0xdfff'u32:
+      if window.pendingSurrogate != 0:
+        window.handleRune(Rune(0x10000'u32 +
+          ((window.pendingSurrogate - 0xd800) shl 10) + codepoint - 0xdc00))
+      window.pendingSurrogate = 0
+    else:
+      window.pendingSurrogate = 0
+      if codepoint <= 0x10ffff and codepoint notin 0xd800'u32 .. 0xdfff'u32:
+        window.handleRune(Rune(codepoint))
     return 0
   of WM_IME_STARTCOMPOSITION:
     let hIMC = ImmGetContext(window.hWnd)
@@ -1311,6 +1414,7 @@ proc init() {.raises: [].} =
   except:
     quit("Error creating helper window")
   platformDoubleClickInterval = GetDoubleClickTime().float64 / 1000
+  eventThread = GetCurrentThreadId()
   initialized = true
 
 proc getHWND*(window: Window): HWND =
@@ -1350,6 +1454,8 @@ proc newWindow*(
     result.createGraphicsContext(depthBits, stencilBits, msaa, vsync, openglVersion)
 
     windows.add(result)
+    result.textRoot = windyTextRootCreate(result.hWnd)
+    DragAcceptFiles(result.hWnd, TRUE)
 
     result.style = style
     result.visible = visible
@@ -1572,8 +1678,12 @@ proc getAvailableClipboardFormats(): seq[UINT] =
     result.add(format)
 
 proc getClipboardContentKinds*(): set[ClipboardContentKind] =
+  ## Reports the native clipboard formats available for reading.
   init()
-
+  if OpenClipboard(helperWindow) == 0:
+    return
+  defer:
+    discard CloseClipboard()
   let availableFormats = getAvailableClipboardFormats()
   if CF_UNICODETEXT in availableFormats:
     result.incl TextContent
@@ -1595,7 +1705,7 @@ proc getClipboardImage*(): Image =
     if p != nil:
       try:
         let size = GlobalSize(dataHandle).int
-        result = decodeDib(p, size, true)
+        result = decodeDib(p, size)
       except:
         discard
       finally:
@@ -1628,6 +1738,62 @@ proc getClipboardString*(): string =
       discard GlobalUnlock(dataHandle)
 
   discard CloseClipboard()
+
+proc setClipboardImage*(image: Image) {.raises: [WindyError].} =
+  ## Writes a packed native DIBV5 image, preserving its color and alpha.
+  if image == nil or image.width <= 0 or image.height <= 0 or
+    image.width > int32.high or image.height > int32.high or
+    image.data.len > (int.high - 124) div 4:
+      raise newException(WindyError, "Invalid clipboard image dimensions")
+  init()
+  let pixelBytes = image.data.len * 4
+  if pixelBytes > uint32.high.int64:
+    raise newException(WindyError, "Clipboard image is too large")
+  var data = newString(124 + pixelBytes)
+  data.writeUint32(0, 124)
+  data.writeInt32(4, image.width.int32)
+  data.writeInt32(8, image.height.int32)
+  data.writeUint16(12, 1)
+  data.writeUint16(14, 32)
+  data.writeUint32(16, 3)
+  data.writeUint32(20, pixelBytes.uint32)
+  data.writeUint32(40, 0x00FF0000)
+  data.writeUint32(44, 0x0000FF00)
+  data.writeUint32(48, 0x000000FF)
+  data.writeUint32(52, 0xFF000000'u32)
+  data.writeUint32(56, 0x73524742)
+  data.writeUint32(108, 4)
+  for y in 0 ..< image.height:
+    for x in 0 ..< image.width:
+      let
+        pixel = image[x, image.height - y - 1]
+        offset = 124 + (y * image.width + x) * 4
+      data[offset] = char(pixel.b)
+      data[offset + 1] = char(pixel.g)
+      data[offset + 2] = char(pixel.r)
+      data[offset + 3] = char(pixel.a)
+  let handle = GlobalAlloc(GMEM_MOVEABLE, data.len)
+  if handle == 0:
+    raise newException(WindyError, "Could not allocate clipboard image")
+  var transferred = false
+  defer:
+    if not transferred:
+      discard GlobalFree(handle)
+  let bytes = GlobalLock(handle)
+  if bytes == nil:
+    raise newException(WindyError, "Could not lock clipboard image")
+  copyMem(bytes, data[0].addr, data.len)
+  discard GlobalUnlock(handle)
+  if OpenClipboard(helperWindow) == 0:
+    raise newException(WindyError, "Could not open the clipboard")
+  defer:
+    discard CloseClipboard()
+  if EmptyClipboard() == 0:
+    raise newException(WindyError, "Could not clear the clipboard")
+  if SetClipboardData(CF_DIBV5, handle) == 0:
+    raise newException(WindyError, "Could not copy image to the clipboard")
+  transferred = true
+
 
 proc setClipboardString*(value: string) =
   init()
@@ -2696,7 +2862,9 @@ proc pollHttp*() =
   ## Polling for HTTP requests happens in the main windows loop.
   discard
 
-proc pollEvents*() =
+proc waitEvents*(timeoutMs: int) =
+  ## Runs onFrame callbacks, then waits up to timeoutMs and dispatches events.
+  ## Gate drawing inside onFrame for on-demand UIs; zero polls without waiting.
   # Draw first (in case a message closes a window or similar)
   for window in windows:
     if window.onFrame != nil:
@@ -2705,6 +2873,15 @@ proc pollEvents*() =
   # Clear all per-frame data
   for window in windows:
     window.state.perFrame = PerFrame()
+
+  if timeoutMs > 0:
+    discard MsgWaitForMultipleObjectsEx(
+      0,
+      nil,
+      min(timeoutMs, int32.high.int).DWORD,
+      AllInputMessages,
+      InputAlreadyAvailable
+    )
 
   var msg: MSG
   while PeekMessageW(msg.addr, 0, 0, 0, PM_REMOVE) > 0:
@@ -2778,6 +2955,15 @@ proc pollEvents*() =
         activeWindow.handleButtonRelease(KeyRightShift)
 
   pollHttp()
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Wakes native waiting from any thread after the first window is created.
+  if eventThread != 0:
+    discard PostThreadMessageW(eventThread, WM_NULL, 0, 0)
+
+proc pollEvents*() =
+  ## Draws pending frames and dispatches events without waiting.
+  waitEvents(0)
 
 proc forceMousePos*(window: Window, mousePos: IVec2) =
   ## Forces mouse position to a place.

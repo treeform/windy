@@ -132,6 +132,7 @@ type
     NSEventTypeKeyDown            = 10,
     NSEventTypeKeyUp              = 11,
     NSEventTypeFlagsChanged       = 12,
+    NSEventTypeApplicationDefined = 15,
 
 const
   NSDragOperationNone* = 0.NSDragOperation
@@ -142,6 +143,7 @@ var
   NSPasteboardTypeString* {.importc.}: NSPasteboardType
   NSPasteboardTypeTIFF* {.importc.}: NSPasteboardType
   NSPasteboardTypePNG* {.importc.}: NSPasteboardType
+  NSPasteboardTypeFileURL* {.importc.}: NSPasteboardType
   NSFilenamesPboardType* {.importc.}: NSPasteboardType
   NSDefaultRunLoopMode* {.importc.}: NSRunLoopMode
 
@@ -181,12 +183,14 @@ objc:
   proc length*(self: NSString): uint
   proc array*(class: typedesc[NSArray]): NSArray
   proc arrayWithObject*(class: typedesc[NSArray], x: ID): NSArray
+  proc arrayByAddingObject*(self: NSArray, x: ID): NSArray
   proc count*(self: NSArray): uint
   proc objectAtIndex*(self: NSArray, x: uint): ID
   proc firstObject*(self: NSArray): ID
   proc containsObject*(self: NSArray, x: ID): bool
   proc registerForDraggedTypes*(self: NSView, x: NSArray)
   proc draggingPasteboard*(self: NSDraggingInfo): NSPasteboard
+  proc draggingLocation*(self: NSDraggingInfo): NSPoint
   proc propertyListForType*(
     self: NSPasteboard,
     x: NSPasteboardType
@@ -214,6 +218,7 @@ objc:
   proc URLs*(self: NSOpenPanel): NSArray
   proc URL*(self: NSSavePanel): NSURL
   proc path*(self: NSURL): NSString
+  proc isFileURL*(self: NSURL): bool
   proc fileURLWithPath*(
     class: typedesc[NSURL],
     x: NSString,
@@ -234,6 +239,16 @@ objc:
   proc types*(self: NSPasteboard): NSArray
   proc stringForType*(self: NSPasteboard, x: NSPasteboardType): NSString
   proc dataForType*(self: NSPasteboard, x: NSPasteboardType): NSData
+  proc readObjectsForClasses*(
+    self: NSPasteboard,
+    x: NSArray,
+    options: NSDictionary
+  ): NSArray
+  proc setData*(
+    self: NSPasteboard,
+    x: NSData,
+    forType: NSPasteboardType
+  ): bool
   proc clearContents*(self: NSPasteboard)
   proc setString*(self: NSPasteboard, x: NSString, forType: NSPasteboardType)
   proc processInfo*(class: typedesc[NSProcessInfo]): NSProcessInfo
@@ -261,6 +276,21 @@ objc:
     dequeue: bool
   ): NSEvent
   proc sendEvent*(self: NSApplication, x: NSEvent)
+  proc postEvent*(self: NSApplication, x: NSEvent, atStart: bool)
+    ## Adds a native event to the application queue from any thread.
+  proc otherEventWithType*(
+    class: typedesc[NSEvent],
+    x: int,
+    location: NSPoint,
+    modifierFlags: uint,
+    timestamp: float64,
+    windowNumber: int,
+    context: NSObject,
+    subtype: int16,
+    data1: int,
+    data2: int
+  ): NSEvent
+    ## Creates an application-defined event without synthesizing user input.
   proc distantPast*(class: typedesc[NSDate]): NSDate
   proc dateWithTimeIntervalSinceNow*(
     class: typedesc[NSDate],
@@ -339,6 +369,7 @@ objc:
     x: bool
   )
   proc openGLContext*(self: NSOpenGLView): NSOpenGLContext
+  proc setView*(self: NSOpenGLContext, x: NSView)
   proc makeCurrentContext*(self: NSOpenGLContext)
   proc setValues*(
     self: NSOpenGLContext,

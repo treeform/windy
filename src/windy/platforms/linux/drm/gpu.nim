@@ -684,4 +684,3 @@ proc presentGpuPixels*(probe: GpuDisplay, image: Image, regions: array[2, PixelR
     probe.gpu.gbm_surface_release_buffer(probe.surface, probe.front)
     probe.locked.delete(probe.locked.find(probe.front))
   probe.front = bo
-

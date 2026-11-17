@@ -36,6 +36,38 @@ when defined(macosx):
       keyCode: uint16
     ): NSEvent
 
+  when not defined(useCpu) and not defined(useMetal4):
+    proc testHiddenFramebuffer() =
+      ## Checks hidden OpenGL drawing and readback before polling or showing.
+      for msaa in [msaaDisabled, msaa8x]:
+        let window = newWindow(
+          "Hidden framebuffer",
+          ivec2(32, 32),
+          visible = false,
+          msaa = msaa
+        )
+        defer:
+          window.close()
+        window.makeContextCurrent()
+        loadExtensions()
+        for size in [ivec2(32, 32), ivec2(96, 64), ivec2(16, 24)]:
+          window.size = size
+          doAssert not window.visible
+          doAssert window.size == size
+          doAssert glCheckFramebufferStatus(GL_FRAMEBUFFER) ==
+            GL_FRAMEBUFFER_COMPLETE
+          glClearColor(1, 0, 0, 1)
+          glClear(GL_COLOR_BUFFER_BIT)
+          for position in [ivec2(0, 0), size - ivec2(1, 1)]:
+            var pixel: array[4, uint8]
+            glReadPixels(
+              position.x, position.y, 1, 1,
+              GL_RGBA, GL_UNSIGNED_BYTE, pixel.addr
+            )
+            doAssert pixel == [255'u8, 0, 0, 255]
+
+    testHiddenFramebuffer()
+
   when defined(useCpu):
     proc testCpuImages() =
       ## Checks image ownership after replacement and repeated close.

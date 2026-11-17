@@ -2,7 +2,7 @@ import
   pixie,
   ../../common,
   ./backends,
-  ./native/[state, touch]
+  ./native/[state, touch, waits]
 
 when HasFbdev:
   import ./fbdev
@@ -21,6 +21,7 @@ else:
     onTextInput*: TextInputCallback
     onTextEdit*: TextInputEditCallback
     onFileDrop*: FileDropCallback
+    onFileDropPaths*: FileDropPathsCallback
     onTouch*: TouchCallback
     direct*: DirectWindowState
 
@@ -83,6 +84,7 @@ proc newDirectWindow*(title: string, backend: LinuxBackend,
   result = Window(direct: DirectWindowState(title: title, device: path, backend: backend))
   let data = result.direct
   try:
+    initEventWait()
     case backend
     of FbdevBackend:
       when HasFbdev:
@@ -172,6 +174,20 @@ proc pollEvents*() =
       window.onFrame()
 
 proc hasWindows*(): bool = windows.len > 0
+
+proc waitEvents*(timeoutMs: int) =
+  ## Services direct input and frames before waiting for the next input report.
+  ## Zero polls without waiting. Call this on the window thread.
+  pollEvents()
+  var descriptors: seq[cint]
+  for window in windows:
+    if not window.closed and window.direct.touch != nil:
+      descriptors.add(window.direct.touch.descriptor())
+  waitNativeEvents(timeoutMs, descriptors)
+
+proc wakeEvents*() {.raises: [], gcsafe.} =
+  ## Wakes native waiting from any thread after the first window is created.
+  wakeNativeEvents()
 
 proc unsupported*() =
   raise newException(WindyError, "Operation is unavailable on a direct display")

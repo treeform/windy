@@ -16,7 +16,6 @@ type
 
 {.push cdecl, importc, dynlib: libX11.}
 proc XCloseDisplay*(d: Display): cint
-proc XPending*(d: Display): cint
 proc XGetVisualInfo*(d: Display, mask: clong, info: ptr XVisualInfo, count: ptr cint): ptr XVisualInfo
 proc XSetForeground*(d: Display, gc: GC, color: culong): cint
 proc XFillRectangle*(d: Display, window: Drawable, gc: GC, x, y: cint, width, height: cuint): cint

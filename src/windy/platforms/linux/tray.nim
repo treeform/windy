@@ -22,6 +22,15 @@ var
 when HasX11:
   var plugTray: XembedTray
 
+proc trayWaitTimeout*(timeoutMs: int): int =
+  ## Keeps tray connections responsive until their descriptors join waiting.
+  result = clamp(timeoutMs, 0, int32.high.int)
+  if busTray != nil:
+    result = min(result, 10)
+  when HasX11:
+    if plugTray != nil:
+      result = min(result, 10)
+
 proc hideTrayIcon*() =
   ## Removes the Linux tray icon and cancels pending registration. Safe to repeat.
   requested = nil

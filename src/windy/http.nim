@@ -262,6 +262,13 @@ proc pollHttp*() =
       if state.onError != nil:
         state.onError(msg)
 
+proc httpWaitTimeout*(timeoutMs: int): int =
+  ## Keeps asynchronous network progress responsive during native event waits.
+  result = clamp(timeoutMs, 0, int32.high.int)
+  usingHttpDispatcher:
+    if hasPendingOperations():
+      result = min(result, 10)
+
 proc startHttpRequest*(
   url: string,
   verb = "GET",
