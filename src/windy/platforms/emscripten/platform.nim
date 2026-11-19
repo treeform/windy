@@ -524,11 +524,10 @@ proc stencilBits*(window: Window): int =
   8
 
 proc setClipboardString*(s: string) =
-  # TODO: Implement clipboard with Emscripten.
-  raise newException(
-    Exception,
-    "setClipboardString is not supported on emscripten"
-  )
+  ## Requests an asynchronous write to the system clipboard.
+  ## Use a secure context and call from a user input callback for browser
+  ## compatibility. Failed writes are reported in the browser console.
+  write_clipboard_text(s.cstring)
 
 proc getClipboardString*(): string =
   ## Returns the text supplied by the latest browser paste event.
