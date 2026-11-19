@@ -123,6 +123,17 @@ EM_JS(void, open_url, (const char* url), {
   window.open(urlUtf8, '_blank');
 });
 
+EM_JS(void, write_clipboard_text, (const char* text), {
+  const clipboard = typeof navigator !== 'undefined' && navigator.clipboard;
+  if (!clipboard || typeof clipboard.writeText !== 'function') {
+    console.warn("Windy: The Clipboard API is unavailable. Use HTTPS or localhost.");
+    return;
+  }
+  clipboard.writeText(UTF8ToString(text)).catch(function(error) {
+    console.warn("Windy: Could not write to the clipboard.", error);
+  });
+});
+
 EM_JS(void, setup_paste_handler, (const char* target, void* userData), {
   var canvas = document.querySelector(UTF8ToString(target));
   canvas.addEventListener('paste', function(event) {
@@ -346,6 +357,7 @@ proc get_window_url_into*(output: cstring, maxLen: cint): cint {.importc.}
 proc get_device_pixel_ratio*(): cdouble {.importc.}
 proc open_temp_text_file*(title, text: cstring) {.importc.}
 proc open_url*(url: cstring) {.importc.}
+proc write_clipboard_text*(text: cstring) {.importc.}
 proc setup_drag_drop_handlers_internal*(target: cstring, userData: pointer) {.importc.}
 proc setup_paste_handler*(target: cstring, userData: pointer) {.importc.}
 proc set_cursor*(cursor: cstring) {.importc.}
