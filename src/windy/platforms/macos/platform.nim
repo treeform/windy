@@ -143,6 +143,27 @@ proc contentScale*(window: Window): float32 =
       backing = contentView.convertRectToBacking(frame)
     result = backing.size.width / frame.size.width
 
+proc updateBackingScale(window: Window, scale: float32) =
+  ## Keeps cached pointer pixels in the current backing scale without events.
+  if not (scale > 0) or scale == window.state.contentScale:
+    return
+  let previous = window.state.contentScale
+  window.state.contentScale = scale
+  if previous <= 0:
+    return
+  let ratio = scale / previous
+  proc rescaled(position: IVec2): IVec2 =
+    ## Converts cached pixel coordinates without changing their logical point.
+    ivec2(
+      round(position.x.float32 * ratio).int32,
+      round(position.y.float32 * ratio).int32
+    )
+  window.state.mousePos = rescaled(window.state.mousePos)
+  window.state.mousePrevPos = rescaled(window.state.mousePrevPos)
+  window.state.perFrame.mouseDelta = rescaled(window.state.perFrame.mouseDelta)
+  for position in window.state.multiClickPositions.mitems:
+    position = rescaled(position)
+
 proc size*(window: Window): IVec2 =
   autoreleasepool:
     let
@@ -349,6 +370,8 @@ proc mouseCaptured*(window: Window): bool =
 
 proc warpCursorToCenter(window: Window) =
   ## Move the system cursor to the window content center.
+  let scale = window.contentScale
+  window.updateBackingScale(scale)
   let
     view = window.inner.contentView
     bounds = view.bounds
@@ -359,7 +382,7 @@ proc warpCursorToCenter(window: Window) =
     primary = NSScreen.screens.objectAtIndex(0).NSScreen.frame
     cgY = primary.origin.y + primary.size.height - inScreen.y
   cgWarpMouseCursorPosition(inScreen.x, cgY)
-  window.state.mousePos = (vec2(local.x, local.y) * window.contentScale).ivec2
+  window.state.mousePos = (vec2(local.x, local.y) * scale).ivec2
   window.state.mousePrevPos = window.state.mousePos
   window.state.hasPrevMouse = false
 
@@ -391,6 +414,8 @@ proc url*(window: Window): string =
 
 proc handleMouseMove(window: Window, location: NSPoint) =
   ## Updates pixel coordinates and containment from unrounded view points.
+  let scale = window.contentScale
+  window.updateBackingScale(scale)
   let
     bounds = window.inner.contentView.bounds
     x = location.x
@@ -398,7 +423,7 @@ proc handleMouseMove(window: Window, location: NSPoint) =
 
   window.state.mousePrevPos = window.state.mousePos
   window.state.mousePos =
-    (vec2(round(x), round(y)) * window.contentScale).ivec2
+    (vec2(round(x), round(y)) * scale).ivec2
   window.state.mouseInside =
     x >= 0 and x < bounds.size.width and
     y >= 0 and y < bounds.size.height
@@ -416,6 +441,7 @@ proc handleMouseMove(window: Window, location: NSPoint) =
 proc handleMouseDelta(window: Window, event: NSEvent) =
   ## Relative deltas while captured. NSEvent deltaY is up-positive.
   let scale = window.contentScale
+  window.updateBackingScale(scale)
   window.state.perFrame.mouseDelta += ivec2(
     round(event.deltaX * scale).int32,
     round(-event.deltaY * scale).int32
@@ -425,13 +451,15 @@ proc handleMouseDelta(window: Window, event: NSEvent) =
 
 proc updateMousePosition(window: Window, event: NSEvent) =
   ## Updates button positions without changing captured pointer state.
+  let scale = window.contentScale
+  window.updateBackingScale(scale)
   if window.state.mouseCaptured:
     return
   let
     location = event.locationInWindow()
     height = window.inner.contentView.bounds.size.height
   window.state.mousePos = (vec2(round(location.x), round(height - location.y)) *
-    window.contentScale).ivec2
+    scale).ivec2
 
 proc handleButtonPress(window: Window, button: Button) =
   handleButtonPressTemplate()
@@ -499,6 +527,7 @@ proc windowDidResize(
   let window = windows.forNSWindow(self.NSWindow)
   if window == nil or window.closing:
     return
+  window.updateBackingScale(window.contentScale)
   if window.fullscreenChanging:
     window.fullscreenResized = true
     return
@@ -519,6 +548,7 @@ proc windowDidMove(
   let window = windows.forNSWindow(self.NSWindow)
   if window == nil or window.closing:
     return
+  window.updateBackingScale(window.contentScale)
   if window.fullscreenChanging:
     window.fullscreenMoved = true
     return
@@ -706,9 +736,10 @@ proc acceptsFirstMouse(self: ID, cmd: SEL, event: NSEvent): bool {.cdecl.} =
   true
 
 proc viewDidChangeBackingProperties(self: ID, cmd: SEL): ID {.cdecl.} =
-  callSuper(self, cmd)
-
   let window = windows.forNSWindow(self.NSview.window)
+  if window != nil and not window.closing:
+    window.updateBackingScale(window.contentScale)
+  callSuper(self, cmd)
   if window == nil or window.closing:
     return
   if window.fullscreenChanging:
@@ -1683,6 +1714,7 @@ proc newWindow*(
       )) or FullScreenNone
     )
 
+    result.updateBackingScale(result.contentScale)
     windows.add(result)
 
     result.title = title
