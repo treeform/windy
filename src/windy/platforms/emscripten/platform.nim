@@ -366,15 +366,16 @@ proc captureMouse*(window: Window) =
   if window.state.mouseCaptured:
     return
   window.state.mouseCaptured = true
-  # Browsers grant pointer lock only inside a user gesture, so the request
-  # waits for the next click or key press when needed.
-  discard emscripten_request_pointerlock(window.canvas, 1)
+  # Browsers grant pointer lock only inside a user gesture, so a refused
+  # request retries on the next click or key press.
+  request_pointer_lock()
 
 proc releaseMouse*(window: Window) =
   ## Show the cursor and restore normal absolute mouse tracking.
   if not window.state.mouseCaptured:
     return
   window.state.mouseCaptured = false
+  cancel_pointer_lock()
   discard emscripten_exit_pointerlock()
 
 proc scrollDelta*(window: Window): Vec2 =
@@ -896,6 +897,7 @@ proc onPointerlockChange(eventType: cint, event: ptr EmscriptenPointerlockChange
   let window = cast[Window](userData)
   if event.isActive == 0:
     window.state.mouseCaptured = false
+    cancel_pointer_lock()
   window.state.hasPrevMouse = false
   return 1
 

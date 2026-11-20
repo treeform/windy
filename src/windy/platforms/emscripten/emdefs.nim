@@ -85,6 +85,32 @@ EM_JS(void, make_canvas_focusable, (), {
   Module.canvas.focus();
 });
 
+EM_JS(void, request_pointer_lock, (), {
+  // Browsers reject pointer lock outside a user gesture and for a moment
+  // after the user exits it, so a refused request retries on later input.
+  var canvas = Module.canvas;
+  Module.windyWantsPointerLock = true;
+  function attempt() {
+    if (!Module.windyWantsPointerLock ||
+      document.pointerLockElement === canvas) return;
+    try {
+      var request = canvas.requestPointerLock();
+      if (request && request.catch) request.catch(function() {});
+    } catch (error) {}
+  }
+  if (!Module.windyPointerLockRetry) {
+    Module.windyPointerLockRetry = true;
+    canvas.addEventListener('mousedown', attempt);
+    canvas.addEventListener('mouseup', attempt);
+    document.addEventListener('keydown', attempt);
+  }
+  attempt();
+});
+
+EM_JS(void, cancel_pointer_lock, (), {
+  Module.windyWantsPointerLock = false;
+});
+
 EM_JS(void, set_document_title, (const char* title), {
   document.title = UTF8ToString(title);
 });
@@ -350,6 +376,8 @@ proc get_canvas_height*(): cint {.importc.}
 proc setup_windy_runtime*() {.importc.}
 proc set_canvas_size*(width, height: cint) {.importc.}
 proc make_canvas_focusable*() {.importc.}
+proc request_pointer_lock*() {.importc.}
+proc cancel_pointer_lock*() {.importc.}
 proc setup_file_drop_handler*(userData: pointer) {.importc.}
 proc set_document_title*(title: cstring) {.importc.}
 proc get_window_url_length*(): cint {.importc.}
