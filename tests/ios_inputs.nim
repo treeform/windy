@@ -186,8 +186,8 @@ native.callbacks.onTouch(36, NativeTouchBegan, 100, 100, TouchPointer, 6.0)
 native.callbacks.onTouch(36, NativeTouchMoved, 100, 1000, TouchPointer, 6.002)
 doAssert window.pointerVelocity.length <= MaxTouchSpeed * window.contentScale
 let primaryVelocity = window.pointerVelocity
-native.callbacks.onTouch(37, NativeTouchBegan, 30, 30, PenPointer, 6.003)
-native.callbacks.onTouch(37, NativeTouchMoved, 30, 300, PenPointer, 6.004)
+native.callbacks.onTouch(37, NativeTouchBegan, 30, 30, TouchPointer, 6.003)
+native.callbacks.onTouch(37, NativeTouchMoved, 30, 300, TouchPointer, 6.004)
 doAssert window.pointerVelocity == primaryVelocity
 native.callbacks.onTouch(36, NativeTouchCancelled, 100, 1000, TouchPointer, 6.005)
 doAssert window.pointerVelocity == vec2(0)
@@ -207,8 +207,8 @@ native.callbacks.onFrame()
 
 echo "Testing primary touch ownership and cancellation"
 native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
-native.callbacks.onTouch(11, NativeTouchBegan, 80, 90, PenPointer)
-native.callbacks.onTouch(11, NativeTouchMoved, 90, 100, PenPointer)
+native.callbacks.onTouch(11, NativeTouchBegan, 80, 90, TouchPointer)
+native.callbacks.onTouch(11, NativeTouchMoved, 90, 100, TouchPointer)
 doAssert window.mousePos == ivec2(30, 40)
 doAssert window.pointerSource == TouchPointer
 native.callbacks.onTouch(0, NativeTouchHover, 100, 120, MousePointer)
@@ -221,15 +221,94 @@ doAssert window.buttonReleased[MouseLeft]
 doAssert not window.mouseInside
 doAssert window.mousePos == ivec2(-1, -1)
 doAssert window.pointerSource == TouchPointer
-native.callbacks.onTouch(11, NativeTouchMoved, 110, 120, PenPointer)
+native.callbacks.onTouch(11, NativeTouchMoved, 110, 120, TouchPointer)
 doAssert not window.buttonDown[MouseLeft]
 doAssert window.mousePos == ivec2(-1, -1)
-native.callbacks.onTouch(11, NativeTouchEnded, 110, 120, PenPointer)
+native.callbacks.onTouch(11, NativeTouchEnded, 110, 120, TouchPointer)
+native.callbacks.onFrame()
+
+window.onButtonPress = nil
+window.onButtonRelease = nil
+
+echo "Testing Pencil drawing with a resting palm"
+var palmCancelled, pencilPressed: bool
+window.onButtonRelease = proc(button: Button) =
+  if button == MouseLeft and window.pointerSource == TouchPointer:
+    doAssert not window.mouseInside
+    doAssert window.mousePos == ivec2(-1, -1)
+    doAssert not window.buttonDown[MouseLeft]
+    palmCancelled = true
+window.onButtonPress = proc(button: Button) =
+  if button == MouseLeft and window.pointerSource == PenPointer:
+    doAssert palmCancelled
+    doAssert window.mousePos == ivec2(200, 300)
+    doAssert window.buttonDown[MouseLeft]
+    pencilPressed = true
+native.callbacks.onTouch(40, NativeTouchBegan, 60, 70, TouchPointer, 9.0)
+native.callbacks.onTouch(40, NativeTouchMoved, 60, 90, TouchPointer, 9.02)
+doAssert window.pointerVelocity.y > 0
+native.callbacks.onFrame()
+native.callbacks.onTouch(41, NativeTouchBegan, 200, 300, PenPointer, 9.03)
+doAssert palmCancelled and pencilPressed
+doAssert window.pointerSource == PenPointer
+doAssert window.pointerVelocity == vec2(0)
+doAssert window.mouseDelta == ivec2(0)
+doAssert window.buttonPressed[MouseLeft]
+doAssert not window.buttonReleased[MouseLeft]
+native.callbacks.onFrame()
+for phase in [NativeTouchMoved, NativeTouchCancelled, NativeTouchEnded]:
+  native.callbacks.onTouch(40, phase, 500, 600, TouchPointer, 9.04)
+  doAssert window.mousePos == ivec2(200, 300)
+  doAssert window.pointerSource == PenPointer
+  doAssert window.buttonDown[MouseLeft]
+native.callbacks.onTouch(42, NativeTouchBegan, 700, 800, TouchPointer, 9.05)
+native.callbacks.onTouch(42, NativeTouchMoved, 800, 900, TouchPointer, 9.06)
+native.callbacks.onTouch(41, NativeTouchMoved, 220, 340, PenPointer, 9.06)
+doAssert window.mousePos == ivec2(220, 340)
+doAssert window.pointerVelocity == vec2(0)
+native.callbacks.onTouch(41, NativeTouchEnded, 230, 350, PenPointer, 9.07)
+doAssert not window.buttonDown[MouseLeft]
+doAssert window.buttonReleased[MouseLeft]
+doAssert window.mousePos == ivec2(230, 350)
+native.callbacks.onFrame()
+native.callbacks.onTouch(42, NativeTouchMoved, 900, 1000, TouchPointer, 9.08)
+native.callbacks.onTouch(42, NativeTouchEnded, 900, 1000, TouchPointer, 9.09)
+doAssert window.mousePos == ivec2(230, 350)
+doAssert not window.buttonDown[MouseLeft]
+window.onButtonPress = nil
+window.onButtonRelease = nil
+
+echo "Testing Pencil cancellation and same-frame strokes"
+native.callbacks.onTouch(43, NativeTouchBegan, 100, 200, PenPointer, 10.0)
+native.callbacks.onTouch(43, NativeTouchMoved, 120, 240, PenPointer, 10.01)
+native.callbacks.onTouch(43, NativeTouchCancelled, 120, 240, PenPointer, 10.02)
+doAssert not window.buttonDown[MouseLeft]
+doAssert not window.buttonPressed[MouseLeft]
+doAssert not window.mouseInside
+native.callbacks.onFrame()
+native.callbacks.onTouch(46, NativeTouchBegan, 50, 60, TouchPointer, 10.9)
+native.callbacks.onTouch(44, NativeTouchBegan, 100, 200, PenPointer, 11.0)
+doAssert not window.buttonReleased[MouseLeft]
+native.callbacks.onTouch(44, NativeTouchMoved, 120, 240, PenPointer, 11.01)
+native.callbacks.onTouch(44, NativeTouchEnded, 130, 250, PenPointer, 11.02)
+doAssert window.pointerSource == PenPointer
+doAssert window.buttonPressed[MouseLeft]
+doAssert window.buttonReleased[MouseLeft]
+doAssert not window.buttonDown[MouseLeft]
+doAssert window.mousePos - window.mouseDelta == ivec2(100, 200)
+doAssert window.pointerVelocity == vec2(0)
+native.callbacks.onFrame()
+
+echo "Testing a fresh finger gesture after Pencil drawing"
+native.callbacks.onTouch(45, NativeTouchBegan, 50, 60, TouchPointer, 12.0)
+native.callbacks.onTouch(45, NativeTouchMoved, 50, 80, TouchPointer, 12.02)
+doAssert window.buttonDown[MouseLeft]
+doAssert window.pointerSource == TouchPointer
+doAssert window.pointerVelocity.y > 0
+native.callbacks.onTouch(45, NativeTouchEnded, 50, 90, TouchPointer, 12.03)
 native.callbacks.onFrame()
 
 echo "Testing pointer source changes after touch cancellation"
-window.onButtonPress = nil
-window.onButtonRelease = nil
 native.callbacks.onTouch(0, NativeTouchHover, 50, 60, MousePointer)
 doAssert window.pointerSource == MousePointer
 doAssert window.mousePos == ivec2(50, 60)

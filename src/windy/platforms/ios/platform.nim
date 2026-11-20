@@ -267,6 +267,12 @@ proc touchCallback(
         window.pointerMotion.clear()
         window.handleMouseMove(x, y)
     of NativeTouchBegan:
+      if source == PenPointer and window.pointerKind == TouchPointer and
+        window.primaryTouch != -1:
+          # Let the Pencil replace a resting palm without activating its target.
+          window.cancelPointer()
+          for button in [MouseLeft, DoubleClick, TripleClick, QuadrupleClick]:
+            window.state.perFrame.buttonReleased.excl button
       if window.primaryTouch == -1:
         window.primaryTouch = touch
         window.pointerKind = source
