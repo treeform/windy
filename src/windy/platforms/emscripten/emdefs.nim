@@ -459,6 +459,16 @@ proc emscripten_set_mousemove_callback_on_thread*(target: cstring, userData: poi
 proc emscripten_set_mouseenter_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_mouseleave_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenMouseEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_wheel_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenWheelEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+type
+  EmscriptenPointerlockChangeEvent* {.importc: "EmscriptenPointerlockChangeEvent", header: "<emscripten/html5.h>".} = object
+    isActive*: EM_BOOL
+
+  EmscriptenPointerlockChangeCallback* = proc(eventType: cint, event: ptr EmscriptenPointerlockChangeEvent, userData: pointer): EM_BOOL {.cdecl.}
+
+proc emscripten_request_pointerlock*(target: cstring, deferUntilInEventHandler: EM_BOOL): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+proc emscripten_exit_pointerlock*(): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+proc emscripten_set_pointerlockchange_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenPointerlockChangeCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
+
 proc emscripten_set_keydown_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenKeyboardEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_keyup_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenKeyboardEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
 proc emscripten_set_keypress_callback_on_thread*(target: cstring, userData: pointer, useCapture: EM_BOOL, callback: EmscriptenKeyboardEventCallback, targetThread: pointer): EMSCRIPTEN_RESULT {.importc, header: "<emscripten/html5.h>".}
