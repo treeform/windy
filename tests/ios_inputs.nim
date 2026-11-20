@@ -291,12 +291,18 @@ native.callbacks.onTouch(44, NativeTouchBegan, 100, 200, PenPointer, 11.0)
 doAssert not window.buttonReleased[MouseLeft]
 native.callbacks.onTouch(44, NativeTouchMoved, 120, 240, PenPointer, 11.01)
 native.callbacks.onTouch(44, NativeTouchEnded, 130, 250, PenPointer, 11.02)
+native.callbacks.onTouch(0, NativeTouchHover, 900, 1000, MousePointer, 11.03)
 doAssert window.pointerSource == PenPointer
 doAssert window.buttonPressed[MouseLeft]
 doAssert window.buttonReleased[MouseLeft]
 doAssert not window.buttonDown[MouseLeft]
+doAssert window.mousePos == ivec2(130, 250)
 doAssert window.mousePos - window.mouseDelta == ivec2(100, 200)
 doAssert window.pointerVelocity == vec2(0)
+native.callbacks.onFrame()
+native.callbacks.onTouch(0, NativeTouchHover, 900, 1000, MousePointer, 11.04)
+doAssert window.pointerSource == MousePointer
+doAssert window.mousePos == ivec2(900, 1000)
 native.callbacks.onFrame()
 
 echo "Testing a fresh finger gesture after Pencil drawing"

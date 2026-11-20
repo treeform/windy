@@ -262,7 +262,11 @@ proc touchCallback(
   try:
     case phase
     of NativeTouchHover:
-      if window.primaryTouch == -1:
+      # Preserve the stroke endpoint until the application consumes its frame.
+      let pendingPen = window.pointerKind == PenPointer and
+        (MouseLeft in window.state.perFrame.buttonPressed or
+          MouseLeft in window.state.perFrame.buttonReleased)
+      if window.primaryTouch == -1 and not pendingPen:
         window.pointerKind = source
         window.pointerMotion.clear()
         window.handleMouseMove(x, y)
