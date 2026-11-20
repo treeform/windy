@@ -366,13 +366,16 @@ proc captureMouse*(window: Window) =
   if window.state.mouseCaptured:
     return
   window.state.mouseCaptured = true
-  warn "Mouse capture is not implemented on Emscripten yet"
+  # Browsers grant pointer lock only inside a user gesture, so the request
+  # waits for the next click or key press when needed.
+  discard emscripten_request_pointerlock(window.canvas, 1)
 
 proc releaseMouse*(window: Window) =
   ## Show the cursor and restore normal absolute mouse tracking.
   if not window.state.mouseCaptured:
     return
   window.state.mouseCaptured = false
+  discard emscripten_exit_pointerlock()
 
 proc scrollDelta*(window: Window): Vec2 =
   window.state.perFrame.scrollDelta
@@ -795,6 +798,13 @@ proc onMouseUp(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: 
 
 proc onMouseMove(eventType: cint, mouseEvent: ptr EmscriptenMouseEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
+  if window.state.mouseCaptured:
+    # Pointer lock reports relative motion; the cursor position stays put.
+    window.state.perFrame.mouseDelta += ivec2(
+      mouseEvent.movementX.int32, mouseEvent.movementY.int32)
+    if window.onMouseMove != nil:
+      window.onMouseMove()
+    return 1
   if not window.state.mouseInside and
       window.state.buttonDown * {MouseLeft, MouseMiddle, MouseRight, MouseButton4} == {}:
     return 0
@@ -881,6 +891,14 @@ proc onKeyPress(eventType: cint, keyEvent: ptr EmscriptenKeyboardEvent, userData
       window.handleRune(Rune(keyEvent.charCode))
   return 1
 
+proc onPointerlockChange(eventType: cint, event: ptr EmscriptenPointerlockChangeEvent, userData: pointer): EM_BOOL {.cdecl.} =
+  ## Reports a browser-ended pointer lock, such as Escape, as a released mouse.
+  let window = cast[Window](userData)
+  if event.isActive == 0:
+    window.state.mouseCaptured = false
+  window.state.hasPrevMouse = false
+  return 1
+
 proc onFocus(eventType: cint, focusEvent: ptr EmscriptenFocusEvent, userData: pointer): EM_BOOL {.cdecl.} =
   let window = cast[Window](userData)
   if frameDispatchActive:
@@ -944,6 +962,7 @@ proc setupEventHandlers(window: Window) =
   discard emscripten_set_keyup_callback_on_thread(window.canvas, cast[pointer](window), 1, onKeyUp, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_keypress_callback_on_thread(window.canvas, cast[pointer](window), 1, onKeyPress, EM_CALLBACK_THREAD_CONTEXT)
 
+  discard emscripten_set_pointerlockchange_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, cast[pointer](window), 1, onPointerlockChange, EM_CALLBACK_THREAD_CONTEXT)
   # Focus events
   discard emscripten_set_focus_callback_on_thread(window.canvas, cast[pointer](window), 1, onFocus, EM_CALLBACK_THREAD_CONTEXT)
   discard emscripten_set_blur_callback_on_thread(window.canvas, cast[pointer](window), 1, onBlur, EM_CALLBACK_THREAD_CONTEXT)
