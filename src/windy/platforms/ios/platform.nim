@@ -64,6 +64,20 @@ proc focused*(window: Window): bool =
   ## Returns whether the application is active.
   window.hasFocus
 
+proc continuousRendering*(window: Window): bool =
+  ## Reports whether UIKit produces frames at the display refresh cadence.
+  native.nativeContinuousRendering()
+
+proc `continuousRendering=`*(window: Window, enabled: bool) =
+  ## Selects display-driven games or explicitly scheduled application frames.
+  if not window.state.closed:
+    native.setNativeContinuousRendering(enabled)
+
+proc requestFrame*(window: Window, delayMs = 0) =
+  ## Schedules an on-demand callback; input and wakeEvents also request one.
+  if not window.state.closed:
+    native.requestNativeFrame(delayMs)
+
 proc dismissTextEditMenu*(window: Window) =
   ## Invalidates actions from the window's current native editing menu.
   inc window.textMenuGeneration
@@ -86,6 +100,7 @@ proc showTextEditMenu*(
       window.textMenuGeneration != generation or action notin actions:
         return
     inc window.textMenuGeneration
+    native.requestNativeFrame()
     callback(action)
   )
 
@@ -206,6 +221,7 @@ proc updateSurface(width, height: int32, scale: float32) =
   window.drawableSize = ivec2(width, height)
   window.state.contentScale = scale
   window.ready = width > 0 and height > 0
+  native.requestNativeFrame()
   if window.onResize != nil:
     window.onResize()
 
@@ -223,6 +239,7 @@ proc focusCallback(focused: bool) =
     return
   try:
     window.hasFocus = focused
+    native.requestNativeFrame()
     if not focused:
       window.dismissTextEditMenu()
       window.cancelPointer()
@@ -241,6 +258,7 @@ proc touchCallback(
   let window = applicationWindow
   if window == nil or window.state.closed or not window.hasFocus:
     return
+  native.requestNativeFrame()
   try:
     case phase
     of NativeTouchHover:
@@ -374,6 +392,7 @@ proc keyCallback(usage: int, action: NativeKeyAction, modifiers: uint) =
   let window = applicationWindow
   if window == nil or window.state.closed or not window.hasFocus:
     return
+  native.requestNativeFrame()
   let button = keyButton(usage)
   try:
     if modifiers != uint.high:
@@ -412,6 +431,7 @@ proc textCallback(text: string) =
   let window = applicationWindow
   if window == nil or window.state.closed or not window.hasFocus:
     return
+  native.requestNativeFrame()
   try:
     handleTextInputTemplate(text)
   except Exception as error:
@@ -424,6 +444,7 @@ proc textEditCallback(edit: TextInputEdit) =
     not window.state.runeInputEnabled or window.textInput.id.len == 0 or
     window.onTextEdit == nil:
       return
+  native.requestNativeFrame()
   try:
     let
       runes = window.textInput.text.toRunes
@@ -455,6 +476,7 @@ proc scrollCallback(x, y, deltaX, deltaY: float64) =
   let window = applicationWindow
   if window == nil or window.state.closed or not window.hasFocus:
     return
+  native.requestNativeFrame()
   try:
     window.pointerKind = MousePointer
     window.pointerMotion.clear()

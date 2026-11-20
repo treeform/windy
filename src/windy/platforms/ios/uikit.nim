@@ -8,6 +8,7 @@ export events
 
 {.compile: "protocols.m".}
 {.compile("services.m", "-fobjc-arc").}
+{.compile("frames.m", "-fobjc-arc").}
 
 proc windyIosNativeProtocol(name: cstring): pointer {.importc, cdecl.}
   ## References UIKit protocol metadata emitted by the SDK's Objective-C headers.
@@ -46,8 +47,12 @@ proc windyIosKeyboardInset(host: pointer): float64 {.importc, cdecl.}
   ## Returns bottom-docked keyboard occlusion in UIKit points.
 proc windyIosObserveKeyboard(changed: proc() {.cdecl.}) {.importc, cdecl.}
   ## Observes keyboard transitions even before text services are focused.
-proc windyIosWakeEvents() {.importc, cdecl, gcsafe.}
-  ## Posts an event to UIKit's main queue from any thread.
+proc windyIosRequestFrame(delayMs: cint) {.importc, cdecl, gcsafe.}
+  ## Requests a coalesced frame on UIKit's main loop from any thread.
+proc windyIosConfigureFrames(
+  callback: proc() {.cdecl.}, enabled: cint
+) {.importc, cdecl.}
+  ## Enables one-shot callbacks only for active on-demand windows.
 proc windyIosShowTextEditMenu(
   host: pointer, x, y, width, height: float64, actions: cuint,
   callback: proc(action: cint) {.cdecl.}
@@ -77,6 +82,7 @@ var
   renderDelegate: ID
   initialized, active, stopped, keyboardRequested: bool
   updatingSurface, running: bool
+  continuousRendering = true
   lastWidth, lastHeight: int32
   lastScale = 1.0'f
   textMenuCallback: TextEditActionCallback
@@ -96,6 +102,7 @@ proc stopNativeRendering*() =
   )
   if nativeView.int != 0:
     nativeView.setPaused(true)
+  windyIosConfigureFrames(nil, 0)
 
 proc reportFailure(message: string) =
   ## Contains failures at the Objective-C callback boundary.
@@ -119,6 +126,35 @@ proc requireHandle[T](handle: T, message: string) =
   ## Rejects a missing native object before attempting to use it.
   if cast[int](handle) == 0:
     raise newException(WindyError, message)
+
+proc drawScheduledFrame() {.cdecl.} =
+  ## Lets MetalKit deliver an explicitly requested application frame.
+  nativeCallback:
+    if initialized and active and not stopped and not continuousRendering and
+      nativeView.int != 0:
+        nativeView.draw()
+
+proc updateFrameScheduling() =
+  ## Leaves games display-driven while applications sleep between deadlines.
+  let available = active and initialized and not stopped
+  if nativeView.int != 0:
+    nativeView.setPaused(not (available and continuousRendering))
+  windyIosConfigureFrames(
+    drawScheduledFrame, cint(available and not continuousRendering)
+  )
+
+proc nativeContinuousRendering*(): bool =
+  ## Reports the native continuous or on-demand frame policy.
+  continuousRendering
+
+proc setNativeContinuousRendering*(enabled: bool) =
+  ## Opts applications out of display-refresh callbacks without changing games.
+  continuousRendering = enabled
+  updateFrameScheduling()
+
+proc requestNativeFrame*(delayMs = 0) {.raises: [], gcsafe.} =
+  ## Wakes an on-demand frame without postponing an earlier deadline.
+  windyIosRequestFrame(clamp(delayMs, 0, cint.high.int).cint)
 
 proc nativeMetalView*(): pointer =
   ## Borrows Windy's singleton MTKView for the Metal renderer.
@@ -148,8 +184,8 @@ proc nativeKeyboardOcclusionHeight*(): float32 =
       nativeScale().float64).float32
 
 proc wakeNativeEvents*() {.gcsafe.} =
-  ## Wakes UIKit's main loop safely from a worker thread.
-  windyIosWakeEvents()
+  ## Wakes the application callback safely from a worker thread.
+  requestNativeFrame()
 
 proc nativeSafeAreaInsets*(): tuple[top, right, bottom, left: float32] =
   ## Converts UIKit's safe area from points to framebuffer pixels.
@@ -383,8 +419,7 @@ proc setActive(value: bool) =
     callbacks.onFocus(value)
   if changed and value:
     setNativeKeyboardVisible(keyboardRequested)
-  if nativeView.int != 0:
-    nativeView.setPaused(not (active and initialized and not stopped))
+  updateFrameScheduling()
 
 proc nativeKeyboardChanged() {.cdecl.} =
   ## Invalidates application layout even when the drawable size is unchanged.

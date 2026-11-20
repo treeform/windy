@@ -48,6 +48,11 @@ jobs:
     - name: Test native iOS input
       if: matrix.os == 'macos-latest'
       run: nim r --path:tests -d:windyIosTesting tests/ios_inputs.nim
+    - name: Test native iOS frame deadlines
+      if: matrix.os == 'macos-latest'
+      run: |
+        clang -fobjc-arc -framework Foundation tests/ios_frames.m -o /tmp/windy-ios-frames
+        /tmp/windy-ios-frames
     - name: Test shared Apple bindings
       if: matrix.os == 'macos-latest'
       run: nim r tests/test_objc.nim

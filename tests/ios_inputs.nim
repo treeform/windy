@@ -17,6 +17,13 @@ doAssert window.metalView != nil
 doAssert window.nativeViewController == cast[pointer](2)
 doAssert window.contentScale == 2
 doAssert window.focused
+doAssert window.continuousRendering
+window.continuousRendering = false
+doAssert not native.continuousFrames
+window.requestFrame(83)
+doAssert native.frameDelay == 83
+window.continuousRendering = true
+doAssert window.continuousRendering
 doAssert window.visible
 doAssert not window.minimized
 doAssert window.safeAreaInsets == (10'f, 20'f, 30'f, 40'f)
@@ -39,8 +46,11 @@ window.onButtonRelease = proc(button: Button) =
     doAssert window.pointerSource == TouchPointer
     sawRelease = true
 
+let beforeTouchWake = native.frameRequestCount
 native.callbacks.onTouch(10, NativeTouchBegan, 30, 40, TouchPointer)
+doAssert native.frameRequestCount == beforeTouchWake + 1
 native.callbacks.onTouch(10, NativeTouchEnded, 31, 41, TouchPointer)
+doAssert native.frameRequestCount == beforeTouchWake + 2
 window.onFrame = proc() =
   doAssert window.buttonPressed[MouseLeft]
   doAssert window.buttonReleased[MouseLeft]
@@ -278,7 +288,9 @@ for pair in [
   native.callbacks.onKey(pair[0], NativeKeyReleased, 0)
   doAssert not window.buttonDown[pair[1]]
 
+let beforeKeyWake = native.frameRequestCount
 native.callbacks.onKey(0x04, NativeKeyPressed, 1'u shl 16)
+doAssert native.frameRequestCount == beforeKeyWake + 1
 doAssert not window.buttonDown[KeyCapsLock]
 native.callbacks.onKey(0x04, NativeKeyReleased, 0)
 
@@ -286,7 +298,9 @@ echo "Testing committed Unicode input and native clipboard"
 var receivedRunes: seq[Rune]
 window.onRune = proc(rune: Rune) =
   receivedRunes.add(rune)
+let beforeTextWake = native.frameRequestCount
 native.callbacks.onText("a界")
+doAssert native.frameRequestCount == beforeTextWake + 1
 doAssert receivedRunes == @[Rune(97), Rune(0x754c)]
 window.runeInputEnabled = false
 doAssert not native.keyboardVisible
@@ -316,9 +330,11 @@ doAssert native.textInput.visibleEnd == 4
 var edits: seq[TextInputEdit]
 window.onTextEdit = proc(edit: TextInputEdit) =
   edits.add(edit)
+let beforeEditWake = native.frameRequestCount
 native.callbacks.onTextEdit(TextInputEdit(
   kind: ReplaceText, start: 1, length: 2, text: "👩🏽‍💻"
 ))
+doAssert native.frameRequestCount == beforeEditWake + 1
 doAssert window.textInput.text == "a👩🏽‍💻z"
 doAssert edits.len == 1
 doAssert edits[0].start == 1 and edits[0].length == 2
@@ -435,16 +451,22 @@ doAssert frameCount == 0
 native.callbacks.onTouch(12, NativeTouchBegan, 50, 60, TouchPointer)
 native.callbacks.onKey(0x04, NativeKeyPressed, 0)
 doAssert window.buttonDown.len == 0
+let beforeFocusWake = native.frameRequestCount
 native.callbacks.onFocus(true)
+doAssert native.frameRequestCount == beforeFocusWake + 1
 doAssert window.focused
 doAssert window.visible
 doAssert not window.minimized
 doAssert window.buttonDown.len == 0
+let beforeResizeWake = native.frameRequestCount
 native.callbacks.onResize(1200, 600, 3)
+doAssert native.frameRequestCount == beforeResizeWake + 1
 doAssert window.size == ivec2(1200, 600)
 doAssert window.contentScale == 3
 doAssert window.pointerSource == TouchPointer
+let beforeScrollWake = native.frameRequestCount
 native.callbacks.onScroll(15, 24, 2, 3)
+doAssert native.frameRequestCount == beforeScrollWake + 1
 doAssert window.pointerSource == MousePointer
 doAssert window.mousePos == ivec2(15, 24)
 doAssert window.scrollDelta == vec2(2, -3)

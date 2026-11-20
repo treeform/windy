@@ -11,6 +11,9 @@ var
   textInput*: TextInputState
   keyboardOcclusion*: float32
   eventWakeCount*: int
+  frameRequestCount*: int
+  frameDelay*: int
+  continuousFrames* = true
   textMenuBounds*: Rect
   textMenuActions*: set[TextEditAction]
   textMenuCallback*: TextEditActionCallback
@@ -75,6 +78,19 @@ proc showNativeTextEditMenu*(
 proc wakeNativeEvents*() {.raises: [], gcsafe.} =
   ## Records event wakes without starting an application event loop.
   inc eventWakeCount
+
+proc nativeContinuousRendering*(): bool =
+  ## Reports the configured callback policy without a display link.
+  continuousFrames
+
+proc setNativeContinuousRendering*(enabled: bool) =
+  ## Stores the application's selected native frame policy.
+  continuousFrames = enabled
+
+proc requestNativeFrame*(delayMs = 0) {.raises: [], gcsafe.} =
+  ## Observes automatic input wakes and explicit application deadlines.
+  inc frameRequestCount
+  frameDelay = delayMs
 
 proc setNativeKeyboardVisible*(visible: bool) =
   ## Records software keyboard visibility requests.
